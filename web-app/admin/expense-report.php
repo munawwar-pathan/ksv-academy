@@ -1,0 +1,632 @@
+<?php
+require_once __DIR__ . '/../config.php';
+
+$current_user = require_login(['super_admin']);
+$page_title = 'Financial & Expense Audit Report | KSV Academy HRMS';
+$page_heading = 'Financial & Expense Report';
+$page_subheading = 'Category Breakdown, Revenue vs Expenditure Balance, and Monthly Audit Summary';
+$active_menu = 'expense-report';
+
+$db = get_db_connection();
+$active_session = get_active_session();
+$session_id = $active_session['id'];
+$school_settings = get_school_settings();
+
+// Summary calculations for the active session
+$total_fees = floatval($db->query("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = {$session_id}")->fetchColumn());
+$total_expenses = floatval($db->query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE session_id = {$session_id}")->fetchColumn());
+$total_payroll = floatval($db->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll WHERE session_id = {$session_id} AND payment_status = 'Paid'")->fetchColumn());
+
+$net_operating_balance = $total_fees - ($total_expenses + $total_payroll);
+$total_disbursed = $total_expenses + $total_payroll;
+
+// Category-wise Breakdown
+$cat_breakdown = $db->query("
+    SELECT c.id, c.category_name, COALESCE(SUM(e.amount), 0) as total_amount, COUNT(e.id) as vouchers_count
+    FROM expense_categories c
+    LEFT JOIN expenses e ON c.id = e.category_id AND e.session_id = {$session_id}
+    GROUP BY c.id, c.category_name
+    HAVING total_amount > 0
+    ORDER BY total_amount DESC
+")->fetchAll();
+
+// Monthly Breakdown
+$monthly_expenses = $db->query("
+    SELECT DATE_FORMAT(expense_date, '%M %Y') as month_label,
+           DATE_FORMAT(expense_date, '%Y-%m') as month_key,
+           COUNT(id) as voucher_count,
+           SUM(amount) as monthly_total
+    FROM expenses
+    WHERE session_id = {$session_id}
+    GROUP BY month_key, month_label
+    ORDER BY month_key DESC
+")->fetchAll();
+
+// Payment Method Distribution
+$method_breakdown = $db->query("
+    SELECT payment_method,
+           COUNT(id) as voucher_count,
+           COALESCE(SUM(amount), 0) as total_amount
+    FROM expenses
+    WHERE session_id = {$session_id}
+    GROUP BY payment_method
+    ORDER BY total_amount DESC
+")->fetchAll();
+
+// Helper to pick category icon and color
+function get_report_cat_icon($name) {
+    $n = strtolower($name);
+    if (strpos($n, 'elect') !== false || strpos($n, 'power') !== false || strpos($n, 'util') !== false) {
+        return ['icon' => 'fa-bolt', 'bg' => '#fef3c7', 'color' => '#b45309', 'border' => '#fde68a'];
+    }
+    if (strpos($n, 'station') !== false || strpos($n, 'print') !== false || strpos($n, 'paper') !== false) {
+        return ['icon' => 'fa-book-open', 'bg' => '#e0f2fe', 'color' => '#0369a1', 'border' => '#bae6fd'];
+    }
+    if (strpos($n, 'lab') !== false || strpos($n, 'scien') !== false || strpos($n, 'chem') !== false) {
+        return ['icon' => 'fa-flask-vial', 'bg' => '#f3e8ff', 'color' => '#7e22ce', 'border' => '#e9d5ff'];
+    }
+    if (strpos($n, 'it') !== false || strpos($n, 'soft') !== false || strpos($n, 'comput') !== false) {
+        return ['icon' => 'fa-laptop-code', 'bg' => '#ecfdf5', 'color' => '#047857', 'border' => '#a7f3d0'];
+    }
+    if (strpos($n, 'maint') !== false || strpos($n, 'build') !== false || strpos($n, 'repair') !== false) {
+        return ['icon' => 'fa-screwdriver-wrench', 'bg' => '#fff7ed', 'color' => '#c2410c', 'border' => '#fed7aa'];
+    }
+    return ['icon' => 'fa-tags', 'bg' => '#f1f5f9', 'color' => '#475569', 'border' => '#e2e8f0'];
+}
+
+function get_method_icon($method) {
+    switch (strtolower(trim($method))) {
+        case 'cash':
+            return ['icon' => 'fa-wallet', 'bg' => '#ecfdf5', 'color' => '#059669', 'border' => '#a7f3d0'];
+        case 'upi':
+            return ['icon' => 'fa-qrcode', 'bg' => '#eff6ff', 'color' => '#2563eb', 'border' => '#bfdbfe'];
+        case 'bank transfer':
+            return ['icon' => 'fa-building-columns', 'bg' => '#f5f3ff', 'color' => '#7c3aed', 'border' => '#ddd6fe'];
+        case 'cheque':
+            return ['icon' => 'fa-money-check', 'bg' => '#fffbeb', 'color' => '#d97706', 'border' => '#fde68a'];
+        default:
+            return ['icon' => 'fa-credit-card', 'bg' => '#f8fafc', 'color' => '#64748b', 'border' => '#e2e8f0'];
+    }
+}
+
+require_once __DIR__ . '/../includes/layout-header.php';
+?>
+
+<style>
+/* ── Report Module Specific Styles ── */
+.report-progress-bar {
+  width: 100%;
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.report-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0092df, #0284c7);
+  transition: width 0.4s ease;
+}
+.report-cat-item {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+.report-cat-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+.method-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid var(--hrms-border);
+  border-radius: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.method-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.method-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+/* ── Print Styles ── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print, header, aside, .sidebar, .hrms-sidebar, .hrms-header, .stat-grid, .roaster-toolbar-card {
+    display: none !important;
+  }
+  .report-printable-area {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .print-header-banner {
+    display: block !important;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 16px;
+  }
+  .print-signatures {
+    display: flex !important;
+    justify-content: space-between;
+    margin-top: 50px;
+    padding-top: 20px;
+  }
+  .hrms-card {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+    margin-bottom: 20px !important;
+    break-inside: avoid;
+  }
+  .hrms-table th {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+}
+.print-header-banner, .print-signatures {
+  display: none;
+}
+</style>
+
+<!-- ══════════════════════════════════════════════════════
+     TOP KPI STAT METRICS GRID
+     ══════════════════════════════════════════════════════ -->
+<div class="stat-grid no-print" style="margin-bottom: 24px;">
+  
+  <!-- Total Revenue (Fee Collections) -->
+  <div class="stat-card green">
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Fee Revenue (Collections)</span>
+          <span class="stat-number" style="color: #059669;"><?php echo format_inr($total_fees); ?></span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+          <i class="fa-solid fa-hand-holding-dollar"></i>
+        </div>
+      </div>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%; background: #10b981;"></div>
+      </div>
+    </div>
+    <div class="stat-card-footer">
+      <span style="color: #059669; font-weight: 700;"><i class="fa-solid fa-arrow-trend-up"></i> Inflow Verified</span>
+      <span class="text-muted">Session <?php echo htmlspecialchars($active_session['session_name']); ?></span>
+    </div>
+  </div>
+
+  <!-- Operational Expenses -->
+  <div class="stat-card purple">
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Operational Expenses</span>
+          <span class="stat-number" style="color: #dc2626;"><?php echo format_inr($total_expenses); ?></span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.12); color: #dc2626;">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+      </div>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%; background: #dc2626;"></div>
+      </div>
+    </div>
+    <div class="stat-card-footer">
+      <span style="color: #dc2626; font-weight: 700;"><i class="fa-solid fa-file-invoice-dollar"></i> Disbursed Vouchers</span>
+      <span class="text-muted">Bills, Labs &amp; Upkeep</span>
+    </div>
+  </div>
+
+  <!-- Faculty & Staff Payroll -->
+  <div class="stat-card blue">
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Faculty &amp; Staff Payroll</span>
+          <span class="stat-number" style="color: #7c3aed;"><?php echo format_inr($total_payroll); ?></span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: rgba(124, 58, 237, 0.12); color: #7c3aed;">
+          <i class="fa-solid fa-users-line"></i>
+        </div>
+      </div>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%; background: #7c3aed;"></div>
+      </div>
+    </div>
+    <div class="stat-card-footer">
+      <span style="color: #7c3aed; font-weight: 700;"><i class="fa-solid fa-money-bill-wave"></i> Paid Staff Salaries</span>
+      <span class="text-muted">Academic &amp; Admin</span>
+    </div>
+  </div>
+
+  <!-- Net Operating Balance -->
+  <div class="stat-card <?php echo $net_operating_balance >= 0 ? 'amber' : 'purple'; ?>">
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Net Operating Balance</span>
+          <span class="stat-number" style="color: <?php echo $net_operating_balance >= 0 ? '#007cbd' : '#dc2626'; ?>;">
+            <?php echo format_inr($net_operating_balance); ?>
+          </span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: <?php echo $net_operating_balance >= 0 ? 'rgba(0, 146, 223, 0.12)' : 'rgba(239, 68, 68, 0.12)'; ?>; color: <?php echo $net_operating_balance >= 0 ? '#0092df' : '#dc2626'; ?>;">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+      </div>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%; background: <?php echo $net_operating_balance >= 0 ? '#0092df' : '#dc2626'; ?>;"></div>
+      </div>
+    </div>
+    <div class="stat-card-footer">
+      <span style="color: <?php echo $net_operating_balance >= 0 ? '#007cbd' : '#dc2626'; ?>; font-weight: 700;">
+        <i class="fa-solid <?php echo $net_operating_balance >= 0 ? 'fa-shield-halved' : 'fa-circle-exclamation'; ?>"></i> 
+        <?php echo $net_operating_balance >= 0 ? 'Surplus Reserve' : 'Deficit Alert'; ?>
+      </span>
+      <span class="text-muted">Revenue &minus; Outflow</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     ROASTER TOOLBAR CARD & NAVIGATION
+     ══════════════════════════════════════════════════════ -->
+<div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
+  <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+    
+    <!-- Left: Subnavigation Links -->
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <a href="<?php echo ADMIN_URL; ?>/expenses" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+        <i class="fa-solid fa-file-invoice-dollar" style="color: #0092df;"></i>
+        <span>Expenses &amp; Vouchers</span>
+      </a>
+
+      <a href="<?php echo ADMIN_URL; ?>/expense-categories" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+        <i class="fa-solid fa-sitemap" style="color: #059669;"></i>
+        <span>Expense Heads</span>
+      </a>
+
+      <a href="<?php echo ADMIN_URL; ?>/fee-collection" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+        <i class="fa-solid fa-hand-holding-dollar" style="color: #7c3aed;"></i>
+        <span>Fee Collections</span>
+      </a>
+    </div>
+
+    <!-- Right: Session Badge & Print Button -->
+    <div class="roaster-toolbar-actions">
+      <div class="scholars-count-badge">
+        <span class="count-dot" style="background: #10b981;"></span>
+        <span>Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      </div>
+
+      <button type="button" onclick="window.print();" class="roaster-add-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Print Official Financial Audit Report">
+        <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
+        <span>Print Audit Report</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     REPORT PRINTABLE / AUDIT CONTAINER
+     ══════════════════════════════════════════════════════ -->
+<div class="report-printable-area">
+  
+  <!-- Printable Official Header Banner -->
+  <div class="print-header-banner">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+          <?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy'); ?>
+        </h1>
+        <p style="margin: 3px 0 0; font-size: 13px; color: #475569;">
+          <?php echo htmlspecialchars($school_settings['address'] ?? 'Official Financial Audit & Expenditure Ledger Report'); ?>
+        </p>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: 12px; font-weight: 700; color: #0284c7;">ACADEMIC AUDIT SESSION</div>
+        <div style="font-size: 18px; font-weight: 800; color: #0f172a;"><?php echo htmlspecialchars($active_session['session_name']); ?></div>
+        <div style="font-size: 11px; color: #64748b;">Generated: <?php echo date('d M Y, h:i A'); ?></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary 2-Column Analytics Section -->
+  <div style="display: grid; grid-template-columns: 1.25fr 1.75fr; gap: 24px; margin-bottom: 24px;">
+    
+    <!-- Left Column: Category-Wise Allocation -->
+    <div class="hrms-card">
+      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-chart-pie" style="color: var(--hrms-primary);"></i>
+          Category-Wise Allocation
+        </h4>
+        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+          <?php echo count($cat_breakdown); ?> Heads Active
+        </span>
+      </div>
+
+      <div style="padding: 18px;">
+        <?php if (empty($cat_breakdown)): ?>
+          <div style="text-align: center; padding: 36px 12px; color: #94a3b8;">
+            <i class="fa-solid fa-folder-open" style="font-size: 2rem; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+            <span style="font-size: 0.85rem;">No categorized expenses recorded in this session.</span>
+          </div>
+        <?php else: ?>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <?php foreach ($cat_breakdown as $cb): ?>
+              <?php 
+                $pct = $total_expenses > 0 ? round(($cb['total_amount'] / $total_expenses) * 100, 1) : 0;
+                $cat_style = get_report_cat_icon($cb['category_name']);
+              ?>
+              <div class="report-cat-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="display: flex; align-items: center; gap: 9px;">
+                    <div style="width: 28px; height: 28px; border-radius: 7px; background: <?php echo $cat_style['bg']; ?>; color: <?php echo $cat_style['color']; ?>; border: 1px solid <?php echo $cat_style['border']; ?>; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                      <i class="fa-solid <?php echo $cat_style['icon']; ?>"></i>
+                    </div>
+                    <div>
+                      <span style="font-weight: 800; font-size: 0.85rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                        <?php echo htmlspecialchars($cb['category_name']); ?>
+                      </span>
+                      <span style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">
+                        &bull; <?php echo $cb['vouchers_count']; ?> vouchers
+                      </span>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <strong style="color: #dc2626; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
+                      <?php echo format_inr($cb['total_amount']); ?>
+                    </strong>
+                    <span style="display: inline-block; font-size: 0.72rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px; margin-left: 4px;">
+                      <?php echo $pct; ?>%
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="report-progress-bar">
+                  <div class="report-progress-fill" style="width: <?php echo min(100, max(2, $pct)); ?>%;"></div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Right Column: Monthly Expenditure Trend -->
+    <div class="hrms-card">
+      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-calendar-days" style="color: var(--hrms-primary);"></i>
+          Monthly Expenditure Trend
+        </h4>
+        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+          <?php echo count($monthly_expenses); ?> Months Recorded
+        </span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="hrms-table">
+          <thead>
+            <tr>
+              <th>Month &amp; Year</th>
+              <th style="text-align: center;">Vouchers</th>
+              <th>Total Disbursed (₹)</th>
+              <th>Avg / Voucher</th>
+              <th style="text-align: right;">Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (empty($monthly_expenses)): ?>
+              <tr>
+                <td colspan="5" style="text-align: center; color: #94a3b8; padding: 40px 20px;">
+                  <i class="fa-regular fa-calendar-xmark" style="font-size: 2rem; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+                  <span>No monthly expenditure vouchers recorded yet.</span>
+                </td>
+              </tr>
+            <?php else: ?>
+              <?php foreach ($monthly_expenses as $me): ?>
+                <?php 
+                  $m_pct = $total_expenses > 0 ? round(($me['monthly_total'] / $total_expenses) * 100, 1) : 0;
+                ?>
+                <tr>
+                  <td>
+                    <div style="font-weight: 800; font-size: 0.86rem; color: #0f172a; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-regular fa-calendar" style="color: #0284c7;"></i>
+                      <span><?php echo htmlspecialchars($me['month_label']); ?></span>
+                    </div>
+                  </td>
+                  <td style="text-align: center;">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.76rem; background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px;">
+                      <?php echo $me['voucher_count']; ?> vouchers
+                    </span>
+                  </td>
+                  <td>
+                    <strong style="color: #dc2626; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
+                      <?php echo format_inr($me['monthly_total']); ?>
+                    </strong>
+                  </td>
+                  <td style="font-size: 0.82rem; color: #475569;">
+                    <?php echo format_inr($me['monthly_total'] / max(1, $me['voucher_count'])); ?>
+                  </td>
+                  <td style="text-align: right;">
+                    <span style="font-size: 0.76rem; font-weight: 800; color: #0369a1; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">
+                      <?php echo $m_pct; ?>%
+                    </span>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Analytics Row: Payment Channel Distribution & Executive Audit Matrix -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 30px;">
+    
+    <!-- Payment Methods Breakdown -->
+    <div class="hrms-card">
+      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-credit-card" style="color: var(--hrms-primary);"></i>
+          Disbursement Channels &amp; Modes
+        </h4>
+        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+          Voucher Settlement
+        </span>
+      </div>
+
+      <div style="padding: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <?php if (empty($method_breakdown)): ?>
+          <p style="color: #94a3b8; font-size: 0.82rem; grid-column: 1 / -1; text-align: center; padding: 20px 0;">No disbursement mode data.</p>
+        <?php else: ?>
+          <?php foreach ($method_breakdown as $mb): ?>
+            <?php 
+              $m_info = get_method_icon($mb['payment_method']);
+              $mb_pct = $total_expenses > 0 ? round(($mb['total_amount'] / $total_expenses) * 100, 1) : 0;
+            ?>
+            <div class="method-card">
+              <div class="method-icon-box" style="background: <?php echo $m_info['bg']; ?>; color: <?php echo $m_info['color']; ?>; border: 1px solid <?php echo $m_info['border']; ?>;">
+                <i class="fa-solid <?php echo $m_info['icon']; ?>"></i>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <span style="font-size: 0.84rem; font-weight: 800; color: #0f172a;"><?php echo htmlspecialchars($mb['payment_method']); ?></span>
+                  <span style="font-size: 0.72rem; font-weight: 800; color: #0284c7;"><?php echo $mb_pct; ?>%</span>
+                </div>
+                <div style="font-size: 0.92rem; font-weight: 800; color: #dc2626; font-family: 'Outfit', sans-serif; margin-top: 2px;">
+                  <?php echo format_inr($mb['total_amount']); ?>
+                </div>
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
+                  <?php echo $mb['voucher_count']; ?> vouchers settled
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Executive Audit Summary Matrix -->
+    <div class="hrms-card">
+      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-file-contract" style="color: var(--hrms-primary);"></i>
+          Institutional Ledger Reconcilement
+        </h4>
+        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+        </span>
+      </div>
+
+      <div style="padding: 18px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <tbody>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 9px 0; color: #475569; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 0.75rem;"></i>
+                <span>Total Fee Realization (Inflow)</span>
+              </td>
+              <td style="padding: 9px 0; text-align: right; font-weight: 800; color: #059669; font-family: 'Outfit', sans-serif;">
+                + <?php echo format_inr($total_fees); ?>
+              </td>
+            </tr>
+
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 9px 0; color: #475569; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-minus" style="color: #ef4444; font-size: 0.75rem;"></i>
+                <span>Operational &amp; Maintenance Expenses</span>
+              </td>
+              <td style="padding: 9px 0; text-align: right; font-weight: 800; color: #dc2626; font-family: 'Outfit', sans-serif;">
+                &minus; <?php echo format_inr($total_expenses); ?>
+              </td>
+            </tr>
+
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 9px 0; color: #475569; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-minus" style="color: #7c3aed; font-size: 0.75rem;"></i>
+                <span>Staff &amp; Faculty Net Salaries Disbursed</span>
+              </td>
+              <td style="padding: 9px 0; text-align: right; font-weight: 800; color: #7c3aed; font-family: 'Outfit', sans-serif;">
+                &minus; <?php echo format_inr($total_payroll); ?>
+              </td>
+            </tr>
+
+            <tr style="border-bottom: 1.5px solid #cbd5e1; background: #f8fafc;">
+              <td style="padding: 10px 8px; font-weight: 700; color: #1e293b;">
+                Total Institutional Outflow
+              </td>
+              <td style="padding: 10px 8px; text-align: right; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                <?php echo format_inr($total_disbursed); ?>
+              </td>
+            </tr>
+
+            <tr style="background: <?php echo $net_operating_balance >= 0 ? 'rgba(0, 146, 223, 0.06)' : 'rgba(239, 68, 68, 0.06)'; ?>;">
+              <td style="padding: 12px 8px; font-weight: 800; font-size: 0.92rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                Net Operating Balance (Reserves)
+              </td>
+              <td style="padding: 12px 8px; text-align: right; font-weight: 800; font-size: 1.05rem; color: <?php echo $net_operating_balance >= 0 ? '#007cbd' : '#dc2626'; ?>; font-family: 'Outfit', sans-serif;">
+                <?php echo format_inr($net_operating_balance); ?>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Printable Signatures / Audit Certification Section -->
+  <div class="print-signatures">
+    <div style="text-align: center; width: 180px;">
+      <div style="border-bottom: 1px dashed #000000; height: 40px; margin-bottom: 8px;"></div>
+      <div style="font-weight: 700; font-size: 12px;">Prepared By</div>
+      <div style="font-size: 11px; color: #475569;">Senior Accountant</div>
+    </div>
+
+    <div style="text-align: center; width: 180px;">
+      <div style="border-bottom: 1px dashed #000000; height: 40px; margin-bottom: 8px;"></div>
+      <div style="font-weight: 700; font-size: 12px;">Verified &amp; Audited</div>
+      <div style="font-size: 11px; color: #475569;">Bursar / Accounts Officer</div>
+    </div>
+
+    <div style="text-align: center; width: 180px;">
+      <div style="border-bottom: 1px dashed #000000; height: 40px; margin-bottom: 8px;"></div>
+      <div style="font-weight: 700; font-size: 12px;">Authorized Approval</div>
+      <div style="font-size: 11px; color: #475569;">Director / Principal</div>
+    </div>
+  </div>
+
+</div>
+
+<?php require_once __DIR__ . '/../includes/layout-footer.php'; ?>
