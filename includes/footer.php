@@ -137,7 +137,8 @@ require_once __DIR__ . '/../config.php';
     <div class="footer-bottom-bar">
       <div class="container footer-bottom-container">
         <div class="copyright-text">
-          &copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All Rights Reserved. Developed by <a href="https://thecompanies.in/" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">The Companies</a>.
+          <span class="copyright-main">&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All Rights Reserved.</span>
+          <span class="copyright-dev">Developed by <a href="https://thecompanies.in/" target="_blank" rel="noopener noreferrer" style="text-decoration: none;">The Companies</a>.</span>
         </div>
         <div class="footer-bottom-links">
           <span>Ulwe Sector 19, Navi Mumbai, 410206</span>

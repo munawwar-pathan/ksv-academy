@@ -769,13 +769,41 @@ img, svg, video {
   .footer-bottom-bar {
     flex-direction: column !important;
     text-align: center !important;
-    gap: 12px !important;
-    padding: 16px 0 !important;
+    gap: 8px !important;
+    padding: 16px 0 20px !important;
+  }
+
+  .footer-bottom-container {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .copyright-text {
+    width: 100% !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .copyright-main {
+    display: block !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  .copyright-dev {
+    display: block !important;
+    text-align: center !important;
+    width: 100% !important;
   }
 
   .footer-bottom-links {
-    justify-content: center !important;
-    flex-wrap: wrap !important;
+    display: none !important;
   }
 
   /* ── Floating Action Buttons Clean Up on Mobile ── */
