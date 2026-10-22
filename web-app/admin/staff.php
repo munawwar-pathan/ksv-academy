@@ -23,6 +23,50 @@ if (!in_array($limit, $allowed_limits)) {
 }
 $page = max(1, intval($_GET['page'] ?? 1));
 
+// Handle Direct Login as Staff (GET request from "Login Direct" button in new tab)
+if (isset($_GET['action']) && $_GET['action'] === 'direct_login') {
+    $target_staff_id = intval($_GET['staff_id'] ?? 0);
+    if ($target_staff_id > 0) {
+        $stmt = $db->prepare("
+            SELECT sp.*, u.id as u_id, u.username, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.role
+            FROM staff_profiles sp
+            JOIN users u ON sp.user_id = u.id
+            WHERE sp.id = ? AND u.status = 'active'
+            LIMIT 1
+        ");
+        $stmt->execute([$target_staff_id]);
+        $target_staff = $stmt->fetch();
+        if ($target_staff) {
+            // Preserve admin session so admin tab is never logged out
+            if (!empty($_SESSION['user_id']) && in_array(($_SESSION['role'] ?? ''), ['super_admin'])) {
+                $_SESSION['admin_user_id'] = $_SESSION['user_id'];
+                $_SESSION['admin_username'] = $_SESSION['username'];
+                $_SESSION['admin_role'] = $_SESSION['role'];
+                $_SESSION['admin_full_name'] = $_SESSION['full_name'];
+            }
+
+            // Set staff active session
+            $_SESSION['user_id'] = $target_staff['u_id'];
+            $_SESSION['username'] = $target_staff['username'];
+            $_SESSION['role'] = 'staff';
+            $_SESSION['full_name'] = $target_staff['full_name'];
+            $_SESSION['email'] = $target_staff['email'] ?: $target_staff['user_email'];
+            $_SESSION['avatar'] = $target_staff['avatar'];
+            $_SESSION['active_staff_id'] = $target_staff['id'];
+            $_SESSION['impersonated_staff'] = true;
+
+            set_flash('success', "Logged in as faculty member " . htmlspecialchars($target_staff['full_name']) . " (" . htmlspecialchars($target_staff['employee_code']) . ")!");
+            $dest_url = get_dashboard_url('staff', $target_staff['u_id']);
+            header('Location: ' . $dest_url);
+            exit;
+        } else {
+            set_flash('error', "Faculty member not found or inactive.");
+            header('Location: ' . ADMIN_URL . '/staff');
+            exit;
+        }
+    }
+}
+
 // Handle Add Staff
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
     $action = $_POST['action'] ?? '';
@@ -98,6 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
         $salary = floatval($_POST['salary'] ?? 55000);
         $blood_group = trim($_POST['blood_group'] ?? 'B+');
         $address = trim($_POST['address'] ?? '');
+        $permissions = isset($_POST['permissions']) && is_array($_POST['permissions']) 
+            ? json_encode(array_values(array_map('trim', $_POST['permissions']))) 
+            : json_encode([]);
 
         if ($staff_id > 0 && !empty($full_name)) {
             try {
@@ -114,12 +161,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
 
                 $stmt_p = $db->prepare("
                     UPDATE staff_profiles 
-                    SET department = ?, designation = ?, qualification = ?, monthly_salary = ?, phone = ?, email = ?, address = ?, blood_group = ?
+                    SET department = ?, designation = ?, qualification = ?, monthly_salary = ?, phone = ?, email = ?, address = ?, blood_group = ?, menu_permissions = ?
                     WHERE id = ?
                 ");
-                $stmt_p->execute([$department, $designation, $qualification, $salary, $phone, $email, $address, $blood_group, $staff_id]);
+                $stmt_p->execute([$department, $designation, $qualification, $salary, $phone, $email, $address, $blood_group, $permissions, $staff_id]);
 
-                set_flash('success', "Faculty profile for {$full_name} updated successfully!");
+                set_flash('success', "Faculty profile and menu permissions for {$full_name} updated successfully!");
                 header('Location: ' . ADMIN_URL . '/staff');
                 exit;
             } catch (Exception $e) {
@@ -141,6 +188,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
             header('Location: ' . ADMIN_URL . '/staff');
             exit;
         }
+    }
+
+    // Change Staff Password
+    if ($action === 'change_staff_password') {
+        $staff_id = intval($_POST['staff_id'] ?? 0);
+        $new_password = trim($_POST['new_password'] ?? '');
+        $confirm_password = trim($_POST['confirm_password'] ?? '');
+
+        if (empty($new_password) || empty($confirm_password)) {
+            set_flash('error', 'Please enter and confirm the new password.');
+        } elseif ($new_password !== $confirm_password) {
+            set_flash('error', 'New password and confirm password do not match.');
+        } elseif (strlen($new_password) < 4) {
+            set_flash('error', 'New password must be at least 4 characters long.');
+        } else {
+            $stmt = $db->prepare("
+                SELECT sp.*, u.id as u_id, u.full_name, sp.employee_code 
+                FROM staff_profiles sp 
+                JOIN users u ON sp.user_id = u.id 
+                WHERE sp.id = ? 
+                LIMIT 1
+            ");
+            $stmt->execute([$staff_id]);
+            $sm = $stmt->fetch();
+            if ($sm && !empty($sm['u_id'])) {
+                $hashed = password_hash($new_password, PASSWORD_DEFAULT);
+                $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hashed, $sm['u_id']]);
+                set_flash('success', "Password for faculty member " . htmlspecialchars($sm['full_name']) . " (" . htmlspecialchars($sm['employee_code']) . ") updated successfully!");
+            } else {
+                set_flash('error', 'Faculty member not found.');
+            }
+        }
+        header('Location: ' . ADMIN_URL . '/staff');
+        exit;
     }
 }
 
@@ -279,118 +360,292 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <style>
-/* ── Faculty Directory Styling ── */
-.staff-avatar-img {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #e0f2fe;
+/* ── Staff ID Directory Table & Badge Styles (Simple & Sober - Matching staff-id) ── */
+.staff-id-table {
+  width: 100%;
+  min-width: 1260px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
-.staff-avatar-init {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
   font-weight: 700;
-  font-family: 'Outfit', sans-serif;
-  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
 }
 
-.emp-code-pill {
+/* Badge & Tag Elements */
+.sid-code-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #334155;
-  padding: 3px 8px;
-  border-radius: 6px;
+  gap: 4px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
   white-space: nowrap;
 }
-
-.dept-pill-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #334155;
-  white-space: nowrap;
-}
-.dept-pill-badge.science {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
-}
-.dept-pill-badge.math {
-  background: #faf5ff;
-  border-color: #e9d5ff;
-  color: #7e22ce;
-}
-.dept-pill-badge.bio {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-  color: #047857;
-}
-.dept-pill-badge.director {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #b45309;
-}
-
-.qual-chip {
+.sid-dept-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #334155;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
   font-weight: 600;
-  max-width: 170px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-
-.salary-badge {
+.sid-blood-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  font-size: 0.70rem;
   font-weight: 700;
-  font-size: 0.92rem;
-  color: #0f172a;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
-
-.status-indicator-pill {
+.sid-status-active {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
-  border-radius: 20px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
   font-size: 0.74rem;
   font-weight: 600;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #047857;
+  padding: 2px 9px;
+  border-radius: 20px;
   white-space: nowrap;
 }
-.status-indicator-pill .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
+
+/* Sober Action Icon Buttons */
+.sid-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.76rem;
+  padding: 0;
+  text-decoration: none;
+}
+.sid-action-btn:hover {
+  transform: translateY(-1px);
+}
+.sid-action-btn.view {
+  color: #0284c7;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+.sid-action-btn.view:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+.sid-action-btn.idcard {
+  color: #0891b2;
+  border-color: #cffafe;
+  background: #ecfeff;
+}
+.sid-action-btn.idcard:hover {
+  background: #0891b2;
+  color: #ffffff;
+  border-color: #0891b2;
+}
+.sid-action-btn.edit {
+  color: #4f46e5;
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+.sid-action-btn.edit:hover {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+.sid-action-btn.delete {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.sid-action-btn.delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+/* ── Login Column & Buttons (Simple & Sober) ── */
+.sid-login-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.btn-student-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-student-login:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #14532d;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.btn-student-pwd {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fefce8;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-student-pwd:hover {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #713f12;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* ── Staff Menu Permissions UI (Simple, Sober & Premium) ── */
+.perm-box-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+.perm-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.perm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 10px;
+}
+.perm-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.perm-card:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.08);
+}
+.perm-card input[type="checkbox"] {
+  accent-color: #0284c7;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+.perm-card-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+.perm-card-text i {
+  color: #0284c7;
+  font-size: 0.84rem;
+  width: 15px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.btn-perm-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-perm-toggle:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
 }
 </style>
 
@@ -546,47 +801,51 @@ require_once __DIR__ . '/../includes/layout-header.php';
 </div>
 
 <!-- ══════════════════════════════════════════════════════
-     FACULTY & STAFF DIRECTORY TABLE
+     FACULTY & STAFF DIRECTORY TABLE (Simple & Sober - Like staff-id)
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 30px;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border);">
+<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-chalkboard-user" style="color: var(--hrms-primary);"></i>
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-chalkboard-user" style="color: #0284c7;"></i>
         Faculty &amp; Staff Directory
-        <span style="font-size: 0.78rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 20px;">
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
-      <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
+      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
         Academic lecturers, department chairs, and administrative leadership registered in the academy.
       </p>
+    </div>
+    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+      <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
     </div>
   </div>
 
   <div class="table-responsive">
-    <table class="hrms-table">
+    <table class="hrms-table staff-id-table">
       <thead>
         <tr>
-          <th style="min-width: 220px;">Faculty Profile</th>
-          <th style="min-width: 140px;">Employee ID</th>
-          <th style="min-width: 170px;">Department &amp; Designation</th>
-          <th style="min-width: 150px;">Qualification &amp; Blood</th>
-          <th style="min-width: 140px;">Monthly Salary</th>
-          <th style="min-width: 170px;">Contact Information</th>
-          <th style="min-width: 100px;">Status</th>
-          <th style="min-width: 120px; text-align: right;">Actions</th>
+          <th style="min-width: 250px;">Faculty Member</th>
+          <th style="min-width: 115px;">Employee ID</th>
+          <th style="min-width: 155px;">Department &amp; Post</th>
+          <th style="min-width: 135px;">Qualification &amp; Blood</th>
+          <th style="min-width: 115px;">Monthly Salary</th>
+          <th style="min-width: 140px;">Contact Info</th>
+          <th style="min-width: 85px;">Status</th>
+          <th style="min-width: 215px;">Login</th>
+          <th style="min-width: 105px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
         <?php if (empty($staff_members)): ?>
           <tr>
-            <td colspan="8" style="text-align: center; padding: 56px 24px; color: #64748b;">
-              <div style="width: 58px; height: 58px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.5rem; color: #94a3b8;">
+            <td colspan="9" style="text-align: center; padding: 50px 20px; color: #64748b;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
                 <i class="fa-solid fa-user-slash"></i>
               </div>
-              <h4 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Faculty Records Found</h4>
-              <p style="font-size: 0.84rem; color: #64748b; margin: 0 0 16px;">
+              <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Faculty Records Found</h4>
+              <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
                 No faculty members matched your query for Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
               </p>
               <?php if (!empty($search) || !empty($filter_dept)): ?>
@@ -608,96 +867,79 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php 
               $photo_url = get_staff_photo_url($sm);
               $first_letter = strtoupper(substr($sm['full_name'], 0, 1));
-              $avatar_bg = $grad_palette[ord($first_letter) % count($grad_palette)];
-
-              // Department styling badge class
-              $dept_lower = strtolower($sm['department']);
-              $dept_class = '';
-              if (strpos($dept_lower, 'direction') !== false || strpos($dept_lower, 'founder') !== false) {
-                $dept_class = 'director';
-              } elseif (strpos($dept_lower, 'math') !== false) {
-                $dept_class = 'math';
-              } elseif (strpos($dept_lower, 'bio') !== false) {
-                $dept_class = 'bio';
-              } elseif (strpos($dept_lower, 'science') !== false || strpos($dept_lower, 'chem') !== false || strpos($dept_lower, 'phys') !== false) {
-                $dept_class = 'science';
-              }
-
               $phone_val = $sm['phone'] ?: $sm['user_phone'];
               $email_val = $sm['email'] ?: $sm['user_email'];
             ?>
             <tr>
               
-              <!-- 1. Faculty Profile -->
-              <td>
-                <div class="user-cell" style="gap: 12px; align-items: center;">
+              <!-- 1. Faculty Member Profile -->
+              <td style="white-space: nowrap;">
+                <div class="user-cell" style="display: flex; align-items: center; gap: 12px; min-width: 240px;">
                   <?php if (!empty($photo_url)): ?>
-                    <img src="<?php echo htmlspecialchars($photo_url); ?>" alt="<?php echo htmlspecialchars($sm['full_name']); ?>" class="staff-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="staff-avatar-init" style="background: <?php echo $avatar_bg; ?>; display: none;">
+                    <img src="<?php echo htmlspecialchars($photo_url); ?>" alt="<?php echo htmlspecialchars($sm['full_name']); ?>" style="width: 40px; height: 40px; min-width: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
                       <?php echo $first_letter; ?>
                     </div>
                   <?php else: ?>
-                    <div class="staff-avatar-init" style="background: <?php echo $avatar_bg; ?>;">
+                    <div style="width: 40px; height: 40px; min-width: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                       <?php echo $first_letter; ?>
                     </div>
                   <?php endif; ?>
                   
-                  <div class="cell-meta">
-                    <span class="cell-name" style="font-size: 0.95rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25; white-space: nowrap;">
                       <?php echo htmlspecialchars($sm['full_name']); ?>
-                    </span>
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.73rem; color: #64748b; margin-top: 2px;">
-                      <span style="font-family: monospace; color: #0284c7; font-weight: 700;">@<?php echo htmlspecialchars($sm['username']); ?></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.73rem; color: #64748b; margin-top: 2px; white-space: nowrap;">
+                      <span style="font-family: monospace; color: #0284c7; font-weight: 600;">@<?php echo htmlspecialchars($sm['username']); ?></span>
                       <span>&bull;</span>
-                      <span><i class="fa-solid fa-calendar-day" style="color: #94a3b8; font-size: 0.68rem;"></i> <?php echo !empty($sm['joining_date']) ? date('M Y', strtotime($sm['joining_date'])) : 'Active'; ?></span>
+                      <span>Joined <?php echo !empty($sm['joining_date']) ? date('M Y', strtotime($sm['joining_date'])) : 'Active'; ?></span>
                     </div>
                   </div>
                 </div>
               </td>
 
-              <!-- 2. Employee ID & QR -->
+              <!-- 2. Employee ID -->
               <td>
-                <span class="emp-code-pill">
-                  <i class="fa-solid fa-id-badge" style="font-size: 0.72rem;"></i>
-                  <?php echo htmlspecialchars($sm['employee_code']); ?>
+                <span class="sid-code-pill">
+                  <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
+                  <span><?php echo htmlspecialchars($sm['employee_code']); ?></span>
                 </span>
-                <div style="font-size: 0.72rem; color: #64748b; margin-top: 3px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-                  <i class="fa-solid fa-qrcode" style="color: #0284c7; font-size: 0.68rem;"></i>
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                  <i class="fa-solid fa-qrcode" style="color: #0284c7; font-size: 0.65rem;"></i>
                   <span>QR Pass Verified</span>
                 </div>
               </td>
 
               <!-- 3. Department & Designation -->
               <td>
-                <span class="dept-pill-badge <?php echo $dept_class; ?>">
-                  <i class="fa-solid fa-graduation-cap" style="font-size: 0.68rem;"></i>
-                  <?php echo htmlspecialchars($sm['department']); ?>
+                <span class="sid-dept-pill">
+                  <i class="fa-solid fa-building" style="font-size: 0.65rem; color: #64748b;"></i>
+                  <span><?php echo htmlspecialchars($sm['department']); ?></span>
                 </span>
-                <div style="font-size: 0.76rem; font-weight: 700; color: #475569; margin-top: 4px;">
+                <div style="font-size: 0.74rem; font-weight: 600; color: #475569; margin-top: 4px; white-space: nowrap;">
                   <?php echo htmlspecialchars($sm['designation']); ?>
                 </div>
               </td>
 
               <!-- 4. Qualification & Blood -->
               <td>
-                <div class="qual-chip" title="<?php echo htmlspecialchars($sm['qualification']); ?>">
-                  <i class="fa-solid fa-award" style="color: #0092df; font-size: 0.68rem;"></i>
-                  <span><?php echo htmlspecialchars($sm['qualification']); ?></span>
+                <div style="font-size: 0.78rem; font-weight: 600; color: #334155; white-space: nowrap;" title="<?php echo htmlspecialchars($sm['qualification']); ?>">
+                  <?php echo htmlspecialchars($sm['qualification']); ?>
                 </div>
                 <?php if (!empty($sm['blood_group'])): ?>
-                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-                    <i class="fa-solid fa-droplet" style="color: #ef4444; font-size: 0.65rem;"></i>
-                    <span>Blood: <strong><?php echo htmlspecialchars($sm['blood_group']); ?></strong></span>
+                  <div style="margin-top: 4px;">
+                    <span class="sid-blood-badge">Blood: <?php echo htmlspecialchars($sm['blood_group']); ?></span>
                   </div>
                 <?php endif; ?>
               </td>
 
               <!-- 5. Monthly Salary -->
               <td>
-                <div class="salary-badge">
+                <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif; white-space: nowrap;">
                   <?php echo format_inr($sm['monthly_salary']); ?>
                 </div>
-                <div style="font-size: 0.72rem; color: #94a3b8; font-weight: 600;">
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 500; margin-top: 2px; white-space: nowrap;">
                   Per Month
                 </div>
               </td>
@@ -705,17 +947,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 6. Contact Information -->
               <td>
                 <?php if (!empty($phone_val)): ?>
-                  <div>
-                    <a href="tel:<?php echo htmlspecialchars($phone_val); ?>" class="guardian-phone-chip" style="font-size: 0.76rem;">
-                      <i class="fa-solid fa-phone" style="color: var(--hrms-primary); font-size: 0.68rem;"></i>
-                      <?php echo htmlspecialchars($phone_val); ?>
+                  <div style="white-space: nowrap;">
+                    <a href="tel:<?php echo htmlspecialchars($phone_val); ?>" style="font-size: 0.74rem; color: #334155; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; white-space: nowrap;">
+                      <i class="fa-solid fa-phone" style="color: #0284c7; font-size: 0.65rem;"></i>
+                      <span><?php echo htmlspecialchars($phone_val); ?></span>
                     </a>
                   </div>
                 <?php endif; ?>
                 <?php if (!empty($email_val)): ?>
-                  <div style="margin-top: 3px;">
-                    <a href="mailto:<?php echo htmlspecialchars($email_val); ?>" style="font-size: 0.74rem; color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
-                      <i class="fa-solid fa-envelope" style="color: #94a3b8; font-size: 0.68rem;"></i>
+                  <div style="margin-top: 3px; white-space: nowrap;">
+                    <a href="mailto:<?php echo htmlspecialchars($email_val); ?>" style="font-size: 0.72rem; color: #64748b; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                      <i class="fa-solid fa-envelope" style="color: #94a3b8; font-size: 0.65rem;"></i>
                       <span><?php echo htmlspecialchars($email_val); ?></span>
                     </a>
                   </div>
@@ -724,24 +966,38 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 7. Status -->
               <td>
-                <span class="status-indicator-pill">
-                  <span class="dot"></span>
-                  <span>Active</span>
+                <span class="sid-status-active">
+                  <i class="fa-solid fa-check" style="font-size: 0.65rem;"></i> Active
                 </span>
               </td>
 
-              <!-- 8. Actions (STRICTLY ONLY: Eye, Pen, Trash like students.php) -->
+              <!-- 8. Login Actions (Login Direct & Change Password) -->
+              <td>
+                <div class="sid-login-wrap">
+                  <a href="<?php echo ADMIN_URL; ?>/staff?action=direct_login&staff_id=<?php echo $sm['id']; ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($sm['full_name']); ?> in a new tab">
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i>
+                    <span>Login Direct</span>
+                  </a>
+
+                  <button type="button" class="btn-student-pwd" title="Change Password for <?php echo htmlspecialchars($sm['full_name']); ?>" onclick='openChangeStaffPasswordModal(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
+                    <i class="fa-solid fa-key" style="font-size: 0.7rem;"></i>
+                    <span>Change Password</span>
+                  </button>
+                </div>
+              </td>
+
+              <!-- 9. Actions (View Profile, Edit, Delete) -->
               <td style="text-align: right;">
-                <div style="display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
                   <!-- Eye Icon: View Profile -->
-                  <button type="button" class="action-icon-btn view" title="View Faculty Profile" onclick='viewStaffDetails(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
+                  <button type="button" class="sid-action-btn view" title="View Faculty Profile" onclick='viewStaffDetails(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
                     <i class="fa-solid fa-eye"></i>
                   </button>
 
                   <!-- Pen Icon: Edit Profile -->
-                  <button type="button" class="action-icon-btn edit" title="Edit Faculty Profile" onclick='openEditStaffModal(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
-                    <i class="fa-solid fa-pen"></i>
+                  <button type="button" class="sid-action-btn edit" title="Edit Faculty Profile" onclick='openEditStaffModal(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
+                    <i class="fa-solid fa-pencil"></i>
                   </button>
 
                   <!-- Trash Icon: Delete Profile -->
@@ -749,7 +1005,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars(addslashes($sm['full_name'])); ?> and their user credentials?');">
                       <input type="hidden" name="action" value="delete_staff">
                       <input type="hidden" name="staff_id" value="<?php echo $sm['id']; ?>">
-                      <button type="submit" class="action-icon-btn delete" title="Delete Faculty Record">
+                      <button type="submit" class="sid-action-btn delete" title="Delete Faculty Record">
                         <i class="fa-solid fa-trash"></i>
                       </button>
                     </form>
@@ -1161,12 +1417,218 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <textarea name="address" id="edit_address" rows="2" class="hrms-input" placeholder="e.g. Sector 19, Ulwe, Navi Mumbai..." style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;"></textarea>
         </div>
 
+        <!-- Row 7: Menu Permissions (Role Access Control) -->
+        <div class="form-group" style="margin-top: 18px; margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div>
+              <label style="display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 2px; font-family: 'Outfit', sans-serif;">
+                <i class="fa-solid fa-user-shield" style="color: #0284c7;"></i>
+                Menu Access Permissions
+              </label>
+              <div style="font-size: 11.5px; color: #64748b;">
+                When this staff member logs in, they will only have access to the menus checked below.
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 2px;">
+              <button type="button" class="btn-perm-toggle" onclick="toggleAllStaffPerms(true)">Select All</button>
+              <button type="button" class="btn-perm-toggle" onclick="toggleAllStaffPerms(false)">Deselect All</button>
+            </div>
+          </div>
+
+          <div class="perm-box-container">
+            <div class="perm-section-label">Faculty Portal Menus</div>
+            <div class="perm-grid" style="margin-bottom: 12px;">
+              
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="dashboard" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-gauge-high"></i>
+                  <span>My Dashboard</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="attendance" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-clock"></i>
+                  <span>Attendance &amp; Punch</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="staff-id" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-id-card"></i>
+                  <span>My Staff ID Card</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="leaves" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-plane-departure"></i>
+                  <span>Apply for Leave</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="students" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-users"></i>
+                  <span>Students &amp; Batches</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="payroll" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-file-invoice-dollar"></i>
+                  <span>Salary Slips</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="announcements" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-bullhorn"></i>
+                  <span>Noticeboard</span>
+                </span>
+              </label>
+
+            </div>
+
+            <div class="perm-section-label" style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+              Academic &amp; Operations Access (Optional)
+            </div>
+            <div class="perm-grid">
+              
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_students" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-user-graduate"></i>
+                  <span>Student Roaster</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_student_attendance" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-qrcode"></i>
+                  <span>Attendance &amp; QR</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_marksheet" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-file-lines"></i>
+                  <span>Marksheet System</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_staff_periods" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                  <span>Staff Periods</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_staff_attendance" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-calendar-check"></i>
+                  <span>Staff Attendance</span>
+                </span>
+              </label>
+
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
         <button type="button" onclick="closeModal('editStaffModal');" class="btn-hrms btn-hrms-outline">Cancel</button>
         <button type="submit" class="login-submit-btn" style="width: auto; margin-top: 0; padding: 10px 24px;">
           <i class="fa-solid fa-check"></i> Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 4: Change Faculty Password (Simple & Sober) -->
+<div class="hrms-modal" id="changeStaffPasswordModal">
+  <div class="hrms-modal-card" style="max-width: 480px;">
+    <div class="hrms-modal-header" style="border-bottom: 1px solid #e2e8f0; padding: 18px 24px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fef08a; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+            Change Faculty Password
+          </h3>
+          <p style="margin: 2px 0 0; font-size: 0.75rem; color: #64748b;">Update faculty member portal authentication credentials</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeModal('changeStaffPasswordModal')" aria-label="Close modal">&times;</button>
+    </div>
+
+    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" id="changeStaffPasswordForm">
+      <input type="hidden" name="action" value="change_staff_password">
+      <input type="hidden" name="staff_id" id="pwd_staff_id" value="">
+
+      <div class="hrms-modal-body" style="padding: 22px 24px;">
+        <!-- Staff Info Chip -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <div>
+            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; font-family: 'Outfit', sans-serif;" id="pwd_staff_name">—</div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
+              Emp ID: <strong style="color: #0284c7;" id="pwd_staff_code">—</strong> &bull; Dept: <span id="pwd_staff_dept">—</span>
+            </div>
+          </div>
+          <span style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-family: monospace;" id="pwd_staff_username">@username</span>
+        </div>
+
+        <!-- New Password -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
+            <span>New Password *</span>
+            <span style="font-weight: 500; font-size: 0.72rem; color: #94a3b8;">Min. 4 characters</span>
+          </label>
+          <div style="position: relative;">
+            <input type="password" name="new_password" id="staff_new_password" class="hrms-input" required minlength="4" placeholder="Enter new password" style="width: 100%; padding-right: 40px;">
+            <button type="button" onclick="toggleStaffPassword('staff_new_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;" title="Show/Hide password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
+            Confirm New Password *
+          </label>
+          <div style="position: relative;">
+            <input type="password" name="confirm_password" id="staff_confirm_password" class="hrms-input" required minlength="4" placeholder="Re-enter new password" style="width: 100%; padding-right: 40px;">
+            <button type="button" onclick="toggleStaffPassword('staff_confirm_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;" title="Show/Hide password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div style="font-size: 0.74rem; color: #64748b; margin-top: 8px; line-height: 1.4;">
+          <i class="fa-solid fa-circle-info" style="color: #0284c7;"></i>
+          The faculty member can use this password to log in to their faculty portal with their username or employee ID.
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+        <button type="button" onclick="closeModal('changeStaffPasswordModal')" class="btn-hrms btn-hrms-outline">Cancel</button>
+        <button type="submit" class="roaster-add-btn" style="padding: 8px 20px; font-size: 0.82rem;">
+          <i class="fa-solid fa-key"></i> <span>Update Password</span>
         </button>
       </div>
     </form>
@@ -1317,12 +1779,68 @@ function openEditStaffModal(sm) {
   const addrEl = document.getElementById('edit_address');
   if (addrEl) addrEl.value = sm.address || '';
 
+  // Populate Menu Permissions
+  let perms = [];
+  if (sm.menu_permissions) {
+    try {
+      perms = typeof sm.menu_permissions === 'string' ? JSON.parse(sm.menu_permissions) : sm.menu_permissions;
+    } catch (e) {
+      perms = [];
+    }
+  } else {
+    // Default faculty portal permissions if not customized yet
+    perms = ['dashboard', 'attendance', 'staff-id', 'leaves', 'students', 'payroll', 'announcements'];
+  }
+  if (!Array.isArray(perms)) {
+    perms = ['dashboard', 'attendance', 'staff-id', 'leaves', 'students', 'payroll', 'announcements'];
+  }
+  document.querySelectorAll('#editStaffModal .edit-staff-perm-cb').forEach(cb => {
+    cb.checked = perms.includes(cb.value);
+  });
+
   openModal('editStaffModal');
+}
+
+function toggleAllStaffPerms(checkAll) {
+  document.querySelectorAll('#editStaffModal .edit-staff-perm-cb').forEach(cb => {
+    cb.checked = Boolean(checkAll);
+  });
 }
 
 function editFromViewModal() {
   if (currentViewingStaff) {
     openEditStaffModal(currentViewingStaff);
+  }
+}
+
+function openChangeStaffPasswordModal(sm) {
+  if (!sm) return;
+  document.getElementById('pwd_staff_id').value = sm.id || '';
+  document.getElementById('pwd_staff_name').textContent = sm.full_name || 'Faculty Member';
+  document.getElementById('pwd_staff_code').textContent = sm.employee_code || '—';
+  document.getElementById('pwd_staff_dept').textContent = sm.department || '—';
+  document.getElementById('pwd_staff_username').textContent = '@' + (sm.username || 'staff');
+  document.getElementById('staff_new_password').value = '';
+  document.getElementById('staff_confirm_password').value = '';
+  openModal('changeStaffPasswordModal');
+}
+
+function toggleStaffPassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) {
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    }
+  } else {
+    input.type = 'password';
+    if (icon) {
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
   }
 }
 
@@ -1332,6 +1850,7 @@ document.addEventListener('keydown', function(e) {
     closeModal('addStaffModal');
     closeModal('viewStaffModal');
     closeModal('editStaffModal');
+    closeModal('changeStaffPasswordModal');
   }
 });
 </script>

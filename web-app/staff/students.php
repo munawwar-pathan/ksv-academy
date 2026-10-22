@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+require_menu_permission('students');
 $page_title = 'Students Roster & Batches';
 $page_heading = 'Students Roster & Batches';
 $page_subheading = 'Active Enrolled Students, Fee Records & Attendance Ratios';

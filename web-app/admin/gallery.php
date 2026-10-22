@@ -251,30 +251,60 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #475569;
 }
 
+/* ── Media Directory Table & Badges (Simple & Sober like Staff ID) ── */
+.staff-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
 /* Category Badges */
 .cat-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 8px;
-  font-size: 0.74rem;
-  font-weight: 800;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
-.cat-pill.campus { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+.cat-pill.campus { background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; }
 .cat-pill.events { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-.cat-pill.sports { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-.cat-pill.academics { background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
-.cat-pill.celebrations { background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
-.cat-pill.other { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.cat-pill.sports { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.cat-pill.academics { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+.cat-pill.celebrations { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.cat-pill.other { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
 
 /* Table Thumbnail */
 .gallery-thumb-container {
-  width: 88px;
-  height: 60px;
-  border-radius: 10px;
+  width: 58px;
+  height: 42px;
+  border-radius: 6px;
   overflow: hidden;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -283,13 +313,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
   justify-content: center;
   position: relative;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  transition: all 0.2s ease;
+  margin: 0 auto;
 }
 .gallery-thumb-container:hover {
-  transform: scale(1.06);
-  box-shadow: 0 6px 16px rgba(0, 146, 223, 0.3);
-  border-color: #0092df;
+  transform: scale(1.05);
+  border-color: #0284c7;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 .gallery-thumb-img {
   width: 100%;
@@ -300,17 +331,50 @@ require_once __DIR__ . '/../includes/layout-header.php';
 .gallery-thumb-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(15, 23, 42, 0.45);
   opacity: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: 0.95rem;
-  transition: opacity 0.2s ease;
+  font-size: 0.78rem;
+  transition: opacity 0.15s ease;
 }
 .gallery-thumb-container:hover .gallery-thumb-overlay {
   opacity: 1;
+}
+
+/* Action Buttons */
+.action-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.action-btn-pill.primary {
+  background: #0284c7;
+  color: #ffffff;
+  border: 1px solid #0284c7;
+}
+.action-btn-pill.primary:hover {
+  background: #0369a1;
+  border-color: #0369a1;
+}
+.action-btn-pill.secondary {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+.action-btn-pill.secondary:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 /* Grid Cards */
@@ -728,111 +792,119 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <!-- ══════════════════════════════════════════════════════
          VIEW MODE 2: DIRECTORY TABLE (Default)
          ══════════════════════════════════════════════════════ -->
-    <div class="hrms-card" style="margin-bottom: 30px; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+    <div class="hrms-card" style="margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; background: #ffffff;">
       
-      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 18px 24px; background: #ffffff;">
+      <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; background: #ffffff;">
         <div>
-          <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-            <i class="fa-solid fa-images" style="color: var(--hrms-primary);"></i>
+          <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+            <i class="fa-solid fa-images" style="color: #0284c7;"></i>
             Media Directory &amp; Photo Records
           </h3>
-          <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
+          <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
             Manage and catalog all campus photography, event archives, and visual records.
           </p>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; color: #475569; background: #f8fafc; padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0;">
-            <i class="fa-solid fa-photo-film" style="color: #0092df;"></i>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.74rem; font-weight: 600; color: #475569; background: #f8fafc; padding: 3px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <i class="fa-solid fa-photo-film" style="color: #0284c7; font-size: 0.72rem;"></i>
             <?php echo $total_records; ?> Total Photos
           </span>
         </div>
       </div>
 
       <div class="table-responsive">
-        <table class="hrms-table">
+        <table class="hrms-table staff-id-table">
           <thead>
             <tr>
-              <th style="width: 110px;">Image</th>
-              <th>Title</th>
-              <th style="width: 180px;">Category</th>
-              <th style="width: 160px;">Uploaded Date</th>
-              <th style="text-align: right; width: 170px;">Actions</th>
+              <th style="width: 76px; text-align: center;">Photo</th>
+              <th style="min-width: 220px;">Title &amp; File Details</th>
+              <th style="min-width: 150px;">Category</th>
+              <th style="min-width: 140px;">Uploaded Date</th>
+              <th style="text-align: right; width: 120px;">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <?php foreach ($gallery_items as $item): ?>
-              <?php
-                $cat_key = strtolower(trim($item['category']));
-                $badge_class = 'other';
-                if (strpos($cat_key, 'camp') !== false) $badge_class = 'campus';
-                elseif (strpos($cat_key, 'event') !== false) $badge_class = 'events';
-                elseif (strpos($cat_key, 'sport') !== false) $badge_class = 'sports';
-                elseif (strpos($cat_key, 'acad') !== false) $badge_class = 'academics';
-                elseif (strpos($cat_key, 'celeb') !== false) $badge_class = 'celebrations';
-                $icon_class = get_category_icon($item['category']);
-              ?>
+            <?php if (empty($gallery_items)): ?>
               <tr>
-                <!-- 1. Image Thumbnail -->
-                <td>
-                  <div class="gallery-thumb-container" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" title="Click to view full preview">
-                    <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" class="gallery-thumb-img" onerror="this.src='/assets/imgs/ksv-logo.png'">
-                    <div class="gallery-thumb-overlay">
-                      <i class="fa-solid fa-magnifying-glass-plus"></i>
-                    </div>
-                  </div>
-                </td>
-
-                <!-- 2. Title -->
-                <td>
-                  <div style="font-weight: 800; font-size: 0.94rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
-                    <?php echo htmlspecialchars($item['title']); ?>
-                  </div>
-                  <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
-                    Path: <?php echo htmlspecialchars(substr($item['image'], 0, 42) . (strlen($item['image']) > 42 ? '...' : '')); ?>
-                  </div>
-                </td>
-
-                <!-- 3. Category -->
-                <td>
-                  <span class="cat-pill <?php echo $badge_class; ?>">
-                    <i class="fa-solid <?php echo $icon_class; ?>"></i>
-                    <?php echo htmlspecialchars($item['category']); ?>
-                  </span>
-                </td>
-
-                <!-- 4. Uploaded Date -->
-                <td>
-                  <span style="font-size: 0.82rem; color: #475569; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-                    <i class="fa-regular fa-calendar" style="color: #94a3b8;"></i>
-                    <?php echo date('d M Y', strtotime($item['created_at'])); ?>
-                  </span>
-                </td>
-
-                <!-- 5. Actions -->
-                <td style="text-align: right;">
-                  <div style="display: flex; gap: 7px; justify-content: flex-end; align-items: center;">
-                    <button type="button" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" class="action-btn-pill secondary" style="padding: 6px 10px;" title="Preview Photo">
-                      <i class="fa-solid fa-eye"></i>
-                    </button>
-
-                    <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item)); ?>);" class="action-btn-pill primary" style="padding: 6px 12px;" title="Edit Media Details">
-                      <i class="fa-solid fa-pen-to-square"></i>
-                      <span>Edit</span>
-                    </button>
-
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline;" onsubmit="return confirm('Delete \'<?php echo addslashes($item['title']); ?>\' from gallery?');">
-                      <input type="hidden" name="action" value="delete_photo">
-                      <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
-                      <input type="hidden" name="redirect_view" value="table">
-                      <button type="submit" class="action-btn-pill secondary" style="padding: 6px 10px; color: #dc2626; border-color: #fecdd3;" title="Delete Photo">
-                        <i class="fa-solid fa-trash-can"></i>
-                      </button>
-                    </form>
-                  </div>
+                <td colspan="5" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
+                  <i class="fa-regular fa-images" style="font-size: 2rem; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+                  <span>No media records found matching current filter.</span>
                 </td>
               </tr>
-            <?php endforeach; ?>
+            <?php else: ?>
+              <?php foreach ($gallery_items as $item): ?>
+                <?php
+                  $cat_key = strtolower(trim($item['category']));
+                  $badge_class = 'other';
+                  if (strpos($cat_key, 'camp') !== false) $badge_class = 'campus';
+                  elseif (strpos($cat_key, 'event') !== false) $badge_class = 'events';
+                  elseif (strpos($cat_key, 'sport') !== false) $badge_class = 'sports';
+                  elseif (strpos($cat_key, 'acad') !== false) $badge_class = 'academics';
+                  elseif (strpos($cat_key, 'celeb') !== false) $badge_class = 'celebrations';
+                  $icon_class = get_category_icon($item['category']);
+                ?>
+                <tr>
+                  <!-- 1. Image Thumbnail -->
+                  <td style="text-align: center;">
+                    <div class="gallery-thumb-container" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" title="Click to view full preview">
+                      <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" class="gallery-thumb-img" onerror="this.src='/assets/imgs/ksv-logo.png'">
+                      <div class="gallery-thumb-overlay">
+                        <i class="fa-solid fa-magnifying-glass-plus"></i>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- 2. Title -->
+                  <td>
+                    <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                      <?php echo htmlspecialchars($item['title']); ?>
+                    </div>
+                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
+                      Path: <?php echo htmlspecialchars(substr($item['image'], 0, 42) . (strlen($item['image']) > 42 ? '...' : '')); ?>
+                    </div>
+                  </td>
+
+                  <!-- 3. Category -->
+                  <td>
+                    <span class="cat-pill <?php echo $badge_class; ?>">
+                      <i class="fa-solid <?php echo $icon_class; ?>"></i>
+                      <?php echo htmlspecialchars($item['category']); ?>
+                    </span>
+                  </td>
+
+                  <!-- 4. Uploaded Date -->
+                  <td>
+                    <span style="font-size: 0.82rem; color: #475569; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
+                      <i class="fa-regular fa-calendar" style="color: #94a3b8; font-size: 0.74rem;"></i>
+                      <?php echo date('d M Y', strtotime($item['created_at'])); ?>
+                    </span>
+                  </td>
+
+                  <!-- 5. Actions -->
+                  <td style="text-align: right;">
+                    <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                      <button type="button" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" class="action-btn-pill secondary" style="padding: 4px 8px;" title="Preview Photo">
+                        <i class="fa-solid fa-eye" style="font-size: 0.72rem;"></i>
+                      </button>
+
+                      <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item)); ?>);" class="action-btn-pill primary" style="padding: 4px 8px;" title="Edit Media Details">
+                        <i class="fa-solid fa-pencil" style="font-size: 0.72rem;"></i>
+                      </button>
+
+                      <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline;" onsubmit="return confirm('Delete \'<?php echo addslashes($item['title']); ?>\' from gallery?');">
+                        <input type="hidden" name="action" value="delete_photo">
+                        <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                        <input type="hidden" name="redirect_view" value="table">
+                        <button type="submit" class="action-btn-pill secondary" style="padding: 4px 8px; color: #dc2626; border-color: #fecdd3;" title="Delete Photo">
+                          <i class="fa-solid fa-trash-can" style="font-size: 0.72rem;"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </tbody>
         </table>
       </div>

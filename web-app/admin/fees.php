@@ -129,7 +129,7 @@ $offset = ($page - 1) * $limit;
 
 // Query Payments with Search, Filters and Pagination
 $query = "
-    SELECT fp.*, s.student_name, s.roll_no, s.standard, s.total_fees, s.paid_fees, s.photo, s.admission_no, s.parent_phone
+    SELECT fp.*, s.student_name, s.roll_no, s.standard, s.total_fees, s.paid_fees, s.photo, s.admission_no, s.parent_phone, s.gender, s.blood_group, s.section
     FROM fee_payments fp
     JOIN students s ON fp.student_id = s.id
     WHERE {$where_sql}
@@ -600,6 +600,173 @@ require_once __DIR__ . '/../includes/layout-header.php';
     break-inside: avoid !important;
   }
 }
+
+/* ── Fee Ledger Table & Badge Styles (Simple & Sober - Matching staff-id & student-id) ── */
+.staff-id-table, .student-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th, .student-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td, .student-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr, .student-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover, .student-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badge & Tag Elements */
+.sid-receipt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sid-roll-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sid-std-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sid-blood-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.sid-feehead-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sid-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sid-mode-pill.upi {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0284c7;
+}
+.sid-mode-pill.cash {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.sid-mode-pill.netbanking, .sid-mode-pill.bank {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #7c3aed;
+}
+.sid-mode-pill.cheque {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+/* Sober Action Buttons */
+.sid-btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.sid-btn-primary {
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+}
+.sid-btn-primary:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+.sid-btn-secondary {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+.sid-btn-secondary:hover {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+}
 </style>
 
 <!-- Financial KPI Stat Metric Cards -->
@@ -768,166 +935,181 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 </div>
 
-<!-- Main Fee Payment Ledger Card -->
-<div class="hrms-card" style="margin-bottom: 24px;">
+<!-- Main Fee Payment Ledger Card (Simple & Sober - Like student-id) -->
+<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
 
   <!-- Card Header -->
-  <div class="hrms-card-header no-print" style="border-bottom: 1px solid var(--hrms-border); padding: 18px 24px;">
-    <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 800; color: var(--hrms-navy); font-family: 'Outfit', sans-serif;">
-      <i class="fa-solid fa-file-invoice-dollar" style="color: var(--hrms-primary);"></i>
-      Fee Payment Ledger &amp; Receipts
-    </h3>
-    <p style="margin: 3px 0 0; font-size: 0.8rem; color: #64748b;">
-      Verified student fee vouchers for Academic Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>
-    </p>
+  <div class="hrms-card-header no-print" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+    <div>
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
+        Fee Payment Ledger &amp; Receipts
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+        </span>
+      </h3>
+      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+        Verified student fee vouchers, ledger transactions &amp; official receipt generation.
+      </p>
+    </div>
+    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+      <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
+    </div>
   </div>
 
   <!-- Fee Transactions Table -->
   <div class="table-responsive">
-    <table class="hrms-table" id="feeLedgerTable">
+    <table class="hrms-table staff-id-table student-id-table" id="feeLedgerTable">
       <thead>
         <tr>
-          <th style="min-width: 140px;">Receipt No</th>
-          <th style="min-width: 190px;">Student Profile</th>
-          <th style="min-width: 120px;">Class</th>
-          <th style="min-width: 130px;">Fee Head</th>
-          <th style="min-width: 130px;">Amount Paid</th>
+          <th style="min-width: 120px;">Receipt No</th>
+          <th style="min-width: 170px;">Student Profile</th>
+          <th style="min-width: 110px;">Roll &amp; Admission</th>
+          <th style="min-width: 130px;">Standard &amp; Section</th>
+          <th style="min-width: 115px;">Fee Head</th>
+          <th style="min-width: 115px;">Amount Paid</th>
           <th style="min-width: 110px;">Payment Mode</th>
-          <th style="min-width: 105px;">Date</th>
-          <th style="min-width: 180px; text-align: center;">Action</th>
+          <th style="min-width: 100px;">Date</th>
+          <th style="min-width: 135px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
         <?php if (empty($payments)): ?>
           <tr>
-            <td colspan="8" style="text-align: center; padding: 50px 20px; color: #94a3b8;">
-              <div style="font-size: 2rem; margin-bottom: 10px; color: #cbd5e1;"><i class="fa-solid fa-file-invoice"></i></div>
-              <h4 style="margin: 0 0 6px; font-weight: 700; color: #475569;">No Fee Transactions Recorded</h4>
-              <p style="margin: 0; font-size: 0.82rem;">No fee collection receipts match the selected filters. Click <strong>"Collect Fee"</strong> above to issue a voucher.</p>
+            <td colspan="9" style="text-align: center; padding: 50px 20px; color: #64748b;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Fee Transactions Recorded</h4>
+              <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
+                No fee collection receipts match the selected filters in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
+              </p>
+              <a href="<?php echo ADMIN_URL; ?>/fees" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+                <i class="fa-solid fa-rotate-left"></i> Reset All Filters
+              </a>
             </td>
           </tr>
         <?php else: ?>
-          <?php 
-            $grad_palette = [
-              'linear-gradient(135deg, #0284c7, #0369a1)',
-              'linear-gradient(135deg, #7c3aed, #6d28d9)',
-              'linear-gradient(135deg, #059669, #047857)',
-              'linear-gradient(135deg, #d97706, #b45309)',
-              'linear-gradient(135deg, #e11d48, #be123c)',
-              'linear-gradient(135deg, #2563eb, #1d4ed8)',
-            ];
-          ?>
           <?php foreach ($payments as $p): ?>
             <?php 
               $has_photo = !empty($p['photo']) && $p['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $p['photo']);
               $first_letter = strtoupper(substr($p['student_name'], 0, 1));
-              $avatar_bg = $grad_palette[ord($first_letter) % count($grad_palette)];
 
-              // Standard class badge
-              $std_name = $p['standard'] ?? '';
-              $std_class = 'foundation';
-              if (stripos($std_name, 'science') !== false) {
-                $std_class = 'science';
-              } elseif (stripos($std_name, 'commerce') !== false) {
-                $std_class = 'commerce';
-              }
-
-              // Mode icon & badge
+              // Mode icon
               $mode_icon = 'fa-money-bill-wave';
-              $mode_color = '#059669';
-              $mode_bg = '#ecfdf5';
               if (stripos($p['payment_method'], 'upi') !== false) {
                 $mode_icon = 'fa-qrcode';
-                $mode_color = '#0284c7';
-                $mode_bg = '#f0f9ff';
               } elseif (stripos($p['payment_method'], 'net') !== false || stripos($p['payment_method'], 'bank') !== false) {
                 $mode_icon = 'fa-building-columns';
-                $mode_color = '#7c3aed';
-                $mode_bg = '#f5f3ff';
               } elseif (stripos($p['payment_method'], 'cheque') !== false) {
                 $mode_icon = 'fa-money-check';
-                $mode_color = '#d97706';
-                $mode_bg = '#fffbeb';
               }
             ?>
             <tr class="ledger-row">
-              <!-- Receipt No -->
+              <!-- 1. Receipt No -->
               <td>
-                <span class="roll-badge-pill" style="font-family: monospace; font-size: 0.76rem; padding: 4px 9px; font-weight: 800; background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;">
-                  <i class="fa-solid fa-receipt" style="font-size: 0.68rem;"></i>
-                  <?php echo htmlspecialchars($p['receipt_no']); ?>
+                <span class="sid-receipt-pill">
+                  <i class="fa-solid fa-receipt" style="font-size: 0.65rem;"></i>
+                  <span><?php echo htmlspecialchars($p['receipt_no']); ?></span>
                 </span>
               </td>
 
-              <!-- Student Profile -->
+              <!-- 2. Student Profile -->
               <td>
-                <div class="user-cell" style="gap: 10px; align-items: center;">
+                <div class="user-cell" style="display: flex; align-items: center; gap: 12px;">
                   <?php if ($has_photo): ?>
-                    <img src="<?php echo htmlspecialchars($p['photo']); ?>" alt="<?php echo htmlspecialchars($p['student_name']); ?>" style="width: 36px; height: 36px; min-width: 36px; border-radius: 9px; object-fit: cover; border: 1.5px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                    <img src="<?php echo htmlspecialchars($p['photo']); ?>" alt="<?php echo htmlspecialchars($p['student_name']); ?>" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 14px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <?php echo $first_letter; ?>
+                    </div>
                   <?php else: ?>
-                    <div style="width: 36px; height: 36px; min-width: 36px; border-radius: 9px; background: <?php echo $avatar_bg; ?>; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 14px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                       <?php echo $first_letter; ?>
                     </div>
                   <?php endif; ?>
                   <div>
-                    <strong style="color: #0f172a; font-size: 0.88rem; font-weight: 700; display: block; font-family: 'Outfit', sans-serif;">
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                       <?php echo htmlspecialchars($p['student_name']); ?>
-                    </strong>
-                    <span style="font-size: 0.72rem; color: #64748b; font-family: monospace;">
-                      Roll: <?php echo htmlspecialchars($p['roll_no']); ?>
-                    </span>
+                    </div>
+                    <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                      <span><?php echo htmlspecialchars($p['gender'] ?? 'Scholar'); ?></span>
+                      <?php if (!empty($p['blood_group'])): ?>
+                        <span>&bull;</span>
+                        <span class="sid-blood-badge">Blood: <?php echo htmlspecialchars($p['blood_group']); ?></span>
+                      <?php endif; ?>
+                    </div>
                   </div>
                 </div>
               </td>
 
-              <!-- Class -->
+              <!-- 3. Roll & Admission -->
               <td>
-                <span class="class-pill-badge <?php echo $std_class; ?>" style="font-size: 0.74rem; padding: 2px 8px;">
-                  <?php echo htmlspecialchars($p['standard']); ?>
+                <span class="sid-roll-pill">
+                  <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
+                  <span><?php echo htmlspecialchars($p['roll_no']); ?></span>
+                </span>
+                <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
+                  Adm: <?php echo htmlspecialchars($p['admission_no'] ?? '—'); ?>
+                </div>
+              </td>
+
+              <!-- 4. Standard & Section -->
+              <td>
+                <span class="sid-std-pill">
+                  <i class="fa-solid fa-graduation-cap" style="font-size: 0.65rem; color: #64748b;"></i>
+                  <span><?php echo htmlspecialchars($p['standard']); ?></span>
+                </span>
+                <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">
+                  Section <?php echo htmlspecialchars($p['section'] ?? 'A'); ?>
+                </div>
+              </td>
+
+              <!-- 5. Fee Type -->
+              <td>
+                <span class="sid-feehead-pill">
+                  <i class="fa-solid fa-tag" style="font-size: 0.62rem; color: #0284c7;"></i>
+                  <span><?php echo htmlspecialchars($p['fee_type'] ?? 'Tuition Fee'); ?></span>
                 </span>
               </td>
 
-              <!-- Fee Type -->
+              <!-- 6. Amount Paid -->
               <td>
-                <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; color: #475569; background: #f1f5f9; padding: 3px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                  <i class="fa-solid fa-tag" style="font-size: 0.65rem; color: var(--hrms-primary);"></i>
-                  <?php echo htmlspecialchars($p['fee_type'] ?? 'Tuition Fee'); ?>
-                </span>
-              </td>
-
-              <!-- Amount Paid -->
-              <td>
-                <span style="font-size: 0.95rem; font-weight: 800; color: #059669; font-family: 'Outfit', sans-serif;">
+                <div style="font-weight: 700; color: #059669; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
                   <?php echo format_inr($p['amount']); ?>
+                </div>
+                <?php if (!empty($p['discount']) && $p['discount'] > 0): ?>
+                  <div style="font-size: 0.70rem; color: #dc2626; margin-top: 1px;">
+                    Disc: <?php echo format_inr($p['discount']); ?>
+                  </div>
+                <?php endif; ?>
+              </td>
+
+              <!-- 7. Payment Mode -->
+              <td>
+                <span class="sid-mode-pill <?php echo strtolower(preg_replace('/[^a-zA-Z]/', '', $p['payment_method'])); ?>">
+                  <i class="fa-solid <?php echo $mode_icon; ?>" style="font-size: 0.65rem;"></i>
+                  <span><?php echo htmlspecialchars($p['payment_method']); ?></span>
                 </span>
               </td>
 
-              <!-- Payment Mode -->
+              <!-- 8. Payment Date -->
               <td>
-                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.74rem; font-weight: 700; color: <?php echo $mode_color; ?>; background: <?php echo $mode_bg; ?>; padding: 3px 8px; border-radius: 6px;">
-                  <i class="fa-solid <?php echo $mode_icon; ?>" style="font-size: 0.72rem;"></i>
-                  <?php echo htmlspecialchars($p['payment_method']); ?>
-                </span>
-              </td>
-
-              <!-- Payment Date -->
-              <td>
-                <span style="font-size: 0.78rem; font-weight: 600; color: #64748b; white-space: nowrap;">
+                <span style="font-size: 0.76rem; font-weight: 600; color: #64748b; white-space: nowrap;">
                   <?php echo format_date($p['payment_date']); ?>
                 </span>
               </td>
 
-              <!-- Action: Collect Fee & Receipt Modal -->
-              <td style="text-align: center; white-space: nowrap;">
-                <div style="display: inline-flex; align-items: center; justify-content: center; gap: 7px;">
+              <!-- 9. Actions (Receipt & Collect) -->
+              <td style="text-align: right; white-space: nowrap;">
+                <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;">
                   <?php if ($current_user['role'] === 'super_admin'): ?>
-                    <button type="button" onclick="openCollectModal(<?php echo (int)$p['student_id']; ?>);" class="btn-hrms btn-hrms-sm" style="padding: 5px 10px; font-size: 0.76rem; font-weight: 700; gap: 5px; background: #f0fdf4; color: #16a34a; border: 1.5px solid #bbf7d0; border-radius: 7px; transition: all 0.2s;" title="Collect next fee for <?php echo htmlspecialchars($p['student_name']); ?>">
-                      <i class="fa-solid fa-circle-dollar-to-slot"></i>
-                      <span>Collect Fee</span>
+                    <button type="button" onclick="openCollectModal(<?php echo (int)$p['student_id']; ?>);" class="sid-btn-action sid-btn-secondary" title="Collect next fee installment for <?php echo htmlspecialchars($p['student_name']); ?>">
+                      <i class="fa-solid fa-circle-dollar-to-slot" style="color: #059669; font-size: 0.70rem;"></i>
+                      <span>Collect</span>
                     </button>
                   <?php endif; ?>
-                  <button type="button" onclick='openReceiptModal(<?php echo json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>);' class="btn-hrms btn-hrms-primary btn-hrms-sm" style="padding: 5px 11px; font-size: 0.76rem; font-weight: 700; gap: 5px; border-radius: 7px;" title="View & Print Official Receipt">
-                    <i class="fa-solid fa-receipt"></i>
+                  <button type="button" onclick='openReceiptModal(<?php echo json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>);' class="sid-btn-action sid-btn-primary" title="View &amp; Print Official Receipt">
+                    <i class="fa-solid fa-receipt" style="font-size: 0.70rem;"></i>
                     <span>Receipt</span>
                   </button>
                 </div>

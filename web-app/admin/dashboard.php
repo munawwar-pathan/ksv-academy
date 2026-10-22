@@ -136,6 +136,207 @@ $pending_fees = max(0, $total_fees - $paid_fees);
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
+<style>
+/* ── Dashboard Tables (Simple & Sober like Staff ID) ── */
+.staff-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Dashboard Card Containers */
+.dashboard-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.hrms-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  background: #ffffff;
+  overflow: hidden;
+}
+.hrms-card-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 13px 18px;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.card-title {
+  margin: 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title i {
+  color: #0284c7;
+  font-size: 0.88rem;
+}
+
+/* Chips and Badges */
+.receipt-tag {
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.badge-dept {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+.badge-dept.science, .badge-dept.math {
+  background: #f0f9ff;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+.badge-dept.admin {
+  background: #faf5ff;
+  color: #7c3aed;
+  border-color: #e9d5ff;
+}
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+.badge-status.badge-present {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.badge-status.badge-absent {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecdd3;
+}
+.badge-status.badge-leave {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.badge-status.badge-approved {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.badge-status.badge-rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecdd3;
+}
+.badge-payment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+.badge-live-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cell-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.cell-name {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.86rem;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.25;
+}
+.cell-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+</style>
+
 <!-- Executive Overview Bar (Simple & Sober) -->
 <div class="admin-welcome-ribbon">
   <div class="welcome-ribbon-content">
@@ -276,13 +477,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
     </div>
     <div class="table-responsive">
-      <table class="hrms-table" id="staffAttendanceTable">
+      <table class="hrms-table staff-id-table" id="staffAttendanceTable">
         <thead>
           <tr>
-            <th>Faculty Member</th>
-            <th>Department</th>
-            <th>Check-In</th>
-            <th>Today's Status</th>
+            <th style="min-width: 200px;">Faculty Member</th>
+            <th style="min-width: 120px;">Department</th>
+            <th style="min-width: 110px;">Check-In</th>
+            <th style="min-width: 110px; text-align: center;">Today's Status</th>
           </tr>
         </thead>
         <tbody>
@@ -327,7 +528,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     </span>
                   <?php endif; ?>
                 </td>
-                <td>
+                <td style="text-align: center;">
                   <?php 
                     $stat = $st['today_status'] ?? 'Present';
                     $badge_class = 'badge-present';
@@ -367,52 +568,52 @@ require_once __DIR__ . '/../includes/layout-header.php';
       
       <!-- Pending Leaves Requiring Action -->
       <?php if (!empty($pending_leave_list)): ?>
-        <div style="padding: 10px 16px; background: #fffbeb; border-bottom: 1px solid #fef3c7; font-size: 0.76rem; font-weight: 600; color: #92400e;">
+        <div style="padding: 10px 16px; background: #fffbeb; border-bottom: 1px solid #fef3c7; font-size: 0.76rem; font-weight: 600; color: #92400e; display: flex; align-items: center; gap: 6px;">
           <i class="fa-solid fa-circle-exclamation"></i> Action Required on Pending Requests
         </div>
-        <table class="hrms-table">
+        <table class="hrms-table staff-id-table">
           <thead>
             <tr>
-              <th>Applicant</th>
-              <th>Window</th>
-              <th style="text-align:right;">Decision</th>
+              <th style="min-width: 170px;">Applicant</th>
+              <th style="min-width: 110px;">Window</th>
+              <th style="text-align: right; width: 140px;">Decision</th>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($pending_leave_list as $lv): ?>
               <tr>
                 <td>
-                  <div style="font-weight: 600; color: #0f172a; font-size:0.86rem;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
-                  <div style="font-size:0.74rem; color:#64748b; margin-top:1px;">
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
+                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
                     <?php echo htmlspecialchars($lv['leave_type']); ?> &bull; <?php echo htmlspecialchars($lv['department'] ?? 'Faculty'); ?>
                   </div>
                   <?php if (!empty($lv['reason'])): ?>
-                    <div style="font-size:0.72rem; color:#475569; margin-top:2px; font-style:italic;">
+                    <div style="font-size: 0.72rem; color: #475569; margin-top: 2px; font-style: italic;">
                       &ldquo;<?php echo htmlspecialchars(mb_strimwidth($lv['reason'], 0, 50, '...')); ?>&rdquo;
                     </div>
                   <?php endif; ?>
                 </td>
                 <td>
-                  <div style="font-weight:600; color:#0f172a; font-size:0.8rem; display:flex; align-items:center; gap:4px; font-variant-numeric: tabular-nums;">
-                    <i class="fa-regular fa-calendar-days" style="color:#0284c7; font-size:0.76rem;"></i>
+                  <div style="font-weight: 600; color: #0f172a; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums;">
+                    <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 0.76rem;"></i>
                     <?php echo format_date($lv['start_date'], 'd M'); ?> &ndash; <?php echo format_date($lv['end_date'], 'd M'); ?>
                   </div>
                 </td>
-                <td style="text-align:right;">
-                  <div style="display: flex; gap: 4px; justify-content: flex-end;">
-                    <form method="POST" style="display:inline;">
+                <td style="text-align: right;">
+                  <div style="display: flex; gap: 5px; justify-content: flex-end; align-items: center;">
+                    <form method="POST" style="display: inline; margin: 0;">
                       <input type="hidden" name="action" value="update_leave">
                       <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
                       <input type="hidden" name="status" value="Approved">
-                      <button type="submit" class="btn-hrms btn-hrms-success btn-hrms-sm" title="Approve Request" style="padding:4px 8px; font-size:0.75rem;">
+                      <button type="submit" class="btn-hrms btn-hrms-success btn-hrms-sm" title="Approve Request" style="padding: 4px 9px; font-size: 0.74rem;">
                         <i class="fa-solid fa-check"></i> Approve
                       </button>
                     </form>
-                    <form method="POST" style="display:inline;">
+                    <form method="POST" style="display: inline; margin: 0;">
                       <input type="hidden" name="action" value="update_leave">
                       <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
                       <input type="hidden" name="status" value="Rejected">
-                      <button type="submit" class="btn-hrms btn-hrms-danger btn-hrms-sm" title="Reject Request" style="padding:4px 8px; font-size:0.75rem;">
+                      <button type="submit" class="btn-hrms btn-hrms-danger btn-hrms-sm" title="Reject Request" style="padding: 4px 8px; font-size: 0.74rem;">
                         <i class="fa-solid fa-xmark"></i>
                       </button>
                     </form>
@@ -427,40 +628,40 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <!-- Recent Reviewed Leaves (History/Audit) -->
       <?php if (!empty($recent_leave_history)): ?>
         <?php if (!empty($pending_leave_list)): ?>
-          <div style="padding: 10px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; font-size: 0.74rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
+          <div style="padding: 8px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">
             Recent Reviewed Leaves
           </div>
         <?php endif; ?>
-        <table class="hrms-table">
+        <table class="hrms-table staff-id-table">
           <thead>
             <tr>
-              <th>Applicant</th>
-              <th>Window</th>
-              <th style="text-align:right;">Status</th>
+              <th style="min-width: 170px;">Applicant</th>
+              <th style="min-width: 110px;">Window</th>
+              <th style="text-align: right; width: 100px;">Status</th>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($recent_leave_history as $lv): ?>
               <tr>
                 <td>
-                  <div style="font-weight: 600; color: #0f172a; font-size:0.86rem;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
-                  <div style="font-size:0.74rem; color:#64748b; margin-top:1px;">
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
+                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
                     <?php echo htmlspecialchars($lv['leave_type']); ?> &bull; <?php echo htmlspecialchars($lv['department'] ?? 'Faculty'); ?>
                   </div>
                   <?php if (!empty($lv['reason'])): ?>
-                    <div style="font-size:0.72rem; color:#64748b; margin-top:2px;">
+                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
                       <?php echo htmlspecialchars(mb_strimwidth($lv['reason'], 0, 45, '...')); ?>
                     </div>
                   <?php endif; ?>
                 </td>
                 <td>
-                  <div style="font-weight:600; color:#0f172a; font-size:0.8rem; display:flex; align-items:center; gap:4px; font-variant-numeric: tabular-nums;">
-                    <i class="fa-regular fa-calendar-days" style="color:#0284c7; font-size:0.76rem;"></i>
+                  <div style="font-weight: 600; color: #0f172a; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums;">
+                    <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 0.76rem;"></i>
                     <?php echo format_date($lv['start_date'], 'd M'); ?> &ndash; <?php echo format_date($lv['end_date'], 'd M'); ?>
                   </div>
                 </td>
-                <td style="text-align:right;">
-                  <span class="badge-status <?php echo $lv['status'] === 'Approved' ? 'badge-approved' : 'badge-rejected'; ?>" style="font-size:0.72rem; padding:2px 8px;">
+                <td style="text-align: right;">
+                  <span class="badge-status <?php echo $lv['status'] === 'Approved' ? 'badge-approved' : 'badge-rejected'; ?>" style="font-size: 0.72rem; padding: 2px 8px;">
                     <?php echo $lv['status']; ?>
                   </span>
                 </td>
@@ -470,11 +671,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </table>
       <?php elseif (empty($pending_leave_list)): ?>
         <div style="padding: 36px 20px; text-align: center;">
-          <div style="width:40px; height:40px; border-radius:50%; background:#f0fdf4; color:#10b981; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:1.1rem;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #f0fdf4; color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.1rem; border: 1px solid #bbf7d0;">
             <i class="fa-solid fa-check"></i>
           </div>
-          <h4 style="font-size:0.9rem; font-weight:600; color:#0f172a; margin-bottom:2px;">No Active Leave Applications</h4>
-          <p style="font-size:0.78rem; color:#64748b; margin:0;">All staff leave requests are up to date.</p>
+          <h4 style="font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 2px; font-family: 'Outfit', sans-serif;">No Active Leave Applications</h4>
+          <p style="font-size: 0.78rem; color: #64748b; margin: 0;">All staff leave requests are up to date.</p>
         </div>
       <?php endif; ?>
 
@@ -493,20 +694,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <a href="<?php echo ADMIN_URL; ?>/fees" class="btn-hrms btn-hrms-outline btn-hrms-sm">Fee Management</a>
     </div>
     <div class="table-responsive">
-      <table class="hrms-table">
+      <table class="hrms-table staff-id-table">
         <thead>
           <tr>
-            <th style="min-width: 105px;">Receipt #</th>
-            <th>Student Name</th>
-            <th style="min-width: 95px;">Amount Paid</th>
-            <th style="min-width: 110px;">Payment Mode</th>
-            <th style="min-width: 105px;">Date</th>
+            <th style="width: 105px;">Receipt #</th>
+            <th style="min-width: 180px;">Student Name</th>
+            <th style="min-width: 110px;">Amount Paid</th>
+            <th style="min-width: 120px;">Payment Mode</th>
+            <th style="min-width: 110px; text-align: right;">Date</th>
           </tr>
         </thead>
         <tbody>
           <?php if (empty($recent_payments)): ?>
             <tr>
-              <td colspan="5" style="text-align:center; padding:28px; color:#64748b;">No recent fee payments logged.</td>
+              <td colspan="5" style="text-align: center; padding: 28px; color: #64748b;">No recent fee payments logged.</td>
             </tr>
           <?php else: ?>
             <?php foreach ($recent_payments as $fp): ?>
@@ -515,15 +716,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <span class="receipt-tag">#<?php echo htmlspecialchars($fp['receipt_no']); ?></span>
                 </td>
                 <td>
-                  <div style="font-weight:600; color:#0f172a; font-size:0.88rem;"><?php echo htmlspecialchars($fp['student_name']); ?></div>
-                  <div style="font-size:0.75rem; color:#64748b; margin-top:1px;">
+                  <div style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($fp['student_name']); ?></div>
+                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
                     <?php echo htmlspecialchars($fp['standard']); ?> &bull; Roll: #<?php echo htmlspecialchars($fp['roll_no'] ?? '—'); ?>
                   </div>
                 </td>
                 <td>
-                  <span style="font-weight:700; font-size:0.92rem; color:#047857; font-variant-numeric: tabular-nums;">
+                  <strong style="color: #059669; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
                     <?php echo format_inr($fp['amount']); ?>
-                  </span>
+                  </strong>
                 </td>
                 <td style="white-space: nowrap;">
                   <?php 
@@ -535,13 +736,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     elseif (strpos($mode, 'card') !== false) $m_icon = 'fa-credit-card';
                   ?>
                   <span class="badge-payment">
-                    <i class="fa-solid <?php echo $m_icon; ?>" style="color:#0284c7; font-size:0.78rem;"></i>
+                    <i class="fa-solid <?php echo $m_icon; ?>"></i>
                     <?php echo htmlspecialchars($fp['payment_method']); ?>
                   </span>
                 </td>
-                <td style="white-space: nowrap;">
-                  <span style="font-size:0.8rem; font-weight:500; color:#475569; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; font-variant-numeric: tabular-nums;">
-                    <i class="fa-regular fa-calendar" style="color:#94a3b8; font-size:0.78rem;"></i>
+                <td style="text-align: right; white-space: nowrap;">
+                  <span style="font-size: 0.8rem; font-weight: 500; color: #475569; display: inline-flex; align-items: center; gap: 5px; justify-content: flex-end; font-variant-numeric: tabular-nums;">
+                    <i class="fa-regular fa-calendar" style="color: #94a3b8; font-size: 0.76rem;"></i>
                     <?php echo format_date($fp['payment_date'], 'd M Y'); ?>
                   </span>
                 </td>

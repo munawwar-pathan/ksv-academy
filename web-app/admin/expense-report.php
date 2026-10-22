@@ -93,10 +93,40 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <style>
+/* ── Staff ID Style Table (Simple & Sober - Matching staff-id) ── */
+.staff-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
 /* ── Report Module Specific Styles ── */
 .report-progress-bar {
   width: 100%;
-  height: 7px;
+  height: 6px;
   background: #f1f5f9;
   border-radius: 999px;
   overflow: hidden;
@@ -109,39 +139,39 @@ require_once __DIR__ . '/../includes/layout-header.php';
   transition: width 0.4s ease;
 }
 .report-cat-item {
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 11px 13px;
+  border-radius: 8px;
   background: #f8fafc;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
 }
 .report-cat-item:hover {
   background: #ffffff;
   border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
 .method-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 12px 14px;
   background: #ffffff;
-  border: 1px solid var(--hrms-border);
-  border-radius: 10px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .method-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.04);
 }
 .method-icon-box {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1rem;
   flex-shrink: 0;
 }
 
@@ -360,13 +390,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div style="display: grid; grid-template-columns: 1.25fr 1.75fr; gap: 24px; margin-bottom: 24px;">
     
     <!-- Left Column: Category-Wise Allocation -->
-    <div class="hrms-card">
-      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-chart-pie" style="color: var(--hrms-primary);"></i>
+    <div class="hrms-card" style="border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+      <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-chart-pie" style="color: #0284c7;"></i>
           Category-Wise Allocation
         </h4>
-        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+        <span style="font-size: 0.74rem; font-weight: 600; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           <?php echo count($cat_breakdown); ?> Heads Active
         </span>
       </div>
@@ -391,7 +421,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       <i class="fa-solid <?php echo $cat_style['icon']; ?>"></i>
                     </div>
                     <div>
-                      <span style="font-weight: 800; font-size: 0.85rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                      <span style="font-weight: 700; font-size: 0.88rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
                         <?php echo htmlspecialchars($cb['category_name']); ?>
                       </span>
                       <span style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">
@@ -403,7 +433,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <strong style="color: #dc2626; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
                       <?php echo format_inr($cb['total_amount']); ?>
                     </strong>
-                    <span style="display: inline-block; font-size: 0.72rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px; margin-left: 4px;">
+                    <span style="display: inline-block; font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px; margin-left: 4px;">
                       <?php echo $pct; ?>%
                     </span>
                   </div>
@@ -421,26 +451,26 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Right Column: Monthly Expenditure Trend -->
-    <div class="hrms-card">
-      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-calendar-days" style="color: var(--hrms-primary);"></i>
+    <div class="hrms-card" style="border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+      <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-calendar-days" style="color: #0284c7;"></i>
           Monthly Expenditure Trend
         </h4>
-        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+        <span style="font-size: 0.74rem; font-weight: 600; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           <?php echo count($monthly_expenses); ?> Months Recorded
         </span>
       </div>
 
       <div class="table-responsive">
-        <table class="hrms-table">
+        <table class="hrms-table staff-id-table">
           <thead>
             <tr>
-              <th>Month &amp; Year</th>
-              <th style="text-align: center;">Vouchers</th>
-              <th>Total Disbursed (₹)</th>
-              <th>Avg / Voucher</th>
-              <th style="text-align: right;">Share</th>
+              <th style="min-width: 130px;">Month &amp; Year</th>
+              <th style="min-width: 90px; text-align: center;">Vouchers</th>
+              <th style="min-width: 120px;">Total Disbursed (₹)</th>
+              <th style="min-width: 100px;">Avg / Voucher</th>
+              <th style="min-width: 70px; text-align: right;">Share</th>
             </tr>
           </thead>
           <tbody>
@@ -458,13 +488,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 ?>
                 <tr>
                   <td>
-                    <div style="font-weight: 800; font-size: 0.86rem; color: #0f172a; display: flex; align-items: center; gap: 7px;">
-                      <i class="fa-regular fa-calendar" style="color: #0284c7;"></i>
+                    <div style="font-weight: 700; font-size: 0.86rem; color: #0f172a; display: flex; align-items: center; gap: 7px;">
+                      <i class="fa-regular fa-calendar" style="color: #0284c7; font-size: 0.72rem;"></i>
                       <span><?php echo htmlspecialchars($me['month_label']); ?></span>
                     </div>
                   </td>
                   <td style="text-align: center;">
-                    <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.76rem; background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px;">
+                    <span style="display: inline-flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.74rem; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 5px;">
                       <?php echo $me['voucher_count']; ?> vouchers
                     </span>
                   </td>
@@ -473,11 +503,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       <?php echo format_inr($me['monthly_total']); ?>
                     </strong>
                   </td>
-                  <td style="font-size: 0.82rem; color: #475569;">
+                  <td style="font-size: 0.82rem; color: #475569; font-weight: 500;">
                     <?php echo format_inr($me['monthly_total'] / max(1, $me['voucher_count'])); ?>
                   </td>
                   <td style="text-align: right;">
-                    <span style="font-size: 0.76rem; font-weight: 800; color: #0369a1; background: #e0f2fe; padding: 2px 7px; border-radius: 4px;">
+                    <span style="font-size: 0.74rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 7px; border-radius: 4px;">
                       <?php echo $m_pct; ?>%
                     </span>
                   </td>
@@ -495,13 +525,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 30px;">
     
     <!-- Payment Methods Breakdown -->
-    <div class="hrms-card">
-      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-credit-card" style="color: var(--hrms-primary);"></i>
+    <div class="hrms-card" style="border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+      <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-credit-card" style="color: #0284c7;"></i>
           Disbursement Channels &amp; Modes
         </h4>
-        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+        <span style="font-size: 0.74rem; font-weight: 600; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Voucher Settlement
         </span>
       </div>
@@ -521,10 +551,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </div>
               <div style="flex: 1; min-width: 0;">
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                  <span style="font-size: 0.84rem; font-weight: 800; color: #0f172a;"><?php echo htmlspecialchars($mb['payment_method']); ?></span>
-                  <span style="font-size: 0.72rem; font-weight: 800; color: #0284c7;"><?php echo $mb_pct; ?>%</span>
+                  <span style="font-size: 0.84rem; font-weight: 700; color: #0f172a;"><?php echo htmlspecialchars($mb['payment_method']); ?></span>
+                  <span style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 5px; border-radius: 4px;"><?php echo $mb_pct; ?>%</span>
                 </div>
-                <div style="font-size: 0.92rem; font-weight: 800; color: #dc2626; font-family: 'Outfit', sans-serif; margin-top: 2px;">
+                <div style="font-size: 0.90rem; font-weight: 700; color: #dc2626; font-family: 'Outfit', sans-serif; margin-top: 2px;">
                   <?php echo format_inr($mb['total_amount']); ?>
                 </div>
                 <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
@@ -538,64 +568,70 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Executive Audit Summary Matrix -->
-    <div class="hrms-card">
-      <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="margin: 0; font-size: 0.96rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-file-contract" style="color: var(--hrms-primary);"></i>
+    <div class="hrms-card" style="border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+      <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-file-contract" style="color: #0284c7;"></i>
           Institutional Ledger Reconcilement
         </h4>
-        <span style="font-size: 0.74rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px;">
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </div>
 
-      <div style="padding: 18px;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+      <div style="padding: 16px;">
+        <table class="hrms-table staff-id-table" style="width: 100%;">
           <tbody>
-            <tr style="border-bottom: 1px solid #f1f5f9;">
-              <td style="padding: 9px 0; color: #475569; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 0.75rem;"></i>
-                <span>Total Fee Realization (Inflow)</span>
+            <tr>
+              <td style="color: #475569; font-size: 0.84rem;">
+                <span style="display: inline-flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 0.75rem;"></i>
+                  <span>Total Fee Realization (Inflow)</span>
+                </span>
               </td>
-              <td style="padding: 9px 0; text-align: right; font-weight: 800; color: #059669; font-family: 'Outfit', sans-serif;">
+              <td style="text-align: right; font-weight: 700; color: #059669; font-family: 'Outfit', sans-serif; font-size: 0.88rem;">
                 + <?php echo format_inr($total_fees); ?>
               </td>
             </tr>
 
-            <tr style="border-bottom: 1px solid #f1f5f9;">
-              <td style="padding: 9px 0; color: #475569; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-circle-minus" style="color: #ef4444; font-size: 0.75rem;"></i>
-                <span>Operational &amp; Maintenance Expenses</span>
+            <tr>
+              <td style="color: #475569; font-size: 0.84rem;">
+                <span style="display: inline-flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-circle-minus" style="color: #ef4444; font-size: 0.75rem;"></i>
+                  <span>Operational &amp; Maintenance Expenses</span>
+                </span>
               </td>
-              <td style="padding: 9px 0; text-align: right; font-weight: 800; color: #dc2626; font-family: 'Outfit', sans-serif;">
+              <td style="text-align: right; font-weight: 700; color: #dc2626; font-family: 'Outfit', sans-serif; font-size: 0.88rem;">
                 &minus; <?php echo format_inr($total_expenses); ?>
               </td>
             </tr>
 
-            <tr style="border-bottom: 1px solid #f1f5f9;">
-              <td style="padding: 9px 0; color: #475569; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-circle-minus" style="color: #7c3aed; font-size: 0.75rem;"></i>
-                <span>Staff &amp; Faculty Net Salaries Disbursed</span>
+            <tr>
+              <td style="color: #475569; font-size: 0.84rem;">
+                <span style="display: inline-flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-circle-minus" style="color: #7c3aed; font-size: 0.75rem;"></i>
+                  <span>Staff &amp; Faculty Net Salaries Disbursed</span>
+                </span>
               </td>
-              <td style="padding: 9px 0; text-align: right; font-weight: 800; color: #7c3aed; font-family: 'Outfit', sans-serif;">
+              <td style="text-align: right; font-weight: 700; color: #7c3aed; font-family: 'Outfit', sans-serif; font-size: 0.88rem;">
                 &minus; <?php echo format_inr($total_payroll); ?>
               </td>
             </tr>
 
-            <tr style="border-bottom: 1.5px solid #cbd5e1; background: #f8fafc;">
-              <td style="padding: 10px 8px; font-weight: 700; color: #1e293b;">
+            <tr style="background: #f8fafc;">
+              <td style="font-weight: 600; color: #1e293b; font-size: 0.84rem;">
                 Total Institutional Outflow
               </td>
-              <td style="padding: 10px 8px; text-align: right; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+              <td style="text-align: right; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif; font-size: 0.88rem;">
                 <?php echo format_inr($total_disbursed); ?>
               </td>
             </tr>
 
-            <tr style="background: <?php echo $net_operating_balance >= 0 ? 'rgba(0, 146, 223, 0.06)' : 'rgba(239, 68, 68, 0.06)'; ?>;">
-              <td style="padding: 12px 8px; font-weight: 800; font-size: 0.92rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+            <tr style="background: <?php echo $net_operating_balance >= 0 ? '#f0fdf4' : '#fef2f2'; ?>;">
+              <td style="font-weight: 700; font-size: 0.88rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
                 Net Operating Balance (Reserves)
               </td>
-              <td style="padding: 12px 8px; text-align: right; font-weight: 800; font-size: 1.05rem; color: <?php echo $net_operating_balance >= 0 ? '#007cbd' : '#dc2626'; ?>; font-family: 'Outfit', sans-serif;">
+              <td style="text-align: right; font-weight: 800; font-size: 0.98rem; color: <?php echo $net_operating_balance >= 0 ? '#166534' : '#dc2626'; ?>; font-family: 'Outfit', sans-serif;">
                 <?php echo format_inr($net_operating_balance); ?>
               </td>
             </tr>

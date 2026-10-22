@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+require_menu_permission('leaves');
 $page_title = 'Leave Management';
 $page_heading = 'Faculty Leave Applications';
 $page_subheading = 'Leave Entitlements, Requests & Approvals';

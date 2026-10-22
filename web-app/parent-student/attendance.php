@@ -33,14 +33,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
 // Fetch logs according to role
 if ($current_user['role'] === 'parent' || $current_user['role'] === 'student') {
     // Show student logs only
-    $logs = $db->query("
-        SELECT al.*, s.student_name as name, s.roll_no as code, s.standard as department
-        FROM attendance_logs al
-        JOIN students s ON al.reference_id = s.id
-        WHERE al.type = 'student'
-        ORDER BY al.log_date DESC, al.id DESC
-        LIMIT 50
-    ")->fetchAll();
+    $active_sid = intval($_SESSION['active_student_id'] ?? 0);
+    if ($active_sid > 0) {
+        $stmt = $db->prepare("
+            SELECT al.*, s.student_name as name, s.roll_no as code, s.standard as department
+            FROM attendance_logs al
+            JOIN students s ON al.reference_id = s.id
+            WHERE al.type = 'student' AND s.id = ?
+            ORDER BY al.log_date DESC, al.id DESC
+            LIMIT 50
+        ");
+        $stmt->execute([$active_sid]);
+        $logs = $stmt->fetchAll();
+    } else {
+        $logs = $db->query("
+            SELECT al.*, s.student_name as name, s.roll_no as code, s.standard as department
+            FROM attendance_logs al
+            JOIN students s ON al.reference_id = s.id
+            WHERE al.type = 'student'
+            ORDER BY al.log_date DESC, al.id DESC
+            LIMIT 50
+        ")->fetchAll();
+    }
 } else {
     // Show filtered logs
     if ($filter_type === 'staff') {

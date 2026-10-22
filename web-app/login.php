@@ -32,8 +32,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $db = get_db_connection();
-            $stmt = $db->prepare("SELECT * FROM users WHERE username = ? AND status = 'active' LIMIT 1");
-            $stmt->execute([$username]);
+            $stmt = $db->prepare("
+                SELECT u.*, s.id as linked_student_id, sp.id as linked_staff_id 
+                FROM users u 
+                LEFT JOIN students s ON u.id = s.user_id 
+                LEFT JOIN staff_profiles sp ON u.id = sp.user_id 
+                WHERE (u.username = ? OR u.email = ? OR s.roll_no = ? OR sp.employee_code = ?) AND u.status = 'active' 
+                LIMIT 1
+            ");
+            $stmt->execute([$username, $username, $username, $username]);
             $user = $stmt->fetch();
 
             if ($user && ($password === $user['password'] || password_verify($password, $user['password']))) {
@@ -44,6 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['full_name'] = $user['full_name'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['avatar'] = $user['avatar'];
+                if (!empty($user['linked_student_id'])) {
+                    $_SESSION['active_student_id'] = $user['linked_student_id'];
+                }
+                if (!empty($user['linked_staff_id'])) {
+                    $_SESSION['active_staff_id'] = $user['linked_staff_id'];
+                }
 
                 // Record login timestamp if needed
                 set_flash('success', 'Welcome back, ' . htmlspecialchars($user['full_name']) . '!');

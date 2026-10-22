@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+require_menu_permission('payroll');
 $page_title = 'Payroll & Salary Management';
 $page_heading = 'Faculty Payroll & Compensation';
 $page_subheading = 'Monthly Salary Slips, Allowances & Direct Credits';

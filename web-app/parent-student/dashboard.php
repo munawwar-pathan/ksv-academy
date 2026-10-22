@@ -12,15 +12,23 @@ $active_menu = 'dashboard';
 $db = get_db_connection();
 
 // Find linked student for this parent/student
-if ($current_user['role'] === 'parent') {
-    $stmt = $db->prepare("SELECT * FROM students WHERE parent_user_id = ? ORDER BY id ASC LIMIT 1");
-    $stmt->execute([$current_user['id']]);
+if (!empty($_SESSION['active_student_id'])) {
+    $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+    $stmt->execute([$_SESSION['active_student_id']]);
     $student = $stmt->fetch();
-} else {
-    // If student user logged in
-    $stmt = $db->prepare("SELECT * FROM students WHERE student_name LIKE ? OR roll_no LIKE 'KSV-2026-101' LIMIT 1");
-    $stmt->execute(['%' . $current_user['full_name'] . '%']);
-    $student = $stmt->fetch();
+}
+
+if (empty($student)) {
+    if ($current_user['role'] === 'parent') {
+        $stmt = $db->prepare("SELECT * FROM students WHERE parent_user_id = ? ORDER BY id ASC LIMIT 1");
+        $stmt->execute([$current_user['id']]);
+        $student = $stmt->fetch();
+    } else {
+        // If student user logged in
+        $stmt = $db->prepare("SELECT * FROM students WHERE user_id = ? OR student_name LIKE ? OR roll_no LIKE 'KSV-2026-101' LIMIT 1");
+        $stmt->execute([$current_user['id'], '%' . $current_user['full_name'] . '%']);
+        $student = $stmt->fetch();
+    }
 }
 
 // Fallback if none directly linked
@@ -50,6 +58,18 @@ $announcements = $db->query("SELECT * FROM announcements WHERE target_role IN ('
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
+
+<?php if (!empty($_SESSION['impersonated_student'])): ?>
+  <div style="background: #0284c7; color: #ffffff; padding: 10px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);">
+    <div style="display: flex; align-items: center; gap: 10px; font-size: 0.84rem;">
+      <i class="fa-solid fa-circle-user" style="font-size: 1.1rem;"></i>
+      <span>Logged in via Admin Impersonation as: <strong><?php echo htmlspecialchars($student['student_name']); ?></strong> (Roll: <?php echo htmlspecialchars($student['roll_no']); ?>)</span>
+    </div>
+    <a href="<?php echo ADMIN_URL; ?>/students" style="background: #ffffff; color: #0284c7; font-weight: 700; font-size: 0.78rem; padding: 5px 12px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+      <i class="fa-solid fa-arrow-left"></i> Return to Admin Panel
+    </a>
+  </div>
+<?php endif; ?>
 
 <!-- Student Profile Banner -->
 <div style="background: linear-gradient(135deg, #001f33 0%, #003754 50%, #007cbd 100%); border-radius: var(--hrms-radius-lg); padding: 26px 30px; color: #ffffff; margin-bottom: 28px; box-shadow: var(--hrms-shadow-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">

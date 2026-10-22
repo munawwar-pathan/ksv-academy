@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_staff_periods');
+}
 $page_title = 'Staff Periods & Timetable | KSV Academy HRMS';
 $page_heading = 'Staff Periods Allocation';
 $page_subheading = 'Faculty Schedules, Subject Class Distribution, Period Timings & Master Timetable';

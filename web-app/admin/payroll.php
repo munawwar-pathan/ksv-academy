@@ -635,91 +635,143 @@ require_once __DIR__ . '/../includes/layout-header.php';
   }
 }
 
-.emp-code-pill {
+/* ── Staff ID Style Table & Badge Styles (Simple & Sober - Matching staff-id) ── */
+.staff-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badge & Tag Elements */
+.sid-code-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   background: #f0f9ff;
   border: 1px solid #bae6fd;
   color: #0284c7;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 2px 7px;
+  border-radius: 5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.74rem;
   font-weight: 700;
   white-space: nowrap;
 }
-
-.period-badge-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.dept-pill-badge {
+.sid-dept-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #334155;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.76rem;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
-
-.net-salary-badge {
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.96rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.01em;
-}
-
-.method-chip {
+.period-badge-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  color: #64748b;
-  margin-top: 3px;
-  font-weight: 500;
-}
-
-.status-badge-paid {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  font-size: 0.72rem;
-  font-weight: 700;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sid-status-paid {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
 }
-
-.status-badge-pending {
+.sid-status-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background: #fffbeb;
   color: #b45309;
   border: 1px solid #fde68a;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.74rem;
+  font-weight: 600;
   padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Action Icon Buttons */
+.sid-action-btn {
+  width: 30px;
+  height: 30px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.76rem;
+  padding: 0;
+  text-decoration: none;
+}
+.sid-action-btn:hover {
+  transform: translateY(-1px);
+}
+.sid-action-btn.pay {
+  color: #059669;
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+.sid-action-btn.pay:hover {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
+.sid-action-btn.slip {
+  color: #0284c7;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+.sid-action-btn.slip:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
 }
 </style>
 
@@ -913,13 +965,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      FACULTY SALARY LEDGER TABLE
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 30px;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border);">
+<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-file-invoice-dollar" style="color: var(--hrms-primary);"></i>
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
         Faculty Salary &amp; Payroll Ledger
-        <span style="font-size: 0.74rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 9px; border-radius: 6px;">
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
@@ -927,28 +979,31 @@ require_once __DIR__ . '/../includes/layout-header.php';
         Official statement of monthly salary disbursements, earnings, deductions, and downloadable payslips.
       </p>
     </div>
+    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+      <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
+    </div>
   </div>
 
   <div class="table-responsive">
-    <table class="hrms-table">
+    <table class="hrms-table staff-id-table">
       <thead>
         <tr>
           <th style="min-width: 190px;">Faculty Member</th>
-          <th style="min-width: 120px;">Employee ID</th>
-          <th style="min-width: 140px;">Department</th>
-          <th style="min-width: 130px;">Period</th>
-          <th style="min-width: 110px;">Basic Salary</th>
-          <th style="min-width: 95px;">Allowances</th>
-          <th style="min-width: 95px;">Deductions</th>
-          <th style="min-width: 120px;">Net Payable</th>
-          <th style="min-width: 130px;">Disbursement</th>
-          <th style="min-width: 150px; text-align: right;">Action</th>
+          <th style="min-width: 110px;">Employee ID</th>
+          <th style="min-width: 135px;">Department</th>
+          <th style="min-width: 120px;">Period</th>
+          <th style="min-width: 100px;">Basic Salary</th>
+          <th style="min-width: 90px;">Allowances</th>
+          <th style="min-width: 90px;">Deductions</th>
+          <th style="min-width: 110px;">Net Payable</th>
+          <th style="min-width: 125px;">Disbursement</th>
+          <th style="min-width: 85px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
         <?php if (empty($payroll_records)): ?>
           <tr>
-            <td colspan="10" style="text-align: center; padding: 48px 20px; color: #64748b;">
+            <td colspan="10" style="text-align: center; padding: 50px 20px; color: #64748b;">
               <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
                 <i class="fa-solid fa-file-invoice-dollar"></i>
               </div>
@@ -966,30 +1021,31 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php 
               $photo_url = get_staff_photo_url($pr);
               $first_letter = strtoupper(substr($pr['full_name'], 0, 1));
-              $avatar_bg = $grad_palette[ord($first_letter) % count($grad_palette)];
             ?>
             <tr>
               
               <!-- 1. Faculty Profile -->
               <td>
-                <div class="user-cell" style="gap: 12px; align-items: center;">
+                <div class="user-cell" style="display: flex; align-items: center; gap: 12px;">
                   <?php if (!empty($photo_url)): ?>
-                    <img src="<?php echo htmlspecialchars($photo_url); ?>" alt="<?php echo htmlspecialchars($pr['full_name']); ?>" style="width: 38px; height: 38px; min-width: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e0f2fe; box-shadow: 0 1px 4px rgba(0,0,0,0.06);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div style="width: 38px; height: 38px; min-width: 38px; border-radius: 50%; background: <?php echo $avatar_bg; ?>; color: #ffffff; display: none; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; font-family: 'Outfit', sans-serif;">
+                    <img src="<?php echo htmlspecialchars($photo_url); ?>" alt="<?php echo htmlspecialchars($pr['full_name']); ?>" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
                       <?php echo $first_letter; ?>
                     </div>
                   <?php else: ?>
-                    <div style="width: 38px; height: 38px; min-width: 38px; border-radius: 50%; background: <?php echo $avatar_bg; ?>; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; font-family: 'Outfit', sans-serif;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                       <?php echo $first_letter; ?>
                     </div>
                   <?php endif; ?>
                   
-                  <div class="cell-meta">
-                    <span class="cell-name" style="font-size: 0.88rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                  <div>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                       <?php echo htmlspecialchars($pr['full_name']); ?>
-                    </span>
-                    <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px;">
-                      <?php echo htmlspecialchars($pr['designation']); ?>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.73rem; color: #64748b; margin-top: 2px;">
+                      <span style="font-family: monospace; color: #0284c7; font-weight: 600;">@<?php echo htmlspecialchars($pr['username']); ?></span>
+                      <span>&bull;</span>
+                      <span><?php echo htmlspecialchars($pr['designation']); ?></span>
                     </div>
                   </div>
                 </div>
@@ -997,16 +1053,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 2. Employee ID -->
               <td>
-                <span class="emp-code-pill">
+                <span class="sid-code-pill">
                   <i class="fa-solid fa-id-badge" style="font-size: 0.65rem;"></i>
-                  <?php echo htmlspecialchars($pr['employee_code']); ?>
+                  <span><?php echo htmlspecialchars($pr['employee_code']); ?></span>
                 </span>
               </td>
 
               <!-- 3. Department -->
               <td>
-                <span class="dept-pill-badge">
-                  <?php echo htmlspecialchars($pr['department']); ?>
+                <span class="sid-dept-pill">
+                  <i class="fa-solid fa-layer-group" style="font-size: 0.65rem; color: #64748b;"></i>
+                  <span><?php echo htmlspecialchars($pr['department']); ?></span>
                 </span>
               </td>
 
@@ -1014,52 +1071,52 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td>
                 <span class="period-badge-chip">
                   <i class="fa-regular fa-calendar" style="font-size: 0.68rem; color: #64748b;"></i>
-                  <?php echo htmlspecialchars($pr['month']); ?> <?php echo htmlspecialchars($pr['year']); ?>
+                  <span><?php echo htmlspecialchars($pr['month']); ?> <?php echo htmlspecialchars($pr['year']); ?></span>
                 </span>
               </td>
 
               <!-- 5. Basic Salary -->
               <td>
-                <span style="font-size: 0.86rem; font-weight: 700; color: #1e293b; font-family: 'Outfit', sans-serif;">
+                <span style="font-size: 0.86rem; font-weight: 600; color: #334155; font-family: 'Outfit', sans-serif;">
                   <?php echo format_inr($pr['basic_salary']); ?>
                 </span>
               </td>
 
               <!-- 6. Allowances -->
               <td>
-                <span style="font-size: 0.82rem; font-weight: 700; color: #059669; font-family: 'Outfit', sans-serif;">
+                <span style="font-size: 0.82rem; font-weight: 600; color: #059669; font-family: 'Outfit', sans-serif;">
                   +<?php echo format_inr($pr['allowances']); ?>
                 </span>
               </td>
 
               <!-- 7. Deductions -->
               <td>
-                <span style="font-size: 0.82rem; font-weight: 700; color: #dc2626; font-family: 'Outfit', sans-serif;">
+                <span style="font-size: 0.82rem; font-weight: 600; color: #dc2626; font-family: 'Outfit', sans-serif;">
                   -<?php echo format_inr($pr['deductions']); ?>
                 </span>
               </td>
 
               <!-- 8. Net Payable -->
               <td>
-                <div class="net-salary-badge">
+                <span style="font-size: 0.92rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
                   <?php echo format_inr($pr['net_salary']); ?>
-                </div>
+                </span>
               </td>
 
               <!-- 9. Disbursement Status & Mode -->
               <td>
                 <div>
                   <?php if ($pr['payment_status'] === 'Paid'): ?>
-                    <span class="status-badge-paid">
-                      <i class="fa-solid fa-circle-check"></i> Paid
+                    <span class="sid-status-paid">
+                      <i class="fa-solid fa-circle-check" style="font-size: 0.68rem;"></i> Paid
                     </span>
                   <?php else: ?>
-                    <span class="status-badge-pending">
-                      <i class="fa-solid fa-clock"></i> Pending
+                    <span class="sid-status-pending">
+                      <i class="fa-solid fa-clock" style="font-size: 0.68rem;"></i> Pending
                     </span>
                   <?php endif; ?>
                 </div>
-                <div class="method-chip" title="<?php echo htmlspecialchars($pr['payment_method']); ?>">
+                <div style="font-size: 0.72rem; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 4px;" title="<?php echo htmlspecialchars($pr['payment_method']); ?>">
                   <i class="fa-solid fa-building-columns" style="font-size: 0.62rem; color: #94a3b8;"></i>
                   <span><?php echo htmlspecialchars($pr['payment_method']); ?></span>
                 </div>
@@ -1067,18 +1124,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 10. Actions: Pay Salary & Payslip -->
               <td style="text-align: right; white-space: nowrap;">
-                <div style="display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
                   <?php if ($current_user['role'] === 'super_admin'): ?>
-                    <button type="button" onclick="openPaySalaryModal(<?php echo (int)$pr['staff_id']; ?>, '<?php echo htmlspecialchars($pr['month'], ENT_QUOTES); ?>', <?php echo (int)$pr['year']; ?>, <?php echo (float)$pr['basic_salary']; ?>, <?php echo (float)$pr['allowances']; ?>, <?php echo (float)$pr['deductions']; ?>, '<?php echo htmlspecialchars($pr['payment_status'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($pr['payment_method'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($pr['payment_date'] ?? date('Y-m-d'), ENT_QUOTES); ?>');" class="roaster-btn secondary" style="padding: 6px 11px; font-size: 0.78rem; font-weight: 600; text-decoration: none; border-radius: 6px;" title="Disburse or edit salary payment">
-                      <i class="fa-solid fa-wallet" style="color: #059669;"></i>
-                      <span>Pay</span>
+                    <button type="button" onclick="openPaySalaryModal(<?php echo (int)$pr['staff_id']; ?>, '<?php echo htmlspecialchars($pr['month'], ENT_QUOTES); ?>', <?php echo (int)$pr['year']; ?>, <?php echo (float)$pr['basic_salary']; ?>, <?php echo (float)$pr['allowances']; ?>, <?php echo (float)$pr['deductions']; ?>, '<?php echo htmlspecialchars($pr['payment_status'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($pr['payment_method'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($pr['payment_date'] ?? date('Y-m-d'), ENT_QUOTES); ?>');" class="sid-action-btn pay" title="Pay or Edit Salary">
+                      <i class="fa-solid fa-wallet"></i>
                     </button>
                   <?php endif; ?>
 
-                  <button type="button" onclick="previewPayslip(<?php echo htmlspecialchars(json_encode($pr)); ?>);" class="roaster-btn secondary" style="padding: 6px 11px; font-size: 0.78rem; font-weight: 600; text-decoration: none; border-radius: 6px;" title="View, Print &amp; Download Salary Slip">
-                    <i class="fa-solid fa-file-invoice" style="color: var(--hrms-primary);"></i>
-                    <span>Payslip</span>
+                  <button type="button" onclick="previewPayslip(<?php echo htmlspecialchars(json_encode($pr)); ?>);" class="sid-action-btn slip" title="View, Print &amp; Download Payslip">
+                    <i class="fa-solid fa-file-invoice"></i>
                   </button>
 
                 </div>

@@ -47,18 +47,20 @@ if ($current_user['role'] === 'super_admin') {
     $student_options = $db->query("SELECT id, student_name, roll_no, standard, (total_fees - paid_fees) as due FROM students WHERE (total_fees - paid_fees) > 0")->fetchAll();
 } else {
     // For parent or student
+    $active_sid = intval($_SESSION['active_student_id'] ?? 0);
     $stmt = $db->prepare("
         SELECT fp.*, s.student_name, s.roll_no, s.standard, s.parent_name, s.parent_phone
         FROM fee_payments fp
         JOIN students s ON fp.student_id = s.id
-        WHERE s.parent_user_id = ? OR s.student_name LIKE ?
+        WHERE s.id = ? OR s.user_id = ? OR s.parent_user_id = ? OR s.student_name LIKE ?
         ORDER BY fp.id DESC
     ");
-    $stmt->execute([$current_user['id'], '%' . $current_user['full_name'] . '%']);
+    $stmt->execute([$active_sid, $current_user['id'], $current_user['id'], '%' . $current_user['full_name'] . '%']);
     $payments = $stmt->fetchAll();
     if (empty($payments)) {
-        // Fallback to first student
-        $payments = $db->query("SELECT fp.*, s.student_name, s.roll_no, s.standard, s.parent_name, s.parent_phone FROM fee_payments fp JOIN students s ON fp.student_id = s.id WHERE s.id = 1 ORDER BY fp.id DESC")->fetchAll();
+        // Fallback to active student or first student
+        $fallback_id = $active_sid > 0 ? $active_sid : 1;
+        $payments = $db->query("SELECT fp.*, s.student_name, s.roll_no, s.standard, s.parent_name, s.parent_phone FROM fee_payments fp JOIN students s ON fp.student_id = s.id WHERE s.id = {$fallback_id} ORDER BY fp.id DESC")->fetchAll();
     }
 }
 

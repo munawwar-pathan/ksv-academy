@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
+require_menu_permission('announcements');
 $page_title = 'Announcements & Notices';
 $page_heading = 'Academy Noticeboard & Circulars';
 $page_subheading = 'Official Notifications, Academic Schedules & Important Alerts';

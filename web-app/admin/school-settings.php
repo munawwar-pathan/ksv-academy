@@ -489,36 +489,74 @@ require_once __DIR__ . '/../includes/layout-header.php';
   margin-top: 2px;
 }
 
-/* ── Table Badges and Chips ── */
+/* ── Academic Sessions Table & Badges (Simple & Sober like Staff ID) ── */
+.staff-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.staff-id-table tbody tr.active-session-row {
+  background-color: #f0f9ff !important;
+}
+.staff-id-table tbody tr.active-session-row td:first-child {
+  border-left: 3px solid #0284c7;
+}
+
+/* ── Table Badges and Chips (Sessions Tab) ── */
 .session-name-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .session-icon-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: rgba(0, 146, 223, 0.1);
-  color: #0092df;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.85rem;
   flex-shrink: 0;
 }
 .session-icon-box.active {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
 }
 .session-title-text {
-  font-weight: 800;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 0.88rem;
   color: #0f172a;
   font-family: 'Outfit', sans-serif;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .badge-default-star {
   display: inline-flex;
@@ -528,11 +566,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #b45309;
   border: 1px solid #fde68a;
   font-size: 0.68rem;
-  font-weight: 800;
-  padding: 2px 7px;
-  border-radius: 6px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 .session-date-range {
   display: inline-flex;
@@ -540,94 +578,79 @@ require_once __DIR__ . '/../includes/layout-header.php';
   gap: 6px;
   font-size: 0.82rem;
   color: #475569;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 .session-metric-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  padding: 4px 10px;
-  border-radius: 7px;
-  letter-spacing: -0.01em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 5px;
 }
 .session-metric-chip.blue {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: #f0f9ff;
+  color: #0284c7;
   border: 1px solid #bae6fd;
 }
 .session-metric-chip.purple {
-  background: #f3e8ff;
-  color: #7e22ce;
+  background: #faf5ff;
+  color: #7c3aed;
   border: 1px solid #e9d5ff;
 }
 .session-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 11px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 800;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 .session-status-badge.active {
-  background: #dcfce7;
-  color: #15803d;
+  background: #f0fdf4;
+  color: #166534;
   border: 1px solid #bbf7d0;
 }
 .session-status-badge.inactive {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #64748b;
   border: 1px solid #e2e8f0;
-}
-.session-status-badge .pulse-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
-  display: inline-block;
-  animation: pulseSession 2s infinite;
-}
-@keyframes pulseSession {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 .session-active-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #059669;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  padding: 5px 12px;
-  border-radius: 8px;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 4px 9px;
+  border-radius: 6px;
 }
 .action-btn-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 7px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-decoration: none;
-  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 .action-btn-pill.primary {
-  background: #0092df;
+  background: #0284c7;
   color: #ffffff;
+  border: 1px solid #0284c7;
 }
 .action-btn-pill.primary:hover {
-  background: #007cbd;
-  box-shadow: 0 3px 10px rgba(0, 146, 223, 0.3);
+  background: #0369a1;
+  border-color: #0369a1;
 }
 .action-btn-pill.secondary {
   background: #ffffff;
@@ -635,9 +658,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border: 1px solid #cbd5e1;
 }
 .action-btn-pill.secondary:hover {
-  background: #0f172a;
-  color: #ffffff;
-  border-color: #0f172a;
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 /* ── Security & Password Styles ── */
@@ -999,142 +1022,151 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Sessions Directory Table Card -->
-  <div class="hrms-card" style="margin-bottom: 30px; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+  <div class="hrms-card" style="margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; background: #ffffff;">
     
-    <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 18px 24px; background: #ffffff;">
+    <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; background: #ffffff;">
       <div>
-        <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-          <i class="fa-solid fa-timeline" style="color: var(--hrms-primary);"></i>
+        <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+          <i class="fa-solid fa-timeline" style="color: #0284c7;"></i>
           Academic Sessions Directory
         </h3>
-        <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
+        <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
           Switch active administrative context to inspect historical student profiles, salary archives, and previous audit balance sheets.
         </p>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; color: #475569; background: #f8fafc; padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0;">
-          <i class="fa-solid fa-layer-group" style="color: #0092df;"></i>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.74rem; font-weight: 600; color: #475569; background: #f8fafc; padding: 3px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <i class="fa-solid fa-layer-group" style="color: #0284c7; font-size: 0.72rem;"></i>
           <?php echo $total_sessions_count; ?> Academic Periods
         </span>
       </div>
     </div>
 
     <div class="table-responsive">
-      <table class="hrms-table">
+      <table class="hrms-table staff-id-table">
         <thead>
           <tr>
-            <th style="width: 250px;">Session Name</th>
-            <th>Duration</th>
-            <th style="text-align: center;">Students</th>
-            <th style="text-align: center;">Staff</th>
-            <th>Fee Collections</th>
-            <th>Expenses</th>
-            <th style="text-align: center;">Status</th>
-            <th style="text-align: right; width: 220px;">Switch &amp; Manage</th>
+            <th style="min-width: 220px;">Session Name</th>
+            <th style="min-width: 170px;">Duration</th>
+            <th style="text-align: center; width: 100px;">Students</th>
+            <th style="text-align: center; width: 90px;">Staff</th>
+            <th style="min-width: 130px;">Fee Collections</th>
+            <th style="min-width: 120px;">Expenses</th>
+            <th style="text-align: center; width: 110px;">Status</th>
+            <th style="text-align: right; width: 190px;">Switch &amp; Manage</th>
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($sessions_list as $sess): ?>
-            <?php $is_active = ($sess['id'] == $active_session['id']); ?>
-            <tr style="<?php echo $is_active ? 'background: rgba(0, 146, 223, 0.04);' : ''; ?>">
-              
-              <!-- Session Name & Default Pill -->
-              <td>
-                <div class="session-name-cell">
-                  <div class="session-icon-box <?php echo $is_active ? 'active' : ''; ?>">
-                    <i class="fa-regular fa-calendar-check"></i>
-                  </div>
-                  <div>
-                    <div class="session-title-text">
-                      <span><?php echo htmlspecialchars($sess['session_name']); ?></span>
-                      <?php if ($sess['is_current']): ?>
-                        <span class="badge-default-star"><i class="fa-solid fa-star"></i> Default</span>
-                      <?php endif; ?>
+          <?php if (empty($sessions_list)): ?>
+            <tr>
+              <td colspan="8" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
+                <i class="fa-regular fa-calendar-xmark" style="font-size: 2rem; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+                <span>No academic sessions found.</span>
+              </td>
+            </tr>
+          <?php else: ?>
+            <?php foreach ($sessions_list as $sess): ?>
+              <?php $is_active = ($sess['id'] == $active_session['id']); ?>
+              <tr class="<?php echo $is_active ? 'active-session-row' : ''; ?>">
+                
+                <!-- Session Name & Default Pill -->
+                <td>
+                  <div class="session-name-cell">
+                    <div class="session-icon-box <?php echo $is_active ? 'active' : ''; ?>">
+                      <i class="fa-regular fa-calendar-check"></i>
+                    </div>
+                    <div>
+                      <div class="session-title-text">
+                        <span><?php echo htmlspecialchars($sess['session_name']); ?></span>
+                        <?php if ($sess['is_current']): ?>
+                          <span class="badge-default-star"><i class="fa-solid fa-star"></i> Default</span>
+                        <?php endif; ?>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </td>
+                </td>
 
-              <!-- Duration -->
-              <td>
-                <div class="session-date-range">
-                  <i class="fa-regular fa-clock" style="color: #94a3b8;"></i>
-                  <span><?php echo date('d M Y', strtotime($sess['start_date'])); ?> &ndash; <?php echo date('d M Y', strtotime($sess['end_date'])); ?></span>
-                </div>
-              </td>
+                <!-- Duration -->
+                <td>
+                  <div class="session-date-range">
+                    <i class="fa-regular fa-clock" style="color: #94a3b8; font-size: 0.76rem;"></i>
+                    <span><?php echo date('d M Y', strtotime($sess['start_date'])); ?> &ndash; <?php echo date('d M Y', strtotime($sess['end_date'])); ?></span>
+                  </div>
+                </td>
 
-              <!-- Students -->
-              <td style="text-align: center;">
-                <span class="session-metric-chip blue">
-                  <i class="fa-solid fa-user-graduate"></i> <?php echo $sess['student_count']; ?>
-                </span>
-              </td>
-
-              <!-- Staff -->
-              <td style="text-align: center;">
-                <span class="session-metric-chip purple">
-                  <i class="fa-solid fa-chalkboard-user"></i> <?php echo $sess['staff_count']; ?>
-                </span>
-              </td>
-
-              <!-- Fees -->
-              <td>
-                <strong style="color: #059669; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
-                  <?php echo format_inr($sess['total_fees_collected']); ?>
-                </strong>
-              </td>
-
-              <!-- Expenses -->
-              <td>
-                <strong style="color: #dc2626; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
-                  <?php echo format_inr($sess['total_expenses']); ?>
-                </strong>
-              </td>
-
-              <!-- Status Badge -->
-              <td style="text-align: center;">
-                <?php if ($is_active): ?>
-                  <span class="session-status-badge active">
-                    <span class="pulse-dot"></span> Active Now
+                <!-- Students -->
+                <td style="text-align: center;">
+                  <span class="session-metric-chip blue">
+                    <i class="fa-solid fa-user-graduate" style="font-size: 0.7rem;"></i> <?php echo $sess['student_count']; ?>
                   </span>
-                <?php else: ?>
-                  <span class="session-status-badge inactive">
-                    Archived
-                  </span>
-                <?php endif; ?>
-              </td>
+                </td>
 
-              <!-- Switch & Manage Actions -->
-              <td style="text-align: right;">
-                <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                  
+                <!-- Staff -->
+                <td style="text-align: center;">
+                  <span class="session-metric-chip purple">
+                    <i class="fa-solid fa-chalkboard-user" style="font-size: 0.7rem;"></i> <?php echo $sess['staff_count']; ?>
+                  </span>
+                </td>
+
+                <!-- Fees -->
+                <td>
+                  <strong style="color: #059669; font-size: 0.86rem; font-family: 'Outfit', sans-serif;">
+                    <?php echo format_inr($sess['total_fees_collected']); ?>
+                  </strong>
+                </td>
+
+                <!-- Expenses -->
+                <td>
+                  <strong style="color: #dc2626; font-size: 0.86rem; font-family: 'Outfit', sans-serif;">
+                    <?php echo format_inr($sess['total_expenses']); ?>
+                  </strong>
+                </td>
+
+                <!-- Status Badge -->
+                <td style="text-align: center;">
                   <?php if ($is_active): ?>
-                    <span class="session-active-indicator">
-                      <i class="fa-solid fa-circle-check"></i> Selected
+                    <span class="session-status-badge active">
+                      Active Now
                     </span>
                   <?php else: ?>
-                    <a href="?switch_session=<?php echo $sess['id']; ?>" class="action-btn-pill primary" title="Switch active working session to <?php echo htmlspecialchars($sess['session_name']); ?>">
-                      <i class="fa-solid fa-repeat"></i>
-                      <span>Switch</span>
-                    </a>
+                    <span class="session-status-badge inactive">
+                      Archived
+                    </span>
                   <?php endif; ?>
+                </td>
 
-                  <?php if (!$sess['is_current']): ?>
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings" style="display: inline;" onsubmit="return confirm('Make session \'<?php echo addslashes($sess['session_name']); ?>\' the system default starting year?');">
-                      <input type="hidden" name="action" value="set_current">
-                      <input type="hidden" name="session_id" value="<?php echo $sess['id']; ?>">
-                      <button type="submit" class="action-btn-pill secondary" title="Set as default start session">
-                        <i class="fa-regular fa-star"></i> Default
-                      </button>
-                    </form>
-                  <?php endif; ?>
+                <!-- Switch & Manage Actions -->
+                <td style="text-align: right;">
+                  <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                    
+                    <?php if ($is_active): ?>
+                      <span class="session-active-indicator">
+                        <i class="fa-solid fa-check"></i> Selected
+                      </span>
+                    <?php else: ?>
+                      <a href="?switch_session=<?php echo $sess['id']; ?>" class="action-btn-pill primary" title="Switch active working session to <?php echo htmlspecialchars($sess['session_name']); ?>">
+                        <i class="fa-solid fa-repeat"></i>
+                        <span>Switch</span>
+                      </a>
+                    <?php endif; ?>
 
-                </div>
-              </td>
+                    <?php if (!$sess['is_current']): ?>
+                      <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings" style="display: inline;" onsubmit="return confirm('Make session \'<?php echo addslashes($sess['session_name']); ?>\' the system default starting year?');">
+                        <input type="hidden" name="action" value="set_current">
+                        <input type="hidden" name="session_id" value="<?php echo $sess['id']; ?>">
+                        <button type="submit" class="action-btn-pill secondary" title="Set as default start session">
+                          <i class="fa-regular fa-star"></i> Default
+                        </button>
+                      </form>
+                    <?php endif; ?>
 
-            </tr>
-          <?php endforeach; ?>
+                  </div>
+                </td>
+
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>

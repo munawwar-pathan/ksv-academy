@@ -3,6 +3,7 @@ require_once __DIR__ . '/../config.php';
 
 // Ensure user is staff or admin
 $current_user = require_login(['staff', 'super_admin']);
+require_menu_permission('dashboard');
 
 $page_title = 'Faculty & Staff Portal';
 $page_heading = 'Faculty Self-Service Portal';
@@ -99,6 +100,18 @@ $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
+
+<?php if (!empty($_SESSION['impersonated_staff'])): ?>
+  <div style="background: #0284c7; color: #ffffff; padding: 10px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);">
+    <div style="display: flex; align-items: center; gap: 10px; font-size: 0.84rem;">
+      <i class="fa-solid fa-circle-user" style="font-size: 1.1rem;"></i>
+      <span>Logged in via Admin Impersonation as Faculty: <strong><?php echo htmlspecialchars($current_user['full_name']); ?></strong> (<?php echo htmlspecialchars($staff_profile['employee_code']); ?>)</span>
+    </div>
+    <a href="<?php echo ADMIN_URL; ?>/staff" style="background: #ffffff; color: #0284c7; font-weight: 700; font-size: 0.78rem; padding: 5px 12px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+      <i class="fa-solid fa-arrow-left"></i> Return to Admin Panel
+    </a>
+  </div>
+<?php endif; ?>
 
 <!-- Staff Top Bio Card -->
 <div style="background: linear-gradient(135deg, #002f47 0%, #00466b 50%, #007cbd 100%); border-radius: var(--hrms-radius-lg); padding: 26px 30px; color: #ffffff; margin-bottom: 28px; box-shadow: var(--hrms-shadow-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">

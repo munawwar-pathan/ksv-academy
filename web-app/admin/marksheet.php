@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_marksheet');
+}
 $page_title = 'Marksheet Management | KSV Academy HRMS';
 $page_heading = 'Marksheet Management';
 $page_subheading = 'Official Academic Statement of Marks, Examination Registers & Printable Report Cards';

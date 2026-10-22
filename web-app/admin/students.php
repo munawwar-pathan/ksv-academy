@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_students');
+}
 $page_title = 'Student Roaster & Profiles';
 $page_heading = 'Student Roaster & Academic Records';
 $page_subheading = 'Enrolled Scholars, Academic Batches, Admission Profiles & Document Repositories';
@@ -14,6 +17,45 @@ $session_id = $active_session['id'];
 // Filter by search and standard
 $search = trim($_GET['search'] ?? '');
 $filter_standard = trim($_GET['standard'] ?? '');
+
+// Handle Direct Login as Student (GET request from "Login Direct" button in new tab)
+if (isset($_GET['action']) && $_GET['action'] === 'direct_login') {
+    $target_student_id = intval($_GET['student_id'] ?? 0);
+    if ($target_student_id > 0) {
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+        $stmt->execute([$target_student_id]);
+        $target_student = $stmt->fetch();
+        if ($target_student) {
+            $stu_user = get_or_create_student_user($target_student, $db);
+
+            // Preserve admin session so admin tab is never logged out
+            if (!empty($_SESSION['user_id']) && in_array(($_SESSION['role'] ?? ''), ['super_admin', 'staff'])) {
+                $_SESSION['admin_user_id'] = $_SESSION['user_id'];
+                $_SESSION['admin_username'] = $_SESSION['username'];
+                $_SESSION['admin_role'] = $_SESSION['role'];
+                $_SESSION['admin_full_name'] = $_SESSION['full_name'];
+            }
+
+            // Set student active session
+            $_SESSION['user_id'] = $stu_user['id'];
+            $_SESSION['username'] = $stu_user['username'];
+            $_SESSION['role'] = 'student';
+            $_SESSION['full_name'] = $stu_user['full_name'];
+            $_SESSION['email'] = $stu_user['email'];
+            $_SESSION['avatar'] = !empty($target_student['photo']) ? $target_student['photo'] : $stu_user['avatar'];
+            $_SESSION['active_student_id'] = $target_student['id'];
+            $_SESSION['impersonated_student'] = true;
+
+            set_flash('success', "Logged in as student " . htmlspecialchars($target_student['student_name']) . " (Roll: " . htmlspecialchars($target_student['roll_no']) . ")!");
+            header('Location: ' . PARENT_URL . '/dashboard');
+            exit;
+        } else {
+            set_flash('error', "Student record not found.");
+            header('Location: ' . ADMIN_URL . '/students');
+            exit;
+        }
+    }
+}
 
 // Handle Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -123,6 +165,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $photo, $academic_files_json
                 ]);
                 $new_student_id = $db->lastInsertId();
+
+                // Automatically link/create user account for this student
+                $stmt_new = $db->prepare("SELECT * FROM students WHERE id = ?");
+                $stmt_new->execute([$new_student_id]);
+                $new_stu = $stmt_new->fetch();
+                if ($new_stu) {
+                    get_or_create_student_user($new_stu, $db);
+                }
 
                 // If initial fee was paid, record fee payment
                 if ($paid_fees > 0) {
@@ -265,6 +315,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     }
+
+    // 4. Change Student Password
+    if ($action === 'change_student_password') {
+        $student_id = intval($_POST['student_id'] ?? 0);
+        $new_password = trim($_POST['new_password'] ?? '');
+        $confirm_password = trim($_POST['confirm_password'] ?? '');
+
+        if (empty($new_password) || empty($confirm_password)) {
+            set_flash('error', 'Please enter and confirm the new password.');
+        } elseif ($new_password !== $confirm_password) {
+            set_flash('error', 'New password and confirm password do not match.');
+        } elseif (strlen($new_password) < 4) {
+            set_flash('error', 'New password must be at least 4 characters long.');
+        } else {
+            $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+            $stmt->execute([$student_id]);
+            $stu = $stmt->fetch();
+            if ($stu) {
+                $stu_user = get_or_create_student_user($stu, $db);
+                $hashed = password_hash($new_password, PASSWORD_DEFAULT);
+                $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hashed, $stu_user['id']]);
+                set_flash('success', "Password for student " . htmlspecialchars($stu['student_name']) . " (Roll: " . htmlspecialchars($stu['roll_no']) . ") updated successfully!");
+            } else {
+                set_flash('error', 'Student record not found.');
+            }
+        }
+        header('Location: ' . ADMIN_URL . '/students');
+        exit;
+    }
 }
 
 // Fetch roaster metrics for active session
@@ -327,7 +406,7 @@ if ($page > $total_pages) {
 $offset = ($page - 1) * $limit;
 
 // Query scholars for current page
-$query = "SELECT * FROM students WHERE {$where_sql} ORDER BY id DESC LIMIT ? OFFSET ?";
+$query = "SELECT s.*, (SELECT username FROM users WHERE id = s.user_id LIMIT 1) as user_username FROM students s WHERE {$where_sql} ORDER BY s.id DESC LIMIT ? OFFSET ?";
 $stmt = $db->prepare($query);
 $bind_idx = 1;
 foreach ($where_params as $val) {
@@ -357,6 +436,281 @@ $standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
+
+<style>
+/* ── Student Roaster Table & Badge Styles (Simple & Sober - Matching student-id) ── */
+.student-id-table {
+  width: 100%;
+  min-width: 1260px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.student-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.student-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.student-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.student-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badge & Tag Elements */
+.sid-roll-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sid-std-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sid-blood-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Fees Badges */
+.sid-fee-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 1px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.sid-fee-paid {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 1px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Attendance Chips */
+.sid-att-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sid-att-chip.high {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+.sid-att-chip.medium {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+.sid-att-chip.low {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+.sid-att-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.sid-att-dot.high { background: #16a34a; }
+.sid-att-dot.medium { background: #d97706; }
+.sid-att-dot.low { background: #dc2626; }
+
+/* Academic Docs button */
+.sid-docs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.sid-docs-chip:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0284c7;
+}
+
+/* Sober Action Icon Buttons */
+.sid-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.76rem;
+  padding: 0;
+  text-decoration: none;
+}
+.sid-action-btn:hover {
+  transform: translateY(-1px);
+}
+.sid-action-btn.view {
+  color: #0284c7;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+.sid-action-btn.view:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+.sid-action-btn.idcard {
+  color: #0891b2;
+  border-color: #cffafe;
+  background: #ecfeff;
+}
+.sid-action-btn.idcard:hover {
+  background: #0891b2;
+  color: #ffffff;
+  border-color: #0891b2;
+}
+.sid-action-btn.edit {
+  color: #4f46e5;
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+.sid-action-btn.edit:hover {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+.sid-action-btn.delete {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.sid-action-btn.delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+/* ── Login Column & Buttons (Simple & Sober) ── */
+.sid-login-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.btn-student-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-student-login:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #14532d;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.btn-student-pwd {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #fefce8;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-student-pwd:hover {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #713f12;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+</style>
 
 <!-- KPI Summary Strip for Student Roaster -->
 <div class="stat-grid" style="margin-bottom: 22px;">
@@ -503,46 +857,50 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 </div>
 
-<!-- Student Roaster Table -->
-<div class="hrms-card">
-  <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border);">
+<!-- Student Roaster Table (Simple & Sober - Like student-id) -->
+<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px;">
-        <i class="fa-solid fa-users" style="color: var(--hrms-primary);"></i>
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-users" style="color: #0284c7;"></i>
         Student Roaster
-        <span style="font-size: 0.78rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 20px;">
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
-      <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
-        Comprehensive student roster with profile pictures, attached academic files, marksheet &amp; fee records.
+      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+        Comprehensive student roster with profile pictures, academic records &amp; fee status.
       </p>
+    </div>
+    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+      <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
     </div>
   </div>
 
   <div class="table-responsive">
-    <table class="hrms-table">
+    <table class="hrms-table student-id-table">
       <thead>
         <tr>
-          <th style="min-width: 220px;">Student Profile</th>
-          <th style="min-width: 140px;">Roll &amp; Admission</th>
-          <th style="min-width: 160px;">Standard &amp; Section</th>
-          <th style="min-width: 160px;">Guardian Info</th>
-          <th style="min-width: 150px;">Fees (Paid / Total)</th>
-          <th style="min-width: 110px;">Attendance</th>
-          <th style="min-width: 110px;">Academic Docs</th>
-          <th style="min-width: 120px; text-align: right;">Actions</th>
+          <th style="min-width: 200px;">Student Profile</th>
+          <th style="min-width: 150px;">Roll &amp; Admission</th>
+          <th style="min-width: 130px;">Standard &amp; Section</th>
+          <th style="min-width: 130px;">Guardian Info</th>
+          <th style="min-width: 140px;">Fees Status</th>
+          <th style="min-width: 100px;">Attendance</th>
+          <th style="min-width: 95px;">Academic Docs</th>
+          <th style="min-width: 220px;">Login</th>
+          <th style="min-width: 135px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
         <?php if (empty($students)): ?>
           <tr>
-            <td colspan="8" style="text-align: center; padding: 56px 24px; color: #64748b;">
-              <div style="width: 58px; height: 58px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.5rem; color: #94a3b8;">
+            <td colspan="9" style="text-align: center; padding: 50px 20px; color: #64748b;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
                 <i class="fa-solid fa-user-slash"></i>
               </div>
-              <h4 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Scholars Found</h4>
-              <p style="font-size: 0.84rem; color: #64748b; margin: 0 0 16px;">
+              <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Scholars Found</h4>
+              <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
                 No student records in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong> matched your query.
               </p>
               <button type="button" class="roaster-add-btn" onclick="openModal('registerStudentModal')" style="display: inline-flex;">
@@ -552,17 +910,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </td>
           </tr>
         <?php else: ?>
-          <?php 
-            $grad_palette = [
-              'linear-gradient(135deg, #0284c7, #0369a1)', // Sky
-              'linear-gradient(135deg, #7c3aed, #6d28d9)', // Violet
-              'linear-gradient(135deg, #059669, #047857)', // Emerald
-              'linear-gradient(135deg, #d97706, #b45309)', // Amber
-              'linear-gradient(135deg, #e11d48, #be123c)', // Rose
-              'linear-gradient(135deg, #2563eb, #1d4ed8)', // Blue
-              'linear-gradient(135deg, #0891b2, #0e7490)', // Cyan
-            ];
-          ?>
           <?php foreach ($students as $stu): ?>
             <?php 
               $total_f = floatval($stu['total_fees']);
@@ -573,132 +920,139 @@ require_once __DIR__ . '/../includes/layout-header.php';
               $docs = !empty($stu['academic_files']) ? json_decode($stu['academic_files'], true) : [];
               $has_photo = !empty($stu['photo']) && $stu['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $stu['photo']);
               $first_letter = strtoupper(substr($stu['student_name'], 0, 1));
-              $avatar_bg = $grad_palette[ord($first_letter) % count($grad_palette)];
-
-              // Standard class color badge
-              $std_name = $stu['standard'] ?? '';
-              $std_class = 'foundation';
-              if (stripos($std_name, 'science') !== false) {
-                $std_class = 'science';
-              } elseif (stripos($std_name, 'commerce') !== false) {
-                $std_class = 'commerce';
-              }
             ?>
             <tr>
-              <!-- 1. Student Profile (Avatar + Name + Metadata) -->
+              <!-- 1. Student Profile (Simple & Sober circular avatar + metadata) -->
               <td>
-                <div class="user-cell" style="gap: 12px; align-items: center;">
+                <div class="user-cell" style="display: flex; align-items: center; gap: 12px;">
                   <?php if ($has_photo): ?>
-                    <img src="<?php echo htmlspecialchars($stu['photo']); ?>" alt="<?php echo htmlspecialchars($stu['student_name']); ?>" class="roaster-student-avatar">
+                    <img src="<?php echo htmlspecialchars($stu['photo']); ?>" alt="<?php echo htmlspecialchars($stu['student_name']); ?>" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <?php echo $first_letter; ?>
+                    </div>
                   <?php else: ?>
-                    <div class="roaster-avatar-init" style="background: <?php echo $avatar_bg; ?>;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                       <?php echo $first_letter; ?>
                     </div>
                   <?php endif; ?>
                   
-                  <div class="cell-meta">
-                    <span class="cell-name" style="font-size: 0.92rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                  <div>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                       <?php echo htmlspecialchars($stu['student_name']); ?>
-                    </span>
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.73rem; color: #64748b; margin-top: 2px;">
-                      <span><i class="fa-solid fa-venus-mars" style="color: #94a3b8; font-size: 0.7rem;"></i> <?php echo htmlspecialchars($stu['gender'] ?? 'Male'); ?></span>
+                    </div>
+                    <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                      <span><?php echo htmlspecialchars($stu['gender'] ?? 'Scholar'); ?></span>
                       <span>&bull;</span>
-                      <span><i class="fa-solid fa-droplet" style="color: #ef4444; font-size: 0.65rem;"></i> <?php echo htmlspecialchars($stu['blood_group'] ?? 'O+'); ?></span>
+                      <span class="sid-blood-badge">Blood: <?php echo htmlspecialchars($stu['blood_group'] ?? 'O+'); ?></span>
                     </div>
                   </div>
                 </div>
               </td>
 
               <!-- 2. Roll & Admission -->
-              <td>
-                <span class="roll-badge-pill">
-                  <i class="fa-solid fa-id-badge" style="font-size: 0.7rem;"></i>
-                  <?php echo htmlspecialchars($stu['roll_no']); ?>
+              <td style="white-space: nowrap;">
+                <span class="sid-roll-pill">
+                  <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
+                  <span><?php echo htmlspecialchars($stu['roll_no']); ?></span>
                 </span>
-                <span class="adm-badge-sub">
+                <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px; white-space: nowrap;">
                   Adm: <?php echo htmlspecialchars($stu['admission_no'] ?? '—'); ?>
-                </span>
+                </div>
               </td>
 
               <!-- 3. Standard & Section -->
               <td>
-                <span class="class-pill-badge <?php echo $std_class; ?>">
-                  <i class="fa-solid fa-graduation-cap" style="font-size: 0.7rem;"></i>
-                  <?php echo htmlspecialchars($stu['standard']); ?>
+                <span class="sid-std-pill">
+                  <i class="fa-solid fa-graduation-cap" style="font-size: 0.65rem; color: #64748b;"></i>
+                  <span><?php echo htmlspecialchars($stu['standard']); ?></span>
                 </span>
-                <span class="sec-pill-sub">
-                  <i class="fa-solid fa-layer-group" style="font-size: 0.65rem; color: #94a3b8;"></i>
+                <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">
                   Section <?php echo htmlspecialchars($stu['section'] ?? 'A'); ?>
-                </span>
+                </div>
               </td>
 
               <!-- 4. Guardian Info -->
               <td>
-                <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem;">
+                <div style="font-size: 0.78rem; font-weight: 600; color: #334155;">
                   <?php echo htmlspecialchars($stu['parent_name'] ?? '—'); ?>
                 </div>
-                <a href="tel:<?php echo htmlspecialchars($stu['parent_phone'] ?? ''); ?>" class="guardian-phone-chip">
-                  <i class="fa-solid fa-phone" style="color: var(--hrms-primary); font-size: 0.68rem;"></i>
-                  <?php echo htmlspecialchars($stu['parent_phone'] ?? '—'); ?>
-                </a>
+                <div style="font-size: 0.74rem; color: #64748b; margin-top: 3px; display: inline-flex; align-items: center; gap: 5px;">
+                  <i class="fa-solid fa-phone" style="font-size: 0.65rem; color: #64748b;"></i>
+                  <span><?php echo htmlspecialchars($stu['parent_phone'] ?? '—'); ?></span>
+                </div>
               </td>
 
-              <!-- 5. Fees (Paid / Total) with micro progress bar -->
+              <!-- 5. Fees (Paid / Total) with sober micro progress bar -->
               <td>
-                <div>
-                  <span class="fee-paid-highlight"><?php echo format_inr($paid_f); ?></span>
-                  <span class="fee-total-sub">/ <?php echo format_inr($total_f); ?></span>
+                <div style="font-weight: 700; color: #0f172a; font-size: 0.85rem; font-family: 'Outfit', sans-serif;">
+                  <span><?php echo format_inr($paid_f); ?></span>
+                  <span style="font-size: 0.74rem; color: #64748b; font-weight: 500;">/ <?php echo format_inr($total_f); ?></span>
                 </div>
                 
-                <div class="fee-progress-bar-wrap" title="<?php echo $fee_pct; ?>% Fee Paid">
-                  <div class="fee-progress-bar-fill" style="width: <?php echo $fee_pct; ?>%;"></div>
+                <div style="width: 80px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 5px 0 4px; overflow: hidden;" title="<?php echo $fee_pct; ?>% Fee Paid">
+                  <div style="height: 100%; border-radius: 2px; width: <?php echo $fee_pct; ?>%; background: #10b981;"></div>
                 </div>
 
                 <?php if ($due > 0): ?>
-                  <span class="fee-badge-due">
+                  <span class="sid-fee-due">
                     Due: <?php echo format_inr($due); ?>
                   </span>
                 <?php else: ?>
-                  <span class="fee-badge-paid">
-                    <i class="fa-solid fa-check"></i> Fully Paid
+                  <span class="sid-fee-paid">
+                    <i class="fa-solid fa-check" style="font-size: 0.65rem;"></i> Fully Paid
                   </span>
                 <?php endif; ?>
               </td>
 
-              <!-- 6. Attendance with dot indicator -->
+              <!-- 6. Attendance with subtle status chip -->
               <td>
                 <?php 
-                  $att_class = $pct >= 85 ? 'high' : ($pct >= 75 ? 'medium' : 'low');
+                  $att_status = $pct >= 85 ? 'high' : ($pct >= 75 ? 'medium' : 'low');
                 ?>
-                <span class="att-pill-chip <?php echo $att_class; ?>">
-                  <span class="legend-dot <?php echo $pct >= 85 ? 'green' : ($pct >= 75 ? 'amber' : 'red'); ?>"></span>
-                  <?php echo number_format($pct, 1); ?>%
+                <span class="sid-att-chip <?php echo $att_status; ?>">
+                  <span class="sid-att-dot <?php echo $att_status; ?>"></span>
+                  <span><?php echo number_format($pct, 1); ?>%</span>
                 </span>
               </td>
 
               <!-- 7. Academic Docs -->
               <td>
                 <?php if (!empty($docs) && is_array($docs)): ?>
-                  <button type="button" class="docs-tag-chip" onclick='showStudentDocs(<?php echo json_encode(htmlspecialchars($stu['student_name'])); ?>, <?php echo json_encode($docs); ?>)'>
-                    <i class="fa-solid fa-paperclip"></i>
+                  <button type="button" class="sid-docs-chip" onclick='showStudentDocs(<?php echo json_encode(htmlspecialchars($stu['student_name'])); ?>, <?php echo json_encode($docs); ?>)' title="View attached documents">
+                    <i class="fa-solid fa-paperclip" style="font-size: 0.68rem;"></i>
                     <span><?php echo count($docs); ?> <?php echo count($docs) === 1 ? 'Doc' : 'Docs'; ?></span>
                   </button>
                 <?php else: ?>
-                  <span class="docs-empty-chip">None</span>
+                  <span style="font-size: 0.74rem; color: #94a3b8; font-weight: 500;">None</span>
                 <?php endif; ?>
               </td>
 
-              <!-- 8. Actions (STRICTLY ONLY: Eye, Pencil, Trash) -->
+              <!-- 8. Login Actions (Login Direct & Change Password) -->
+              <td>
+                <div class="sid-login-wrap">
+                  <a href="<?php echo ADMIN_URL; ?>/students?action=direct_login&student_id=<?php echo $stu['id']; ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($stu['student_name']); ?> in a new tab">
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i>
+                    <span>Login Direct</span>
+                  </a>
+
+                  <button type="button" class="btn-student-pwd" title="Change Password for <?php echo htmlspecialchars($stu['student_name']); ?>" onclick='openChangePasswordModal(<?php echo htmlspecialchars(json_encode($stu), ENT_QUOTES, "UTF-8"); ?>)'>
+                    <i class="fa-solid fa-key" style="font-size: 0.7rem;"></i>
+                    <span>Change Password</span>
+                  </button>
+                </div>
+              </td>
+
+              <!-- 9. Actions (View Profile, Edit, Delete) -->
               <td style="text-align: right;">
-                <div style="display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
                   <!-- Eye Icon: View Profile -->
-                  <button type="button" class="action-icon-btn view" title="View Student Profile" onclick='viewStudentDetails(<?php echo htmlspecialchars(json_encode($stu), ENT_QUOTES, "UTF-8"); ?>)'>
+                  <button type="button" class="sid-action-btn view" title="View Student Profile" onclick='viewStudentDetails(<?php echo htmlspecialchars(json_encode($stu), ENT_QUOTES, "UTF-8"); ?>)'>
                     <i class="fa-solid fa-eye"></i>
                   </button>
 
                   <!-- Pencil Icon: Edit Profile -->
-                  <button type="button" class="action-icon-btn edit" title="Edit Student Profile" onclick='openEditStudentModal(<?php echo htmlspecialchars(json_encode($stu), ENT_QUOTES, "UTF-8"); ?>)'>
+                  <button type="button" class="sid-action-btn edit" title="Edit Student Profile" onclick='openEditStudentModal(<?php echo htmlspecialchars(json_encode($stu), ENT_QUOTES, "UTF-8"); ?>)'>
                     <i class="fa-solid fa-pencil"></i>
                   </button>
 
@@ -706,7 +1060,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <form method="POST" action="<?php echo ADMIN_URL; ?>/students" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars(addslashes($stu['student_name'])); ?> from the student roaster?');">
                     <input type="hidden" name="action" value="delete_student">
                     <input type="hidden" name="student_id" value="<?php echo $stu['id']; ?>">
-                    <button type="submit" class="action-icon-btn delete" title="Delete Student Record">
+                    <button type="submit" class="sid-action-btn delete" title="Delete Student Record">
                       <i class="fa-solid fa-trash"></i>
                     </button>
                   </form>
@@ -1278,6 +1632,83 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 </div>
 
+<!-- Modal 5: Change Student Password (Simple & Sober) -->
+<div class="hrms-modal" id="changeStudentPasswordModal">
+  <div class="hrms-modal-card" style="max-width: 480px;">
+    <div class="hrms-modal-header" style="border-bottom: 1px solid #e2e8f0; padding: 18px 24px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: #fefce8; color: #a16207; border: 1px solid #fef08a; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+            Change Student Password
+          </h3>
+          <p style="margin: 2px 0 0; font-size: 0.75rem; color: #64748b;">Update student portal authentication credentials</p>
+        </div>
+      </div>
+      <button type="button" class="modal-close-btn" onclick="closeModal('changeStudentPasswordModal')" aria-label="Close modal">&times;</button>
+    </div>
+
+    <form method="POST" action="<?php echo ADMIN_URL; ?>/students" id="changeStudentPasswordForm">
+      <input type="hidden" name="action" value="change_student_password">
+      <input type="hidden" name="student_id" id="pwd_modal_student_id" value="">
+
+      <div class="hrms-modal-body" style="padding: 22px 24px;">
+        <!-- Student Info Chip -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <div>
+            <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem; font-family: 'Outfit', sans-serif;" id="pwd_modal_student_name">—</div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
+              Roll: <strong style="color: #0284c7;" id="pwd_modal_roll_no">—</strong> &bull; Standard: <span id="pwd_modal_standard">—</span>
+            </div>
+          </div>
+          <span style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-family: monospace;" id="pwd_modal_username">@username</span>
+        </div>
+
+        <!-- New Password -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
+            <span>New Password *</span>
+            <span style="font-weight: 500; font-size: 0.72rem; color: #94a3b8;">Min. 4 characters</span>
+          </label>
+          <div style="position: relative;">
+            <input type="password" name="new_password" id="modal_new_password" class="hrms-input" required minlength="4" placeholder="Enter new password" style="width: 100%; padding-right: 40px;">
+            <button type="button" onclick="togglePasswordVisibility('modal_new_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;" title="Show/Hide password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
+            Confirm New Password *
+          </label>
+          <div style="position: relative;">
+            <input type="password" name="confirm_password" id="modal_confirm_password" class="hrms-input" required minlength="4" placeholder="Re-enter new password" style="width: 100%; padding-right: 40px;">
+            <button type="button" onclick="togglePasswordVisibility('modal_confirm_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;" title="Show/Hide password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div style="font-size: 0.74rem; color: #64748b; margin-top: 8px; line-height: 1.4;">
+          <i class="fa-solid fa-circle-info" style="color: #0284c7;"></i>
+          The student can use this password to log in at the portal with their username or roll number.
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+        <button type="button" onclick="closeModal('changeStudentPasswordModal')" class="btn-hrms btn-hrms-outline">Cancel</button>
+        <button type="submit" class="roaster-add-btn" style="padding: 8px 20px; font-size: 0.82rem;">
+          <i class="fa-solid fa-key"></i> <span>Update Password</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 let currentViewingStudent = null;
 
@@ -1516,6 +1947,42 @@ function showStudentDocs(studentName, docs) {
   }
 
   openModal('studentDocsModal');
+}
+
+function openChangePasswordModal(stu) {
+  if (!stu) return;
+  document.getElementById('pwd_modal_student_id').value = stu.id || '';
+  document.getElementById('pwd_modal_student_name').textContent = stu.student_name || 'Student';
+  document.getElementById('pwd_modal_roll_no').textContent = stu.roll_no || '—';
+  document.getElementById('pwd_modal_standard').textContent = stu.standard || '—';
+
+  let uname = stu.user_username || '';
+  if (!uname && stu.roll_no) {
+    uname = stu.roll_no.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+  document.getElementById('pwd_modal_username').textContent = '@' + (uname || 'student');
+  document.getElementById('modal_new_password').value = '';
+  document.getElementById('modal_confirm_password').value = '';
+  openModal('changeStudentPasswordModal');
+}
+
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) {
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    }
+  } else {
+    input.type = 'password';
+    if (icon) {
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  }
 }
 </script>
 

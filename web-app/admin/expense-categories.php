@@ -208,34 +208,80 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <style>
-/* ── Category Module Specific Styling ── */
+/* ── Staff ID Style Table & Badge Styles (Simple & Sober - Matching staff-id) ── */
+.staff-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badge & Tag Elements */
 .cat-icon-badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.95rem;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
 }
-.hrms-table tbody tr:hover .cat-icon-badge {
-  transform: scale(1.08);
-}
-.cat-tag-pill {
+
+.cat-code-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  padding: 1px 6px;
-  border-radius: 4px;
+  white-space: nowrap;
 }
+
+.cat-vouchers-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .cat-progress-track {
   width: 100%;
-  height: 6px;
+  height: 5px;
   background: #f1f5f9;
   border-radius: 999px;
   overflow: hidden;
@@ -247,52 +293,61 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: linear-gradient(90deg, #0092df, #0284c7);
   transition: width 0.4s ease;
 }
-.action-btn-sm {
+
+/* Action Icon Buttons */
+.sid-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 6px 11px;
-  border-radius: 7px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-.action-btn-sm.view {
-  background: rgba(0, 146, 223, 0.09);
-  color: #007cbd;
-  border: 1px solid rgba(0, 146, 223, 0.2);
-}
-.action-btn-sm.view:hover {
-  background: #0092df;
-  color: #ffffff;
-}
-.action-btn-sm.edit {
-  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   color: #475569;
-  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.76rem;
+  padding: 0;
+  text-decoration: none;
 }
-.action-btn-sm.edit:hover {
-  background: #0f172a;
+.sid-action-btn:hover {
+  transform: translateY(-1px);
+}
+.sid-action-btn.view {
+  color: #0284c7;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+.sid-action-btn.view:hover {
+  background: #0284c7;
   color: #ffffff;
-  border-color: #0f172a;
+  border-color: #0284c7;
 }
-.action-btn-sm.delete {
-  background: rgba(239, 68, 68, 0.08);
+.sid-action-btn.edit {
+  color: #4f46e5;
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+.sid-action-btn.edit:hover {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+}
+.sid-action-btn.delete {
   color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-color: #fecaca;
+  background: #fef2f2;
 }
-.action-btn-sm.delete:hover {
+.sid-action-btn.delete:hover {
   background: #dc2626;
   color: #ffffff;
+  border-color: #dc2626;
 }
-.action-btn-sm.locked {
-  background: #f8fafc;
+.sid-action-btn.locked {
   color: #94a3b8;
-  border: 1px solid #e2e8f0;
+  border-color: #e2e8f0;
+  background: #f8fafc;
   cursor: not-allowed;
 }
 </style>
@@ -429,17 +484,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      CATEGORIES LEDGER TABLE
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 30px;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 22px;">
+<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-        <i class="fa-solid fa-sitemap" style="color: var(--hrms-primary);"></i>
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-sitemap" style="color: #0284c7;"></i>
         Expense Heads &amp; Accounting Classifications
-        <span style="font-size: 0.76rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 20px;">
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
-      <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
+      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
         Official cost-center chart of accounts for auditing institutional procurement, utilities, maintenance, and student welfare.
       </p>
     </div>
@@ -452,23 +507,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <div class="table-responsive">
-    <table class="hrms-table" id="categoriesTable">
+    <table class="hrms-table staff-id-table" id="categoriesTable">
       <thead>
         <tr>
-          <th style="width: 300px;">Category Head</th>
-          <th>Budget Scope &amp; Purpose</th>
-          <th style="width: 140px; text-align: center;">Vouchers (Session)</th>
-          <th style="width: 200px;">Expenditure (₹)</th>
-          <th style="width: 140px; text-align: right;">Action</th>
+          <th style="min-width: 240px;">Category Head</th>
+          <th style="min-width: 220px;">Budget Scope &amp; Purpose</th>
+          <th style="min-width: 130px; text-align: center;">Vouchers (Session)</th>
+          <th style="min-width: 170px;">Expenditure (₹)</th>
+          <th style="min-width: 110px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
         <?php if (empty($categories)): ?>
           <tr>
-            <td colspan="5" style="text-align: center; padding: 48px 20px; color: #94a3b8;">
-              <i class="fa-solid fa-folder-open" style="font-size: 2.4rem; color: #cbd5e1; display: block; margin-bottom: 12px;"></i>
-              <strong style="color: #475569; font-size: 0.95rem;">No Expense Categories Defined</strong>
-              <p style="margin: 4px 0 16px; font-size: 0.82rem;">Create your first expense head to begin tracking departmental expenditures.</p>
+            <td colspan="5" style="text-align: center; padding: 50px 20px; color: #64748b;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
+                <i class="fa-solid fa-folder-open"></i>
+              </div>
+              <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Expense Categories Defined</h4>
+              <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">Create your first expense head to begin tracking departmental expenditures.</p>
               <button type="button" onclick="openAddCatModal();" class="roaster-add-btn" style="display: inline-flex;">
                 <div class="btn-icon-circle"><i class="fa-solid fa-plus"></i></div>
                 <span>Add First Category</span>
@@ -491,11 +548,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid <?php echo $style_info['icon']; ?>"></i>
                   </div>
                   <div>
-                    <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                    <div style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                       <?php echo htmlspecialchars($cat['category_name']); ?>
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                      <span class="cat-tag-pill">EXP-HEAD-<?php echo str_pad($cat['id'], 2, '0', STR_PAD_LEFT); ?></span>
+                      <span class="cat-code-pill">HEAD-<?php echo str_pad($cat['id'], 2, '0', STR_PAD_LEFT); ?></span>
                       <?php if ($cat['lifetime_expense_count'] > 0): ?>
                         <span style="font-size: 0.72rem; color: #64748b;">(<?php echo $cat['lifetime_expense_count']; ?> all-time)</span>
                       <?php endif; ?>
@@ -507,9 +564,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- Scope & Purpose -->
               <td>
                 <?php if (!empty($cat['description'])): ?>
-                  <span style="font-size: 0.82rem; color: #475569; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                  <div style="font-size: 0.82rem; color: #475569; line-height: 1.4;">
                     <?php echo htmlspecialchars($cat['description']); ?>
-                  </span>
+                  </div>
                 <?php else: ?>
                   <span style="font-size: 0.78rem; color: #94a3b8; font-style: italic;">No specific scope instructions registered</span>
                 <?php endif; ?>
@@ -518,11 +575,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- Vouchers in current session -->
               <td style="text-align: center;">
                 <?php if ($cat['expense_count'] > 0): ?>
-                  <span style="display: inline-flex; align-items: center; gap: 5px; font-weight: 700; font-size: 0.76rem; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 20px; border: 1px solid #bae6fd;">
-                    <i class="fa-solid fa-file-invoice"></i> <?php echo $cat['expense_count']; ?> vouchers
+                  <span class="cat-vouchers-pill">
+                    <i class="fa-solid fa-file-invoice" style="color: #0284c7; font-size: 0.68rem;"></i>
+                    <span><?php echo $cat['expense_count']; ?> vouchers</span>
                   </span>
                 <?php else: ?>
-                  <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; color: #94a3b8; background: #f8fafc; padding: 3px 8px; border-radius: 6px;">
+                  <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; color: #94a3b8; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 4px;">
                     0 vouchers
                   </span>
                 <?php endif; ?>
@@ -535,7 +593,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php echo format_inr($spent_amt); ?>
                   </strong>
                   <?php if ($spent_amt > 0): ?>
-                    <span style="font-size: 0.72rem; font-weight: 800; color: #0284c7; background: #f0f9ff; padding: 1px 6px; border-radius: 4px;">
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px;">
                       <?php echo $pct_spent; ?>%
                     </span>
                   <?php endif; ?>
@@ -547,33 +605,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- Actions -->
               <td style="text-align: right;">
-                <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
                   <!-- View Ledger Link -->
-                  <a href="<?php echo ADMIN_URL; ?>/expenses?category_id=<?php echo $cat['id']; ?>" class="action-btn-sm view" title="View all expenses under this head">
+                  <a href="<?php echo ADMIN_URL; ?>/expenses?category_id=<?php echo $cat['id']; ?>" class="sid-action-btn view" title="View all expenses under this head">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                    <span>Ledger</span>
                   </a>
 
                   <!-- Edit Category Button -->
                   <button type="button" 
                           onclick='openEditCatModal(<?php echo json_encode($cat); ?>)' 
-                          class="action-btn-sm edit" 
+                          class="sid-action-btn edit" 
                           title="Edit Category Details">
                     <i class="fa-solid fa-pen-to-square"></i>
                   </button>
 
                   <!-- Delete Category Button -->
                   <?php if ($cat['expense_count'] == 0 && $cat['lifetime_expense_count'] == 0): ?>
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete \'<?php echo addslashes($cat['category_name']); ?>\'?');">
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to permanently delete \'<?php echo addslashes($cat['category_name']); ?>\'?');">
                       <input type="hidden" name="action" value="delete_category">
                       <input type="hidden" name="category_id" value="<?php echo $cat['id']; ?>">
-                      <button type="submit" class="action-btn-sm delete" title="Delete category head">
+                      <button type="submit" class="sid-action-btn delete" title="Delete category head">
                         <i class="fa-solid fa-trash-can"></i>
                       </button>
                     </form>
                   <?php else: ?>
-                    <span class="action-btn-sm locked" title="Cannot delete: Active vouchers are bound to this head">
+                    <span class="sid-action-btn locked" title="Cannot delete: Active vouchers are bound to this head">
                       <i class="fa-solid fa-lock"></i>
                     </span>
                   <?php endif; ?>

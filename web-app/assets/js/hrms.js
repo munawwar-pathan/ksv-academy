@@ -202,4 +202,20 @@ document.addEventListener('DOMContentLoaded', function () {
     updateClock();
     setInterval(updateClock, 1000);
   }
+
+  // 6. Auto-scroll sidebar active menu item into view
+  function ensureActiveSidebarMenuVisible() {
+    const nav = document.querySelector('.sidebar-nav-container');
+    if (!nav) return;
+    const activeItem = nav.querySelector('.sidebar-menu-item.active');
+    if (activeItem) {
+      const containerHeight = nav.clientHeight;
+      const itemTop = activeItem.offsetTop;
+      const itemHeight = activeItem.clientHeight;
+      const targetScroll = itemTop - (containerHeight / 2) + (itemHeight / 2);
+      nav.scrollTop = Math.max(0, targetScroll);
+    }
+  }
+  ensureActiveSidebarMenuVisible();
+  window.addEventListener('load', ensureActiveSidebarMenuVisible);
 });

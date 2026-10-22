@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_student_attendance');
+}
 $page_title = 'Student Attendance & QR Scanner';
 $page_heading = 'Student Attendance & QR Code Scanner';
 $page_subheading = 'Real-time Camera QR Biometric Punch-In, Daily Roll Register & Automated Logging';
@@ -285,6 +288,144 @@ $standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
+<style>
+/* ── Student Attendance Table Styles (Simple & Sober - Matching student-id) ── */
+.student-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.student-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.student-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.student-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.student-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badge & Tag Elements */
+.sid-roll-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sid-std-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sid-blood-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Attendance Status Pills */
+.att-pill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.att-pill-chip.high {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+.att-pill-chip.medium {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+.att-pill-chip.low {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.legend-dot.green { background: #16a34a; }
+.legend-dot.amber { background: #d97706; }
+.legend-dot.red { background: #dc2626; }
+
+.att-time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.unmarked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+</style>
+
 <!-- KPI Stat Summary Cards -->
 <div class="stat-grid" style="margin-bottom: 24px;">
   
@@ -378,16 +519,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 </div>
 
-<!-- Main Attendance Register Workstation (Full Width) -->
-<div class="hrms-card" style="margin-bottom: 24px;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 18px 24px;">
+<!-- Main Attendance Register Workstation (Simple & Sober - Like student-id) -->
+<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.12rem; font-weight: 800; color: var(--hrms-navy); font-family: 'Outfit', sans-serif;">
-        <i class="fa-solid fa-clipboard-user" style="color: var(--hrms-primary);"></i>
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-clipboard-user" style="color: #0284c7;"></i>
         Attendance Register
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+          <?php echo date('d M Y', strtotime($filter_date)); ?>
+        </span>
       </h3>
-      <p style="margin: 3px 0 0; font-size: 0.8rem; color: #64748b;">
-        Daily roll call for <strong><?php echo date('l, d M Y', strtotime($filter_date)); ?></strong>
+      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+        Daily attendance roster &amp; biometric punch logs for <strong><?php echo date('l, d F Y', strtotime($filter_date)); ?></strong>
       </p>
     </div>
 
@@ -396,176 +540,181 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <form method="GET" action="<?php echo ADMIN_URL; ?>/student-attendance" style="display: flex; gap: 8px; align-items: center; margin: 0;">
         <input type="hidden" name="limit" value="<?php echo $limit; ?>">
         <div style="position: relative;">
-          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date); ?>" onchange="this.form.submit()" class="hrms-input" style="padding: 7px 12px; font-size: 0.82rem; border-radius: 8px; width: 145px;">
+          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date); ?>" onchange="this.form.submit()" class="hrms-input" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: 140px; border: 1px solid #cbd5e1;">
         </div>
         
-        <select name="standard" onchange="this.form.submit()" class="hrms-input" style="padding: 7px 14px; font-size: 0.82rem; border-radius: 8px; min-width: 140px;">
-          <option value="">All Classes</option>
+        <select name="standard" onchange="this.form.submit()" class="hrms-input" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; min-width: 140px; border: 1px solid #cbd5e1;">
+          <option value="">All Academic Classes</option>
           <?php foreach ($standards as $std): ?>
             <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>><?php echo $std; ?></option>
           <?php endforeach; ?>
         </select>
       </form>
 
-      <!-- Start Camera Scanner Trigger Button (Opens Popup Modal & Starts Camera) -->
-      <button type="button" onclick="openScannerModal();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem; gap: 8px;" title="Open Camera Scanner Popup">
-        <i class="fa-solid fa-camera"></i>
-        <span>Start Camera Scanner</span>
+      <!-- Start Camera Scanner Trigger Button -->
+      <button type="button" onclick="openScannerModal();" class="roaster-add-btn" style="padding: 6px 14px; font-size: 0.8rem; gap: 7px;" title="Open Camera Scanner Popup">
+        <div class="btn-icon-circle"><i class="fa-solid fa-camera"></i></div>
+        <span>Camera Scanner</span>
       </button>
     </div>
   </div>
 
-    <!-- Attendance Roster Table -->
-    <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
-      <table class="hrms-table">
-        <thead>
+  <!-- Attendance Roster Table -->
+  <div class="table-responsive">
+    <table class="hrms-table student-id-table">
+      <thead>
+        <tr>
+          <th style="min-width: 170px;">Student Profile</th>
+          <th style="min-width: 110px;">Roll &amp; Admission</th>
+          <th style="min-width: 130px;">Standard &amp; Section</th>
+          <th style="min-width: 110px;">Status</th>
+          <th style="min-width: 110px;">Check-In Time</th>
+          <th style="min-width: 120px; text-align: right;">Quick Punch</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (empty($students_attendance)): ?>
           <tr>
-            <th style="min-width: 200px;">Student Profile</th>
-            <th style="min-width: 130px;">Roll No</th>
-            <th style="min-width: 140px;">Standard</th>
-            <th style="min-width: 110px;">Status</th>
-            <th style="min-width: 110px;">Check-In</th>
-            <th style="min-width: 125px; text-align: right;">Quick Punch</th>
+            <td colspan="6" style="text-align: center; padding: 50px 20px; color: #64748b;">
+              <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
+                <i class="fa-solid fa-user-slash"></i>
+              </div>
+              <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Scholars Found</h4>
+              <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
+                No students in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong> matched the selected criteria.
+              </p>
+              <a href="<?php echo ADMIN_URL; ?>/student-attendance" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+                <i class="fa-solid fa-rotate-left"></i> Reset Filter
+              </a>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          <?php if (empty($students_attendance)): ?>
-            <tr>
-              <td colspan="6" style="text-align: center; padding: 40px 20px; color: #94a3b8;">
-                <div style="font-size: 1.4rem; margin-bottom: 8px;"><i class="fa-solid fa-user-slash"></i></div>
-                No students enrolled in this session matching selected criteria.
-              </td>
-            </tr>
-          <?php else: ?>
+        <?php else: ?>
+          <?php foreach ($students_attendance as $row): ?>
             <?php 
-              $grad_palette = [
-                'linear-gradient(135deg, #0284c7, #0369a1)',
-                'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                'linear-gradient(135deg, #059669, #047857)',
-                'linear-gradient(135deg, #d97706, #b45309)',
-                'linear-gradient(135deg, #e11d48, #be123c)',
-                'linear-gradient(135deg, #2563eb, #1d4ed8)',
-              ];
+              $has_photo = !empty($row['photo']) && $row['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $row['photo']);
+              $first_letter = strtoupper(substr($row['student_name'], 0, 1));
+              $cur_status = $row['today_status'] ?? '';
             ?>
-            <?php foreach ($students_attendance as $row): ?>
-              <?php 
-                $has_photo = !empty($row['photo']) && $row['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $row['photo']);
-                $first_letter = strtoupper(substr($row['student_name'], 0, 1));
-                $avatar_bg = $grad_palette[ord($first_letter) % count($grad_palette)];
-
-                // Standard class type
-                $std_name = $row['standard'] ?? '';
-                $std_class = 'foundation';
-                if (stripos($std_name, 'science') !== false) {
-                  $std_class = 'science';
-                } elseif (stripos($std_name, 'commerce') !== false) {
-                  $std_class = 'commerce';
-                }
-                $cur_status = $row['today_status'] ?? '';
-              ?>
-              <tr>
-                <!-- Student Profile Cell -->
-                <td>
-                  <div class="user-cell" style="gap: 10px; align-items: center;">
-                    <?php if ($has_photo): ?>
-                      <img src="<?php echo htmlspecialchars($row['photo']); ?>" alt="<?php echo htmlspecialchars($row['student_name']); ?>" style="width: 34px; height: 34px; min-width: 34px; border-radius: 9px; object-fit: cover; border: 1.5px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
-                    <?php else: ?>
-                      <div style="width: 34px; height: 34px; min-width: 34px; border-radius: 9px; background: <?php echo $avatar_bg; ?>; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif;">
-                        <?php echo $first_letter; ?>
-                      </div>
-                    <?php endif; ?>
-                    <div>
-                      <strong style="color: #0f172a; font-size: 0.86rem; font-weight: 700; display: block; font-family: 'Outfit', sans-serif;">
-                        <?php echo htmlspecialchars($row['student_name']); ?>
-                      </strong>
+            <tr>
+              <!-- 1. Student Profile Cell -->
+              <td>
+                <div class="user-cell" style="display: flex; align-items: center; gap: 12px;">
+                  <?php if ($has_photo): ?>
+                    <img src="<?php echo htmlspecialchars($row['photo']); ?>" alt="<?php echo htmlspecialchars($row['student_name']); ?>" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 14px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <?php echo $first_letter; ?>
+                    </div>
+                  <?php else: ?>
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 14px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <?php echo $first_letter; ?>
+                    </div>
+                  <?php endif; ?>
+                  <div>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
+                      <?php echo htmlspecialchars($row['student_name']); ?>
+                    </div>
+                    <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
+                      <span><?php echo htmlspecialchars($row['gender'] ?? 'Scholar'); ?></span>
+                      <?php if (!empty($row['blood_group'])): ?>
+                        <span>&bull;</span>
+                        <span class="sid-blood-badge">Blood: <?php echo htmlspecialchars($row['blood_group']); ?></span>
+                      <?php endif; ?>
                     </div>
                   </div>
-                </td>
+                </div>
+              </td>
 
-                <!-- Roll No Cell -->
-                <td>
-                  <span class="roll-badge-pill" style="font-size: 0.74rem; padding: 2px 7px;">
-                    <i class="fa-solid fa-id-badge" style="font-size: 0.65rem;"></i>
-                    <?php echo htmlspecialchars($row['roll_no']); ?>
+              <!-- 2. Roll & Admission -->
+              <td>
+                <span class="sid-roll-pill">
+                  <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
+                  <span><?php echo htmlspecialchars($row['roll_no']); ?></span>
+                </span>
+                <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
+                  Adm: <?php echo htmlspecialchars($row['admission_no'] ?? '—'); ?>
+                </div>
+              </td>
+
+              <!-- 3. Standard & Section -->
+              <td>
+                <span class="sid-std-pill">
+                  <i class="fa-solid fa-graduation-cap" style="font-size: 0.65rem; color: #64748b;"></i>
+                  <span><?php echo htmlspecialchars($row['standard']); ?></span>
+                </span>
+                <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">
+                  Section <?php echo htmlspecialchars($row['section'] ?? 'A'); ?>
+                </div>
+              </td>
+
+              <!-- 4. Status Badge Cell -->
+              <td id="statusCell-<?php echo $row['id']; ?>">
+                <?php if ($cur_status === 'Present'): ?>
+                  <span class="att-pill-chip high">
+                    <span class="legend-dot green"></span> Present
                   </span>
-                </td>
-
-                <!-- Standard Cell -->
-                <td>
-                  <span class="class-pill-badge <?php echo $std_class; ?>" style="font-size: 0.74rem; padding: 2px 7px;">
-                    <?php echo htmlspecialchars($row['standard']); ?>
+                <?php elseif ($cur_status === 'Late'): ?>
+                  <span class="att-pill-chip medium">
+                    <span class="legend-dot amber"></span> Late
                   </span>
-                </td>
+                <?php elseif ($cur_status === 'Absent'): ?>
+                  <span class="att-pill-chip low">
+                    <span class="legend-dot red"></span> Absent
+                  </span>
+                <?php else: ?>
+                  <span class="unmarked-pill">
+                    <i class="fa-solid fa-minus" style="font-size: 0.6rem;"></i> Unmarked
+                  </span>
+                <?php endif; ?>
+              </td>
 
-                <!-- Status Badge Cell -->
-                <td id="statusCell-<?php echo $row['id']; ?>">
-                  <?php if ($cur_status === 'Present'): ?>
-                    <span class="att-pill-chip high" style="font-size: 0.72rem; padding: 2px 7px;">
-                      <span class="legend-dot green"></span> Present
-                    </span>
-                  <?php elseif ($cur_status === 'Late'): ?>
-                    <span class="att-pill-chip medium" style="font-size: 0.72rem; padding: 2px 7px;">
-                      <span class="legend-dot amber"></span> Late
-                    </span>
-                  <?php elseif ($cur_status === 'Absent'): ?>
-                    <span class="att-pill-chip low" style="font-size: 0.72rem; padding: 2px 7px;">
-                      <span class="legend-dot red"></span> Absent
-                    </span>
-                  <?php else: ?>
-                    <span style="display: inline-flex; align-items: center; gap: 4px; background: #f1f5f9; color: #64748b; font-size: 0.72rem; font-weight: 700; padding: 2px 7px; border-radius: 12px;">
-                      <i class="fa-solid fa-minus" style="font-size: 0.6rem;"></i> Unmarked
-                    </span>
-                  <?php endif; ?>
-                </td>
+              <!-- 5. Check-In Timestamp -->
+              <td id="checkInCell-<?php echo $row['id']; ?>">
+                <?php if (!empty($row['check_in_time']) && $cur_status !== 'Absent'): ?>
+                  <span class="att-time-badge">
+                    <i class="fa-regular fa-clock" style="color: #0284c7; font-size: 0.68rem;"></i>
+                    <?php echo date('h:i A', strtotime($row['check_in_time'])); ?>
+                  </span>
+                <?php else: ?>
+                  <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 600;">—</span>
+                <?php endif; ?>
+              </td>
 
-                <!-- Check-In Timestamp -->
-                <td id="checkInCell-<?php echo $row['id']; ?>">
-                  <?php if (!empty($row['check_in_time']) && $cur_status !== 'Absent'): ?>
-                    <span class="att-time-badge">
-                      <i class="fa-regular fa-clock" style="color: var(--hrms-primary); font-size: 0.68rem;"></i>
-                      <?php echo date('h:i A', strtotime($row['check_in_time'])); ?>
-                    </span>
-                  <?php else: ?>
-                    <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 600;">—</span>
-                  <?php endif; ?>
-                </td>
+              <!-- 6. Quick Punch Segmented Group -->
+              <td style="text-align: right;">
+                <div class="punch-pill-group" id="punchGroup-<?php echo $row['id']; ?>">
+                  
+                  <!-- P: Present -->
+                  <button type="button" 
+                          onclick="punchStudent(<?php echo $row['id']; ?>, 'Present', this)" 
+                          class="punch-action-btn present <?php echo $cur_status === 'Present' ? 'active' : ''; ?>" 
+                          title="Mark Present">
+                    P
+                  </button>
 
-                <!-- Quick Punch Segmented Group -->
-                <td style="text-align: right;">
-                  <div class="punch-pill-group" id="punchGroup-<?php echo $row['id']; ?>">
-                    
-                    <!-- P: Present -->
-                    <button type="button" 
-                            onclick="punchStudent(<?php echo $row['id']; ?>, 'Present', this)" 
-                            class="punch-action-btn present <?php echo $cur_status === 'Present' ? 'active' : ''; ?>" 
-                            title="Mark Present">
-                      P
-                    </button>
+                  <!-- L: Late (Opens small tooltip popup for entering late time) -->
+                  <button type="button" 
+                          onclick="openLateTooltip(this, <?php echo $row['id']; ?>, '<?php echo addslashes(htmlspecialchars($row['student_name'])); ?>', '<?php echo addslashes(htmlspecialchars($row['roll_no'])); ?>', '<?php echo (!empty($row['check_in_time']) && $cur_status === 'Late') ? date('H:i', strtotime($row['check_in_time'])) : ''; ?>')" 
+                          class="punch-action-btn late <?php echo $cur_status === 'Late' ? 'active' : ''; ?>" 
+                          title="Mark Late &amp; Enter Time">
+                    L
+                  </button>
 
-                    <!-- L: Late (Opens small tooltip popup for entering late time) -->
-                    <button type="button" 
-                            onclick="openLateTooltip(this, <?php echo $row['id']; ?>, '<?php echo addslashes(htmlspecialchars($row['student_name'])); ?>', '<?php echo addslashes(htmlspecialchars($row['roll_no'])); ?>', '<?php echo (!empty($row['check_in_time']) && $cur_status === 'Late') ? date('H:i', strtotime($row['check_in_time'])) : ''; ?>')" 
-                            class="punch-action-btn late <?php echo $cur_status === 'Late' ? 'active' : ''; ?>" 
-                            title="Mark Late & Enter Time">
-                      L
-                    </button>
+                  <!-- A: Absent -->
+                  <button type="button" 
+                          onclick="punchStudent(<?php echo $row['id']; ?>, 'Absent', this)" 
+                          class="punch-action-btn absent <?php echo $cur_status === 'Absent' ? 'active' : ''; ?>" 
+                          title="Mark Absent">
+                    A
+                  </button>
 
-                    <!-- A: Absent -->
-                    <button type="button" 
-                            onclick="punchStudent(<?php echo $row['id']; ?>, 'Absent', this)" 
-                            class="punch-action-btn absent <?php echo $cur_status === 'Absent' ? 'active' : ''; ?>" 
-                            title="Mark Absent">
-                      A
-                    </button>
-
-                  </div>
-                </td>
-              </tr>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
 
     <!-- Table Pagination & Per-Page Controls -->
     <div class="pagination-controls-wrap">

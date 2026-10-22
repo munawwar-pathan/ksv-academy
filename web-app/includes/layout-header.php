@@ -197,52 +197,122 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
         </ul>
 
       <?php elseif ($current_user['role'] === 'staff'): ?>
+        <?php 
+          $staff_perms = get_staff_permissions($current_user['id']);
+        ?>
         <!-- STAFF MENU -->
         <div class="nav-section-title">Faculty Portal</div>
         <ul class="sidebar-menu">
-          <li class="sidebar-menu-item <?php echo $active_menu === 'dashboard' ? 'active' : ''; ?>">
-            <a href="<?php echo STAFF_URL; ?>/dashboard">
-              <i class="fa-solid fa-gauge-high"></i>
-              <span>My Dashboard</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item <?php echo $active_menu === 'attendance' ? 'active' : ''; ?>">
-            <a href="<?php echo STAFF_URL; ?>/attendance">
-              <i class="fa-solid fa-clock"></i>
-              <span>Attendance &amp; Punch</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item <?php echo $active_menu === 'staff-id' ? 'active' : ''; ?>">
-            <a href="<?php echo STAFF_URL; ?>/staff-id">
-              <i class="fa-solid fa-id-card"></i>
-              <span>My Staff ID Card</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item <?php echo $active_menu === 'leaves' ? 'active' : ''; ?>">
-            <a href="<?php echo STAFF_URL; ?>/leaves">
-              <i class="fa-solid fa-plane-departure"></i>
-              <span>Apply for Leave</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item <?php echo $active_menu === 'students' ? 'active' : ''; ?>">
-            <a href="<?php echo STAFF_URL; ?>/students">
-              <i class="fa-solid fa-users"></i>
-              <span>My Students &amp; Batches</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item <?php echo $active_menu === 'payroll' ? 'active' : ''; ?>">
-            <a href="<?php echo STAFF_URL; ?>/payroll">
-              <i class="fa-solid fa-file-invoice-dollar"></i>
-              <span>Salary Slips</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item <?php echo $active_menu === 'announcements' ? 'active' : ''; ?>">
-            <a href="<?php echo STAFF_URL; ?>/announcements">
-              <i class="fa-solid fa-bullhorn"></i>
-              <span>Noticeboard</span>
-            </a>
-          </li>
+          <?php if (in_array('dashboard', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'dashboard' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/dashboard">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span>My Dashboard</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if (in_array('attendance', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'attendance' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/attendance">
+                <i class="fa-solid fa-clock"></i>
+                <span>Attendance &amp; Punch</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if (in_array('staff-id', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'staff-id' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/staff-id">
+                <i class="fa-solid fa-id-card"></i>
+                <span>My Staff ID Card</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if (in_array('leaves', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'leaves' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/leaves">
+                <i class="fa-solid fa-plane-departure"></i>
+                <span>Apply for Leave</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if (in_array('students', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'students' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/students">
+                <i class="fa-solid fa-users"></i>
+                <span>My Students &amp; Batches</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if (in_array('payroll', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'payroll' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/payroll">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <span>Salary Slips</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if (in_array('announcements', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'announcements' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/announcements">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Noticeboard</span>
+              </a>
+            </li>
+          <?php endif; ?>
         </ul>
+
+        <?php 
+          $has_admin_modules = false;
+          $admin_module_keys = ['admin_students', 'admin_student_attendance', 'admin_marksheet', 'admin_staff_periods', 'admin_staff_attendance'];
+          foreach ($admin_module_keys as $amk) {
+            if (in_array($amk, $staff_perms)) { $has_admin_modules = true; break; }
+          }
+        ?>
+        <?php if ($has_admin_modules): ?>
+          <div class="nav-section-title">Academic &amp; Operations</div>
+          <ul class="sidebar-menu">
+            <?php if (in_array('admin_students', $staff_perms)): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'students' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/students">
+                  <i class="fa-solid fa-user-graduate"></i>
+                  <span>Student Roaster</span>
+                </a>
+              </li>
+            <?php endif; ?>
+            <?php if (in_array('admin_student_attendance', $staff_perms)): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'student-attendance' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/student-attendance">
+                  <i class="fa-solid fa-qrcode"></i>
+                  <span>Attendance &amp; QR Scan</span>
+                </a>
+              </li>
+            <?php endif; ?>
+            <?php if (in_array('admin_marksheet', $staff_perms)): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/marksheet">
+                  <i class="fa-solid fa-file-lines"></i>
+                  <span>Marksheet Management</span>
+                </a>
+              </li>
+            <?php endif; ?>
+            <?php if (in_array('admin_staff_periods', $staff_perms)): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'staff-periods' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/staff-periods">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                  <span>Staff Periods</span>
+                </a>
+              </li>
+            <?php endif; ?>
+            <?php if (in_array('admin_staff_attendance', $staff_perms)): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'staff-attendance' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/staff-attendance">
+                  <i class="fa-solid fa-calendar-check"></i>
+                  <span>Staff Attendance</span>
+                </a>
+              </li>
+            <?php endif; ?>
+          </ul>
+        <?php endif; ?>
 
       <?php else: ?>
         <!-- PARENT & STUDENT MENU -->
@@ -308,6 +378,30 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
     </div>
 
   </aside>
+
+  <!-- Auto-scroll active menu item into view -->
+  <script>
+  (function() {
+    function scrollActiveSidebarMenu() {
+      var nav = document.querySelector('.sidebar-nav-container');
+      if (!nav) return;
+      var activeItem = nav.querySelector('.sidebar-menu-item.active');
+      if (activeItem) {
+        var containerHeight = nav.clientHeight;
+        var itemTop = activeItem.offsetTop;
+        var itemHeight = activeItem.clientHeight;
+        var targetScroll = itemTop - (containerHeight / 2) + (itemHeight / 2);
+        nav.scrollTop = Math.max(0, targetScroll);
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', scrollActiveSidebarMenu);
+    } else {
+      scrollActiveSidebarMenu();
+    }
+    window.addEventListener('load', scrollActiveSidebarMenu);
+  })();
+  </script>
 
   <!-- Right Main View -->
   <div class="hrms-main-content">

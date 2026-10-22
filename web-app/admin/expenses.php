@@ -164,81 +164,133 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <style>
-/* ── Expenses Module Design Styles ── */
+/* ── Staff ID Style Table & Badge Styles (Simple & Sober - Matching staff-id) ── */
+.staff-id-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-id-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.staff-id-table tbody td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.84rem;
+}
+.staff-id-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+.staff-id-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Badge & Tag Elements */
 .exp-cat-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.76rem;
-  font-weight: 800;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
   white-space: nowrap;
-}
-.exp-cat-badge.utility {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
-}
-.exp-cat-badge.stationery {
-  background: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
-}
-.exp-cat-badge.lab {
-  background: #f3e8ff;
-  color: #7e22ce;
-  border: 1px solid #e9d5ff;
-}
-.exp-cat-badge.it {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-}
-.exp-cat-badge.maintenance {
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
-}
-.exp-cat-badge.general {
-  background: #f1f5f9;
-  color: #475569;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
+  color: #334155;
 }
 
 .mode-pill-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 9px;
-  border-radius: 6px;
-  font-size: 0.74rem;
-  font-weight: 700;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #334155;
-  white-space: nowrap;
-}
-
-.ref-code-badge {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 2px 8px;
+  border-radius: 5px;
   font-size: 0.75rem;
-  font-weight: 800;
-  color: #0284c7;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  padding: 2px 7px;
-  border-radius: 6px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.vendor-chip {
+.ref-code-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.8rem;
+  gap: 4px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
   font-weight: 700;
-  color: #0f172a;
+  white-space: nowrap;
+}
+
+.voucher-id-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.70rem;
+  font-weight: 600;
+}
+
+/* Action Icon Buttons */
+.sid-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.76rem;
+  padding: 0;
+  text-decoration: none;
+}
+.sid-action-btn:hover {
+  transform: translateY(-1px);
+}
+.sid-action-btn.view {
+  color: #0284c7;
+  border-color: #bae6fd;
+  background: #f0f9ff;
+}
+.sid-action-btn.view:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+.sid-action-btn.delete {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.sid-action-btn.delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
 }
 </style>
 
@@ -413,17 +465,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      CAMPUS OPERATIONAL EXPENSES TABLE
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 30px;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 22px;">
+<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-        <i class="fa-solid fa-file-invoice-dollar" style="color: var(--hrms-primary);"></i>
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
         Campus Operational Expenses &amp; Voucher Ledger
-        <span style="font-size: 0.76rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 20px;">
+        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
-      <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
+      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
         Comprehensive breakdown of utility bills, laboratory consignments, vendor payouts, and institutional purchases.
       </p>
     </div>
@@ -436,17 +488,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <div class="table-responsive">
-    <table class="hrms-table">
+    <table class="hrms-table staff-id-table">
       <thead>
         <tr>
-          <th style="min-width: 130px;">Date</th>
-          <th style="min-width: 240px;">Expense Title &amp; Details</th>
-          <th style="min-width: 170px;">Category Head</th>
-          <th style="min-width: 180px;">Vendor / Payee</th>
-          <th style="min-width: 140px;">Invoice / Ref</th>
-          <th style="min-width: 140px;">Amount (₹)</th>
-          <th style="min-width: 130px;">Payment Mode</th>
-          <th style="min-width: 140px; text-align: right;">Action</th>
+          <th style="min-width: 125px;">Date &amp; Voucher</th>
+          <th style="min-width: 220px;">Expense Title &amp; Details</th>
+          <th style="min-width: 140px;">Category Head</th>
+          <th style="min-width: 160px;">Vendor / Payee</th>
+          <th style="min-width: 130px;">Invoice / Ref</th>
+          <th style="min-width: 110px;">Amount (₹)</th>
+          <th style="min-width: 120px;">Payment Mode</th>
+          <th style="min-width: 80px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -468,24 +520,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php else: ?>
           <?php foreach ($expenses as $exp): ?>
             <?php 
-              // Category class & icon
+              // Category icon
               $cat_name = strtolower($exp['category_name']);
-              $cat_badge_class = 'general';
               $cat_icon = 'fa-tag';
               if (strpos($cat_name, 'elect') !== false || strpos($cat_name, 'util') !== false) {
-                $cat_badge_class = 'utility';
                 $cat_icon = 'fa-bolt';
               } elseif (strpos($cat_name, 'stat') !== false || strpos($cat_name, 'print') !== false) {
-                $cat_badge_class = 'stationery';
                 $cat_icon = 'fa-pen-nib';
               } elseif (strpos($cat_name, 'lab') !== false || strpos($cat_name, 'sci') !== false) {
-                $cat_badge_class = 'lab';
                 $cat_icon = 'fa-flask-vial';
               } elseif (strpos($cat_name, 'it') !== false || strpos($cat_name, 'soft') !== false || strpos($cat_name, 'net') !== false) {
-                $cat_badge_class = 'it';
                 $cat_icon = 'fa-server';
               } elseif (strpos($cat_name, 'maint') !== false || strpos($cat_name, 'build') !== false) {
-                $cat_badge_class = 'maintenance';
                 $cat_icon = 'fa-wrench';
               }
 
@@ -507,19 +553,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <div style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">
                   <?php echo format_date($exp['expense_date']); ?>
                 </div>
-                <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
-                  Voucher #<?php echo $exp['id']; ?>
+                <div style="margin-top: 2px;">
+                  <span class="voucher-id-pill">#<?php echo $exp['id']; ?></span>
                 </div>
               </td>
 
               <!-- 2. Expense Title & Details -->
               <td>
-                <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                <div style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                   <?php echo htmlspecialchars($exp['title']); ?>
                 </div>
                 <?php if (!empty($exp['notes'])): ?>
-                  <div style="font-size: 0.76rem; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 5px;">
-                    <i class="fa-solid fa-circle-info" style="color: #94a3b8; font-size: 0.68rem;"></i>
+                  <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-circle-info" style="color: #94a3b8; font-size: 0.65rem;"></i>
                     <span><?php echo htmlspecialchars($exp['notes']); ?></span>
                   </div>
                 <?php endif; ?>
@@ -527,16 +573,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 3. Category Head -->
               <td>
-                <span class="exp-cat-badge <?php echo $cat_badge_class; ?>">
-                  <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+                <span class="exp-cat-badge">
+                  <i class="fa-solid <?php echo $cat_icon; ?>" style="color: #64748b; font-size: 0.68rem;"></i>
                   <span><?php echo htmlspecialchars($exp['category_name']); ?></span>
                 </span>
               </td>
 
               <!-- 4. Vendor / Payee -->
               <td>
-                <div class="vendor-chip">
-                  <i class="fa-solid fa-store" style="color: #64748b; font-size: 0.72rem;"></i>
+                <div style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #334155; font-size: 0.82rem;">
+                  <i class="fa-solid fa-store" style="color: #94a3b8; font-size: 0.70rem;"></i>
                   <span><?php echo htmlspecialchars($exp['vendor_name'] ?: 'Official Vendor'); ?></span>
                 </div>
               </td>
@@ -544,18 +590,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 5. Invoice / Ref -->
               <td>
                 <?php if (!empty($exp['invoice_ref']) && $exp['invoice_ref'] !== '—'): ?>
-                  <span class="ref-code-badge">
+                  <span class="ref-code-pill">
                     <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
                     <span><?php echo htmlspecialchars($exp['invoice_ref']); ?></span>
                   </span>
                 <?php else: ?>
-                  <span style="color: #94a3b8; font-size: 0.78rem;">None</span>
+                  <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 600;">—</span>
                 <?php endif; ?>
               </td>
 
               <!-- 6. Amount -->
               <td>
-                <strong style="color: #dc2626; font-size: 0.96rem; font-family: 'Outfit', sans-serif;">
+                <strong style="color: #dc2626; font-size: 0.92rem; font-family: 'Outfit', sans-serif;">
                   <?php echo format_inr($exp['amount']); ?>
                 </strong>
               </td>
@@ -563,26 +609,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 7. Mode -->
               <td>
                 <span class="mode-pill-chip">
-                  <i class="fa-solid <?php echo $mode_icon; ?>" style="color: #0284c7;"></i>
+                  <i class="fa-solid <?php echo $mode_icon; ?>" style="color: #0284c7; font-size: 0.68rem;"></i>
                   <span><?php echo htmlspecialchars($exp['payment_method']); ?></span>
                 </span>
               </td>
 
               <!-- 8. Actions -->
               <td style="text-align: right; white-space: nowrap;">
-                <div style="display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
                   <!-- View Details Button -->
-                  <button type="button" onclick="openVoucherModal(<?php echo htmlspecialchars(json_encode($exp)); ?>);" class="roaster-btn secondary" style="padding: 6px 10px; font-size: 0.78rem; font-weight: 700;" title="View Full Voucher Details">
-                    <i class="fa-solid fa-eye" style="color: var(--hrms-primary);"></i>
-                    <span>View</span>
+                  <button type="button" onclick="openVoucherModal(<?php echo htmlspecialchars(json_encode($exp)); ?>);" class="sid-action-btn view" title="View Voucher Details">
+                    <i class="fa-solid fa-eye"></i>
                   </button>
 
                   <!-- Delete Voucher -->
                   <form method="POST" action="<?php echo ADMIN_URL; ?>/expenses" style="display: inline; margin: 0;" onsubmit="return confirm('Permanently remove this expense voucher record?');">
                     <input type="hidden" name="action" value="delete_expense">
                     <input type="hidden" name="expense_id" value="<?php echo $exp['id']; ?>">
-                    <button type="submit" class="roaster-btn secondary" style="padding: 6px 8px; font-size: 0.78rem; color: #ef4444; border-color: #fee2e2; background: #fff5f5;" title="Delete Voucher">
+                    <button type="submit" class="sid-action-btn delete" title="Delete Voucher">
                       <i class="fa-solid fa-trash-can"></i>
                     </button>
                   </form>

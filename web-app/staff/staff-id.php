@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+require_menu_permission('staff-id');
 $page_title = 'Faculty & Staff ID Card Generator';
 $page_heading = 'Faculty Identity Card & Biometric QR Pass';
 $page_subheading = 'Official Faculty Identity Badge & Automated Biometric QR Pass';
