@@ -153,28 +153,7 @@ if (!empty($past_dates)) {
     }
 }
 
-// Fetch staff attendance list
-$query = "
-    SELECT sp.*, u.full_name, u.username, u.avatar,
-    (SELECT status FROM attendance_logs WHERE type = 'staff' AND reference_id = sp.id AND log_date = ?) as today_status,
-    (SELECT check_in_time FROM attendance_logs WHERE type = 'staff' AND reference_id = sp.id AND log_date = ?) as check_in_time
-    FROM staff_profiles sp
-    JOIN users u ON sp.user_id = u.id
-    WHERE sp.session_id = ?
-";
-$params = [$filter_date, $filter_date, $session_id];
-
-if (!empty($filter_dept)) {
-    $query .= " AND sp.department = ?";
-    $params[] = $filter_dept;
-}
-$query .= " ORDER BY sp.id ASC";
-
-$stmt = $db->prepare($query);
-$stmt->execute($params);
-$staff_attendance = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Overall Attendance Statistics Query
+// Overall Attendance Statistics Query (unaffected by pagination limits)
 $stats_sql = "
     SELECT 
         COUNT(sp.id) as total_faculty,
@@ -194,7 +173,7 @@ $stats_stmt = $db->prepare($stats_sql);
 $stats_stmt->execute($stats_params);
 $day_stats_res = $stats_stmt->fetch(PDO::FETCH_ASSOC);
 
-$total_count = intval($day_stats_res['total_faculty'] ?? count($staff_attendance));
+$total_count = intval($day_stats_res['total_faculty'] ?? 0);
 $present_count = intval($day_stats_res['present_count'] ?? 0);
 $late_count = intval($day_stats_res['late_count'] ?? 0);
 $absent_count = intval($day_stats_res['absent_count'] ?? 0);
@@ -203,6 +182,65 @@ $unmarked_count = max(0, $total_count - ($present_count + $late_count + $absent_
 $present_rate = $total_count > 0 ? round(($present_count / $total_count) * 100, 1) : 0;
 $late_rate = $total_count > 0 ? round(($late_count / $total_count) * 100, 1) : 0;
 $absent_rate = $total_count > 0 ? round((($absent_count + $unmarked_count) / $total_count) * 100, 1) : 0;
+
+// Helper for attendance pagination links preserving date, department and limit
+function get_staff_attendance_pagination_url($target_page, $date, $department, $limit) {
+    $params = ['date' => $date];
+    if (!empty($department)) {
+        $params['department'] = $department;
+    }
+    if ($limit !== 10) {
+        $params['limit'] = $limit;
+    }
+    if ($target_page > 1) {
+        $params['page'] = $target_page;
+    }
+    return ADMIN_URL . '/staff-attendance?' . http_build_query($params);
+}
+
+// Pagination & Limits Setup (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+$total_records = $total_count;
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+$start_record = $total_records > 0 ? ($offset + 1) : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Fetch staff attendance list for current page
+$query = "
+    SELECT sp.*, u.full_name, u.username, u.avatar,
+    (SELECT status FROM attendance_logs WHERE type = 'staff' AND reference_id = sp.id AND log_date = ?) as today_status,
+    (SELECT check_in_time FROM attendance_logs WHERE type = 'staff' AND reference_id = sp.id AND log_date = ?) as check_in_time
+    FROM staff_profiles sp
+    JOIN users u ON sp.user_id = u.id
+    WHERE sp.session_id = ?
+";
+$params = [$filter_date, $filter_date, $session_id];
+
+if (!empty($filter_dept)) {
+    $query .= " AND sp.department = ?";
+    $params[] = $filter_dept;
+}
+$query .= " ORDER BY sp.id ASC LIMIT ? OFFSET ?";
+
+$stmt = $db->prepare($query);
+$b_idx = 1;
+foreach ($params as $p) {
+    $stmt->bindValue($b_idx++, $p);
+}
+$stmt->bindValue($b_idx++, $limit, PDO::PARAM_INT);
+$stmt->bindValue($b_idx++, $offset, PDO::PARAM_INT);
+$stmt->execute();
+$staff_attendance = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Dynamic Departments list
 $db_depts = $db->query("SELECT DISTINCT department FROM staff_profiles WHERE department IS NOT NULL AND department != '' ORDER BY department ASC")->fetchAll(PDO::FETCH_COLUMN);
@@ -415,6 +453,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <!-- Date, Department Filter & Quick Actions -->
     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
       <form method="GET" action="<?php echo ADMIN_URL; ?>/staff-attendance" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
         <div style="position: relative;">
           <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date); ?>" onchange="this.form.submit()" class="hrms-input" style="padding: 7px 12px; font-size: 0.82rem; border-radius: 8px; width: 145px;">
         </div>
@@ -438,7 +477,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Attendance Roster Table -->
-  <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+  <div class="table-responsive">
     <table class="hrms-table">
       <thead>
         <tr>
@@ -595,10 +634,73 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </table>
   </div>
 
-  <!-- Register Footer Strip (Exact match to student attendance) -->
-  <div class="roaster-table-footer" style="padding: 12px 20px;">
-    <div id="roasterFooterSummary" style="font-size: 0.78rem; color: #475569;">
-      Showing <strong><?php echo $total_count; ?></strong> faculty &amp; staff | 
+  <!-- Table Pagination & Per-Page Controls -->
+  <div class="pagination-controls-wrap">
+    
+    <!-- Left: Showing summary & Limit Selector -->
+    <div class="pagination-meta-group">
+      <span style="font-size: 0.82rem; color: #475569;">
+        <?php if ($total_records > 0): ?>
+          Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> faculty &amp; staff
+        <?php else: ?>
+          Showing <strong>0</strong> faculty &amp; staff
+        <?php endif; ?>
+      </span>
+
+      <div class="pagination-limit-box">
+        <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+        <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+          <?php foreach ($allowed_limits as $l): ?>
+            <option value="<?php echo htmlspecialchars(get_staff_attendance_pagination_url(1, $filter_date, $filter_dept, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <?php echo $l; ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+
+    <!-- Center/Right: Navigation page buttons -->
+    <?php if ($total_pages > 1): ?>
+      <nav class="pagination-nav" aria-label="Faculty Attendance Pagination">
+        <!-- Prev Page -->
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_staff_attendance_pagination_url($page - 1, $filter_date, $filter_dept, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+           aria-label="Previous Page"
+           title="Previous Page">
+          <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+        </a>
+
+        <!-- Page Numbers -->
+        <?php
+          $range = 2;
+          for ($p = 1; $p <= $total_pages; $p++):
+            if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+        ?>
+          <a href="<?php echo htmlspecialchars(get_staff_attendance_pagination_url($p, $filter_date, $filter_dept, $limit)); ?>" 
+             class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+            <?php echo $p; ?>
+          </a>
+        <?php 
+            elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+        ?>
+          <span class="pagination-ellipsis">&hellip;</span>
+        <?php 
+            endif;
+          endfor;
+        ?>
+
+        <!-- Next Page -->
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_staff_attendance_pagination_url($page + 1, $filter_date, $filter_dept, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+           aria-label="Next Page"
+           title="Next Page">
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+        </a>
+      </nav>
+    <?php endif; ?>
+
+    <!-- Right: Summary status counts -->
+    <div id="roasterFooterSummary" style="font-size: 0.76rem; color: #475569; display: flex; align-items: center; gap: 8px; margin-left: auto;">
       <span id="footerPresentCount" style="color: #059669; font-weight: 700;"><?php echo $present_count; ?> Present</span> &bull; 
       <span id="footerLateCount" style="color: #d97706; font-weight: 700;"><?php echo $late_count; ?> Late</span> &bull; 
       <span id="footerAbsentCount" style="color: #dc2626; font-weight: 700;"><?php echo $absent_count; ?> Absent</span>
@@ -607,9 +709,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <?php endif; ?>
     </div>
 
-    <div style="font-size: 0.74rem; color: #94a3b8;">
-      <i class="fa-solid fa-clock-rotate-left"></i> Real-time sync &bull; <?php echo date('h:i A'); ?>
-    </div>
   </div>
 
 </div>

@@ -39,27 +39,72 @@ $all_students_stmt = $db->prepare("
 $all_students_stmt->execute([$session_id]);
 $all_students_list = $all_students_stmt->fetchAll();
 
-// Query filtered students for the table directory
-$query = "SELECT * FROM students WHERE session_id = ?";
-$params = [$session_id];
+// Pagination & Limits Setup (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+// Build WHERE filter conditions
+$where_clauses = ["session_id = ?"];
+$where_params = [$session_id];
 
 if (!empty($search)) {
-    $query .= " AND (student_name LIKE ? OR roll_no LIKE ? OR admission_no LIKE ? OR parent_phone LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
+    $where_clauses[] = "(student_name LIKE ? OR roll_no LIKE ? OR admission_no LIKE ? OR parent_phone LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
 }
 
 if (!empty($filter_standard)) {
-    $query .= " AND standard = ?";
-    $params[] = $filter_standard;
+    $where_clauses[] = "standard = ?";
+    $where_params[] = $filter_standard;
 }
 
-$query .= " ORDER BY standard ASC, roll_no ASC, student_name ASC";
+$where_sql = implode(' AND ', $where_clauses);
+
+// Count total matching scholars
+$count_stmt = $db->prepare("SELECT COUNT(*) FROM students WHERE {$where_sql}");
+$count_stmt->execute($where_params);
+$total_records = intval($count_stmt->fetchColumn());
+
+// Calculate total pages & offset
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+
+// Query students for the paginated table directory
+$query = "SELECT * FROM students WHERE {$where_sql} ORDER BY standard ASC, roll_no ASC, student_name ASC LIMIT ? OFFSET ?";
 $stmt_table = $db->prepare($query);
-$stmt_table->execute($params);
+$bind_idx = 1;
+foreach ($where_params as $val) {
+    $stmt_table->bindValue($bind_idx++, $val);
+}
+$stmt_table->bindValue($bind_idx++, $limit, PDO::PARAM_INT);
+$stmt_table->bindValue($bind_idx++, $offset, PDO::PARAM_INT);
+$stmt_table->execute();
 $table_students = $stmt_table->fetchAll();
+
+// Pagination indicators
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Helper for generating marksheet pagination links
+function get_marksheet_pagination_url($target_page, $search, $filter_standard, $selected_student_id, $selected_marksheet_id, $limit) {
+    $params = [];
+    if ($selected_student_id > 0) $params['student_id'] = $selected_student_id;
+    if ($selected_marksheet_id > 0) $params['marksheet_id'] = $selected_marksheet_id;
+    if (!empty($search)) $params['search'] = $search;
+    if (!empty($filter_standard)) $params['standard'] = $filter_standard;
+    if ($limit != 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    return ADMIN_URL . '/marksheet' . (!empty($params) ? '?' . http_build_query($params) : '') . '#marksheetDirectoryCard';
+}
 
 // Default selected student:
 if ($selected_student_id === 0) {
@@ -1426,6 +1471,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php if (!empty($filter_standard)): ?>
           <input type="hidden" name="standard" value="<?php echo htmlspecialchars($filter_standard); ?>">
         <?php endif; ?>
+        <?php if ($limit !== 10): ?>
+          <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <?php endif; ?>
+        <?php if ($page > 1): ?>
+          <input type="hidden" name="page" value="<?php echo $page; ?>">
+        <?php endif; ?>
         <label style="font-size: 13px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;">
           <i class="fa-solid fa-book-bookmark" style="color: #0092df;"></i> <span>Exam:</span>
         </label>
@@ -1683,6 +1734,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     
     <!-- Filter form -->
     <form method="GET" action="<?php echo ADMIN_URL; ?>/marksheet" class="roaster-filter-form">
+      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       <?php if ($selected_student_id > 0): ?>
         <input type="hidden" name="student_id" value="<?php echo $selected_student_id; ?>">
       <?php endif; ?>
@@ -1694,13 +1746,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search student name, roll no, phone..." autocomplete="off">
         <?php if (!empty($search)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/marksheet<?php 
-            $qp = [];
-            if ($selected_student_id > 0) $qp['student_id'] = $selected_student_id;
-            if ($selected_marksheet_id > 0) $qp['marksheet_id'] = $selected_marksheet_id;
-            if (!empty($filter_standard)) $qp['standard'] = $filter_standard;
-            echo !empty($qp) ? '?' . http_build_query($qp) : '';
-          ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <a href="<?php echo htmlspecialchars(get_marksheet_pagination_url(1, '', $filter_standard, $selected_student_id, $selected_marksheet_id, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
 
@@ -1722,7 +1768,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <?php if (!empty($search) || !empty($filter_standard)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/marksheet<?php echo $selected_student_id > 0 ? '?student_id=' . $selected_student_id : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+        <a href="<?php echo ADMIN_URL; ?>/marksheet<?php 
+          $rp = [];
+          if ($selected_student_id > 0) $rp['student_id'] = $selected_student_id;
+          if ($selected_marksheet_id > 0) $rp['marksheet_id'] = $selected_marksheet_id;
+          if ($limit !== 10) $rp['limit'] = $limit;
+          echo !empty($rp) ? '?' . http_build_query($rp) : '';
+        ?>" class="roaster-btn ghost" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -1732,7 +1784,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot"></span>
-        <span><strong><?php echo count($table_students); ?></strong> Scholars</span>
+        <span><strong><?php echo $total_records; ?></strong> Scholars</span>
       </div>
     </div>
 
@@ -1742,7 +1794,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      STUDENT DATA TABLE (Simple & Sober - Like student-id.php)
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card no-print" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+<div class="hrms-card no-print" id="marksheetDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
   <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div>
       <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
@@ -1759,7 +1811,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
       <span style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
-        Total Records: <strong style="color: #0f172a;"><?php echo count($table_students); ?></strong>
+        Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong>
       </span>
       <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
         <button type="button" onclick="openCreateMarksheetModal(<?php echo $selected_student_id; ?>);" class="ms-btn-action ms-btn-secondary" style="font-size: 0.76rem; gap: 5px;">
@@ -1815,6 +1867,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
               $switch_url = ADMIN_URL . '/marksheet?student_id=' . $stu['id'] . 
                             (!empty($search) ? '&search=' . urlencode($search) : '') . 
                             (!empty($filter_standard) ? '&standard=' . urlencode($filter_standard) : '') . 
+                            ($limit !== 10 ? '&limit=' . $limit : '') .
+                            ($page > 1 ? '&page=' . $page : '') .
                             '#report-card-view';
             ?>
             <tr class="<?php echo $is_cur_viewing ? 'active-student-row' : ''; ?>">
@@ -1967,6 +2021,80 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </tbody>
     </table>
+  </div>
+
+  <!-- Table Pagination & Per-Page Controls -->
+  <div class="pagination-controls-wrap">
+    
+    <!-- Left: Showing summary & Limit Selector -->
+    <div class="pagination-meta-group">
+      <span style="font-size: 0.82rem; color: #475569;">
+        <?php if ($total_records > 0): ?>
+          Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> scholars
+        <?php else: ?>
+          Showing <strong>0</strong> scholars
+        <?php endif; ?>
+      </span>
+
+      <div class="pagination-limit-box">
+        <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+        <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+          <?php foreach ($allowed_limits as $l): ?>
+            <option value="<?php echo htmlspecialchars(get_marksheet_pagination_url(1, $search, $filter_standard, $selected_student_id, $selected_marksheet_id, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <?php echo $l; ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+
+    <!-- Center/Right: Navigation page buttons -->
+    <?php if ($total_pages > 1): ?>
+      <nav class="pagination-nav" aria-label="Scholar Academic Directory Pagination">
+        <!-- Prev Page -->
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_marksheet_pagination_url($page - 1, $search, $filter_standard, $selected_student_id, $selected_marksheet_id, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+           aria-label="Previous Page"
+           title="Previous Page">
+          <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+        </a>
+
+        <!-- Page Numbers -->
+        <?php
+          $range = 2;
+          for ($p = 1; $p <= $total_pages; $p++):
+            if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+        ?>
+          <a href="<?php echo htmlspecialchars(get_marksheet_pagination_url($p, $search, $filter_standard, $selected_student_id, $selected_marksheet_id, $limit)); ?>" 
+             class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+            <?php echo $p; ?>
+          </a>
+        <?php 
+            elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+        ?>
+          <span class="pagination-ellipsis">&hellip;</span>
+        <?php 
+            endif;
+          endfor;
+        ?>
+
+        <!-- Next Page -->
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_marksheet_pagination_url($page + 1, $search, $filter_standard, $selected_student_id, $selected_marksheet_id, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+           aria-label="Next Page"
+           title="Next Page">
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+        </a>
+      </nav>
+    <?php endif; ?>
+
+    <!-- Session info & evaluation summary -->
+    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+      <span>Total Evaluations: <strong style="color: #0284c7;"><?php echo $total_marksheets_count; ?></strong></span>
+      <span style="color: #cbd5e1;">|</span>
+      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+    </div>
+
   </div>
 </div>
 

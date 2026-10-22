@@ -148,8 +148,26 @@ $school_settings = get_school_settings();
 // Fetch all system users for security account management
 $all_system_users = $db->query("SELECT id, username, full_name, role, status FROM users ORDER BY role ASC, full_name ASC")->fetchAll();
 
-// Fetch sessions with statistics
-$sessions_list = $db->query("
+// Sessions Pagination Setup (10, 20, 30, 40, 50) - Only for sessions tab
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+// Total count of academic sessions
+$total_sessions_count = (int)$db->query("SELECT COUNT(*) FROM academic_sessions")->fetchColumn();
+$total_pages = max(1, ceil($total_sessions_count / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+$start_record = $total_sessions_count > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_sessions_count);
+
+// Fetch paginated sessions with statistics
+$sessions_stmt = $db->prepare("
     SELECT s.*,
         (SELECT COUNT(*) FROM students WHERE session_id = s.id) as student_count,
         (SELECT COUNT(*) FROM staff_profiles WHERE session_id = s.id) as staff_count,
@@ -157,19 +175,38 @@ $sessions_list = $db->query("
         (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE session_id = s.id) as total_expenses
     FROM academic_sessions s
     ORDER BY s.id DESC
-")->fetchAll();
+    LIMIT ? OFFSET ?
+");
+$sessions_stmt->bindValue(1, (int)$limit, PDO::PARAM_INT);
+$sessions_stmt->bindValue(2, (int)$offset, PDO::PARAM_INT);
+$sessions_stmt->execute();
+$sessions_list = $sessions_stmt->fetchAll();
 
-$active_session_stats = [
+// Fetch active session stats for the top banner
+$active_stat_stmt = $db->prepare("
+    SELECT s.*,
+        (SELECT COUNT(*) FROM students WHERE session_id = s.id) as student_count,
+        (SELECT COUNT(*) FROM staff_profiles WHERE session_id = s.id) as staff_count,
+        (SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = s.id) as total_fees_collected,
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE session_id = s.id) as total_expenses
+    FROM academic_sessions s
+    WHERE s.id = ?
+    LIMIT 1
+");
+$active_stat_stmt->execute([$active_session['id']]);
+$active_session_stats = $active_stat_stmt->fetch() ?: [
     'student_count' => 0,
     'staff_count' => 0,
     'total_fees_collected' => 0,
     'total_expenses' => 0
 ];
-foreach ($sessions_list as $s_row) {
-    if ($s_row['id'] == $active_session['id']) {
-        $active_session_stats = $s_row;
-        break;
-    }
+
+// Helper to build sessions pagination URL
+function get_sessions_pagination_url($target_page, $limit) {
+    $params = ['tab' => 'sessions'];
+    if ($limit !== 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    return ADMIN_URL . '/school-settings?' . http_build_query($params);
 }
 
 require_once __DIR__ . '/../includes/layout-header.php';
@@ -673,7 +710,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="settings-tab-pill <?php echo $current_tab === 'sessions' ? 'active' : ''; ?>" onclick="switchSettingsTab('sessions')">
         <i class="fa-solid fa-timeline"></i>
         <span>Academic Sessions</span>
-        <span class="tab-badge"><?php echo count($sessions_list); ?></span>
+        <span class="tab-badge"><?php echo $total_sessions_count; ?></span>
       </button>
 
       <button type="button" class="settings-tab-pill <?php echo $current_tab === 'security' ? 'active' : ''; ?>" onclick="switchSettingsTab('security')">
@@ -978,7 +1015,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; color: #475569; background: #f8fafc; padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0;">
           <i class="fa-solid fa-layer-group" style="color: #0092df;"></i>
-          <?php echo count($sessions_list); ?> Academic Periods
+          <?php echo $total_sessions_count; ?> Academic Periods
         </span>
       </div>
     </div>
@@ -1100,6 +1137,73 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php endforeach; ?>
         </tbody>
       </table>
+    </div>
+
+    <!-- Table Footer Pagination & Per-Page Controls (Matches HRMS standard) -->
+    <div class="pagination-controls-wrap">
+      
+      <!-- Left: Showing summary & Limit Selector -->
+      <div class="pagination-meta-group">
+        <span style="font-size: 0.82rem; color: #475569;">
+          <?php if ($total_sessions_count > 0): ?>
+            Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_sessions_count; ?></strong> <?php echo $total_sessions_count === 1 ? 'session' : 'sessions'; ?>
+          <?php else: ?>
+            Showing <strong>0</strong> sessions
+          <?php endif; ?>
+        </span>
+
+        <div class="pagination-limit-box">
+          <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+          <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+            <?php foreach ($allowed_limits as $l): ?>
+              <option value="<?php echo htmlspecialchars(get_sessions_pagination_url(1, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+                <?php echo $l; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+
+      <!-- Center/Right: Navigation page buttons -->
+      <?php if ($total_pages > 1): ?>
+        <nav class="pagination-nav" aria-label="Academic Sessions Table Pagination">
+          <!-- Prev Page -->
+          <a href="<?php echo $page > 1 ? htmlspecialchars(get_sessions_pagination_url($page - 1, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+             aria-label="Previous Page"
+             title="Previous Page">
+            <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+          </a>
+
+          <!-- Page Numbers -->
+          <?php
+            $range = 2;
+            for ($p = 1; $p <= $total_pages; $p++):
+              if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+          ?>
+            <a href="<?php echo htmlspecialchars(get_sessions_pagination_url($p, $limit)); ?>" 
+               class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+              <?php echo $p; ?>
+            </a>
+          <?php 
+              elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+          ?>
+            <span class="pagination-ellipsis">&hellip;</span>
+          <?php 
+              endif;
+            endfor; 
+          ?>
+
+          <!-- Next Page -->
+          <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_sessions_pagination_url($page + 1, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+             aria-label="Next Page"
+             title="Next Page">
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+          </a>
+        </nav>
+      <?php endif; ?>
+
     </div>
 
   </div>
@@ -1459,6 +1563,10 @@ function switchSettingsTab(tabName) {
   // Sync URL query without page reload
   const newUrl = new URL(window.location);
   newUrl.searchParams.set('tab', tabName);
+  if (tabName !== 'sessions') {
+    newUrl.searchParams.delete('page');
+    newUrl.searchParams.delete('limit');
+  }
   window.history.replaceState({}, '', newUrl);
 }
 

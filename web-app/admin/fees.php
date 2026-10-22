@@ -18,6 +18,14 @@ $filter_standard = trim($_GET['standard'] ?? '');
 $filter_method = trim($_GET['method'] ?? '');
 $filter_student_id = intval($_GET['student_id'] ?? 0);
 
+// Pagination & Limits Setup (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
 // Standards list
 $standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
 
@@ -66,48 +74,93 @@ $all_students = $db->prepare("SELECT id, student_name, roll_no, standard, total_
 $all_students->execute([$session_id]);
 $students_list = $all_students->fetchAll();
 
-// Query Payments with Search and Filters
-$query = "
-    SELECT fp.*, s.student_name, s.roll_no, s.standard, s.total_fees, s.paid_fees, s.photo, s.admission_no, s.parent_phone
-    FROM fee_payments fp
-    JOIN students s ON fp.student_id = s.id
-    WHERE fp.session_id = ?
-";
-$params = [$session_id];
+// Build WHERE filter conditions
+$where_clauses = ["fp.session_id = ?"];
+$where_params = [$session_id];
 
 if (!empty($search)) {
-    $query .= " AND (s.student_name LIKE ? OR s.roll_no LIKE ? OR fp.receipt_no LIKE ? OR s.admission_no LIKE ? OR s.parent_phone LIKE ? OR fp.remarks LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
+    $where_clauses[] = "(s.student_name LIKE ? OR s.roll_no LIKE ? OR fp.receipt_no LIKE ? OR s.admission_no LIKE ? OR s.parent_phone LIKE ? OR fp.remarks LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
 }
 
 if (!empty($filter_standard)) {
-    $query .= " AND s.standard = ?";
-    $params[] = $filter_standard;
+    $where_clauses[] = "s.standard = ?";
+    $where_params[] = $filter_standard;
 }
 
 if (!empty($filter_method)) {
     if ($filter_method === 'UPI') {
-        $query .= " AND fp.payment_method LIKE '%UPI%'";
+        $where_clauses[] = "fp.payment_method LIKE '%UPI%'";
     } else {
-        $query .= " AND fp.payment_method LIKE ?";
-        $params[] = "%$filter_method%";
+        $where_clauses[] = "fp.payment_method LIKE ?";
+        $where_params[] = "%$filter_method%";
     }
 }
 
 if ($filter_student_id > 0) {
-    $query .= " AND fp.student_id = ?";
-    $params[] = $filter_student_id;
+    $where_clauses[] = "fp.student_id = ?";
+    $where_params[] = $filter_student_id;
 }
 
-$query .= " ORDER BY fp.id DESC";
+$where_sql = implode(' AND ', $where_clauses);
+
+// Count total matching payment records
+$count_query = "
+    SELECT COUNT(*)
+    FROM fee_payments fp
+    JOIN students s ON fp.student_id = s.id
+    WHERE {$where_sql}
+";
+$count_stmt = $db->prepare($count_query);
+$count_stmt->execute($where_params);
+$total_records = intval($count_stmt->fetchColumn());
+
+// Calculate total pages & offset
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+
+// Query Payments with Search, Filters and Pagination
+$query = "
+    SELECT fp.*, s.student_name, s.roll_no, s.standard, s.total_fees, s.paid_fees, s.photo, s.admission_no, s.parent_phone
+    FROM fee_payments fp
+    JOIN students s ON fp.student_id = s.id
+    WHERE {$where_sql}
+    ORDER BY fp.id DESC
+    LIMIT ? OFFSET ?
+";
 $stmt = $db->prepare($query);
-$stmt->execute($params);
+$bind_idx = 1;
+foreach ($where_params as $val) {
+    $stmt->bindValue($bind_idx++, $val);
+}
+$stmt->bindValue($bind_idx++, $limit, PDO::PARAM_INT);
+$stmt->bindValue($bind_idx++, $offset, PDO::PARAM_INT);
+$stmt->execute();
 $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Pagination indicators
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Helper for generating fee pagination links
+function get_fee_pagination_url($target_page, $search, $filter_standard, $filter_method, $filter_student_id, $limit) {
+    $params = [];
+    if (!empty($search)) $params['search'] = $search;
+    if (!empty($filter_standard)) $params['standard'] = $filter_standard;
+    if (!empty($filter_method)) $params['method'] = $filter_method;
+    if ($filter_student_id > 0) $params['student_id'] = $filter_student_id;
+    if ($limit != 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    return ADMIN_URL . '/fees' . (!empty($params) ? '?' . http_build_query($params) : '');
+}
 
 // Fetch all payments mapped by student_id to show installment history
 $all_stu_payments = $db->query("
@@ -132,7 +185,7 @@ unset($p);
 $total_collected = floatval($db->query("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = {$session_id}")->fetchColumn());
 $total_receivable = floatval($db->query("SELECT COALESCE(SUM(total_fees), 0) FROM students WHERE session_id = {$session_id}")->fetchColumn());
 $total_dues = max(0, $total_receivable - $total_collected);
-$receipts_count = count($payments);
+$receipts_count = intval($db->query("SELECT COUNT(*) FROM fee_payments WHERE session_id = {$session_id}")->fetchColumn());
 
 $collection_rate = $total_receivable > 0 ? round(($total_collected / $total_receivable) * 100, 1) : 0;
 $dues_rate = $total_receivable > 0 ? round(($total_dues / $total_receivable) * 100, 1) : 0;
@@ -648,16 +701,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
     
     <!-- Filter form -->
     <form method="GET" action="<?php echo ADMIN_URL; ?>/fees" class="roaster-filter-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1;">
+      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+      <?php if ($filter_student_id > 0): ?>
+        <input type="hidden" name="student_id" value="<?php echo $filter_student_id; ?>">
+      <?php endif; ?>
+
       <div class="roaster-search-box" style="min-width: 200px; max-width: 250px; padding: 7px 12px;">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, receipt, roll..." autocomplete="off">
         <?php if (!empty($search)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/fees<?php 
-            $qp = [];
-            if (!empty($filter_standard)) $qp['standard'] = $filter_standard;
-            if (!empty($filter_method)) $qp['method'] = $filter_method;
-            echo !empty($qp) ? '?' . http_build_query($qp) : '';
-          ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <a href="<?php echo htmlspecialchars(get_fee_pagination_url(1, '', $filter_standard, $filter_method, $filter_student_id, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
 
@@ -691,8 +744,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-sliders"></i> Filter
       </button>
 
-      <?php if (!empty($search) || !empty($filter_standard) || !empty($filter_method)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/fees" class="roaster-btn ghost" style="padding: 7px 12px; font-size: 0.82rem;" title="Reset all filters">
+      <?php if (!empty($search) || !empty($filter_standard) || !empty($filter_method) || $filter_student_id > 0): ?>
+        <a href="<?php echo ADMIN_URL; ?>/fees<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" style="padding: 7px 12px; font-size: 0.82rem;" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -702,7 +755,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-actions" style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
       <div class="scholars-count-badge" style="padding: 6px 12px; font-size: 0.8rem;">
         <span class="count-dot"></span>
-        <span><strong><?php echo count($payments); ?></strong> Receipts</span>
+        <span><strong><?php echo $total_records; ?></strong> Receipts</span>
       </div>
 
       <?php if ($current_user['role'] === 'super_admin'): ?>
@@ -730,7 +783,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Fee Transactions Table -->
-  <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
+  <div class="table-responsive">
     <table class="hrms-table" id="feeLedgerTable">
       <thead>
         <tr>
@@ -886,16 +939,78 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </table>
   </div>
 
-  <!-- Ledger Footer Summary -->
-  <div class="roaster-table-footer" style="padding: 12px 20px;">
-    <div style="font-size: 0.78rem; color: #64748b;">
-      Showing <strong><?php echo $receipts_count; ?></strong> transaction receipts | 
-      Total Amount: <strong style="color: #059669; font-family: 'Outfit', sans-serif;"><?php echo format_inr($total_collected); ?></strong>
+  <!-- Table Pagination & Per-Page Controls -->
+  <div class="pagination-controls-wrap">
+    
+    <!-- Left: Showing summary & Limit Selector -->
+    <div class="pagination-meta-group">
+      <span style="font-size: 0.82rem; color: #475569;">
+        <?php if ($total_records > 0): ?>
+          Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> receipts
+        <?php else: ?>
+          Showing <strong>0</strong> receipts
+        <?php endif; ?>
+      </span>
+
+      <div class="pagination-limit-box">
+        <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+        <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+          <?php foreach ($allowed_limits as $l): ?>
+            <option value="<?php echo htmlspecialchars(get_fee_pagination_url(1, $search, $filter_standard, $filter_method, $filter_student_id, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <?php echo $l; ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
 
-    <div style="font-size: 0.74rem; color: #94a3b8;">
-      Financial Year: <?php echo htmlspecialchars($active_session['session_name']); ?>
+    <!-- Center/Right: Navigation page buttons -->
+    <?php if ($total_pages > 1): ?>
+      <nav class="pagination-nav" aria-label="Fee Ledger Pagination">
+        <!-- Prev Page -->
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_fee_pagination_url($page - 1, $search, $filter_standard, $filter_method, $filter_student_id, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+           aria-label="Previous Page"
+           title="Previous Page">
+          <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+        </a>
+
+        <!-- Page Numbers -->
+        <?php
+          $range = 2;
+          for ($p = 1; $p <= $total_pages; $p++):
+            if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+        ?>
+          <a href="<?php echo htmlspecialchars(get_fee_pagination_url($p, $search, $filter_standard, $filter_method, $filter_student_id, $limit)); ?>" 
+             class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+            <?php echo $p; ?>
+          </a>
+        <?php 
+            elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+        ?>
+          <span class="pagination-ellipsis">&hellip;</span>
+        <?php 
+            endif;
+          endfor;
+        ?>
+
+        <!-- Next Page -->
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_fee_pagination_url($page + 1, $search, $filter_standard, $filter_method, $filter_student_id, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+           aria-label="Next Page"
+           title="Next Page">
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+        </a>
+      </nav>
+    <?php endif; ?>
+
+    <!-- Ledger Footer Summary & Session Info -->
+    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+      <span>Total Collected: <strong style="color: #059669; font-family: 'Outfit', sans-serif;"><?php echo format_inr($total_collected); ?></strong></span>
+      <span style="color: #cbd5e1;">|</span>
+      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
     </div>
+
   </div>
 
 </div>

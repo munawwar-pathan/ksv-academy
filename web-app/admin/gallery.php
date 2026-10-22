@@ -129,29 +129,72 @@ $filter_category = trim($_GET['category'] ?? '');
 $search = trim($_GET['search'] ?? '');
 $view_mode = trim($_GET['view'] ?? 'table'); // 'table' or 'grid'
 
-$query = "SELECT * FROM gallery WHERE 1=1";
+// Pagination Setup (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+$where_clauses = ["1=1"];
 $params = [];
 
 if (!empty($filter_category) && $filter_category !== 'all') {
-    $query .= " AND category = ?";
+    $where_clauses[] = "category = ?";
     $params[] = $filter_category;
 }
 
 if (!empty($search)) {
-    $query .= " AND (title LIKE ? OR category LIKE ?)";
+    $where_clauses[] = "(title LIKE ? OR category LIKE ?)";
     $params[] = "%$search%";
     $params[] = "%$search%";
 }
 
-$query .= " ORDER BY id DESC";
+$where_sql = implode(' AND ', $where_clauses);
+
+// Count total filtered records
+$count_query = "SELECT COUNT(*) FROM gallery WHERE {$where_sql}";
+$count_stmt = $db->prepare($count_query);
+$count_stmt->execute($params);
+$total_records = (int)$count_stmt->fetchColumn();
+
+$total_pages = max(1, ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Fetch paginated records
+$query = "SELECT * FROM gallery WHERE {$where_sql} ORDER BY id DESC LIMIT ? OFFSET ?";
 $stmt = $db->prepare($query);
-$stmt->execute($params);
+$p_idx = 1;
+foreach ($params as $param_val) {
+    $stmt->bindValue($p_idx++, $param_val);
+}
+$stmt->bindValue($p_idx++, (int)$limit, PDO::PARAM_INT);
+$stmt->bindValue($p_idx++, (int)$offset, PDO::PARAM_INT);
+$stmt->execute();
 $gallery_items = $stmt->fetchAll();
 
 // Get list of distinct categories for filters
 $categories_stmt = $db->query("SELECT category, COUNT(*) as cnt FROM gallery GROUP BY category ORDER BY category ASC");
 $category_counts = $categories_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 $total_all_count = array_sum($category_counts);
+
+// Helper function to build pagination url
+function get_gallery_pagination_url($target_page, $filter_category, $search, $view_mode, $limit) {
+    $p = [];
+    if (!empty($filter_category) && $filter_category !== 'all') $p['category'] = $filter_category;
+    if (!empty($search)) $p['search'] = $search;
+    if ($view_mode !== 'table') $p['view'] = $view_mode;
+    if ($limit !== 10) $p['limit'] = $limit;
+    if ($target_page > 1) $p['page'] = $target_page;
+    $q = !empty($p) ? '?' . http_build_query($p) : '';
+    return ADMIN_URL . '/gallery' . $q;
+}
 
 // Helper function to return icon for category
 function get_category_icon($cat) {
@@ -458,7 +501,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <!-- Left: Category Pills with Icons -->
     <div style="display: flex; gap: 6px; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 12px; flex-wrap: wrap;">
       
-      <a href="?category=all&view=<?php echo urlencode($view_mode); ?>" class="gallery-tab-pill <?php echo (empty($filter_category) || $filter_category === 'all') ? 'active' : ''; ?>">
+      <a href="?category=all&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo (empty($filter_category) || $filter_category === 'all') ? 'active' : ''; ?>">
         <i class="fa-solid fa-layer-group"></i>
         <span>All Photos</span>
         <span class="tab-badge"><?php echo $total_all_count; ?></span>
@@ -466,7 +509,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       <?php foreach ($category_counts as $cat_name => $count): ?>
         <?php $cat_icon = get_category_icon($cat_name); ?>
-        <a href="?category=<?php echo urlencode($cat_name); ?>&view=<?php echo urlencode($view_mode); ?>" class="gallery-tab-pill <?php echo $filter_category === $cat_name ? 'active' : ''; ?>">
+        <a href="?category=<?php echo urlencode($cat_name); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo $filter_category === $cat_name ? 'active' : ''; ?>">
           <i class="fa-solid <?php echo $cat_icon; ?>"></i>
           <span><?php echo htmlspecialchars($cat_name); ?></span>
           <span class="tab-badge"><?php echo $count; ?></span>
@@ -484,21 +527,24 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <input type="hidden" name="category" value="<?php echo htmlspecialchars($filter_category); ?>">
         <?php endif; ?>
         <input type="hidden" name="view" value="<?php echo htmlspecialchars($view_mode); ?>">
+        <?php if ($limit !== 10): ?>
+          <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <?php endif; ?>
         
         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; color: #94a3b8; font-size: 0.82rem; pointer-events: none;"></i>
         <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search photos..." style="padding: 7px 14px 7px 32px; border-radius: 9px; border: 1.5px solid #cbd5e1; font-size: 0.82rem; outline: none; width: 180px; background: #ffffff; transition: border-color 0.2s ease;">
         <?php if (!empty($search)): ?>
-          <a href="?category=<?php echo urlencode($filter_category); ?>&view=<?php echo urlencode($view_mode); ?>" style="position: absolute; right: 10px; color: #94a3b8; text-decoration: none; font-size: 0.85rem;" title="Clear search">&times;</a>
+          <a href="?category=<?php echo urlencode($filter_category); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" style="position: absolute; right: 10px; color: #94a3b8; text-decoration: none; font-size: 0.85rem;" title="Clear search">&times;</a>
         <?php endif; ?>
       </form>
 
       <!-- View Switcher -->
       <div style="display: flex; background: #f1f5f9; padding: 3px; border-radius: 9px; border: 1px solid #e2e8f0;">
-        <a href="?view=table<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'table' ? 'primary' : 'secondary'; ?>" style="padding: 6px 12px; border: none; <?php echo $view_mode === 'table' ? '' : 'background: transparent; color: #64748b;'; ?>" title="Table View">
+        <a href="?view=table<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'table' ? 'primary' : 'secondary'; ?>" style="padding: 6px 12px; border: none; <?php echo $view_mode === 'table' ? '' : 'background: transparent; color: #64748b;'; ?>" title="Table View">
           <i class="fa-solid fa-table-list"></i>
           <span>Table</span>
         </a>
-        <a href="?view=grid<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'grid' ? 'primary' : 'secondary'; ?>" style="padding: 6px 12px; border: none; <?php echo $view_mode === 'grid' ? '' : 'background: transparent; color: #64748b;'; ?>" title="Grid View">
+        <a href="?view=grid<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'grid' ? 'primary' : 'secondary'; ?>" style="padding: 6px 12px; border: none; <?php echo $view_mode === 'grid' ? '' : 'background: transparent; color: #64748b;'; ?>" title="Grid View">
           <i class="fa-solid fa-grip"></i>
           <span>Grid</span>
         </a>
@@ -609,6 +655,75 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <?php endforeach; ?>
     </div>
 
+    <!-- Grid View Footer Pagination & Per-Page Controls -->
+    <div class="hrms-card no-print" style="margin-top: 24px; margin-bottom: 30px; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
+      <div class="pagination-controls-wrap">
+        
+        <!-- Left: Showing summary & Limit Selector -->
+        <div class="pagination-meta-group">
+          <span style="font-size: 0.82rem; color: #475569;">
+            <?php if ($total_records > 0): ?>
+              Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'photo' : 'photos'; ?>
+            <?php else: ?>
+              Showing <strong>0</strong> photos
+            <?php endif; ?>
+          </span>
+
+          <div class="pagination-limit-box">
+            <label for="perPageLimitSelectGrid" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+            <select id="perPageLimitSelectGrid" class="pagination-limit-select" onchange="window.location.href = this.value;">
+              <?php foreach ($allowed_limits as $l): ?>
+                <option value="<?php echo htmlspecialchars(get_gallery_pagination_url(1, $filter_category, $search, $view_mode, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+                  <?php echo $l; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </div>
+
+        <!-- Center/Right: Navigation page buttons -->
+        <?php if ($total_pages > 1): ?>
+          <nav class="pagination-nav" aria-label="Media Gallery Grid Pagination">
+            <!-- Prev Page -->
+            <a href="<?php echo $page > 1 ? htmlspecialchars(get_gallery_pagination_url($page - 1, $filter_category, $search, $view_mode, $limit)) : '#'; ?>" 
+               class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+               aria-label="Previous Page"
+               title="Previous Page">
+              <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+            </a>
+
+            <!-- Page Numbers -->
+            <?php
+              $range = 2;
+              for ($p = 1; $p <= $total_pages; $p++):
+                if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+            ?>
+              <a href="<?php echo htmlspecialchars(get_gallery_pagination_url($p, $filter_category, $search, $view_mode, $limit)); ?>" 
+                 class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+                <?php echo $p; ?>
+              </a>
+            <?php 
+                elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+            ?>
+              <span class="pagination-ellipsis">&hellip;</span>
+            <?php 
+                endif;
+              endfor; 
+            ?>
+
+            <!-- Next Page -->
+            <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_gallery_pagination_url($page + 1, $filter_category, $search, $view_mode, $limit)) : '#'; ?>" 
+               class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+               aria-label="Next Page"
+               title="Next Page">
+              <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+            </a>
+          </nav>
+        <?php endif; ?>
+
+      </div>
+    </div>
+
   <?php else: ?>
     <!-- ══════════════════════════════════════════════════════
          VIEW MODE 2: DIRECTORY TABLE (Default)
@@ -629,7 +744,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; color: #475569; background: #f8fafc; padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0;">
             <i class="fa-solid fa-photo-film" style="color: #0092df;"></i>
-            <?php echo count($gallery_items); ?> Total Photos
+            <?php echo $total_records; ?> Total Photos
           </span>
         </div>
       </div>
@@ -720,6 +835,73 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php endforeach; ?>
           </tbody>
         </table>
+      </div>
+
+      <!-- Table Footer Pagination & Per-Page Controls (Matches HRMS standard) -->
+      <div class="pagination-controls-wrap">
+        
+        <!-- Left: Showing summary & Limit Selector -->
+        <div class="pagination-meta-group">
+          <span style="font-size: 0.82rem; color: #475569;">
+            <?php if ($total_records > 0): ?>
+              Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'photo' : 'photos'; ?>
+            <?php else: ?>
+              Showing <strong>0</strong> photos
+            <?php endif; ?>
+          </span>
+
+          <div class="pagination-limit-box">
+            <label for="perPageLimitSelectTable" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+            <select id="perPageLimitSelectTable" class="pagination-limit-select" onchange="window.location.href = this.value;">
+              <?php foreach ($allowed_limits as $l): ?>
+                <option value="<?php echo htmlspecialchars(get_gallery_pagination_url(1, $filter_category, $search, $view_mode, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+                  <?php echo $l; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+        </div>
+
+        <!-- Center/Right: Navigation page buttons -->
+        <?php if ($total_pages > 1): ?>
+          <nav class="pagination-nav" aria-label="Media Gallery Table Pagination">
+            <!-- Prev Page -->
+            <a href="<?php echo $page > 1 ? htmlspecialchars(get_gallery_pagination_url($page - 1, $filter_category, $search, $view_mode, $limit)) : '#'; ?>" 
+               class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+               aria-label="Previous Page"
+               title="Previous Page">
+              <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+            </a>
+
+            <!-- Page Numbers -->
+            <?php
+              $range = 2;
+              for ($p = 1; $p <= $total_pages; $p++):
+                if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+            ?>
+              <a href="<?php echo htmlspecialchars(get_gallery_pagination_url($p, $filter_category, $search, $view_mode, $limit)); ?>" 
+                 class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+                <?php echo $p; ?>
+              </a>
+            <?php 
+                elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+            ?>
+              <span class="pagination-ellipsis">&hellip;</span>
+            <?php 
+                endif;
+              endfor; 
+            ?>
+
+            <!-- Next Page -->
+            <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_gallery_pagination_url($page + 1, $filter_category, $search, $view_mode, $limit)) : '#'; ?>" 
+               class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+               aria-label="Next Page"
+               title="Next Page">
+              <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+            </a>
+          </nav>
+        <?php endif; ?>
+
       </div>
 
     </div>

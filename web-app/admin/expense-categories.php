@@ -85,33 +85,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch categories with total expenses in this session
-$categories = $db->query("
-    SELECT c.*,
+// Compute overall stats across all categories for active session
+$all_categories = $db->query("
+    SELECT c.id, c.category_name,
         (SELECT COUNT(*) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as expense_count,
-        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as total_spent,
-        (SELECT COUNT(*) FROM expenses WHERE category_id = c.id) as lifetime_expense_count
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as total_spent
     FROM expense_categories c
     ORDER BY c.category_name ASC
 ")->fetchAll();
 
-// Statistics computation
-$total_categories_count = count($categories);
+$total_categories_count = count($all_categories);
 $active_in_use_count = 0;
 $session_total_spent = 0;
 $top_category_name = '—';
 $top_category_amount = 0;
 
-foreach ($categories as $cat) {
-    $spent = floatval($cat['total_spent']);
+foreach ($all_categories as $c_item) {
+    $spent = floatval($c_item['total_spent']);
     $session_total_spent += $spent;
-    if ($cat['expense_count'] > 0) {
+    if ($c_item['expense_count'] > 0) {
         $active_in_use_count++;
     }
     if ($spent > $top_category_amount) {
         $top_category_amount = $spent;
-        $top_category_name = $cat['category_name'];
+        $top_category_name = $c_item['category_name'];
     }
+}
+
+// Search & Pagination Setup (10, 20, 30, 40, 50)
+$search = trim($_GET['search'] ?? '');
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+$where_clauses = [];
+$where_params = [];
+if (!empty($search)) {
+    $where_clauses[] = "(LOWER(c.category_name) LIKE ? OR LOWER(c.description) LIKE ?)";
+    $where_params[] = '%' . strtolower($search) . '%';
+    $where_params[] = '%' . strtolower($search) . '%';
+}
+$where_sql = !empty($where_clauses) ? 'WHERE ' . implode(' AND ', $where_clauses) : '';
+
+// Count matching categories
+$count_stmt = $db->prepare("SELECT COUNT(*) FROM expense_categories c {$where_sql}");
+$count_stmt->execute($where_params);
+$total_matching_categories = (int)$count_stmt->fetchColumn();
+
+$total_pages = max(1, ceil($total_matching_categories / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+$start_record = $total_matching_categories > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_matching_categories);
+
+// Fetch paginated categories with session totals
+$cat_query = "
+    SELECT c.*,
+        (SELECT COUNT(*) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as expense_count,
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as total_spent,
+        (SELECT COUNT(*) FROM expenses WHERE category_id = c.id) as lifetime_expense_count
+    FROM expense_categories c
+    {$where_sql}
+    ORDER BY c.category_name ASC
+    LIMIT ? OFFSET ?
+";
+$stmt = $db->prepare($cat_query);
+$param_idx = 1;
+foreach ($where_params as $val) {
+    $stmt->bindValue($param_idx++, $val);
+}
+$stmt->bindValue($param_idx++, (int)$limit, PDO::PARAM_INT);
+$stmt->bindValue($param_idx++, (int)$offset, PDO::PARAM_INT);
+$stmt->execute();
+$categories = $stmt->fetchAll();
+
+// Helper to preserve active query parameters in pagination links
+function get_categories_pagination_url($target_page, $search, $limit) {
+    $params = [];
+    if (!empty($search)) $params['search'] = $search;
+    if ($limit !== 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    $query_str = !empty($params) ? '?' . http_build_query($params) : '';
+    return ADMIN_URL . '/expense-categories' . $query_str;
 }
 
 // Helper to pick category icon and color
@@ -240,7 +300,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      TOP KPI STAT METRICS GRID
      ══════════════════════════════════════════════════════ -->
-<div class="stat-grid no-print" style="margin-bottom: 24px;">
+<div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
   
   <!-- Total Categories -->
   <div class="stat-card blue">
@@ -259,8 +319,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
     </div>
     <div class="stat-card-footer">
-      <span><i class="fa-solid fa-tags" style="color: #0284c7;"></i> Registered Heads</span>
-      <span class="text-muted">Campus Accounting</span>
+      <span><i class="fa-solid fa-tags" style="color: #0284c7; margin-right: 4px;"></i> Registered Heads</span>
+      <span style="color: #0284c7; font-weight: 700;">Campus Accounting</span>
     </div>
   </div>
 
@@ -272,17 +332,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span class="stat-label">Active Heads in Use</span>
           <span class="stat-number"><?php echo $active_in_use_count; ?></span>
         </div>
-        <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">
+        <div class="stat-icon-wrapper">
           <i class="fa-solid fa-check-double"></i>
         </div>
       </div>
       <div class="stat-card-progress">
-        <div class="stat-card-progress-bar" style="width: <?php echo $total_categories_count > 0 ? round(($active_in_use_count / $total_categories_count) * 100) : 0; ?>%; background: #10b981;"></div>
+        <div class="stat-card-progress-bar" style="width: <?php echo $total_categories_count > 0 ? round(($active_in_use_count / $total_categories_count) * 100) : 0; ?>%;"></div>
       </div>
     </div>
     <div class="stat-card-footer">
-      <span style="color: #059669; font-weight: 700;"><i class="fa-solid fa-receipt"></i> Active Vouchers</span>
-      <span class="text-muted"><?php echo $total_categories_count - $active_in_use_count; ?> unused heads</span>
+      <span><i class="fa-solid fa-receipt" style="color: #059669; margin-right: 4px;"></i> Active Vouchers</span>
+      <span style="color: #059669; font-weight: 700;"><?php echo $total_categories_count - $active_in_use_count; ?> unused heads</span>
     </div>
   </div>
 
@@ -294,7 +354,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span class="stat-label">Session Expenditure</span>
           <span class="stat-number" style="color: #dc2626;"><?php echo format_inr($session_total_spent); ?></span>
         </div>
-        <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.12); color: #dc2626;">
+        <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.12); color: #dc2626; border-color: #fee2e2;">
           <i class="fa-solid fa-wallet"></i>
         </div>
       </div>
@@ -303,8 +363,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
     </div>
     <div class="stat-card-footer">
-      <span style="color: #dc2626; font-weight: 700;"><i class="fa-solid fa-arrow-trend-down"></i> Head Disbursements</span>
-      <span class="text-muted">Top: <?php echo htmlspecialchars($top_category_name); ?></span>
+      <span><i class="fa-solid fa-arrow-trend-down" style="color: #dc2626; margin-right: 4px;"></i> Head Disbursements</span>
+      <span style="color: #dc2626; font-weight: 700;">Top: <?php echo htmlspecialchars($top_category_name); ?></span>
     </div>
   </div>
 
@@ -314,19 +374,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="stat-card-top">
         <div class="stat-info">
           <span class="stat-label">Active Academic Session</span>
-          <span class="stat-number" style="font-size: 1.4rem;"><?php echo htmlspecialchars($active_session['session_name']); ?></span>
+          <span class="stat-number" style="font-size: 1.35rem;"><?php echo htmlspecialchars($active_session['session_name']); ?></span>
         </div>
-        <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+        <div class="stat-icon-wrapper">
           <i class="fa-solid fa-calendar-check"></i>
         </div>
       </div>
       <div class="stat-card-progress">
-        <div class="stat-card-progress-bar" style="width: 100%; background: #d97706;"></div>
+        <div class="stat-card-progress-bar" style="width: 100%;"></div>
       </div>
     </div>
     <div class="stat-card-footer">
-      <span style="color: #d97706; font-weight: 700;"><i class="fa-solid fa-shield-halved"></i> Active Ledger</span>
-      <span class="text-muted">Financial Fiscal Year</span>
+      <span><i class="fa-solid fa-shield-halved" style="color: #d97706; margin-right: 4px;"></i> Verified Ledger</span>
+      <span style="color: #d97706; font-weight: 700;">Financial Fiscal Year</span>
     </div>
   </div>
 
@@ -338,29 +398,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
-    <!-- Left: Instant Search & Nav Pills -->
-    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <!-- Left: Search Box -->
+    <form method="GET" action="<?php echo ADMIN_URL; ?>/expense-categories" class="roaster-filter-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       <div class="roaster-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="catSearchInput" placeholder="Search category name, scope, keywords..." oninput="filterCategories()">
+        <input type="text" name="search" id="catSearchInput" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search category name, scope, keywords..." autocomplete="off" oninput="filterCategories()">
+        <?php if (!empty($search)): ?>
+          <a href="<?php echo htmlspecialchars(get_categories_pagination_url(1, '', $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
+        <?php endif; ?>
       </div>
-
-      <a href="<?php echo ADMIN_URL; ?>/expenses" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
-        <i class="fa-solid fa-file-invoice-dollar" style="color: #0092df;"></i>
-        <span>Vouchers Ledger</span>
-      </a>
-
-      <a href="<?php echo ADMIN_URL; ?>/expense-report" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
-        <i class="fa-solid fa-chart-pie" style="color: #7c3aed;"></i>
-        <span>Analytics</span>
-      </a>
-    </div>
+    </form>
 
     <!-- Right: Count Badge & Add Category Button -->
     <div class="roaster-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot" style="background: #0092df;"></span>
-        <span><strong id="visibleCatCount"><?php echo $total_categories_count; ?></strong> Categories</span>
+        <span><strong id="visibleCatCount"><?php echo $total_matching_categories; ?></strong> <?php echo $total_matching_categories === 1 ? 'Category' : 'Categories'; ?></span>
       </div>
 
       <button type="button" onclick="openAddCatModal();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Add Expense Category Head">
@@ -390,10 +444,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </p>
     </div>
 
-    <button type="button" onclick="openAddCatModal();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Add Expense Category Head">
-      <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
-      <span>Add Category</span>
-    </button>
+    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+      <span>Total Spent: <strong style="color: #dc2626; font-size: 0.95rem; font-family: 'Outfit', sans-serif;"><?php echo format_inr($session_total_spent); ?></strong></span>
+      <span style="color: #cbd5e1;">|</span>
+      <span>Total Heads: <strong style="color: #0f172a;"><?php echo $total_categories_count; ?></strong></span>
+    </div>
   </div>
 
   <div class="table-responsive">
@@ -532,6 +587,74 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </tbody>
     </table>
   </div>
+
+  <!-- Table Footer Pagination & Per-Page Controls (Matches HRMS standard) -->
+  <div class="pagination-controls-wrap">
+    
+    <!-- Left: Showing summary & Limit Selector -->
+    <div class="pagination-meta-group">
+      <span style="font-size: 0.82rem; color: #475569;">
+        <?php if ($total_matching_categories > 0): ?>
+          Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_matching_categories; ?></strong> <?php echo $total_matching_categories === 1 ? 'category' : 'categories'; ?>
+        <?php else: ?>
+          Showing <strong>0</strong> categories
+        <?php endif; ?>
+      </span>
+
+      <div class="pagination-limit-box">
+        <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+        <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+          <?php foreach ($allowed_limits as $l): ?>
+            <option value="<?php echo htmlspecialchars(get_categories_pagination_url(1, $search, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <?php echo $l; ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+
+    <!-- Center/Right: Navigation page buttons -->
+    <?php if ($total_pages > 1): ?>
+      <nav class="pagination-nav" aria-label="Categories Table Pagination">
+        <!-- Prev Page -->
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_categories_pagination_url($page - 1, $search, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+           aria-label="Previous Page"
+           title="Previous Page">
+          <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+        </a>
+
+        <!-- Page Numbers -->
+        <?php
+          $range = 2;
+          for ($p = 1; $p <= $total_pages; $p++):
+            if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+        ?>
+          <a href="<?php echo htmlspecialchars(get_categories_pagination_url($p, $search, $limit)); ?>" 
+             class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+            <?php echo $p; ?>
+          </a>
+        <?php 
+            elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+        ?>
+          <span class="pagination-ellipsis">&hellip;</span>
+        <?php 
+            endif;
+          endfor; 
+        ?>
+
+        <!-- Next Page -->
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_categories_pagination_url($page + 1, $search, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+           aria-label="Next Page"
+           title="Next Page">
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+        </a>
+      </nav>
+    <?php endif; ?>
+
+  </div>
+
 </div>
 
 <!-- ══════════════════════════════════════════════════════
@@ -655,7 +778,7 @@ function closeEditCatModal() {
   document.getElementById('editCategoryModal').style.display = 'none';
 }
 
-// Client-side real-time filter
+// Client-side real-time filter for currently visible rows
 function filterCategories() {
   const query = document.getElementById('catSearchInput').value.toLowerCase().trim();
   const rows = document.querySelectorAll('.category-row');
@@ -672,7 +795,10 @@ function filterCategories() {
     }
   });
 
-  document.getElementById('visibleCatCount').innerText = visibleCount;
+  const countBadge = document.getElementById('visibleCatCount');
+  if (countBadge) {
+    countBadge.innerText = visibleCount;
+  }
 }
 
 // Modal backdrop click close

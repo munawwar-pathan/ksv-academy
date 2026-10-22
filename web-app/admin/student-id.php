@@ -38,27 +38,71 @@ $all_students_stmt = $db->prepare("
 $all_students_stmt->execute([$session_id]);
 $all_students_list = $all_students_stmt->fetchAll();
 
-// Query filtered students for the table directory and quick switcher
-$query = "SELECT * FROM students WHERE session_id = ?";
-$params = [$session_id];
+// Pagination & Limits Setup (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+// Build WHERE filter conditions
+$where_clauses = ["session_id = ?"];
+$where_params = [$session_id];
 
 if (!empty($search)) {
-    $query .= " AND (student_name LIKE ? OR roll_no LIKE ? OR admission_no LIKE ? OR parent_phone LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
+    $where_clauses[] = "(student_name LIKE ? OR roll_no LIKE ? OR admission_no LIKE ? OR parent_phone LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
 }
 
 if (!empty($filter_standard)) {
-    $query .= " AND standard = ?";
-    $params[] = $filter_standard;
+    $where_clauses[] = "standard = ?";
+    $where_params[] = $filter_standard;
 }
 
-$query .= " ORDER BY standard ASC, roll_no ASC, student_name ASC";
+$where_sql = implode(' AND ', $where_clauses);
+
+// Count total matching scholars
+$count_stmt = $db->prepare("SELECT COUNT(*) FROM students WHERE {$where_sql}");
+$count_stmt->execute($where_params);
+$total_records = intval($count_stmt->fetchColumn());
+
+// Calculate total pages & offset
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+
+// Query students for the paginated table directory
+$query = "SELECT * FROM students WHERE {$where_sql} ORDER BY standard ASC, roll_no ASC, student_name ASC LIMIT ? OFFSET ?";
 $stmt_table = $db->prepare($query);
-$stmt_table->execute($params);
+$bind_idx = 1;
+foreach ($where_params as $val) {
+    $stmt_table->bindValue($bind_idx++, $val);
+}
+$stmt_table->bindValue($bind_idx++, $limit, PDO::PARAM_INT);
+$stmt_table->bindValue($bind_idx++, $offset, PDO::PARAM_INT);
+$stmt_table->execute();
 $table_students = $stmt_table->fetchAll();
+
+// Pagination indicators
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Helper for generating student ID directory pagination links
+function get_student_id_pagination_url($target_page, $search, $filter_standard, $selected_id, $limit) {
+    $params = [];
+    if ($selected_id > 0) $params['id'] = $selected_id;
+    if (!empty($search)) $params['search'] = $search;
+    if (!empty($filter_standard)) $params['standard'] = $filter_standard;
+    if ($limit != 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    return ADMIN_URL . '/student-id' . (!empty($params) ? '?' . http_build_query($params) : '') . '#studentIdDirectoryCard';
+}
 
 // Default selected student:
 // 1. If ID requested and exists, keep it
@@ -72,8 +116,15 @@ if ($selected_id === 0) {
     }
 }
 
-// Active navigation list: use filtered table students if available, else all students
-$nav_list = !empty($table_students) ? $table_students : $all_students_list;
+// Active navigation list for Prev / Next card switcher:
+// Get all matching student records for smooth Prev/Next card navigation
+if (!empty($search) || !empty($filter_standard)) {
+    $nav_stmt = $db->prepare("SELECT id FROM students WHERE {$where_sql} ORDER BY standard ASC, roll_no ASC, student_name ASC");
+    $nav_stmt->execute($where_params);
+    $nav_list = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $nav_list = $all_students_list;
+}
 
 // Find current student index for Previous / Next navigation
 $current_index = 0;
@@ -761,6 +812,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   $qp_filter = [];
   if (!empty($search)) $qp_filter['search'] = $search;
   if (!empty($filter_standard)) $qp_filter['standard'] = $filter_standard;
+  if ($limit !== 10) $qp_filter['limit'] = $limit;
+  if ($page > 1) $qp_filter['page'] = $page;
   $filter_qs = !empty($qp_filter) ? '&' . http_build_query($qp_filter) : '';
   $prev_card_url = $prev_student_id ? (ADMIN_URL . '/student-id?id=' . $prev_student_id . $filter_qs . '#id-card-stage') : '#';
   $next_card_url = $next_student_id ? (ADMIN_URL . '/student-id?id=' . $next_student_id . $filter_qs . '#id-card-stage') : '#';
@@ -991,6 +1044,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       
       <!-- Filter form -->
       <form method="GET" action="<?php echo ADMIN_URL; ?>/student-id" class="roaster-filter-form">
+        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
         <?php if ($selected_id > 0): ?>
           <input type="hidden" name="id" value="<?php echo $selected_id; ?>">
         <?php endif; ?>
@@ -999,12 +1053,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, roll no, phone..." autocomplete="off">
           <?php if (!empty($search)): ?>
-            <a href="<?php echo ADMIN_URL; ?>/student-id<?php 
-              $qp = [];
-              if ($selected_id > 0) $qp['id'] = $selected_id;
-              if (!empty($filter_standard)) $qp['standard'] = $filter_standard;
-              echo !empty($qp) ? '?' . http_build_query($qp) : '';
-            ?>" class="clear-search-btn" title="Clear search">&times;</a>
+            <a href="<?php echo htmlspecialchars(get_student_id_pagination_url(1, '', $filter_standard, $selected_id, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
           <?php endif; ?>
         </div>
 
@@ -1026,7 +1075,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </button>
 
         <?php if (!empty($search) || !empty($filter_standard)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/student-id<?php echo $selected_id > 0 ? '?id=' . $selected_id : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+          <a href="<?php echo ADMIN_URL; ?>/student-id<?php 
+            $rp = [];
+            if ($selected_id > 0) $rp['id'] = $selected_id;
+            if ($limit !== 10) $rp['limit'] = $limit;
+            echo !empty($rp) ? '?' . http_build_query($rp) : '';
+          ?>" class="roaster-btn ghost" title="Reset all filters">
             <i class="fa-solid fa-rotate-left"></i> Reset
           </a>
         <?php endif; ?>
@@ -1036,7 +1090,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="roaster-toolbar-actions">
         <div class="scholars-count-badge">
           <span class="count-dot"></span>
-          <span><strong><?php echo count($table_students); ?></strong> Scholars</span>
+          <span><strong><?php echo $total_records; ?></strong> Scholars</span>
         </div>
 
         <a href="<?php echo ADMIN_URL; ?>/students" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
@@ -1051,7 +1105,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <!-- ══════════════════════════════════════════════════════
        STUDENT DATA TABLE (Simple & Sober - Like staff-id.php)
        ══════════════════════════════════════════════════════ -->
-  <div class="hrms-card no-print" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card no-print" id="studentIdDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
     <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
       <div>
         <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
@@ -1066,7 +1120,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </p>
       </div>
       <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
-        <span>Total Records: <strong style="color: #0f172a;"><?php echo count($table_students); ?></strong></span>
+        <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
       </div>
     </div>
 
@@ -1111,6 +1165,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 $switch_url = ADMIN_URL . '/student-id?id=' . $stu['id'] . 
                               (!empty($search) ? '&search=' . urlencode($search) : '') . 
                               (!empty($filter_standard) ? '&standard=' . urlencode($filter_standard) : '') . 
+                              ($limit !== 10 ? '&limit=' . $limit : '') .
+                              ($page > 1 ? '&page=' . $page : '') .
                               '#id-card-stage';
               ?>
               <tr class="<?php echo $is_cur_viewing ? 'active-student-row' : ''; ?>">
@@ -1222,6 +1278,83 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php endif; ?>
         </tbody>
       </table>
+    </div>
+
+    <!-- Table Pagination & Per-Page Controls -->
+    <div class="pagination-controls-wrap">
+      
+      <!-- Left: Showing summary & Limit Selector -->
+      <div class="pagination-meta-group">
+        <span style="font-size: 0.82rem; color: #475569;">
+          <?php if ($total_records > 0): ?>
+            Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> scholars
+          <?php else: ?>
+            Showing <strong>0</strong> scholars
+          <?php endif; ?>
+        </span>
+
+        <div class="pagination-limit-box">
+          <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+          <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+            <?php foreach ($allowed_limits as $l): ?>
+              <option value="<?php echo htmlspecialchars(get_student_id_pagination_url(1, $search, $filter_standard, $selected_id, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+                <?php echo $l; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+
+      <!-- Center/Right: Navigation page buttons -->
+      <?php if ($total_pages > 1): ?>
+        <nav class="pagination-nav" aria-label="Student ID Directory Pagination">
+          <!-- Prev Page -->
+          <a href="<?php echo $page > 1 ? htmlspecialchars(get_student_id_pagination_url($page - 1, $search, $filter_standard, $selected_id, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+             aria-label="Previous Page"
+             title="Previous Page">
+            <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+          </a>
+
+          <!-- Page Numbers -->
+          <?php
+            $range = 2;
+            for ($p = 1; $p <= $total_pages; $p++):
+              if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+          ?>
+            <a href="<?php echo htmlspecialchars(get_student_id_pagination_url($p, $search, $filter_standard, $selected_id, $limit)); ?>" 
+               class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+              <?php echo $p; ?>
+            </a>
+          <?php 
+              elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+          ?>
+            <span class="pagination-ellipsis">&hellip;</span>
+          <?php 
+              endif;
+            endfor;
+          ?>
+
+          <!-- Next Page -->
+          <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_student_id_pagination_url($page + 1, $search, $filter_standard, $selected_id, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+             aria-label="Next Page"
+             title="Next Page">
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+          </a>
+        </nav>
+      <?php endif; ?>
+
+      <!-- Legend / Session Status -->
+      <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+          Official PVC Pass
+        </span>
+        <span style="color: #cbd5e1;">|</span>
+        <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      </div>
+
     </div>
   </div>
   

@@ -54,6 +54,8 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
 
   <!-- Core Stylesheet -->
   <link rel="stylesheet" href="<?php echo url('assets/css/style.css?v=' . filemtime(__DIR__ . '/../assets/css/style.css')); ?>">
+  <!-- Responsive Stylesheet -->
+  <link rel="stylesheet" href="<?php echo url('assets/css/responsive.css?v=' . (file_exists(__DIR__ . '/../assets/css/responsive.css') ? filemtime(__DIR__ . '/../assets/css/responsive.css') : time())); ?>">
 
   <!-- JSON-LD Structured Data Schema for Search Engines -->
   <script type="application/ld+json">
@@ -132,10 +134,10 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
             <i class="fa-brands fa-whatsapp"></i>
           </a>
         </div>
-        <a href="<?php echo url('web-app'); ?>" class="top-contact-item" style="color:#ffffff; font-weight:700; text-decoration:none; background:rgba(255,255,255,0.18); padding:3px 10px; border-radius:4px; border:1px solid rgba(255,255,255,0.25);" title="Staff &amp; Student Web App Portal">
-          <i class="fa-solid fa-lock" style="font-size:0.75rem; color:#fef08a;"></i>
-          <span>Portal Login</span>
-        </a>
+        <div class="top-contact-item top-portal-link">
+          <i class="fa-solid fa-lock"></i>
+          <a href="<?php echo url('web-app'); ?>" title="Staff &amp; Student Web App Portal">Portal Login</a>
+        </div>
         <!-- Dark/Light Mode Switcher -->
         <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark and light theme" title="Toggle Theme">
           <i class="fa-solid fa-moon dark-icon"></i>
@@ -273,7 +275,7 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
         <img src="<?php echo url(SITE_LOGO); ?>" alt="KSV Academy Logo" width="48" height="48" class="drawer-logo-img">
         <div>
           <span class="drawer-brand-name">KSV ACADEMY</span>
-          <span class="drawer-brand-tagline">Ulwe, Navi Mumbai</span>
+          <span class="drawer-brand-tagline">Where Learning Meets Excellence</span>
         </div>
       </div>
       <button id="drawerCloseBtn" class="drawer-close-btn" aria-label="Close Mobile Menu">
@@ -282,6 +284,7 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
     </div>
 
     <div class="drawer-body">
+
       <ul class="drawer-menu-list">
         <li><a href="<?php echo url(); ?>" class="<?php echo is_active('home'); ?>"><i class="fa-solid fa-house"></i> Home</a></li>
         <li><a href="<?php echo url('about'); ?>" class="<?php echo is_active('about'); ?>"><i class="fa-solid fa-circle-info"></i> About Us</a></li>
@@ -299,6 +302,18 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
         <li><a href="<?php echo url('admissions'); ?>" class="<?php echo is_active('admissions'); ?>"><i class="fa-solid fa-award"></i> Admissions & Scholarship</a></li>
         <li><a href="<?php echo url('gallery'); ?>" class="<?php echo is_active('gallery'); ?>"><i class="fa-solid fa-images"></i> Campus & Class Gallery</a></li>
         <li><a href="<?php echo url('contact'); ?>" class="<?php echo is_active('contact'); ?>"><i class="fa-solid fa-headset"></i> Student Support & Contact</a></li>
+        <li class="drawer-login-menu-item">
+          <a href="<?php echo url('web-app'); ?>" class="drawer-login-menu-link">
+            <div class="drawer-login-left">
+              <i class="fa-solid fa-lock"></i>
+              <div class="drawer-login-text">
+                <span class="drawer-login-title">Portal Login</span>
+                <span class="drawer-login-subtitle">Admin, Staff &amp; Student</span>
+              </div>
+            </div>
+            <span class="drawer-login-pill">Sign In</span>
+          </a>
+        </li>
       </ul>
 
       <div class="drawer-cta-section">

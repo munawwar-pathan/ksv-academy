@@ -43,34 +43,85 @@ $all_staff_stmt = $db->prepare("
 $all_staff_stmt->execute([$session_id]);
 $all_staff_list = $all_staff_stmt->fetchAll();
 
-// Query filtered staff for the table directory
+// Pagination & Limits Setup (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+// Build WHERE filter conditions
+$where_clauses = ["sp.session_id = ?"];
+$where_params = [$session_id];
+
+if (!empty($search)) {
+    $where_clauses[] = "(u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ? OR sp.phone LIKE ? OR u.phone LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+}
+
+if (!empty($filter_dept)) {
+    $where_clauses[] = "sp.department = ?";
+    $where_params[] = $filter_dept;
+}
+
+$where_sql = implode(' AND ', $where_clauses);
+
+// Count total matching faculty members
+$count_stmt = $db->prepare("
+    SELECT COUNT(*) 
+    FROM staff_profiles sp 
+    JOIN users u ON sp.user_id = u.id 
+    WHERE {$where_sql}
+");
+$count_stmt->execute($where_params);
+$total_records = intval($count_stmt->fetchColumn());
+
+// Calculate total pages & offset
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+
+// Query filtered staff for the paginated table directory
 $query = "
     SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
     FROM staff_profiles sp
     JOIN users u ON sp.user_id = u.id
-    WHERE sp.session_id = ?
+    WHERE {$where_sql}
+    ORDER BY sp.id ASC
+    LIMIT ? OFFSET ?
 ";
-$params = [$session_id];
-
-if (!empty($search)) {
-    $query .= " AND (u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ? OR sp.phone LIKE ? OR u.phone LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-}
-
-if (!empty($filter_dept)) {
-    $query .= " AND sp.department = ?";
-    $params[] = $filter_dept;
-}
-
-$query .= " ORDER BY sp.id ASC";
 $stmt_table = $db->prepare($query);
-$stmt_table->execute($params);
+$bind_idx = 1;
+foreach ($where_params as $val) {
+    $stmt_table->bindValue($bind_idx++, $val);
+}
+$stmt_table->bindValue($bind_idx++, $limit, PDO::PARAM_INT);
+$stmt_table->bindValue($bind_idx++, $offset, PDO::PARAM_INT);
+$stmt_table->execute();
 $table_staff = $stmt_table->fetchAll();
+
+// Pagination indicators
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Helper for generating staff ID directory pagination links
+function get_staff_id_pagination_url($target_page, $search, $filter_dept, $selected_id, $limit) {
+    $params = [];
+    if ($selected_id > 0) $params['id'] = $selected_id;
+    if (!empty($search)) $params['search'] = $search;
+    if (!empty($filter_dept)) $params['department'] = $filter_dept;
+    if ($limit != 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    return ADMIN_URL . '/staff-id' . (!empty($params) ? '?' . http_build_query($params) : '') . '#staffIdDirectoryCard';
+}
 
 // Default selected staff:
 // 1. If ID requested and exists, keep it
@@ -84,8 +135,20 @@ if ($selected_id === 0) {
     }
 }
 
-// Active navigation list: use filtered table staff if available, else all staff
-$nav_list = !empty($table_staff) ? $table_staff : $all_staff_list;
+// Active navigation list: use all filtered staff if available, else all staff in session
+if (!empty($search) || !empty($filter_dept)) {
+    $nav_stmt = $db->prepare("
+        SELECT sp.id 
+        FROM staff_profiles sp 
+        JOIN users u ON sp.user_id = u.id 
+        WHERE {$where_sql} 
+        ORDER BY sp.id ASC
+    ");
+    $nav_stmt->execute($where_params);
+    $nav_list = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $nav_list = $all_staff_list;
+}
 
 // Find current staff index for Previous / Next navigation
 $current_index = 0;
@@ -1019,12 +1082,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
       
       <!-- Left: Search & Department Filter Form -->
       <form method="GET" action="<?php echo ADMIN_URL; ?>/staff-id" class="roaster-filter-form">
-        <input type="hidden" name="id" value="<?php echo $selected_id; ?>">
+        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <?php if ($selected_id > 0): ?>
+          <input type="hidden" name="id" value="<?php echo $selected_id; ?>">
+        <?php endif; ?>
 
         <!-- Search Input -->
         <div class="roaster-search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search faculty name, code, dept...">
+          <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search faculty name, code, dept..." autocomplete="off">
+          <?php if (!empty($search)): ?>
+            <a href="<?php echo htmlspecialchars(get_staff_id_pagination_url(1, '', $filter_dept, $selected_id, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <?php endif; ?>
         </div>
 
         <!-- Department Filter Dropdown -->
@@ -1046,7 +1115,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </button>
 
         <?php if (!empty($search) || !empty($filter_dept)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/staff-id<?php echo $selected_id > 0 ? '?id=' . $selected_id : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+          <a href="<?php echo ADMIN_URL; ?>/staff-id<?php 
+            $rp = [];
+            if ($selected_id > 0) $rp['id'] = $selected_id;
+            if ($limit !== 10) $rp['limit'] = $limit;
+            echo !empty($rp) ? '?' . http_build_query($rp) : '';
+          ?>" class="roaster-btn ghost" title="Reset all filters">
             <i class="fa-solid fa-rotate-left"></i> Reset
           </a>
         <?php endif; ?>
@@ -1056,8 +1130,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="roaster-toolbar-actions">
         <div class="scholars-count-badge">
           <span class="count-dot" style="background: #7e22ce;"></span>
-          <span><strong><?php echo count($table_staff); ?></strong> Faculty Members</span>
+          <span><strong><?php echo $total_records; ?></strong> Faculty Members</span>
         </div>
+
+        <a href="<?php echo ADMIN_URL; ?>/staff" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+          <i class="fa-solid fa-user-tie"></i>
+          <span>Faculty Directory</span>
+        </a>
       </div>
 
     </div>
@@ -1066,7 +1145,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <!-- ══════════════════════════════════════════════════════
        FACULTY DATA TABLE (Simple & Sober)
        ══════════════════════════════════════════════════════ -->
-  <div class="hrms-card no-print" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card no-print" id="staffIdDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
     <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
       <div>
         <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
@@ -1081,7 +1160,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </p>
       </div>
       <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
-        <span>Total Records: <strong style="color: #0f172a;"><?php echo count($table_staff); ?></strong></span>
+        <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
       </div>
     </div>
 
@@ -1128,6 +1207,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 $qp = [];
                 if (!empty($search)) $qp['search'] = $search;
                 if (!empty($filter_dept)) $qp['department'] = $filter_dept;
+                if ($limit != 10) $qp['limit'] = $limit;
+                if ($page > 1) $qp['page'] = $page;
                 $qp['id'] = $st['id'];
                 $switch_url = ADMIN_URL . '/staff-id?' . http_build_query($qp) . '#id-card-stage';
               ?>
@@ -1240,6 +1321,83 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php endif; ?>
         </tbody>
       </table>
+    </div>
+
+    <!-- Table Footer Pagination & Per-Page Controls (Matches HRMS standard) -->
+    <div class="pagination-controls-wrap">
+      
+      <!-- Left: Showing summary & Limit Selector -->
+      <div class="pagination-meta-group">
+        <span style="font-size: 0.82rem; color: #475569;">
+          <?php if ($total_records > 0): ?>
+            Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> faculty members
+          <?php else: ?>
+            Showing <strong>0</strong> faculty members
+          <?php endif; ?>
+        </span>
+
+        <div class="pagination-limit-box">
+          <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+          <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+            <?php foreach ($allowed_limits as $l): ?>
+              <option value="<?php echo htmlspecialchars(get_staff_id_pagination_url(1, $search, $filter_dept, $selected_id, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+                <?php echo $l; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+
+      <!-- Center/Right: Navigation page buttons -->
+      <?php if ($total_pages > 1): ?>
+        <nav class="pagination-nav" aria-label="Staff ID Directory Pagination">
+          <!-- Prev Page -->
+          <a href="<?php echo $page > 1 ? htmlspecialchars(get_staff_id_pagination_url($page - 1, $search, $filter_dept, $selected_id, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+             aria-label="Previous Page"
+             title="Previous Page">
+            <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+          </a>
+
+          <!-- Page Numbers -->
+          <?php
+            $range = 2;
+            for ($p = 1; $p <= $total_pages; $p++):
+              if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+          ?>
+            <a href="<?php echo htmlspecialchars(get_staff_id_pagination_url($p, $search, $filter_dept, $selected_id, $limit)); ?>" 
+               class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+              <?php echo $p; ?>
+            </a>
+          <?php 
+              elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+          ?>
+            <span class="pagination-ellipsis">&hellip;</span>
+          <?php 
+              endif;
+            endfor;
+          ?>
+
+          <!-- Next Page -->
+          <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_staff_id_pagination_url($page + 1, $search, $filter_dept, $selected_id, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+             aria-label="Next Page"
+             title="Next Page">
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+          </a>
+        </nav>
+      <?php endif; ?>
+
+      <!-- Legend / Session Status -->
+      <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+          Official PVC Pass
+        </span>
+        <span style="color: #cbd5e1;">|</span>
+        <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      </div>
+
     </div>
   </div>
 

@@ -18,6 +18,14 @@ $filter_month = isset($_GET['month']) ? trim($_GET['month']) : '';
 $filter_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
 $filter_staff_id = intval($_GET['staff_id'] ?? 0);
 
+// Pagination Settings (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
 // If staff role, restrict to own profile
 if ($current_user['role'] === 'staff') {
     $my_prof = $db->query("SELECT id FROM staff_profiles WHERE user_id = {$current_user['id']} LIMIT 1")->fetch();
@@ -93,47 +101,86 @@ $total_disbursed_amt = floatval($stat_payroll['total_disbursed'] ?? 0);
 $avg_payout_amt = floatval($stat_payroll['avg_payout'] ?? 0);
 $total_faculty_count = count($staff_dropdown);
 
-// Query Payroll Records
-$query = "
+// Query Payroll Records with Filtering & Pagination
+$where_clauses = ["p.session_id = ?"];
+$where_params = [$session_id];
+
+if (!empty($search)) {
+    $where_clauses[] = "(u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+}
+if (!empty($filter_month)) {
+    $where_clauses[] = "p.month = ?";
+    $where_params[] = $filter_month;
+}
+if ($filter_year > 0) {
+    $where_clauses[] = "p.year = ?";
+    $where_params[] = $filter_year;
+}
+if ($filter_staff_id > 0) {
+    $where_clauses[] = "p.staff_id = ?";
+    $where_params[] = $filter_staff_id;
+}
+
+$where_sql = implode(' AND ', $where_clauses);
+
+// Accurate SQL aggregate for total slip count and total disbursed sum for the current filter criteria
+$agg_stmt = $db->prepare("
+    SELECT COUNT(*) as total_slips,
+           COALESCE(SUM(CASE WHEN p.payment_status = 'Paid' THEN p.net_salary ELSE 0 END), 0) as total_disbursed
+    FROM payroll p
+    JOIN staff_profiles sp ON p.staff_id = sp.id
+    JOIN users u ON sp.user_id = u.id
+    WHERE {$where_sql}
+");
+$agg_stmt->execute($where_params);
+$agg_res = $agg_stmt->fetch();
+$total_records = intval($agg_res['total_slips'] ?? 0);
+$filtered_disbursed = floatval($agg_res['total_disbursed'] ?? 0);
+
+// Calculate Pagination Bounds
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Fetch Paginated Records
+$data_sql = "
     SELECT p.*, sp.employee_code, sp.department, sp.designation, sp.photo as staff_photo, u.full_name, u.username, u.avatar, u.phone, u.email
     FROM payroll p
     JOIN staff_profiles sp ON p.staff_id = sp.id
     JOIN users u ON sp.user_id = u.id
-    WHERE p.session_id = ?
+    WHERE {$where_sql}
+    ORDER BY p.id DESC
+    LIMIT ? OFFSET ?
 ";
-$params = [$session_id];
-
-if (!empty($search)) {
-    $query .= " AND (u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
+$stmt = $db->prepare($data_sql);
+$param_idx = 1;
+foreach ($where_params as $val) {
+    $stmt->bindValue($param_idx++, $val);
 }
-if (!empty($filter_month)) {
-    $query .= " AND p.month = ?";
-    $params[] = $filter_month;
-}
-if ($filter_year > 0) {
-    $query .= " AND p.year = ?";
-    $params[] = $filter_year;
-}
-if ($filter_staff_id > 0) {
-    $query .= " AND p.staff_id = ?";
-    $params[] = $filter_staff_id;
-}
-
-$query .= " ORDER BY p.id DESC";
-$stmt = $db->prepare($query);
-$stmt->execute($params);
+$stmt->bindValue($param_idx++, (int)$limit, PDO::PARAM_INT);
+$stmt->bindValue($param_idx++, (int)$offset, PDO::PARAM_INT);
+$stmt->execute();
 $payroll_records = $stmt->fetchAll();
 
-// Current filtered disbursed total
-$filtered_disbursed = 0;
-foreach ($payroll_records as $rec) {
-    if ($rec['payment_status'] === 'Paid') {
-        $filtered_disbursed += floatval($rec['net_salary']);
-    }
+// Helper to preserve active query parameters in pagination links
+function get_payroll_pagination_url($target_page, $search, $filter_month, $filter_year, $filter_staff_id, $limit) {
+    $params = [];
+    if (!empty($search)) $params['search'] = $search;
+    if (!empty($filter_month)) $params['month'] = $filter_month;
+    if ($filter_year > 0) $params['year'] = $filter_year;
+    if ($filter_staff_id > 0) $params['staff_id'] = $filter_staff_id;
+    if ($limit !== 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    $query_str = !empty($params) ? '?' . http_build_query($params) : '';
+    return ADMIN_URL . '/payroll' . $query_str;
 }
 
 $months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -782,6 +829,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     
     <!-- Filter form -->
     <form method="GET" action="<?php echo ADMIN_URL; ?>/payroll" class="roaster-filter-form">
+      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       
       <!-- Search Input -->
       <div class="roaster-search-box">
@@ -791,6 +839,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <a href="<?php 
             $params = $_GET; 
             unset($params['search']); 
+            unset($params['page']);
             echo ADMIN_URL . '/payroll' . (!empty($params) ? '?' . http_build_query($params) : ''); 
           ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
@@ -844,7 +893,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <?php if (!empty($search) || !empty($filter_month) || $filter_staff_id > 0 || $filter_year != date('Y')): ?>
-        <a href="<?php echo ADMIN_URL; ?>/payroll" class="roaster-btn ghost" title="Reset all filters">
+        <a href="<?php echo ADMIN_URL; ?>/payroll<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -854,7 +903,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot" style="background: #0284c7;"></span>
-        <span><strong><?php echo count($payroll_records); ?></strong> <?php echo count($payroll_records) === 1 ? 'Slip' : 'Slips'; ?></span>
+        <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Slip' : 'Slips'; ?></span>
       </div>
     </div>
 
@@ -1040,6 +1089,85 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </tbody>
     </table>
+  </div>
+
+  <!-- Table Footer Pagination & Per-Page Controls (Matches HRMS standard) -->
+  <div class="pagination-controls-wrap">
+    
+    <!-- Left: Showing summary & Limit Selector -->
+    <div class="pagination-meta-group">
+      <span style="font-size: 0.82rem; color: #475569;">
+        <?php if ($total_records > 0): ?>
+          Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> salary <?php echo $total_records === 1 ? 'slip' : 'slips'; ?>
+        <?php else: ?>
+          Showing <strong>0</strong> salary slips
+        <?php endif; ?>
+      </span>
+
+      <div class="pagination-limit-box">
+        <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+        <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+          <?php foreach ($allowed_limits as $l): ?>
+            <option value="<?php echo htmlspecialchars(get_payroll_pagination_url(1, $search, $filter_month, $filter_year, $filter_staff_id, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <?php echo $l; ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+
+    <!-- Center/Right: Navigation page buttons -->
+    <?php if ($total_pages > 1): ?>
+      <nav class="pagination-nav" aria-label="Faculty Payroll Pagination">
+        <!-- Prev Page -->
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_payroll_pagination_url($page - 1, $search, $filter_month, $filter_year, $filter_staff_id, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+           aria-label="Previous Page"
+           title="Previous Page">
+          <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+        </a>
+
+        <!-- Page Numbers -->
+        <?php
+          $range = 2;
+          for ($p = 1; $p <= $total_pages; $p++):
+            if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+        ?>
+          <a href="<?php echo htmlspecialchars(get_payroll_pagination_url($p, $search, $filter_month, $filter_year, $filter_staff_id, $limit)); ?>" 
+             class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+            <?php echo $p; ?>
+          </a>
+        <?php 
+            elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+        ?>
+          <span class="pagination-ellipsis">&hellip;</span>
+        <?php 
+            endif;
+          endfor;
+        ?>
+
+        <!-- Next Page -->
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_payroll_pagination_url($page + 1, $search, $filter_month, $filter_year, $filter_staff_id, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+           aria-label="Next Page"
+           title="Next Page">
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+        </a>
+      </nav>
+    <?php endif; ?>
+
+    <!-- Status Legend -->
+    <div style="display: flex; align-items: center; gap: 16px; font-size: 0.78rem; color: #64748b; margin-left: auto;">
+      <span style="display: inline-flex; align-items: center; gap: 6px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+        Paid &amp; Settled
+      </span>
+      <span style="display: inline-flex; align-items: center; gap: 6px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span>
+        Pending Disbursal
+      </span>
+    </div>
+
   </div>
 </div>
 

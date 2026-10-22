@@ -8,7 +8,28 @@
 define('SITE_NAME', 'KSV Academy');
 define('SITE_TAGLINE', 'Where Learning Meets Excellence');
 define('SITE_MOTTO', 'Ab Sapnon ki Coaching Ulwe Mein! Strong Foundation, Sure Success.');
-define('SITE_URL', 'https://www.ksvacademy.net');
+// Environment Detection (Live vs Localhost)
+$http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '');
+$is_ssl = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+$protocol = $is_ssl ? 'https://' : 'http://';
+
+$is_local_env = (
+    empty($http_host) ||
+    in_array($http_host, ['localhost', '127.0.0.1', '::1']) ||
+    strpos($http_host, 'localhost:') === 0 ||
+    strpos($http_host, '127.0.0.1:') === 0 ||
+    preg_match('/\.local$/i', $http_host)
+);
+
+if ($is_local_env) {
+    define('IS_LIVE', false);
+    define('LIVE_URL', 'https://ksvacademy.org');
+    define('SITE_URL', $http_host ? $protocol . $http_host : 'http://localhost:8000');
+} else {
+    define('IS_LIVE', true);
+    define('LIVE_URL', 'https://ksvacademy.org');
+    define('SITE_URL', 'https://ksvacademy.org');
+}
 define('SITE_LOGO', 'assets/imgs/ksv-logo.jpg');
 
 // Contact Details

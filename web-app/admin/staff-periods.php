@@ -166,42 +166,104 @@ if (!function_exists('get_staff_photo_url')) {
     }
 }
 
-$query = "
+// Pagination Settings (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+// Build WHERE filter conditions
+$where_clauses = ["1=1"];
+$where_params = [];
+
+if ($filter_staff > 0) {
+    $where_clauses[] = "p.staff_id = ?";
+    $where_params[] = $filter_staff;
+}
+
+if (!empty($filter_day) && $filter_day !== 'all') {
+    $where_clauses[] = "p.day_of_week LIKE ?";
+    $where_params[] = "%$filter_day%";
+}
+
+if (!empty($search)) {
+    $where_clauses[] = "(p.staff_name LIKE ? OR p.subject LIKE ? OR p.class_name LIKE ? OR p.room_no LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+}
+
+$where_sql = implode(' AND ', $where_clauses);
+
+// Accurate SQL aggregate for total periods, unique faculty, and unique subjects
+$metrics_stmt = $db->prepare("
+    SELECT COUNT(*) as total_periods,
+           COUNT(DISTINCT p.staff_id) as unique_faculty,
+           COUNT(DISTINCT p.subject) as unique_subjects
+    FROM staff_periods p
+    LEFT JOIN staff_profiles sp ON p.staff_id = sp.id
+    LEFT JOIN users u ON sp.user_id = u.id
+    WHERE {$where_sql}
+");
+$metrics_stmt->execute($where_params);
+$metrics = $metrics_stmt->fetch(PDO::FETCH_ASSOC);
+$total_records = intval($metrics['total_periods'] ?? 0);
+$total_periods = $total_records;
+$unique_faculty_count = intval($metrics['unique_faculty'] ?? 0);
+$unique_subjects_count = intval($metrics['unique_subjects'] ?? 0);
+
+// Calculate Pagination Bounds
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Base SELECT clause for periods
+$base_select = "
     SELECT p.*, sp.employee_code, sp.department, sp.designation, sp.photo, u.username, u.email as user_email, u.full_name as user_full_name, u.avatar
     FROM staff_periods p
     LEFT JOIN staff_profiles sp ON p.staff_id = sp.id
     LEFT JOIN users u ON sp.user_id = u.id
-    WHERE 1=1
+    WHERE {$where_sql}
+    ORDER BY p.period_name ASC, p.id ASC
 ";
-$params = [];
 
-if ($filter_staff > 0) {
-    $query .= " AND p.staff_id = ?";
-    $params[] = $filter_staff;
+// If in table view, paginate the records; for schedule card view, fetch all matching periods
+if ($view_mode === 'schedule') {
+    $stmt = $db->prepare($base_select);
+    $stmt->execute($where_params);
+    $periods = $stmt->fetchAll();
+} else {
+    $table_sql = $base_select . " LIMIT ? OFFSET ?";
+    $stmt = $db->prepare($table_sql);
+    $param_idx = 1;
+    foreach ($where_params as $val) {
+        $stmt->bindValue($param_idx++, $val);
+    }
+    $stmt->bindValue($param_idx++, (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue($param_idx++, (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $periods = $stmt->fetchAll();
 }
 
-if (!empty($filter_day) && $filter_day !== 'all') {
-    $query .= " AND p.day_of_week LIKE ?";
-    $params[] = "%$filter_day%";
+// Helper to preserve active query parameters in pagination links
+function get_staff_periods_pagination_url($target_page, $search, $filter_staff, $filter_day, $view_mode, $limit) {
+    $params = [];
+    if (!empty($view_mode) && $view_mode !== 'table') $params['view'] = $view_mode;
+    if ($filter_staff > 0) $params['staff_id'] = $filter_staff;
+    if (!empty($filter_day) && $filter_day !== 'all') $params['day'] = $filter_day;
+    if (!empty($search)) $params['search'] = $search;
+    if ($limit !== 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    $query_str = !empty($params) ? '?' . http_build_query($params) : '';
+    return ADMIN_URL . '/staff-periods' . $query_str;
 }
-
-if (!empty($search)) {
-    $query .= " AND (p.staff_name LIKE ? OR p.subject LIKE ? OR p.class_name LIKE ? OR p.room_no LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-}
-
-$query .= " ORDER BY p.period_name ASC, p.id ASC";
-$stmt = $db->prepare($query);
-$stmt->execute($params);
-$periods = $stmt->fetchAll();
-
-// Metrics calculations
-$total_periods = count($periods);
-$unique_faculty_count = count(array_unique(array_column($periods, 'staff_id')));
-$unique_subjects_count = count(array_unique(array_column($periods, 'subject')));
 
 // Helper for subject badge color theme (Simple & Sober)
 function get_subject_theme($subj) {
@@ -615,13 +677,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <!-- Left: Filters & Live Search Form -->
     <form method="GET" action="<?php echo ADMIN_URL; ?>/staff-periods" class="roaster-filter-form">
       <input type="hidden" name="view" value="<?php echo htmlspecialchars($view_mode); ?>">
+      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       
       <!-- Styled Search Input -->
       <div class="roaster-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search faculty, subject, room..." autocomplete="off">
         <?php if (!empty($search)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=<?php echo urlencode($view_mode); ?><?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <a href="<?php echo htmlspecialchars(get_staff_periods_pagination_url(1, '', $filter_staff, $filter_day, $view_mode, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
 
@@ -659,7 +722,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <?php if (!empty($search) || $filter_staff > 0 || (!empty($filter_day) && $filter_day !== 'all')): ?>
-        <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=<?php echo urlencode($view_mode); ?>" class="roaster-btn ghost" title="Reset all filters">
+        <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -669,7 +732,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot" style="background: #0092df;"></span>
-        <span><strong><?php echo $total_periods; ?></strong> Periods</span>
+        <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Period' : 'Periods'; ?></span>
       </div>
 
       <?php if (in_array($current_user['role'], ['super_admin', 'admin'])): ?>
@@ -706,12 +769,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <!-- View Switcher -->
         <div class="sp-view-toggle">
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" 
+          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
              class="sp-view-tab <?php echo $view_mode !== 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-table-list"></i>
             <span>Table View</span>
           </a>
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=schedule<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" 
+          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=schedule<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
              class="sp-view-tab <?php echo $view_mode === 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-calendar-days"></i>
             <span>Faculty Timetables</span>
@@ -719,7 +782,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
-          <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_periods; ?></strong></span>
+          <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
         </div>
       </div>
     </div>
@@ -869,6 +932,82 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </table>
     </div>
 
+    <!-- Table Footer Pagination & Per-Page Controls (Matches HRMS standard) -->
+    <div class="pagination-controls-wrap">
+      
+      <!-- Left: Showing summary & Limit Selector -->
+      <div class="pagination-meta-group">
+        <span style="font-size: 0.82rem; color: #475569;">
+          <?php if ($total_records > 0): ?>
+            Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> periods
+          <?php else: ?>
+            Showing <strong>0</strong> periods
+          <?php endif; ?>
+        </span>
+
+        <div class="pagination-limit-box">
+          <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+          <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+            <?php foreach ($allowed_limits as $l): ?>
+              <option value="<?php echo htmlspecialchars(get_staff_periods_pagination_url(1, $search, $filter_staff, $filter_day, $view_mode, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+                <?php echo $l; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+
+      <!-- Center/Right: Navigation page buttons -->
+      <?php if ($total_pages > 1): ?>
+        <nav class="pagination-nav" aria-label="Staff Periods Master Schedule Pagination">
+          <!-- Prev Page -->
+          <a href="<?php echo $page > 1 ? htmlspecialchars(get_staff_periods_pagination_url($page - 1, $search, $filter_staff, $filter_day, $view_mode, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+             aria-label="Previous Page"
+             title="Previous Page">
+            <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+          </a>
+
+          <!-- Page Numbers -->
+          <?php
+            $range = 2;
+            for ($p = 1; $p <= $total_pages; $p++):
+              if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+          ?>
+            <a href="<?php echo htmlspecialchars(get_staff_periods_pagination_url($p, $search, $filter_staff, $filter_day, $view_mode, $limit)); ?>" 
+               class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+              <?php echo $p; ?>
+            </a>
+          <?php 
+              elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+          ?>
+            <span class="pagination-ellipsis">&hellip;</span>
+          <?php 
+              endif;
+            endfor;
+          ?>
+
+          <!-- Next Page -->
+          <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_staff_periods_pagination_url($page + 1, $search, $filter_staff, $filter_day, $view_mode, $limit)) : '#'; ?>" 
+             class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+             aria-label="Next Page"
+             title="Next Page">
+            <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+          </a>
+        </nav>
+      <?php endif; ?>
+
+      <!-- Legend / Session Status -->
+      <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+        <span style="display: inline-flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+          Active Schedule
+        </span>
+        <span style="color: #cbd5e1;">|</span>
+        <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      </div>
+
+    </div>
   </div>
 
 <!-- ══════════════════════════════════════════════════════
@@ -893,12 +1032,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <!-- View Switcher -->
         <div class="sp-view-toggle">
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" 
+          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
              class="sp-view-tab <?php echo $view_mode !== 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-table-list"></i>
             <span>Table View</span>
           </a>
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=schedule<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" 
+          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=schedule<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
              class="sp-view-tab <?php echo $view_mode === 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-calendar-days"></i>
             <span>Faculty Timetables</span>

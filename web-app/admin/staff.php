@@ -15,6 +15,14 @@ $session_id = $active_session['id'];
 $search = trim($_GET['search'] ?? '');
 $filter_dept = trim($_GET['department'] ?? '');
 
+// Pagination & Limits Setup (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
 // Handle Add Staff
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
     $action = $_POST['action'] ?? '';
@@ -152,34 +160,76 @@ $total_depts_count = intval($stats['total_depts'] ?? 0);
 $total_payroll_val = floatval($stats['total_payroll'] ?? 0);
 $avg_salary_val = floatval($stats['avg_salary'] ?? 0);
 
-// Query Staff
+// Build WHERE filter conditions
+$where_clauses = ["sp.session_id = ?"];
+$where_params = [$session_id];
+
+if (!empty($search)) {
+    $where_clauses[] = "(u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ? OR u.phone LIKE ? OR sp.phone LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+}
+
+if (!empty($filter_dept)) {
+    $where_clauses[] = "sp.department = ?";
+    $where_params[] = $filter_dept;
+}
+
+$where_sql = implode(' AND ', $where_clauses);
+
+// Count total matching staff records
+$count_stmt = $db->prepare("
+    SELECT COUNT(*) 
+    FROM staff_profiles sp 
+    JOIN users u ON sp.user_id = u.id 
+    WHERE {$where_sql}
+");
+$count_stmt->execute($where_params);
+$total_records = intval($count_stmt->fetchColumn());
+
+// Calculate total pages & offset
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+
+// Query staff for current table page
 $query = "
     SELECT sp.*, u.username, u.full_name, u.email as user_email, u.phone as user_phone, u.status as user_status, u.avatar
     FROM staff_profiles sp
     JOIN users u ON sp.user_id = u.id
-    WHERE sp.session_id = ?
+    WHERE {$where_sql}
+    ORDER BY sp.id ASC
+    LIMIT ? OFFSET ?
 ";
-$params = [$session_id];
-
-if (!empty($search)) {
-    $query .= " AND (u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ? OR u.phone LIKE ? OR sp.phone LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-}
-
-if (!empty($filter_dept)) {
-    $query .= " AND sp.department = ?";
-    $params[] = $filter_dept;
-}
-
-$query .= " ORDER BY sp.id ASC";
 $stmt = $db->prepare($query);
-$stmt->execute($params);
+$bind_idx = 1;
+foreach ($where_params as $val) {
+    $stmt->bindValue($bind_idx++, $val);
+}
+$stmt->bindValue($bind_idx++, $limit, PDO::PARAM_INT);
+$stmt->bindValue($bind_idx++, $offset, PDO::PARAM_INT);
+$stmt->execute();
 $staff_members = $stmt->fetchAll();
+
+// Pagination indicators
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Helper for generating staff pagination links
+function get_staff_pagination_url($target_page, $search, $filter_dept, $limit) {
+    $params = [];
+    if (!empty($search)) $params['search'] = $search;
+    if (!empty($filter_dept)) $params['department'] = $filter_dept;
+    if ($limit != 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    return ADMIN_URL . '/staff' . (!empty($params) ? '?' . http_build_query($params) : '');
+}
 
 // Dynamic Department list combining existing and standard departments
 $db_depts = $db->query("SELECT DISTINCT department FROM staff_profiles WHERE department IS NOT NULL AND department != '' ORDER BY department ASC")->fetchAll(PDO::FETCH_COLUMN);
@@ -443,12 +493,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
     
     <!-- Filter form -->
     <form method="GET" action="<?php echo ADMIN_URL; ?>/staff" class="roaster-filter-form">
-      
+      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+
       <div class="roaster-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, code, dept, phone..." autocomplete="off">
         <?php if (!empty($search)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/staff<?php echo !empty($filter_dept) ? '?department=' . urlencode($filter_dept) : ''; ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <a href="<?php echo htmlspecialchars(get_staff_pagination_url(1, '', $filter_dept, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
 
@@ -470,7 +521,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <?php if (!empty($search) || !empty($filter_dept)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/staff" class="roaster-btn ghost" title="Reset all filters">
+        <a href="<?php echo ADMIN_URL; ?>/staff<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -480,7 +531,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot"></span>
-        <span><strong><?php echo count($staff_members); ?></strong> <?php echo count($staff_members) === 1 ? 'Faculty' : 'Faculty'; ?></span>
+        <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Faculty' : 'Faculty'; ?></span>
       </div>
 
       <?php if ($current_user['role'] === 'super_admin'): ?>
@@ -714,14 +765,73 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </table>
   </div>
 
-  <!-- Table Footer Summary & Legend (Matches students.php) -->
+  <!-- Table Footer Pagination & Per-Page Controls (Matches students.php) -->
   <div class="pagination-controls-wrap">
+    
+    <!-- Left: Showing summary & Limit Selector -->
     <div class="pagination-meta-group">
       <span style="font-size: 0.82rem; color: #475569;">
-        Showing <strong><?php echo count($staff_members); ?></strong> faculty &amp; staff <?php echo count($staff_members) === 1 ? 'member' : 'members'; ?>
+        <?php if ($total_records > 0): ?>
+          Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> faculty &amp; staff
+        <?php else: ?>
+          Showing <strong>0</strong> faculty &amp; staff
+        <?php endif; ?>
       </span>
+
+      <div class="pagination-limit-box">
+        <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+        <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+          <?php foreach ($allowed_limits as $l): ?>
+            <option value="<?php echo htmlspecialchars(get_staff_pagination_url(1, $search, $filter_dept, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <?php echo $l; ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 16px; font-size: 0.78rem; color: #64748b;">
+
+    <!-- Center/Right: Navigation page buttons -->
+    <?php if ($total_pages > 1): ?>
+      <nav class="pagination-nav" aria-label="Faculty &amp; Staff Directory Pagination">
+        <!-- Prev Page -->
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_staff_pagination_url($page - 1, $search, $filter_dept, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+           aria-label="Previous Page"
+           title="Previous Page">
+          <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+        </a>
+
+        <!-- Page Numbers -->
+        <?php
+          $range = 2;
+          for ($p = 1; $p <= $total_pages; $p++):
+            if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+        ?>
+          <a href="<?php echo htmlspecialchars(get_staff_pagination_url($p, $search, $filter_dept, $limit)); ?>" 
+             class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+            <?php echo $p; ?>
+          </a>
+        <?php 
+            elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+        ?>
+          <span class="pagination-ellipsis">&hellip;</span>
+        <?php 
+            endif;
+          endfor;
+        ?>
+
+        <!-- Next Page -->
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_staff_pagination_url($page + 1, $search, $filter_dept, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+           aria-label="Next Page"
+           title="Next Page">
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+        </a>
+      </nav>
+    <?php endif; ?>
+
+    <!-- Status Legend -->
+    <div style="display: flex; align-items: center; gap: 16px; font-size: 0.78rem; color: #64748b; margin-left: auto;">
       <span style="display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
         Active Verified
@@ -731,6 +841,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         Biometric Pass
       </span>
     </div>
+
   </div>
 </div>
 

@@ -62,56 +62,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Fetch all categories for filter and form
 $categories = $db->query("SELECT id, category_name FROM expense_categories ORDER BY category_name ASC")->fetchAll();
 
-// Query Expenses
+// Pagination Settings (10, 20, 30, 40, 50)
+$allowed_limits = [10, 20, 30, 40, 50];
+$limit = intval($_GET['limit'] ?? 10);
+if (!in_array($limit, $allowed_limits)) {
+    $limit = 10;
+}
+$page = max(1, intval($_GET['page'] ?? 1));
+
+// Build WHERE filter conditions
+$where_clauses = ["e.session_id = ?"];
+$where_params = [$session_id];
+
+if ($filter_cat_id > 0) {
+    $where_clauses[] = "e.category_id = ?";
+    $where_params[] = $filter_cat_id;
+}
+if (!empty($filter_method)) {
+    $where_clauses[] = "e.payment_method = ?";
+    $where_params[] = $filter_method;
+}
+if (!empty($filter_start_date)) {
+    $where_clauses[] = "e.expense_date >= ?";
+    $where_params[] = $filter_start_date;
+}
+if (!empty($filter_end_date)) {
+    $where_clauses[] = "e.expense_date <= ?";
+    $where_params[] = $filter_end_date;
+}
+if (!empty($search)) {
+    $where_clauses[] = "(e.title LIKE ? OR e.invoice_ref LIKE ? OR e.vendor_name LIKE ? OR e.notes LIKE ?)";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+    $where_params[] = "%$search%";
+}
+
+$where_sql = implode(' AND ', $where_clauses);
+
+// Accurate SQL aggregate for total vouchers and disbursed sum under current filters
+$agg_stmt = $db->prepare("
+    SELECT COUNT(*) as total_vouchers,
+           COALESCE(SUM(e.amount), 0) as total_amount
+    FROM expenses e
+    JOIN expense_categories c ON e.category_id = c.id
+    WHERE {$where_sql}
+");
+$agg_stmt->execute($where_params);
+$agg = $agg_stmt->fetch(PDO::FETCH_ASSOC);
+$total_records = intval($agg['total_vouchers'] ?? 0);
+$total_expense_sum = floatval($agg['total_amount'] ?? 0);
+
+// Calculate Pagination Bounds
+$total_pages = max(1, (int)ceil($total_records / $limit));
+if ($page > $total_pages) {
+    $page = $total_pages;
+}
+$offset = ($page - 1) * $limit;
+$start_record = $total_records > 0 ? $offset + 1 : 0;
+$end_record = min($offset + $limit, $total_records);
+
+// Fetch Paginated Expense Records
 $query = "
     SELECT e.*, c.category_name
     FROM expenses e
     JOIN expense_categories c ON e.category_id = c.id
-    WHERE e.session_id = ?
+    WHERE {$where_sql}
+    ORDER BY e.expense_date DESC, e.id DESC
+    LIMIT ? OFFSET ?
 ";
-$params = [$session_id];
-
-if ($filter_cat_id > 0) {
-    $query .= " AND e.category_id = ?";
-    $params[] = $filter_cat_id;
-}
-if (!empty($filter_method)) {
-    $query .= " AND e.payment_method = ?";
-    $params[] = $filter_method;
-}
-if (!empty($filter_start_date)) {
-    $query .= " AND e.expense_date >= ?";
-    $params[] = $filter_start_date;
-}
-if (!empty($filter_end_date)) {
-    $query .= " AND e.expense_date <= ?";
-    $params[] = $filter_end_date;
-}
-if (!empty($search)) {
-    $query .= " AND (e.title LIKE ? OR e.invoice_ref LIKE ? OR e.vendor_name LIKE ? OR e.notes LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-}
-
-$query .= " ORDER BY e.expense_date DESC, e.id DESC";
 $stmt = $db->prepare($query);
-$stmt->execute($params);
+$param_idx = 1;
+foreach ($where_params as $val) {
+    $stmt->bindValue($param_idx++, $val);
+}
+$stmt->bindValue($param_idx++, (int)$limit, PDO::PARAM_INT);
+$stmt->bindValue($param_idx++, (int)$offset, PDO::PARAM_INT);
+$stmt->execute();
 $expenses = $stmt->fetchAll();
 
-// Statistics computation
-$total_expense_sum = 0;
-foreach ($expenses as $e) {
-    $total_expense_sum += floatval($e['amount']);
-}
-
-// Global session total
+// Global session total for top stat card
 $global_sum_stmt = $db->prepare("SELECT COALESCE(SUM(amount), 0) as total_spent, COUNT(*) as total_vouchers FROM expenses WHERE session_id = ?");
 $global_sum_stmt->execute([$session_id]);
 $global_metrics = $global_sum_stmt->fetch();
 $all_time_spent = floatval($global_metrics['total_spent'] ?? 0);
 $all_time_vouchers = intval($global_metrics['total_vouchers'] ?? 0);
+
+// Helper to preserve active query parameters in pagination links
+function get_expenses_pagination_url($target_page, $search, $filter_cat_id, $filter_method, $limit) {
+    $params = [];
+    if (!empty($search)) $params['search'] = $search;
+    if ($filter_cat_id > 0) $params['category_id'] = $filter_cat_id;
+    if (!empty($filter_method)) $params['method'] = $filter_method;
+    if ($limit !== 10) $params['limit'] = $limit;
+    if ($target_page > 1) $params['page'] = $target_page;
+    $query_str = !empty($params) ? '?' . http_build_query($params) : '';
+    return ADMIN_URL . '/expenses' . $query_str;
+}
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
@@ -198,81 +245,93 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      TOP KPI STAT METRICS GRID
      ══════════════════════════════════════════════════════ -->
-<div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 24px;">
+<div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
   
   <!-- Total Expenditure -->
   <div class="stat-card purple">
-    <div class="stat-card-header">
-      <div class="stat-card-meta">
-        <span class="stat-card-title">Total Expenditure</span>
-        <h3 class="stat-card-value" style="color: #dc2626;"><?php echo format_inr($total_expense_sum); ?></h3>
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Total Expenditure</span>
+          <span class="stat-number" style="color: #dc2626;"><?php echo format_inr($total_expense_sum); ?></span>
+        </div>
+        <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.12); color: #dc2626; border-color: #fee2e2;">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
       </div>
-      <div class="stat-card-icon" style="background: rgba(239, 68, 68, 0.15); color: #dc2626;">
-        <i class="fa-solid fa-wallet"></i>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%; background: #dc2626;"></div>
       </div>
     </div>
     <div class="stat-card-footer">
-      <span class="stat-card-sub" style="color: #dc2626; font-weight: 700;">
-        <i class="fa-solid fa-arrow-trend-down"></i> Filtered Disbursements
-      </span>
-      <span class="stat-card-sub text-muted">Session Total: <?php echo format_inr($all_time_spent); ?></span>
+      <span><i class="fa-solid fa-arrow-trend-down" style="color: #dc2626; margin-right: 4px;"></i> Filtered Disbursements</span>
+      <span style="color: #dc2626; font-weight: 700;">Total: <?php echo format_inr($all_time_spent); ?></span>
     </div>
   </div>
 
   <!-- Total Vouchers -->
   <div class="stat-card blue">
-    <div class="stat-card-header">
-      <div class="stat-card-meta">
-        <span class="stat-card-title">Vouchers Issued</span>
-        <h3 class="stat-card-value"><?php echo number_format(count($expenses)); ?></h3>
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Vouchers Issued</span>
+          <span class="stat-number"><?php echo number_format($total_records); ?></span>
+        </div>
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
       </div>
-      <div class="stat-card-icon">
-        <i class="fa-solid fa-receipt"></i>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%;"></div>
       </div>
     </div>
     <div class="stat-card-footer">
-      <span class="stat-card-sub" style="color: #0284c7; font-weight: 700;">
-        <i class="fa-solid fa-file-invoice"></i> Registered Bills
-      </span>
-      <span class="stat-card-sub text-muted">Overall: <?php echo $all_time_vouchers; ?> records</span>
+      <span><i class="fa-solid fa-file-invoice" style="color: #0284c7; margin-right: 4px;"></i> Registered Bills</span>
+      <span style="color: #0284c7; font-weight: 700;">Overall: <?php echo $all_time_vouchers; ?> records</span>
     </div>
   </div>
 
   <!-- Active Categories -->
   <div class="stat-card green">
-    <div class="stat-card-header">
-      <div class="stat-card-meta">
-        <span class="stat-card-title">Budget Categories</span>
-        <h3 class="stat-card-value"><?php echo count($categories); ?></h3>
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Budget Categories</span>
+          <span class="stat-number"><?php echo count($categories); ?></span>
+        </div>
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-tags"></i>
+        </div>
       </div>
-      <div class="stat-card-icon" style="background: rgba(16, 185, 129, 0.15); color: #059669;">
-        <i class="fa-solid fa-tags"></i>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%;"></div>
       </div>
     </div>
     <div class="stat-card-footer">
-      <span class="stat-card-sub" style="color: #059669; font-weight: 700;">
-        <i class="fa-solid fa-layer-group"></i> Active Cost Centers
-      </span>
-      <span class="stat-card-sub text-muted">Campus Operations</span>
+      <span><i class="fa-solid fa-layer-group" style="color: #059669; margin-right: 4px;"></i> Active Cost Centers</span>
+      <span style="color: #059669; font-weight: 700;">Campus Operations</span>
     </div>
   </div>
 
   <!-- Working Session -->
   <div class="stat-card amber">
-    <div class="stat-card-header">
-      <div class="stat-card-meta">
-        <span class="stat-card-title">Active Academic Session</span>
-        <h3 class="stat-card-value" style="font-size: 1.25rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($active_session['session_name']); ?></h3>
+    <div>
+      <div class="stat-card-top">
+        <div class="stat-info">
+          <span class="stat-label">Active Academic Session</span>
+          <span class="stat-number" style="font-size: 1.35rem;"><?php echo htmlspecialchars($active_session['session_name']); ?></span>
+        </div>
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
       </div>
-      <div class="stat-card-icon" style="background: rgba(245, 158, 11, 0.15); color: #d97706;">
-        <i class="fa-solid fa-calendar-check"></i>
+      <div class="stat-card-progress">
+        <div class="stat-card-progress-bar" style="width: 100%;"></div>
       </div>
     </div>
     <div class="stat-card-footer">
-      <span class="stat-card-sub" style="color: #d97706; font-weight: 700;">
-        <i class="fa-solid fa-shield-halved"></i> Verified Ledger
-      </span>
-      <span class="stat-card-sub text-muted">Active Financial Year</span>
+      <span><i class="fa-solid fa-shield-halved" style="color: #d97706; margin-right: 4px;"></i> Verified Ledger</span>
+      <span style="color: #d97706; font-weight: 700;">Active Financial Year</span>
     </div>
   </div>
 
@@ -285,12 +344,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Filter Form -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/expenses" class="roaster-filter-form" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+    <form method="GET" action="<?php echo ADMIN_URL; ?>/expenses" class="roaster-filter-form">
+      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       
       <!-- Search Input -->
       <div class="roaster-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search title, invoice, vendor...">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search title, invoice, vendor..." autocomplete="off">
+        <?php if (!empty($search)): ?>
+          <a href="<?php echo htmlspecialchars(get_expenses_pagination_url(1, '', $filter_cat_id, $filter_method, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
+        <?php endif; ?>
       </div>
 
       <!-- Category Filter Dropdown -->
@@ -325,7 +388,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <?php if (!empty($search) || $filter_cat_id > 0 || !empty($filter_method) || !empty($filter_start_date) || !empty($filter_end_date)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/expenses" class="roaster-btn ghost" title="Reset all filters">
+        <a href="<?php echo ADMIN_URL; ?>/expenses<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -335,13 +398,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot" style="background: #ef4444;"></span>
-        <span><strong><?php echo count($expenses); ?></strong> Vouchers</span>
+        <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Voucher' : 'Vouchers'; ?></span>
       </div>
-
-      <a href="<?php echo ADMIN_URL; ?>/expense-report" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
-        <i class="fa-solid fa-chart-pie" style="color: #7c3aed;"></i>
-        <span>Analytics</span>
-      </a>
 
       <button type="button" onclick="openAddExpenseModal();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Record New Expense Voucher">
         <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
@@ -370,10 +428,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </p>
     </div>
 
-    <button type="button" onclick="openAddExpenseModal();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Record New Expense Voucher">
-      <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
-      <span>Add Expense</span>
-    </button>
+    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+      <span>Disbursed: <strong style="color: #dc2626; font-size: 0.95rem; font-family: 'Outfit', sans-serif;"><?php echo format_inr($total_expense_sum); ?></strong></span>
+      <span style="color: #cbd5e1;">|</span>
+      <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
+    </div>
   </div>
 
   <div class="table-responsive">
@@ -536,6 +595,83 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </tbody>
     </table>
+  </div>
+
+  <!-- Table Footer Pagination & Per-Page Controls (Matches HRMS standard) -->
+  <div class="pagination-controls-wrap">
+    
+    <!-- Left: Showing summary & Limit Selector -->
+    <div class="pagination-meta-group">
+      <span style="font-size: 0.82rem; color: #475569;">
+        <?php if ($total_records > 0): ?>
+          Showing <strong><?php echo $start_record; ?></strong>–<strong><?php echo $end_record; ?></strong> of <strong><?php echo $total_records; ?></strong> expense <?php echo $total_records === 1 ? 'voucher' : 'vouchers'; ?>
+        <?php else: ?>
+          Showing <strong>0</strong> expense vouchers
+        <?php endif; ?>
+      </span>
+
+      <div class="pagination-limit-box">
+        <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
+        <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
+          <?php foreach ($allowed_limits as $l): ?>
+            <option value="<?php echo htmlspecialchars(get_expenses_pagination_url(1, $search, $filter_cat_id, $filter_method, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <?php echo $l; ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+
+    <!-- Center/Right: Navigation page buttons -->
+    <?php if ($total_pages > 1): ?>
+      <nav class="pagination-nav" aria-label="Expenses Ledger Pagination">
+        <!-- Prev Page -->
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_expenses_pagination_url($page - 1, $search, $filter_cat_id, $filter_method, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
+           aria-label="Previous Page"
+           title="Previous Page">
+          <i class="fa-solid fa-chevron-left" style="font-size: 0.72rem;"></i>
+        </a>
+
+        <!-- Page Numbers -->
+        <?php
+          $range = 2;
+          for ($p = 1; $p <= $total_pages; $p++):
+            if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
+        ?>
+          <a href="<?php echo htmlspecialchars(get_expenses_pagination_url($p, $search, $filter_cat_id, $filter_method, $limit)); ?>" 
+             class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
+            <?php echo $p; ?>
+          </a>
+        <?php 
+            elseif (($p == 2 && $page - $range > 2) || ($p == $total_pages - 1 && $page + $range < $total_pages - 1)):
+        ?>
+          <span class="pagination-ellipsis">&hellip;</span>
+        <?php 
+            endif;
+          endfor;
+        ?>
+
+        <!-- Next Page -->
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_expenses_pagination_url($page + 1, $search, $filter_cat_id, $filter_method, $limit)) : '#'; ?>" 
+           class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
+           aria-label="Next Page"
+           title="Next Page">
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.72rem;"></i>
+        </a>
+      </nav>
+    <?php endif; ?>
+
+    <!-- Legend / Session Status -->
+    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+      <span style="display: inline-flex; align-items: center; gap: 6px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+        Verified Ledger
+      </span>
+      <span style="color: #cbd5e1;">|</span>
+      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+    </div>
+
   </div>
 </div>
 

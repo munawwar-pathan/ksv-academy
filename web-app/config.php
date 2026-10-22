@@ -7,14 +7,41 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Database Credentials
-define('DB_HOST', '127.0.0.1');
-define('DB_PORT', 3306);
-define('DB_NAME', 'ksvacademy');
-define('DB_USER', 'root');
-// Primary password is myPassword$10 with fallback to myPasswprd$10
-define('DB_PASS', 'myPassword$10');
-define('DB_PASS_ALT', 'myPasswprd$10');
+// Environment Detection (Live vs Localhost)
+$http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '');
+$is_local_env = (
+    empty($http_host) ||
+    in_array($http_host, ['localhost', '127.0.0.1', '::1']) ||
+    strpos($http_host, 'localhost:') === 0 ||
+    strpos($http_host, '127.0.0.1:') === 0 ||
+    preg_match('/\.local$/i', $http_host)
+);
+
+if ($is_local_env) {
+    // ----------------------------------------------------
+    // LOCALHOST ENVIRONMENT
+    // ----------------------------------------------------
+    define('IS_LIVE', false);
+    define('LIVE_URL', 'https://ksvacademy.org');
+    define('DB_HOST', '127.0.0.1');
+    define('DB_PORT', 3306);
+    define('DB_NAME', 'ksvacademy');
+    define('DB_USER', 'root');
+    define('DB_PASS', 'myPassword$10');
+    define('DB_PASS_ALT', 'myPasswprd$10');
+} else {
+    // ----------------------------------------------------
+    // LIVE SERVER ENVIRONMENT (https://ksvacademy.org)
+    // ----------------------------------------------------
+    define('IS_LIVE', true);
+    define('LIVE_URL', 'https://ksvacademy.org');
+    define('DB_HOST', 'localhost');
+    define('DB_PORT', 3306);
+    define('DB_NAME', 'u471423132_ksvacademy');
+    define('DB_USER', 'u471423132_ksvacademy');
+    define('DB_PASS', '@KsvAdmin2027');
+    define('DB_PASS_ALT', '@KsvAdmin2027');
+}
 
 // App Paths
 define('HRMS_URL', '/web-app');
@@ -33,9 +60,17 @@ function get_db_connection() {
         return $pdo;
     }
 
-    $passwords = [DB_PASS, DB_PASS_ALT, ''];
+    $passwords = [DB_PASS];
+    if (defined('DB_PASS_ALT') && DB_PASS_ALT !== DB_PASS) {
+        $passwords[] = DB_PASS_ALT;
+    }
+    if (!defined('IS_LIVE') || !IS_LIVE) {
+        $passwords[] = '';
+    }
+
     $last_exception = null;
 
+    // 1. Primary connection attempt using configured DB_HOST
     foreach ($passwords as $pwd) {
         try {
             $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
@@ -50,21 +85,27 @@ function get_db_connection() {
         }
     }
 
-    // Try localhost socket
-    try {
-        $dsn = "mysql:host=localhost;dbname=" . DB_NAME . ";charset=utf8mb4";
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        return $pdo;
-    } catch (PDOException $e) {
-        die("<div style='font-family:sans-serif;padding:20px;background:#fee2e2;color:#991b1b;border-radius:8px;'>
-            <h3>Database Connection Failed</h3>
-            <p>Could not connect to database <code>" . DB_NAME . "</code>. Please check MySQL service status.</p>
-            <p><small>" . htmlspecialchars($last_exception ? $last_exception->getMessage() : $e->getMessage()) . "</small></p>
-        </div>");
+    // 2. Fallback host attempt (toggle between localhost and 127.0.0.1)
+    $fallback_host = (DB_HOST === '127.0.0.1') ? 'localhost' : '127.0.0.1';
+    foreach ($passwords as $pwd) {
+        try {
+            $dsn = "mysql:host=" . $fallback_host . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+            $pdo = new PDO($dsn, DB_USER, $pwd, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]);
+            return $pdo;
+        } catch (PDOException $e) {
+            $last_exception = $e;
+        }
     }
+
+    die("<div style='font-family:sans-serif;padding:20px;background:#fee2e2;color:#991b1b;border-radius:8px;'>
+        <h3>Database Connection Failed</h3>
+        <p>Could not connect to database <code>" . htmlspecialchars(DB_NAME) . "</code> on <code>" . htmlspecialchars(DB_HOST) . "</code>. Please check MySQL service status.</p>
+        <p><small>" . htmlspecialchars($last_exception ? $last_exception->getMessage() : 'Unknown error') . "</small></p>
+    </div>");
 }
 
 /**
