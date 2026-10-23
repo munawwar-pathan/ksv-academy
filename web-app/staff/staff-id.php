@@ -16,8 +16,8 @@ $school_settings = get_school_settings();
 // Get selected staff ID
 $selected_id = intval($_GET['id'] ?? 0);
 
-// If staff role, lock to their profile
-if ($current_user['role'] === 'staff') {
+// If staff role and no specific id requested, default to their own profile
+if ($current_user['role'] === 'staff' && $selected_id === 0) {
     $my_prof = $db->query("SELECT id FROM staff_profiles WHERE user_id = {$current_user['id']} LIMIT 1")->fetch();
     if ($my_prof) {
         $selected_id = $my_prof['id'];
@@ -160,9 +160,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <div class="hrms-card no-print" style="margin-bottom: 24px;">
   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
     
-    <?php if ($current_user['role'] === 'super_admin'): ?>
-      <form method="GET" action="<?php echo ADMIN_URL; ?>/staff-id" style="display: flex; align-items: center; gap: 12px;">
-        <label style="font-size: 13px; font-weight: 700; color: var(--neutral-700);">Select Faculty Member:</label>
+      <form method="GET" action="<?php echo ($current_user['role'] === 'super_admin') ? ADMIN_URL . '/staff-id' : STAFF_URL . '/staff-id'; ?>" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <label style="font-size: 13px; font-weight: 700; color: var(--neutral-700); display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-id-badge" style="color: #7c3aed;"></i> Select Faculty Member:
+        </label>
         <select name="id" onchange="this.form.submit()" class="hrms-input" style="min-width: 280px; padding: 8px 12px; border-radius: 6px;">
           <?php foreach ($staff_list as $st_item): ?>
             <option value="<?php echo $st_item['id']; ?>" <?php echo $st_item['id'] == $selected_id ? 'selected' : ''; ?>>
@@ -171,12 +172,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php endforeach; ?>
         </select>
       </form>
-    <?php else: ?>
-      <div>
-        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--neutral-800);">Faculty Official Identity Card</h3>
-        <p style="margin: 2px 0 0; font-size: 12px; color: var(--neutral-500);">Campus identification &amp; attendance QR pass</p>
-      </div>
-    <?php endif; ?>
 
     <div>
       <button type="button" onclick="window.print();" class="action-primary-btn" style="background: #7c3aed; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);">

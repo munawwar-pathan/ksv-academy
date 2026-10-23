@@ -1448,10 +1448,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </label>
 
               <label class="perm-card">
-                <input type="checkbox" name="permissions[]" value="attendance" class="edit-staff-perm-cb">
+                <input type="checkbox" name="permissions[]" value="myself-attendance" class="edit-staff-perm-cb">
                 <span class="perm-card-text">
-                  <i class="fa-solid fa-clock"></i>
-                  <span>Attendance &amp; Punch</span>
+                  <i class="fa-solid fa-calendar-check"></i>
+                  <span>MySelf Attendance</span>
                 </span>
               </label>
 
@@ -1464,18 +1464,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </label>
 
               <label class="perm-card">
-                <input type="checkbox" name="permissions[]" value="leaves" class="edit-staff-perm-cb">
+                <input type="checkbox" name="permissions[]" value="staff-periods" class="edit-staff-perm-cb">
                 <span class="perm-card-text">
-                  <i class="fa-solid fa-plane-departure"></i>
-                  <span>Apply for Leave</span>
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                  <span>Staff Periods</span>
                 </span>
               </label>
 
               <label class="perm-card">
-                <input type="checkbox" name="permissions[]" value="students" class="edit-staff-perm-cb">
+                <input type="checkbox" name="permissions[]" value="leaves" class="edit-staff-perm-cb">
                 <span class="perm-card-text">
-                  <i class="fa-solid fa-users"></i>
-                  <span>Students &amp; Batches</span>
+                  <i class="fa-solid fa-plane-departure"></i>
+                  <span>Apply for Leave</span>
                 </span>
               </label>
 
@@ -1498,9 +1498,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
 
             <div class="perm-section-label" style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
-              Academic &amp; Operations Access (Optional)
+              Students &amp; Academics Access (Optional)
             </div>
-            <div class="perm-grid">
+            <div class="perm-grid" style="margin-bottom: 12px;">
               
               <label class="perm-card">
                 <input type="checkbox" name="permissions[]" value="admin_students" class="edit-staff-perm-cb">
@@ -1514,7 +1514,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <input type="checkbox" name="permissions[]" value="admin_student_attendance" class="edit-staff-perm-cb">
                 <span class="perm-card-text">
                   <i class="fa-solid fa-qrcode"></i>
-                  <span>Attendance &amp; QR</span>
+                  <span>Attendance &amp; QR Scan</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_fees" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-receipt"></i>
+                  <span>Fee Management</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_student_id" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-id-badge"></i>
+                  <span>Student ID Card</span>
                 </span>
               </label>
 
@@ -1522,9 +1538,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <input type="checkbox" name="permissions[]" value="admin_marksheet" class="edit-staff-perm-cb">
                 <span class="perm-card-text">
                   <i class="fa-solid fa-file-lines"></i>
-                  <span>Marksheet System</span>
+                  <span>Marksheet Management</span>
                 </span>
               </label>
+
+            </div>
+
+            <div class="perm-section-label" style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+              HR &amp; Operations Access (Optional)
+            </div>
+            <div class="perm-grid">
 
               <label class="perm-card">
                 <input type="checkbox" name="permissions[]" value="admin_staff_periods" class="edit-staff-perm-cb">
@@ -1539,6 +1562,37 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <span class="perm-card-text">
                   <i class="fa-solid fa-calendar-check"></i>
                   <span>Staff Attendance</span>
+                </span>
+              </label>
+
+            </div>
+
+            <div class="perm-section-label" style="border-top: 1px dashed #cbd5e1; padding-top: 10px; margin-top: 10px;">
+              Expense Management Access (Optional)
+            </div>
+            <div class="perm-grid">
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_expenses" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-wallet"></i>
+                  <span>Expenses List &amp; Add</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_expense_categories" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-tags"></i>
+                  <span>Expense Categories</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_expense_report" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-chart-pie"></i>
+                  <span>Expense Report</span>
                 </span>
               </label>
 
@@ -1789,13 +1843,33 @@ function openEditStaffModal(sm) {
     }
   } else {
     // Default faculty portal permissions if not customized yet
-    perms = ['dashboard', 'attendance', 'staff-id', 'leaves', 'students', 'payroll', 'announcements'];
+    perms = [
+      'dashboard', 'myself-attendance', 
+      'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_marksheet', 
+      'staff-id', 'staff-periods', 'leaves', 'payroll', 'announcements',
+      'admin_expenses', 'admin_expense_categories', 'admin_expense_report'
+    ];
   }
   if (!Array.isArray(perms)) {
-    perms = ['dashboard', 'attendance', 'staff-id', 'leaves', 'students', 'payroll', 'announcements'];
+    perms = [
+      'dashboard', 'myself-attendance', 
+      'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_marksheet', 
+      'staff-id', 'staff-periods', 'leaves', 'payroll', 'announcements',
+      'admin_expenses', 'admin_expense_categories', 'admin_expense_report'
+    ];
   }
   document.querySelectorAll('#editStaffModal .edit-staff-perm-cb').forEach(cb => {
-    cb.checked = perms.includes(cb.value);
+    cb.checked = perms.includes(cb.value) || 
+      (cb.value === 'admin_students' && perms.includes('students')) ||
+      (cb.value === 'admin_student_attendance' && perms.includes('student-attendance')) ||
+      (cb.value === 'admin_fees' && perms.includes('fees')) ||
+      (cb.value === 'admin_student_id' && perms.includes('student-id')) ||
+      (cb.value === 'admin_marksheet' && perms.includes('marksheet')) ||
+      (cb.value === 'admin_staff_periods' && perms.includes('staff-periods')) ||
+      (cb.value === 'staff-periods' && (perms.includes('admin_staff_periods') || perms.includes('staff-periods'))) ||
+      (cb.value === 'admin_expenses' && (perms.includes('expenses') || perms.includes('admin_expenses'))) ||
+      (cb.value === 'admin_expense_categories' && (perms.includes('expense-categories') || perms.includes('admin_expense_categories'))) ||
+      (cb.value === 'admin_expense_report' && (perms.includes('expense-report') || perms.includes('admin_expense_report')));
   });
 
   openModal('editStaffModal');

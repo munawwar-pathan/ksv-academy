@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-$current_user = require_login(['super_admin']);
+$current_user = require_login(['super_admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_expenses');
+}
 $page_title = 'Expenses & Vouchers | KSV Academy HRMS';
 $page_heading = 'School Operational Expenses';
 $page_subheading = 'Campus Expenditure Vouchers, Vendor Payments & Ledger Tracking';

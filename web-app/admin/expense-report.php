@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-$current_user = require_login(['super_admin']);
+$current_user = require_login(['super_admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_expense_report');
+}
 $page_title = 'Financial & Expense Audit Report | KSV Academy HRMS';
 $page_heading = 'Financial & Expense Report';
 $page_subheading = 'Category Breakdown, Revenue vs Expenditure Balance, and Monthly Audit Summary';

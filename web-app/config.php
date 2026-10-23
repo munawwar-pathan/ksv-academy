@@ -226,12 +226,20 @@ function get_or_create_student_user($student, $db = null) {
  */
 define('DEFAULT_STAFF_PERMISSIONS', [
     'dashboard',
-    'attendance',
+    'myself-attendance',
+    'admin_students',
+    'admin_student_attendance',
+    'admin_fees',
+    'admin_student_id',
+    'admin_marksheet',
     'staff-id',
+    'staff-periods',
     'leaves',
-    'students',
     'payroll',
-    'announcements'
+    'announcements',
+    'admin_expenses',
+    'admin_expense_categories',
+    'admin_expense_report'
 ]);
 
 /**
@@ -272,7 +280,37 @@ function has_menu_permission($menu_key, $user = null) {
     }
     if ($user['role'] === 'staff') {
         $perms = get_staff_permissions($user['id']);
-        return in_array($menu_key, $perms);
+        if (in_array($menu_key, $perms)) {
+            return true;
+        }
+        $aliases = [
+            'admin_students' => ['students', 'admin_students'],
+            'students' => ['students', 'admin_students'],
+            'admin_student_attendance' => ['student-attendance', 'admin_student_attendance'],
+            'student-attendance' => ['student-attendance', 'admin_student_attendance'],
+            'admin_fees' => ['fees', 'admin_fees'],
+            'fees' => ['fees', 'admin_fees'],
+            'admin_student_id' => ['student-id', 'admin_student_id'],
+            'student-id' => ['student-id', 'admin_student_id'],
+            'admin_marksheet' => ['marksheet', 'admin_marksheet'],
+            'marksheet' => ['marksheet', 'admin_marksheet'],
+            'admin_staff_periods' => ['staff-periods', 'admin_staff_periods'],
+            'staff-periods' => ['staff-periods', 'admin_staff_periods'],
+            'admin_expenses' => ['expenses', 'admin_expenses'],
+            'expenses' => ['expenses', 'admin_expenses'],
+            'admin_expense_categories' => ['expense-categories', 'admin_expense_categories'],
+            'expense-categories' => ['expense-categories', 'admin_expense_categories'],
+            'admin_expense_report' => ['expense-report', 'admin_expense_report'],
+            'expense-report' => ['expense-report', 'admin_expense_report'],
+        ];
+        if (isset($aliases[$menu_key])) {
+            foreach ($aliases[$menu_key] as $alias) {
+                if (in_array($alias, $perms)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     return false;
 }

@@ -211,11 +211,11 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
               </a>
             </li>
           <?php endif; ?>
-          <?php if (in_array('attendance', $staff_perms)): ?>
-            <li class="sidebar-menu-item <?php echo $active_menu === 'attendance' ? 'active' : ''; ?>">
-              <a href="<?php echo STAFF_URL; ?>/attendance">
-                <i class="fa-solid fa-clock"></i>
-                <span>Attendance &amp; Punch</span>
+          <?php if (in_array('myself-attendance', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'myself-attendance' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/myself-attendance">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>MySelf Attendance</span>
               </a>
             </li>
           <?php endif; ?>
@@ -227,19 +227,19 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
               </a>
             </li>
           <?php endif; ?>
+          <?php if (in_array('staff-periods', $staff_perms) || in_array('admin_staff_periods', $staff_perms)): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'staff-periods' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/staff-periods">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Staff Periods</span>
+              </a>
+            </li>
+          <?php endif; ?>
           <?php if (in_array('leaves', $staff_perms)): ?>
             <li class="sidebar-menu-item <?php echo $active_menu === 'leaves' ? 'active' : ''; ?>">
               <a href="<?php echo STAFF_URL; ?>/leaves">
                 <i class="fa-solid fa-plane-departure"></i>
                 <span>Apply for Leave</span>
-              </a>
-            </li>
-          <?php endif; ?>
-          <?php if (in_array('students', $staff_perms)): ?>
-            <li class="sidebar-menu-item <?php echo $active_menu === 'students' ? 'active' : ''; ?>">
-              <a href="<?php echo STAFF_URL; ?>/students">
-                <i class="fa-solid fa-users"></i>
-                <span>My Students &amp; Batches</span>
               </a>
             </li>
           <?php endif; ?>
@@ -262,52 +262,104 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
         </ul>
 
         <?php 
-          $has_admin_modules = false;
-          $admin_module_keys = ['admin_students', 'admin_student_attendance', 'admin_marksheet', 'admin_staff_periods', 'admin_staff_attendance'];
-          foreach ($admin_module_keys as $amk) {
-            if (in_array($amk, $staff_perms)) { $has_admin_modules = true; break; }
-          }
+          $can_students = in_array('admin_students', $staff_perms) || in_array('students', $staff_perms);
+          $can_stu_att = in_array('admin_student_attendance', $staff_perms) || in_array('student-attendance', $staff_perms);
+          $can_fees = in_array('admin_fees', $staff_perms) || in_array('fees', $staff_perms);
+          $can_stu_id = in_array('admin_student_id', $staff_perms) || in_array('student-id', $staff_perms);
+          $can_marksheet = in_array('admin_marksheet', $staff_perms) || in_array('marksheet', $staff_perms);
+          $has_academic_section = $can_students || $can_stu_att || $can_fees || $can_stu_id || $can_marksheet;
         ?>
-        <?php if ($has_admin_modules): ?>
-          <div class="nav-section-title">Academic &amp; Operations</div>
+        <?php if ($has_academic_section): ?>
+        <div class="nav-section-title">Students &amp; Academics</div>
+        <ul class="sidebar-menu">
+          <?php if ($can_students): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'students' ? 'active' : ''; ?>">
+              <a href="<?php echo ADMIN_URL; ?>/students">
+                <i class="fa-solid fa-user-graduate"></i>
+                <span>Student Roaster</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if ($can_stu_att): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'student-attendance' ? 'active' : ''; ?>">
+              <a href="<?php echo STAFF_URL; ?>/student-attendance">
+                <i class="fa-solid fa-qrcode"></i>
+                <span>Attendance &amp; QR Scan</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if ($can_fees): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'fees' ? 'active' : ''; ?>">
+              <a href="<?php echo ADMIN_URL; ?>/fees">
+                <i class="fa-solid fa-receipt"></i>
+                <span>Fee Management</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if ($can_stu_id): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'student-id' ? 'active' : ''; ?>">
+              <a href="<?php echo ADMIN_URL; ?>/student-id">
+                <i class="fa-solid fa-id-badge"></i>
+                <span>Student ID Card</span>
+              </a>
+            </li>
+          <?php endif; ?>
+          <?php if ($can_marksheet): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
+              <a href="<?php echo ADMIN_URL; ?>/marksheet">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Marksheet Management</span>
+              </a>
+            </li>
+          <?php endif; ?>
+        </ul>
+        <?php endif; ?>
+
+        <?php 
+          $can_staff_att = in_array('admin_staff_attendance', $staff_perms);
+        ?>
+        <?php if ($can_staff_att): ?>
+          <div class="nav-section-title">HR &amp; Staff Operations</div>
           <ul class="sidebar-menu">
-            <?php if (in_array('admin_students', $staff_perms)): ?>
-              <li class="sidebar-menu-item <?php echo $active_menu === 'students' ? 'active' : ''; ?>">
-                <a href="<?php echo ADMIN_URL; ?>/students">
-                  <i class="fa-solid fa-user-graduate"></i>
-                  <span>Student Roaster</span>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'staff-attendance' ? 'active' : ''; ?>">
+              <a href="<?php echo ADMIN_URL; ?>/staff-attendance">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Staff Attendance</span>
+              </a>
+            </li>
+          </ul>
+        <?php endif; ?>
+
+        <?php 
+          $can_expenses = in_array('admin_expenses', $staff_perms) || in_array('expenses', $staff_perms);
+          $can_exp_cats = in_array('admin_expense_categories', $staff_perms) || in_array('expense-categories', $staff_perms);
+          $can_exp_rep = in_array('admin_expense_report', $staff_perms) || in_array('expense-report', $staff_perms);
+          $has_expense_section = $can_expenses || $can_exp_cats || $can_exp_rep;
+        ?>
+        <?php if ($has_expense_section): ?>
+          <div class="nav-section-title">Expense Management</div>
+          <ul class="sidebar-menu">
+            <?php if ($can_expenses): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'expenses' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/expenses">
+                  <i class="fa-solid fa-wallet"></i>
+                  <span>Expenses List &amp; Add</span>
                 </a>
               </li>
             <?php endif; ?>
-            <?php if (in_array('admin_student_attendance', $staff_perms)): ?>
-              <li class="sidebar-menu-item <?php echo $active_menu === 'student-attendance' ? 'active' : ''; ?>">
-                <a href="<?php echo ADMIN_URL; ?>/student-attendance">
-                  <i class="fa-solid fa-qrcode"></i>
-                  <span>Attendance &amp; QR Scan</span>
+            <?php if ($can_exp_cats): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'expense-categories' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/expense-categories">
+                  <i class="fa-solid fa-tags"></i>
+                  <span>Expense Categories</span>
                 </a>
               </li>
             <?php endif; ?>
-            <?php if (in_array('admin_marksheet', $staff_perms)): ?>
-              <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
-                <a href="<?php echo ADMIN_URL; ?>/marksheet">
-                  <i class="fa-solid fa-file-lines"></i>
-                  <span>Marksheet Management</span>
-                </a>
-              </li>
-            <?php endif; ?>
-            <?php if (in_array('admin_staff_periods', $staff_perms)): ?>
-              <li class="sidebar-menu-item <?php echo $active_menu === 'staff-periods' ? 'active' : ''; ?>">
-                <a href="<?php echo ADMIN_URL; ?>/staff-periods">
-                  <i class="fa-solid fa-clock-rotate-left"></i>
-                  <span>Staff Periods</span>
-                </a>
-              </li>
-            <?php endif; ?>
-            <?php if (in_array('admin_staff_attendance', $staff_perms)): ?>
-              <li class="sidebar-menu-item <?php echo $active_menu === 'staff-attendance' ? 'active' : ''; ?>">
-                <a href="<?php echo ADMIN_URL; ?>/staff-attendance">
-                  <i class="fa-solid fa-calendar-check"></i>
-                  <span>Staff Attendance</span>
+            <?php if ($can_exp_rep): ?>
+              <li class="sidebar-menu-item <?php echo $active_menu === 'expense-report' ? 'active' : ''; ?>">
+                <a href="<?php echo ADMIN_URL; ?>/expense-report">
+                  <i class="fa-solid fa-chart-pie"></i>
+                  <span>Expense Report</span>
                 </a>
               </li>
             <?php endif; ?>

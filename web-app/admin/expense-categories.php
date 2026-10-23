@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-$current_user = require_login(['super_admin']);
+$current_user = require_login(['super_admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_expense_categories');
+}
 $page_title = 'Expense Categories & Heads | KSV Academy HRMS';
 $page_heading = 'Expense Categories & Heads';
 $page_subheading = 'Classify School Expenditures, Accounting Heads & Budget Classifications';

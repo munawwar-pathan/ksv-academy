@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-$current_user = require_login(['super_admin', 'parent', 'student']);
+$current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_fees');
+}
 $page_title = 'Fee Management & Accounts';
 $page_heading = 'Student Fee Management & Accounts';
 $page_subheading = 'Tuition Invoices, Payment Receipts, Outstanding Balances & Ledger Records';

@@ -2,6 +2,10 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
+if ($current_user['role'] === 'staff') {
+    header("Location: " . STAFF_URL . "/myself-attendance");
+    exit;
+}
 require_menu_permission('attendance');
 $page_title = 'Attendance Tracker';
 $page_heading = 'Attendance Records & Biometric Logs';
