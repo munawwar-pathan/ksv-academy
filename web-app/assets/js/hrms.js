@@ -3,9 +3,38 @@
  */
 
 document.addEventListener('DOMContentLoaded', function () {
-  // 1. Mobile Sidebar Toggle
+  // 1. Sidebar Fold / Unfold & Mobile Toggle
+  const foldToggle = document.getElementById('sidebarFoldToggle');
   const mobileToggle = document.getElementById('mobileMenuToggle');
   const sidebar = document.getElementById('hrmsSidebar');
+  const appWrapper = document.getElementById('hrmsAppWrapper');
+
+  // Populate data-tooltip and title on menu items for collapsed state
+  document.querySelectorAll('.sidebar-menu-item a').forEach(function (link) {
+    const textSpan = link.querySelector('span:not(.sidebar-counter-badge):not(.sidebar-badge)');
+    if (textSpan) {
+      const label = textSpan.textContent.trim();
+      if (!link.getAttribute('data-tooltip')) link.setAttribute('data-tooltip', label);
+      if (!link.getAttribute('title')) link.setAttribute('title', label);
+    }
+  });
+
+  if (foldToggle && appWrapper) {
+    foldToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (window.innerWidth >= 992) {
+        const isCollapsed = appWrapper.classList.toggle('sidebar-collapsed');
+        try {
+          localStorage.setItem('hrms_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+        } catch (err) {}
+      } else {
+        if (sidebar) {
+          sidebar.classList.toggle('open');
+        }
+      }
+    });
+  }
+
   if (mobileToggle && sidebar) {
     mobileToggle.addEventListener('click', function () {
       sidebar.classList.toggle('open');

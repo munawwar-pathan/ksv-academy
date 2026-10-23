@@ -43,18 +43,30 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
 </head>
 <body>
 
-<div class="hrms-app-wrapper">
+<div class="hrms-app-wrapper" id="hrmsAppWrapper">
+  <script>
+    try {
+      if (localStorage.getItem('hrms_sidebar_collapsed') === 'true' && window.innerWidth >= 992) {
+        document.getElementById('hrmsAppWrapper').classList.add('sidebar-collapsed');
+      }
+    } catch(e) {}
+  </script>
 
   <!-- Left Sidebar Navigation -->
   <aside class="hrms-sidebar" id="hrmsSidebar">
     
-    <!-- Brand Title & Logo -->
+    <!-- Brand Title, Logo & Hamburger Toggle -->
     <div class="sidebar-brand">
-      <img src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="KSV Academy Logo" class="sidebar-brand-logo">
-      <div class="sidebar-brand-text">
-        <span class="brand-name"><?php echo htmlspecialchars($school_settings['school_name']); ?></span>
-        <span class="brand-badge">HRMS &amp; Portal</span>
+      <div class="sidebar-brand-content">
+        <img src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="KSV Academy Logo" class="sidebar-brand-logo">
+        <div class="sidebar-brand-text">
+          <span class="brand-name"><?php echo htmlspecialchars($school_settings['school_name']); ?></span>
+          <span class="brand-badge">HRMS &amp; Portal</span>
+        </div>
       </div>
+      <button type="button" class="sidebar-toggle-btn" id="sidebarFoldToggle" aria-label="Toggle Navigation" title="Fold / Unfold Sidebar">
+        <i class="fa-solid fa-bars"></i>
+      </button>
     </div>
 
     <!-- Sidebar Menu Navigation -->
@@ -186,6 +198,18 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             <a href="<?php echo ADMIN_URL; ?>/popup">
               <i class="fa-solid fa-window-restore"></i>
               <span>Popup</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item <?php echo $active_menu === 'form-data' ? 'active' : ''; ?>">
+            <a href="<?php echo ADMIN_URL; ?>/form-data">
+              <i class="fa-solid fa-clipboard-list"></i>
+              <span>Form Data</span>
+              <?php 
+                $unread_count = get_unread_form_data_count();
+                if ($unread_count > 0): 
+              ?>
+                <span class="sidebar-counter-badge" style="background: #ef4444; color: #ffffff; font-size: 0.70rem; font-weight: 800; padding: 2px 7px; border-radius: 9999px; margin-left: auto;"><?php echo $unread_count; ?></span>
+              <?php endif; ?>
             </a>
           </li>
           <li class="sidebar-menu-item <?php echo $active_menu === 'announcements' ? 'active' : ''; ?>">

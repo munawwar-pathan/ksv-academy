@@ -522,3 +522,60 @@ function format_time($time) {
     if (!$time) return '—';
     return date('h:i A', strtotime($time));
 }
+
+/**
+ * Ensure form_data table exists
+ */
+function ensure_form_data_table($db = null) {
+    if (!$db) {
+        $db = get_db_connection();
+    }
+    static $ensured = false;
+    if ($ensured) return;
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS form_data (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            form_type VARCHAR(50) NOT NULL,
+            full_name VARCHAR(150) NOT NULL,
+            phone VARCHAR(30) NOT NULL,
+            email VARCHAR(150) DEFAULT NULL,
+            parent_name VARCHAR(150) DEFAULT NULL,
+            course VARCHAR(150) DEFAULT NULL,
+            batch_timing VARCHAR(150) DEFAULT NULL,
+            school_name VARCHAR(255) DEFAULT NULL,
+            query_type VARCHAR(150) DEFAULT NULL,
+            message TEXT DEFAULT NULL,
+            status VARCHAR(30) NOT NULL DEFAULT 'unread',
+            notes TEXT DEFAULT NULL,
+            source_page VARCHAR(255) DEFAULT NULL,
+            ip_address VARCHAR(45) DEFAULT NULL,
+            user_agent VARCHAR(255) DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_form_type (form_type),
+            INDEX idx_status (status),
+            INDEX idx_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        $ensured = true;
+    } catch (Exception $e) {
+        // ignore
+    }
+}
+
+/**
+ * Get count of unread form submissions
+ */
+function get_unread_form_data_count() {
+    static $count = null;
+    if ($count !== null) return $count;
+    try {
+        $db = get_db_connection();
+        ensure_form_data_table($db);
+        $stmt = $db->query("SELECT COUNT(*) FROM form_data WHERE status = 'unread'");
+        $count = (int) $stmt->fetchColumn();
+        return $count;
+    } catch (Exception $e) {
+        return 0;
+    }
+}
+

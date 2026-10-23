@@ -89,33 +89,34 @@ require_once __DIR__ . '/includes/header.php';
           </a>
         </div>
 
-        <form id="onlineAdmissionForm" class="interactive-form" onsubmit="handleAdmissionSubmit(event)">
+        <form id="onlineAdmissionForm" class="interactive-form" method="POST" action="/submit-form" onsubmit="handleAdmissionSubmit(event)">
+          <input type="hidden" name="form_type" value="admission">
           <div class="form-row">
             <div class="form-group col-half">
               <label for="admStudentName"><i class="fa-solid fa-user"></i> Student Full Name <span class="required">*</span></label>
-              <input type="text" id="admStudentName" class="form-control" placeholder="Student name" required>
+              <input type="text" id="admStudentName" name="student_name" class="form-control" placeholder="Student name" required>
             </div>
             <div class="form-group col-half">
               <label for="admParentName"><i class="fa-solid fa-user-tie"></i> Parent / Guardian Name</label>
-              <input type="text" id="admParentName" class="form-control" placeholder="Parent name">
+              <input type="text" id="admParentName" name="parent_name" class="form-control" placeholder="Parent name">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group col-half">
               <label for="admPhone"><i class="fa-solid fa-phone"></i> Mobile / WhatsApp <span class="required">*</span></label>
-              <input type="tel" id="admPhone" class="form-control" placeholder="10-digit number" pattern="[0-9]{10}" required>
+              <input type="tel" id="admPhone" name="phone" class="form-control" placeholder="10-digit number" pattern="[0-9]{10}" required>
             </div>
             <div class="form-group col-half">
               <label for="admEmail"><i class="fa-solid fa-envelope"></i> Email Address</label>
-              <input type="email" id="admEmail" class="form-control" placeholder="email@example.com">
+              <input type="email" id="admEmail" name="email" class="form-control" placeholder="email@example.com">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group col-half">
               <label for="admCourse"><i class="fa-solid fa-book-open"></i> Course Applying For <span class="required">*</span></label>
-              <select id="admCourse" class="form-control" required>
+              <select id="admCourse" name="course" class="form-control" required>
                 <option value="">-- Select Course --</option>
                 <option value="Class 5th - 8th Foundation">Class 5th - 8th Foundation</option>
                 <option value="Class 9th & 10th Boards (CBSE/ICSE/State)">Class 9th & 10th Boards (CBSE/ICSE/State)</option>
@@ -131,7 +132,7 @@ require_once __DIR__ . '/includes/header.php';
 
             <div class="form-group col-half">
               <label for="admBatch"><i class="fa-solid fa-clock"></i> Preferred Shift</label>
-              <select id="admBatch" class="form-control">
+              <select id="admBatch" name="batch_timing" class="form-control">
                 <option value="Morning Batch (7:30 AM - 11:30 AM)">Morning Shift (7:30 AM - 11:30 AM)</option>
                 <option value="Evening Batch (4:00 PM - 8:30 PM)">Evening Shift (4:00 PM - 8:30 PM)</option>
                 <option value="Weekend Special">Weekend Special</option>
@@ -141,15 +142,15 @@ require_once __DIR__ . '/includes/header.php';
 
           <div class="form-group">
             <label for="admSchool"><i class="fa-solid fa-school"></i> Current School / Junior College</label>
-            <input type="text" id="admSchool" class="form-control" placeholder="e.g. DPS Nerul / Ramsheth Thakur / College in Ulwe">
+            <input type="text" id="admSchool" name="school_name" class="form-control" placeholder="e.g. DPS Nerul / Ramsheth Thakur / College in Ulwe">
           </div>
 
           <div class="form-group">
             <label for="admQuery"><i class="fa-solid fa-message"></i> Remarks or Questions</label>
-            <textarea id="admQuery" class="form-control" placeholder="Any specific requirements or questions for our academic team..."></textarea>
+            <textarea id="admQuery" name="message" class="form-control" placeholder="Any specific requirements or questions for our academic team..."></textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block btn-lg">
+          <button type="submit" id="admSubmitBtn" class="btn btn-primary btn-block btn-lg">
             <i class="fa-solid fa-paper-plane"></i> Submit Admission Application
           </button>
         </form>
@@ -328,11 +329,56 @@ function handleAdmissionSubmit(e) {
   e.preventDefault();
   const form = document.getElementById('onlineAdmissionForm');
   const successState = document.getElementById('admissionSuccessState');
-  if (form && successState) {
-    form.style.display = 'none';
-    successState.style.display = 'block';
-    successState.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const submitBtn = document.getElementById('admSubmitBtn');
+  const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+  const studentName = document.getElementById('admStudentName')?.value.trim();
+  const phone = document.getElementById('admPhone')?.value.trim();
+  const course = document.getElementById('admCourse')?.value;
+
+  if (!studentName || !phone || !course) {
+    alert('Please fill in Student Name, Phone Number, and Course.');
+    return;
   }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting Application...';
+  }
+
+  const formData = new FormData(form);
+  formData.append('ajax', '1');
+
+  fetch('/submit-form', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      if (form) form.style.display = 'none';
+      if (successState) {
+        successState.style.display = 'block';
+        successState.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      form.reset();
+    } else {
+      alert(data.message || 'Error saving admission application. Please try again.');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origBtnHtml;
+      }
+    }
+  })
+  .catch(err => {
+    console.error('Submission error:', err);
+    // Graceful fallback to native submit if fetch fails
+    form.submit();
+  });
 }
 </script>
 

@@ -17,7 +17,8 @@ require_once __DIR__ . '/../config.php';
           Experience our interactive conceptual teaching methodology first-hand. Meet Mr. Salam Khan and our specialized faculty in Ulwe Sector 19.
         </p>
 
-        <form id="demoClassForm" class="interactive-form" onsubmit="handleDemoSubmit(event)">
+        <form id="demoClassForm" class="interactive-form" method="POST" action="/submit-form" onsubmit="handleDemoSubmit(event)">
+          <input type="hidden" name="form_type" value="demo_class">
           <div class="form-group">
             <label for="demoStudentName"><i class="fa-solid fa-user"></i> Student Name <span class="required">*</span></label>
             <input type="text" id="demoStudentName" name="student_name" class="form-control" placeholder="Enter full name" required>
@@ -71,7 +72,7 @@ require_once __DIR__ . '/../config.php';
           </div>
 
           <div class="form-submit-block">
-            <button type="submit" class="btn btn-primary btn-block btn-lg">
+            <button type="submit" id="demoSubmitBtn" class="btn btn-primary btn-block btn-lg">
               <i class="fa-solid fa-check-circle"></i> Confirm Free 3-Days Demo Pass
             </button>
             <p class="form-note">

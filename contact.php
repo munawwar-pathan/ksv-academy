@@ -49,26 +49,27 @@ require_once __DIR__ . '/includes/header.php';
           <p>Thank you for reaching out to KSV Academy. We will respond to your inquiry via phone/WhatsApp shortly.</p>
         </div>
 
-        <form id="contactForm" class="interactive-form" onsubmit="handleContactSubmit(event)">
+        <form id="contactForm" class="interactive-form" method="POST" action="/submit-form" onsubmit="handleContactSubmit(event)">
+          <input type="hidden" name="form_type" value="inquiry">
           <div class="form-row">
             <div class="form-group col-half">
               <label for="contactName"><i class="fa-solid fa-user"></i> Full Name <span class="required">*</span></label>
-              <input type="text" id="contactName" class="form-control" placeholder="Your full name" required>
+              <input type="text" id="contactName" name="full_name" class="form-control" placeholder="Your full name" required>
             </div>
             <div class="form-group col-half">
               <label for="contactPhone"><i class="fa-solid fa-phone"></i> Phone Number <span class="required">*</span></label>
-              <input type="tel" id="contactPhone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
+              <input type="tel" id="contactPhone" name="phone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group col-half">
               <label for="contactEmail"><i class="fa-solid fa-envelope"></i> Email Address <span class="required">*</span></label>
-              <input type="email" id="contactEmail" class="form-control" placeholder="yourname@gmail.com" required>
+              <input type="email" id="contactEmail" name="email" class="form-control" placeholder="yourname@gmail.com" required>
             </div>
             <div class="form-group col-half">
               <label for="contactQueryType"><i class="fa-solid fa-list-check"></i> Query Type <span class="required">*</span></label>
-              <select id="contactQueryType" class="form-control" required>
+              <select id="contactQueryType" name="query_type" class="form-control" required>
                 <option value="">Please Select</option>
                 <option value="Admission Enquiry">Admission Enquiry</option>
                 <option value="Book Free 3-Days Demo Class">Book Free 3-Days Demo Class</option>
@@ -82,10 +83,10 @@ require_once __DIR__ . '/includes/header.php';
 
           <div class="form-group">
             <label for="contactMessage"><i class="fa-solid fa-comment-dots"></i> Message / Details</label>
-            <textarea id="contactMessage" class="form-control" placeholder="Write your question, student standard, or any specific requirements here..."></textarea>
+            <textarea id="contactMessage" name="message" class="form-control" placeholder="Write your question, student standard, or any specific requirements here..."></textarea>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-block btn-lg">
+          <button type="submit" id="contactSubmitBtn" class="btn btn-primary btn-block btn-lg">
             <i class="fa-solid fa-paper-plane"></i> Submit Inquiry
           </button>
         </form>

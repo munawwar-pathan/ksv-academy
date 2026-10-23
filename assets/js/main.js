@@ -482,34 +482,78 @@ function initStatsCounter() {
 /* ==========================================================================
    10. Interactive Form Handlers (Demo Class & Contact)
    ========================================================================== */
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function handleDemoSubmit(e) {
   e.preventDefault();
   const form = document.getElementById('demoClassForm');
   const successState = document.getElementById('demoSuccessState');
-  const name = document.getElementById('demoStudentName').value.trim();
-  const phone = document.getElementById('demoPhone').value.trim();
-  const course = document.getElementById('demoClass').value;
+  const submitBtn = document.getElementById('demoSubmitBtn');
+  const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+  const name = document.getElementById('demoStudentName')?.value.trim();
+  const phone = document.getElementById('demoPhone')?.value.trim();
+  const course = document.getElementById('demoClass')?.value;
 
   if (!name || !phone || !course) {
     alert('Please complete all required fields.');
     return;
   }
 
-  // Hide form and show success state
-  form.style.display = 'none';
-  if (successState) {
-    successState.style.display = 'block';
-    const textEl = document.getElementById('demoSuccessText');
-    if (textEl) {
-      textEl.innerHTML = `Thank you, <strong>${name}</strong>! Your 3-day demo registration for <strong>${course}</strong> has been received. Our counselor will contact you at <strong>+91 ${phone}</strong>.`;
-    }
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Reserving Seat...';
   }
+
+  const formData = new FormData(form);
+  formData.append('ajax', '1');
+
+  fetch('/submit-form', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      if (form) form.style.display = 'none';
+      if (successState) {
+        successState.style.display = 'block';
+        const textEl = document.getElementById('demoSuccessText');
+        if (textEl) {
+          textEl.innerHTML = `Thank you, <strong>${escapeHtml(name)}</strong>! Your 3-day demo registration for <strong>${escapeHtml(course)}</strong> has been received. Our counselor will contact you at <strong>+91 ${escapeHtml(phone)}</strong>.`;
+        }
+      }
+      form.reset();
+    } else {
+      alert(data.message || 'Error booking demo class. Please check your details.');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = origBtnHtml;
+      }
+    }
+  })
+  .catch(err => {
+    console.error('Demo form error:', err);
+    form.submit();
+  });
 }
 
 function handleContactSubmit(e) {
   e.preventDefault();
   const form = document.getElementById('contactForm');
   const alertBox = document.getElementById('contactSuccessAlert');
+  const submitBtn = document.getElementById('contactSubmitBtn');
+  const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
   const name = document.getElementById('contactName')?.value.trim();
   const phone = document.getElementById('contactPhone')?.value.trim();
 
@@ -518,12 +562,42 @@ function handleContactSubmit(e) {
     return;
   }
 
-  if (alertBox) {
-    alertBox.style.display = 'block';
-    alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
   }
 
-  form.reset();
+  const formData = new FormData(form);
+  formData.append('ajax', '1');
+
+  fetch('/submit-form', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = origBtnHtml;
+    }
+    if (data.success) {
+      if (alertBox) {
+        alertBox.style.display = 'block';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      form.reset();
+    } else {
+      alert(data.message || 'Error submitting your inquiry. Please try again.');
+    }
+  })
+  .catch(err => {
+    console.error('Contact form error:', err);
+    form.submit();
+  });
 }
 
 /* ==========================================================================
