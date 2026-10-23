@@ -148,9 +148,17 @@ $my_leaves->execute([$staff_id]);
 $leave_records = $my_leaves->fetchAll();
 
 // Fetch My Payslips
-$my_payroll = $db->prepare("SELECT * FROM payroll WHERE staff_id = ? ORDER BY year DESC, id DESC LIMIT 4");
+$my_payroll = $db->prepare("
+    SELECT p.*, sp.employee_code, sp.department, sp.designation, sp.photo as staff_photo, u.full_name, u.username, u.avatar, u.phone, u.email
+    FROM payroll p
+    JOIN staff_profiles sp ON p.staff_id = sp.id
+    JOIN users u ON sp.user_id = u.id
+    WHERE p.staff_id = ?
+    ORDER BY p.year DESC, p.id DESC
+    LIMIT 4
+");
 $my_payroll->execute([$staff_id]);
-$payroll_slips = $my_payroll->fetchAll();
+$payroll_slips = $my_payroll->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch Announcements for Staff
 $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'staff') ORDER BY id DESC LIMIT 4")->fetchAll();
@@ -547,21 +555,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
       </div>
 
-      <!-- Punch Action Buttons -->
-      <div style="display: flex; gap: 12px; justify-content: center;">
-        <form method="POST">
-          <input type="hidden" name="action" value="punch_in">
-          <button type="submit" class="btn-sober-primary" style="padding: 10px 22px; font-size: 0.88rem;">
-            <i class="fa-solid fa-fingerprint"></i> Punch In
-          </button>
-        </form>
-
-        <form method="POST">
-          <input type="hidden" name="action" value="punch_out">
-          <button type="submit" class="btn-sober-secondary" style="padding: 10px 22px; font-size: 0.88rem;">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i> Punch Out
-          </button>
-        </form>
+      <!-- Managed From Admin Side Notice -->
+      <div style="margin-top: 14px; font-size: 0.78rem; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 7px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px 16px; border-radius: 8px;">
+        <i class="fa-solid fa-shield-halved" style="color: #0284c7; font-size: 0.85rem;"></i>
+        <span>Attendance punches are recorded &amp; managed directly by the Administrator</span>
       </div>
 
     </div>
@@ -611,8 +608,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </span>
                 </td>
                 <td style="text-align: right;">
-                  <button type="button" class="btn-sober-secondary" style="padding: 4px 10px; font-size: 0.76rem;" onclick="alert('Viewing Payslip: <?php echo $ps['month']; ?> <?php echo $ps['year']; ?>\nBasic: ₹<?php echo $ps['basic_salary']; ?>\nNet Credited: ₹<?php echo $ps['net_salary']; ?>')">
-                    <i class="fa-solid fa-download"></i> View
+                  <button type="button" class="btn-sober-secondary" style="padding: 4px 10px; font-size: 0.76rem;" onclick="previewPayslip(<?php echo htmlspecialchars(json_encode($ps)); ?>);" title="View, Print & Download Salary Receipt">
+                    <i class="fa-solid fa-receipt"></i> View Receipt
                   </button>
                 </td>
               </tr>
@@ -768,5 +765,7 @@ function updateStaffLiveClock() {
 }
 setInterval(updateStaffLiveClock, 1000);
 </script>
+
+<?php require_once __DIR__ . '/../includes/payslip-modal.php'; ?>
 
 <?php require_once __DIR__ . '/../includes/layout-footer.php'; ?>

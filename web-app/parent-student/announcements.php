@@ -2,14 +2,15 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
-$page_title = 'Announcements & Notices';
+$page_title = 'Academy Noticeboard & Circulars | KSV Academy HRMS';
 $page_heading = 'Academy Noticeboard & Circulars';
-$page_subheading = 'Official Notifications, Academic Schedules & Important Alerts';
+$page_subheading = 'Official Academic Notifications, Examination Schedules & Important Academy Alerts';
 $active_menu = 'announcements';
 
 $db = get_db_connection();
+$active_session = get_active_session();
 
-// Handle Post Notice (Admin)
+// Handle Post Notice (Super Admin)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
     $title = trim($_POST['title'] ?? '');
     $content = trim($_POST['content'] ?? '');
@@ -23,85 +24,269 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
     }
 }
 
-// Fetch Announcements
+// Fetch Announcements based on role
 if ($current_user['role'] === 'super_admin') {
-    $notices = $db->query("SELECT * FROM announcements ORDER BY id DESC")->fetchAll();
+    $notices = $db->query("SELECT * FROM announcements ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 } elseif ($current_user['role'] === 'staff') {
-    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'staff') ORDER BY id DESC")->fetchAll();
+    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'staff') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'parent') ORDER BY id DESC")->fetchAll();
+    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'parent') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 }
+
+$total_notices = count($notices);
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-  <div>
-    <span style="font-size: 0.9rem; color: var(--hrms-text-muted); font-weight: 600;">
-      Total Circulars: <strong><?php echo count($notices); ?></strong>
-    </span>
-  </div>
-  <?php if ($current_user['role'] === 'super_admin'): ?>
-    <button type="button" class="btn-hrms btn-hrms-primary" onclick="openModal('announcementModal')">
-      <i class="fa-solid fa-bullhorn"></i> Broadcast New Notice
-    </button>
-  <?php endif; ?>
-</div>
+<style>
+/* ── Simple, Sober & Clean Noticeboard Styles ── */
+.periods-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 4px 12px -2px rgba(15,23,42,0.04);
+  margin-bottom: 24px;
+  overflow: hidden;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
-<div class="hrms-card">
-  <div class="hrms-card-header">
-    <h2 class="card-title"><i class="fa-solid fa-bullhorn"></i> Active Noticeboard Announcements</h2>
+.periods-card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.notice-item {
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #0284c7;
+  transition: all 0.15s ease;
+}
+
+.notice-item:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  border-left-color: #0284c7;
+}
+
+.notice-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.notice-title {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.notice-time {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.notice-desc {
+  font-size: 0.84rem;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0 0 10px;
+  white-space: pre-line;
+}
+
+.notice-footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.73rem;
+  color: #64748b;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.notice-badge-target {
+  font-size: 0.70rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  text-transform: capitalize;
+}
+
+.periods-card-footer {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: #64748b;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.roaster-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-decoration: none;
+}
+
+.roaster-btn.primary {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.roaster-btn.primary:hover {
+  background: #0369a1;
+}
+
+.empty-notice-state {
+  text-align: center;
+  padding: 40px 16px;
+  color: #64748b;
+}
+
+.empty-notice-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+  font-size: 1.2rem;
+  color: #94a3b8;
+}
+</style>
+
+<!-- Main Sober Noticeboard Card -->
+<div class="periods-card">
+  
+  <div class="periods-card-header">
+    <div style="flex: 1; min-width: 0;">
+      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        <i class="fa-solid fa-bullhorn" style="color: #0284c7;"></i>
+        Academy Circulars &amp; Alerts
+        <span style="font-size: 0.70rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 1px 7px; border-radius: 5px;">
+          Official Notices
+        </span>
+      </h3>
+      <p style="margin: 2px 0 0; font-size: 0.74rem; color: #64748b;">
+        Important notices, exam schedules &amp; management circulars.
+      </p>
+    </div>
+
+    <?php if ($current_user['role'] === 'super_admin'): ?>
+      <button type="button" class="roaster-btn primary" onclick="openModal('announcementModal')">
+        <i class="fa-solid fa-plus"></i> Broadcast Notice
+      </button>
+    <?php endif; ?>
   </div>
-  <div class="hrms-card-body">
-    <div class="notice-list">
-      <?php if (empty($notices)): ?>
-        <p style="text-align: center; color: var(--hrms-text-muted); padding: 24px;">No notices published yet.</p>
-      <?php else: ?>
+
+  <div>
+    <?php if (empty($notices)): ?>
+      <div class="empty-notice-state">
+        <div class="empty-notice-icon">
+          <i class="fa-solid fa-bell-slash"></i>
+        </div>
+        <h4 style="font-size: 0.92rem; font-weight: 700; color: #0f172a; margin: 0 0 3px;">No Active Circulars</h4>
+        <p style="font-size: 0.78rem; color: #64748b; margin: 0;">Important announcements from academy administration will be posted here.</p>
+      </div>
+    <?php else: ?>
+      <div class="notice-list">
         <?php foreach ($notices as $ann): ?>
-          <div class="notice-item" style="padding: 18px 20px; margin-bottom: 8px;">
+          <div class="notice-item">
             <div class="notice-header">
-              <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--hrms-navy);"><?php echo htmlspecialchars($ann['title']); ?></h3>
-              <span class="notice-time"><i class="fa-regular fa-calendar"></i> <?php echo format_date($ann['created_at'], 'd M Y, h:i A'); ?></span>
+              <span class="notice-title"><?php echo htmlspecialchars($ann['title']); ?></span>
+              <span class="notice-time">
+                <i class="fa-regular fa-calendar" style="color: #94a3b8; margin-right: 4px;"></i>
+                <?php echo format_date($ann['created_at'], 'd M Y, h:i A'); ?>
+              </span>
             </div>
-            <p class="notice-desc" style="font-size: 0.9rem; line-height: 1.6; color: var(--hrms-text); margin: 8px 0;"><?php echo nl2br(htmlspecialchars($ann['content'])); ?></p>
-            <div style="margin-top: 10px; font-size: 0.76rem; color: var(--hrms-primary); font-weight: 700; display: flex; align-items: center; gap: 12px;">
-              <span><i class="fa-solid fa-user-tie"></i> Posted by: <?php echo htmlspecialchars($ann['posted_by']); ?></span>
-              <span class="badge-status badge-approved" style="text-transform: uppercase;">Target: <?php echo htmlspecialchars($ann['target_role']); ?></span>
+            <p class="notice-desc"><?php echo nl2br(htmlspecialchars($ann['content'])); ?></p>
+            <div class="notice-footer-meta">
+              <span>
+                <i class="fa-regular fa-user" style="color: #0284c7; margin-right: 4px;"></i>
+                Posted by: <strong><?php echo htmlspecialchars($ann['posted_by'] ?: 'Directorate'); ?></strong>
+              </span>
+              <span class="notice-badge-target">
+                Audience: <?php echo htmlspecialchars($ann['target_role'] === 'parent' ? 'Parents & Students' : ($ann['target_role'] === 'staff' ? 'Faculty & Staff' : 'All')); ?>
+              </span>
             </div>
           </div>
         <?php endforeach; ?>
-      <?php endif; ?>
-    </div>
+      </div>
+    <?php endif; ?>
   </div>
+
+  <div class="periods-card-footer">
+    <span>Official institute notices for students &amp; guardians</span>
+    <span><strong><?php echo $total_notices; ?></strong> Recent Alerts</span>
+  </div>
+
 </div>
 
-<!-- Modal: Post Announcement -->
+<!-- Modal: Post Notice (Super Admin) -->
 <?php if ($current_user['role'] === 'super_admin'): ?>
 <div class="hrms-modal" id="announcementModal">
-  <div class="hrms-modal-card">
-    <div class="hrms-modal-header">
-      <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--hrms-navy);"><i class="fa-solid fa-bullhorn" style="color: var(--hrms-primary);"></i> Broadcast Circular</h3>
-      <button type="button" class="modal-close-btn" onclick="closeModal('announcementModal')"><i class="fa-solid fa-xmark"></i></button>
+  <div class="hrms-modal-card" style="max-width: 520px; width: 100%; background: #ffffff; border-radius: 10px; overflow: hidden;">
+    <div class="hrms-modal-header" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+      <h3 style="font-size: 0.98rem; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-bullhorn" style="color: #0284c7;"></i> Broadcast Notice
+      </h3>
+      <button type="button" class="modal-close-btn" style="background: none; border: none; cursor: pointer; color: #64748b; font-size: 1rem;" onclick="closeModal('announcementModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <form method="POST" action="<?php echo PARENT_URL; ?>/announcements">
-      <div class="hrms-modal-body">
-        <div class="form-group">
-          <label class="form-label">Notice Headline</label>
-          <input type="text" name="title" class="hrms-input" placeholder="e.g. Sunday Mock Test Timing" required>
+      <div class="hrms-modal-body" style="padding: 18px;">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Notice Headline</label>
+          <input type="text" name="title" class="hrms-input" style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 6px;" placeholder="e.g. Mid-Term Examination Timing" required>
         </div>
-        <div class="form-group">
-          <label class="form-label">Target Audience</label>
-          <select name="target_role" class="hrms-input">
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Target Audience</label>
+          <select name="target_role" class="hrms-input" style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            <option value="parent">Parents &amp; Students Only</option>
             <option value="all">Everyone (All Faculty &amp; Parents)</option>
             <option value="staff">Faculty &amp; Staff Only</option>
-            <option value="parent">Parents &amp; Students Only</option>
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">Notice Message Details</label>
-          <textarea name="content" class="hrms-input" rows="4" placeholder="Enter notice content here..." required></textarea>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Notice Details</label>
+          <textarea name="content" class="hrms-input" rows="4" style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical;" placeholder="Enter notice message details..." required></textarea>
         </div>
-        <button type="submit" class="login-submit-btn">
+        <button type="submit" class="roaster-btn primary" style="width: 100%; padding: 9px; font-size: 0.84rem; justify-content: center;">
           <i class="fa-solid fa-paper-plane"></i> Publish Notice
         </button>
       </div>
