@@ -40,6 +40,18 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
   <!-- HRMS Stylesheet -->
   <link rel="stylesheet" href="<?php echo HRMS_URL; ?>/assets/css/hrms.css?v=<?php echo time(); ?>">
   <link rel="icon" type="image/jpeg" href="<?php echo htmlspecialchars($school_settings['logo_url']); ?>">
+
+  <!-- Early Theme Initialization (Prevents theme flickering) -->
+  <script>
+    (function() {
+      try {
+        var dbTheme = <?php echo json_encode($school_settings['theme_mode'] ?? 'light'); ?>;
+        var savedTheme = localStorage.getItem('hrms_theme');
+        var activeTheme = savedTheme || dbTheme || 'light';
+        document.documentElement.setAttribute('data-theme', activeTheme);
+      } catch(e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -389,6 +401,16 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             <?php endif; ?>
           </ul>
         <?php endif; ?>
+        
+        <div class="nav-section-title">Settings &amp; System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-menu-item <?php echo $active_menu === 'settings' ? 'active' : ''; ?>">
+            <a href="<?php echo STAFF_URL; ?>/settings">
+              <i class="fa-solid fa-sliders"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
 
       <?php else: ?>
         <!-- PARENT & STUDENT MENU -->
@@ -428,6 +450,16 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             <a href="<?php echo PARENT_URL; ?>/announcements">
               <i class="fa-solid fa-bullhorn"></i>
               <span>Academy Notices</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-section-title">Settings &amp; System</div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-menu-item <?php echo $active_menu === 'settings' ? 'active' : ''; ?>">
+            <a href="<?php echo PARENT_URL; ?>/settings">
+              <i class="fa-solid fa-sliders"></i>
+              <span>Settings</span>
             </a>
           </li>
         </ul>
@@ -508,6 +540,12 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             <?php endforeach; ?>
           </select>
         </div>
+
+        <!-- QUICK LIGHT / DARK THEME TOGGLE -->
+        <button type="button" id="headerThemeToggle" class="header-theme-toggle" aria-label="Toggle Theme" title="Toggle Light / Dark Mode" onclick="toggleAppTheme()">
+          <i class="fa-solid fa-moon theme-icon-moon"></i>
+          <i class="fa-solid fa-sun theme-icon-sun"></i>
+        </button>
 
         <div class="header-date-badge">
           <i class="fa-regular fa-calendar"></i>

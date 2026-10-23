@@ -470,7 +470,8 @@ function get_school_settings() {
         'currency_symbol' => '₹',
         'principal_name' => 'Mr. Salam Khan (M.Sc, B.Ed)',
         'logo_url' => '/assets/imgs/ksv-logo.jpg',
-        'stamp_text' => 'OFFICIAL SEAL - KSV ACADEMY'
+        'stamp_text' => 'OFFICIAL SEAL - KSV ACADEMY',
+        'theme_mode' => 'light'
     ];
 
     $settings = array_merge($defaults, $settings);

@@ -23,18 +23,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields = [
             'school_name', 'tagline', 'affiliation', 'phone', 'email',
             'address', 'website', 'currency_symbol', 'principal_name',
-            'logo_url', 'stamp_text', 'sms_alerts'
+            'logo_url', 'stamp_text', 'sms_alerts', 'theme_mode'
         ];
 
         $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
 
         foreach ($fields as $f) {
-            $val = trim($_POST[$f] ?? '');
-            $stmt->execute([$f, $val]);
+            if (isset($_POST[$f])) {
+                $val = trim($_POST[$f]);
+                $stmt->execute([$f, $val]);
+            }
         }
 
         set_flash('success', 'General settings and academy profile updated successfully!');
         header('Location: ' . ADMIN_URL . '/school-settings?tab=general');
+        exit;
+    }
+
+    // 1b. Save Theme Setting (Instant AJAX/Fetch)
+    if ($action === 'save_theme') {
+        $theme = in_array($_POST['theme'] ?? '', ['light', 'dark']) ? $_POST['theme'] : 'light';
+        $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES ('theme_mode', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+        $stmt->execute([$theme]);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'theme' => $theme]);
         exit;
     }
 
@@ -790,89 +802,170 @@ require_once __DIR__ . '/../includes/layout-header.php';
   
   <div style="display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; margin-bottom: 30px;">
     
-    <!-- Left Column: Live Academy Identity Preview Card -->
-    <div class="academy-preview-card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-size: 0.72rem; font-weight: 800; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; border: 1px solid #bae6fd;">
-          <i class="fa-solid fa-eye"></i> Live Identity Preview
-        </span>
-        <span style="font-size: 0.72rem; color: #64748b; font-weight: 700;">Verified Seal</span>
+    <!-- Left Column: Live Academy Identity Preview Card & Appearance Setting -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <div class="academy-preview-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.72rem; font-weight: 800; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; border: 1px solid #bae6fd;">
+            <i class="fa-solid fa-eye"></i> Live Identity Preview
+          </span>
+          <span style="font-size: 0.72rem; color: #64748b; font-weight: 700;">Verified Seal</span>
+        </div>
+
+        <!-- Avatar with Live Preview -->
+        <div class="academy-avatar-wrapper">
+          <img id="previewLogo" src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="Academy Logo" class="academy-avatar-img">
+        </div>
+
+        <div style="text-align: center; margin-bottom: 16px;">
+          <h3 id="previewName" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+            <?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy'); ?>
+          </h3>
+          <p id="previewTagline" style="margin: 4px 0 0; font-size: 0.78rem; color: #64748b; font-style: italic;">
+            &ldquo;<?php echo htmlspecialchars($school_settings['tagline'] ?? 'Where Learning Meets Excellence'); ?>&rdquo;
+          </p>
+          <div style="margin-top: 8px;">
+            <span id="previewAffiliation" style="font-size: 0.72rem; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 20px; display: inline-block;">
+              <i class="fa-solid fa-award"></i> <?php echo htmlspecialchars($school_settings['affiliation'] ?? 'Affiliated Institution'); ?>
+            </span>
+          </div>
+        </div>
+
+        <!-- Metadata List -->
+        <div style="background: #ffffff; border-radius: 10px; padding: 12px 14px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+          
+          <div class="academy-meta-row">
+            <div class="academy-meta-icon"><i class="fa-solid fa-user-tie"></i></div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">PRINCIPAL / DIRECTOR</div>
+              <div id="previewPrincipal" style="font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <?php echo htmlspecialchars($school_settings['principal_name'] ?? 'Not Specified'); ?>
+              </div>
+            </div>
+          </div>
+
+          <div class="academy-meta-row">
+            <div class="academy-meta-icon"><i class="fa-solid fa-phone"></i></div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">CONTACT HOTLINE</div>
+              <div id="previewPhone" style="font-weight: 700; color: #334155;">
+                <?php echo htmlspecialchars($school_settings['phone'] ?? '—'); ?>
+              </div>
+            </div>
+          </div>
+
+          <div class="academy-meta-row">
+            <div class="academy-meta-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">EMAIL DISPATCH</div>
+              <div id="previewEmail" style="font-weight: 700; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <?php echo htmlspecialchars($school_settings['email'] ?? '—'); ?>
+              </div>
+            </div>
+          </div>
+
+          <div class="academy-meta-row">
+            <div class="academy-meta-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">CAMPUS ADDRESS</div>
+              <div id="previewAddress" style="font-weight: 600; color: #475569; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                <?php echo htmlspecialchars($school_settings['address'] ?? '—'); ?>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="font-size: 0.74rem; color: #64748b; background: rgba(0, 146, 223, 0.06); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(0, 146, 223, 0.15); line-height: 1.4;">
+          <i class="fa-solid fa-info-circle" style="color: #0092df;"></i>
+          These details automatically imprint across student ID cards, report cards, fee receipts, and faculty payslips.
+        </div>
       </div>
 
-      <!-- Avatar with Live Preview -->
-      <div class="academy-avatar-wrapper">
-        <img id="previewLogo" src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="Academy Logo" class="academy-avatar-img">
-      </div>
+      <!-- Appearance Card (Light or Dark Mode) -->
+      <div class="settings-group-card appearance-card" style="margin-bottom: 0;">
+        <div class="form-section-header" style="margin-bottom: 14px;">
+          <div class="form-section-icon" style="background: rgba(2, 132, 199, 0.1); color: #0284c7;">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+          </div>
+          <div>
+            <h4 style="margin: 0; font-size: 0.98rem; font-weight: 800; font-family: 'Outfit', sans-serif;">
+              Appearance
+            </h4>
+            <p style="margin: 2px 0 0; font-size: 0.74rem; color: #64748b;">
+              Select system theme for Light or Dark mode
+            </p>
+          </div>
+        </div>
 
-      <div style="text-align: center; margin-bottom: 16px;">
-        <h3 id="previewName" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-          <?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy'); ?>
-        </h3>
-        <p id="previewTagline" style="margin: 4px 0 0; font-size: 0.78rem; color: #64748b; font-style: italic;">
-          &ldquo;<?php echo htmlspecialchars($school_settings['tagline'] ?? 'Where Learning Meets Excellence'); ?>&rdquo;
-        </p>
-        <div style="margin-top: 8px;">
-          <span id="previewAffiliation" style="font-size: 0.72rem; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 2px 10px; border-radius: 20px; display: inline-block;">
-            <i class="fa-solid fa-award"></i> <?php echo htmlspecialchars($school_settings['affiliation'] ?? 'Affiliated Institution'); ?>
+        <div class="theme-switch-grid">
+          <!-- Light Mode Option -->
+          <div class="theme-option-box <?php echo ($school_settings['theme_mode'] ?? 'light') !== 'dark' ? 'active' : ''; ?>" id="themeCardLight" onclick="selectThemeMode('light')">
+            <div class="theme-wireframe light-wireframe">
+              <div class="wireframe-header">
+                <div class="wireframe-dot"></div>
+                <div class="wireframe-bar"></div>
+              </div>
+              <div class="wireframe-content">
+                <div class="wireframe-sidebar"></div>
+                <div class="wireframe-main">
+                  <div class="wireframe-card"></div>
+                  <div class="wireframe-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-option-label">
+              <div class="theme-option-info">
+                <i class="fa-solid fa-sun" style="color: #f59e0b;"></i>
+                <span class="theme-name">Light</span>
+              </div>
+              <div class="theme-check-icon"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+          </div>
+
+          <!-- Dark Mode Option -->
+          <div class="theme-option-box <?php echo ($school_settings['theme_mode'] ?? 'light') === 'dark' ? 'active' : ''; ?>" id="themeCardDark" onclick="selectThemeMode('dark')">
+            <div class="theme-wireframe dark-wireframe">
+              <div class="wireframe-header">
+                <div class="wireframe-dot"></div>
+                <div class="wireframe-bar"></div>
+              </div>
+              <div class="wireframe-content">
+                <div class="wireframe-sidebar"></div>
+                <div class="wireframe-main">
+                  <div class="wireframe-card"></div>
+                  <div class="wireframe-card"></div>
+                </div>
+              </div>
+            </div>
+            <div class="theme-option-label">
+              <div class="theme-option-info">
+                <i class="fa-solid fa-moon" style="color: #38bdf8;"></i>
+                <span class="theme-name">Dark</span>
+              </div>
+              <div class="theme-check-icon"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="theme-status-footer" style="margin-top: 14px; display: flex; align-items: center; justify-content: space-between;">
+          <span id="themeSavedMessage" style="font-size: 0.74rem; font-weight: 700; color: #10b981; opacity: 0; transition: opacity 0.25s ease;">
+            <i class="fa-solid fa-circle-check"></i> Saved successfully!
+          </span>
+          <span style="font-size: 0.72rem; color: #64748b;">
+            Live preview on click
           </span>
         </div>
       </div>
 
-      <!-- Metadata List -->
-      <div style="background: #ffffff; border-radius: 10px; padding: 12px 14px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
-        
-        <div class="academy-meta-row">
-          <div class="academy-meta-icon"><i class="fa-solid fa-user-tie"></i></div>
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">PRINCIPAL / DIRECTOR</div>
-            <div id="previewPrincipal" style="font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <?php echo htmlspecialchars($school_settings['principal_name'] ?? 'Not Specified'); ?>
-            </div>
-          </div>
-        </div>
-
-        <div class="academy-meta-row">
-          <div class="academy-meta-icon"><i class="fa-solid fa-phone"></i></div>
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">CONTACT HOTLINE</div>
-            <div id="previewPhone" style="font-weight: 700; color: #334155;">
-              <?php echo htmlspecialchars($school_settings['phone'] ?? '—'); ?>
-            </div>
-          </div>
-        </div>
-
-        <div class="academy-meta-row">
-          <div class="academy-meta-icon"><i class="fa-solid fa-envelope"></i></div>
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">EMAIL DISPATCH</div>
-            <div id="previewEmail" style="font-weight: 700; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              <?php echo htmlspecialchars($school_settings['email'] ?? '—'); ?>
-            </div>
-          </div>
-        </div>
-
-        <div class="academy-meta-row">
-          <div class="academy-meta-icon"><i class="fa-solid fa-location-dot"></i></div>
-          <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">CAMPUS ADDRESS</div>
-            <div id="previewAddress" style="font-weight: 600; color: #475569; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              <?php echo htmlspecialchars($school_settings['address'] ?? '—'); ?>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <div style="font-size: 0.74rem; color: #64748b; background: rgba(0, 146, 223, 0.06); padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(0, 146, 223, 0.15); line-height: 1.4;">
-        <i class="fa-solid fa-info-circle" style="color: #0092df;"></i>
-        These details automatically imprint across student ID cards, report cards, fee receipts, and faculty payslips.
-      </div>
     </div>
 
     <!-- Right Column: Settings Form Groups -->
     <div>
       <form id="generalSettingsForm" method="POST" action="<?php echo ADMIN_URL; ?>/school-settings">
         <input type="hidden" name="action" value="save_settings">
+        <input type="hidden" name="theme_mode" id="generalThemeModeInput" value="<?php echo htmlspecialchars($school_settings['theme_mode'] ?? 'light'); ?>">
 
         <!-- Group 1: Institution Identity & Authority -->
         <div class="settings-group-card">
@@ -1745,19 +1838,45 @@ window.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeNewSessionModal();
 });
 
-// Run initial toolbar state
-document.addEventListener('DOMContentLoaded', function() {
-  const activePane = document.querySelector('.settings-tab-pane.active');
-  if (activePane) {
-    if (activePane.id === 'pane-sessions') {
-      switchSettingsTab('sessions');
-    } else if (activePane.id === 'pane-security') {
-      switchSettingsTab('security');
+// Appearance Selection and Instant Persist
+function selectThemeMode(theme) {
+  var lightCard = document.getElementById('themeCardLight');
+  var darkCard = document.getElementById('themeCardDark');
+  if (lightCard && darkCard) {
+    if (theme === 'dark') {
+      lightCard.classList.remove('active');
+      darkCard.classList.add('active');
     } else {
-      switchSettingsTab('general');
+      darkCard.classList.remove('active');
+      lightCard.classList.add('active');
     }
   }
-});
+
+  var themeInput = document.getElementById('generalThemeModeInput');
+  if (themeInput) {
+    themeInput.value = theme;
+  }
+
+  if (typeof switchAppTheme === 'function') {
+    switchAppTheme(theme);
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem('hrms_theme', theme); } catch(e) {}
+  }
+
+  fetch('<?php echo ADMIN_URL; ?>/school-settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'action=save_theme&theme=' + encodeURIComponent(theme)
+  }).then(function(res) { return res.json(); })
+    .then(function(data) {
+      var msg = document.getElementById('themeSavedMessage');
+      if (msg) {
+        msg.style.opacity = '1';
+        setTimeout(function() { msg.style.opacity = '0'; }, 2200);
+      }
+    }).catch(function(err) {});
+}
 </script>
 
 <?php require_once __DIR__ . '/../includes/layout-footer.php'; ?>

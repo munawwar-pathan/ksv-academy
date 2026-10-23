@@ -2,6 +2,43 @@
  * KSV Academy HRMS - Interactive Client Script
  */
 
+// Theme Mode Manager (Light / Dark)
+window.switchAppTheme = function (theme) {
+  const targetTheme = (theme === 'dark') ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', targetTheme);
+  try {
+    localStorage.setItem('hrms_theme', targetTheme);
+  } catch (e) {}
+
+  const lightCard = document.getElementById('themeCardLight');
+  const darkCard = document.getElementById('themeCardDark');
+  if (lightCard && darkCard) {
+    if (targetTheme === 'dark') {
+      lightCard.classList.remove('active');
+      darkCard.classList.add('active');
+    } else {
+      darkCard.classList.remove('active');
+      lightCard.classList.add('active');
+    }
+  }
+};
+
+window.toggleAppTheme = function () {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const nextTheme = current === 'dark' ? 'light' : 'dark';
+  window.switchAppTheme(nextTheme);
+
+  if (typeof selectThemeMode === 'function') {
+    selectThemeMode(nextTheme);
+  } else {
+    fetch('/web-app/admin/school-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=save_theme&theme=' + encodeURIComponent(nextTheme)
+    }).catch(function () {});
+  }
+};
+
 document.addEventListener('DOMContentLoaded', function () {
   // 1. Sidebar Fold / Unfold & Mobile Toggle
   const foldToggle = document.getElementById('sidebarFoldToggle');
