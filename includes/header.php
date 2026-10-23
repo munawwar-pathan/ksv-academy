@@ -113,13 +113,16 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
         <span class="ticker-badge"><i class="fa-solid fa-graduation-cap"></i> Session <?php echo CURRENT_SESSION; ?></span>
         <div class="ticker-text-wrapper">
           <span class="ticker-text">
-            <strong>Admissions Open</strong> &bull; Scholarship up to 60% &bull; 3-Days Free Demo Classes
+            <span class="topbar-live-dot"></span>
+            <strong>Admissions Open</strong> &bull; 
+            <span class="topbar-chip-gold"><i class="fa-solid fa-sparkles"></i> Up to 60% Scholarship</span> &bull; 
+            <span class="topbar-chip-white"><i class="fa-solid fa-calendar-check"></i> 3-Days Free Demo</span>
           </span>
         </div>
       </div>
       <div class="top-bar-right">
-        <div class="top-contact-item d-none-mobile">
-          <i class="fa-solid fa-phone"></i>
+        <div class="top-contact-item d-none-mobile top-phone-capsule">
+          <i class="fa-solid fa-phone-volume"></i>
           <span>Call:</span>
           <a href="tel:<?php echo PHONE_RAW_1; ?>"><?php echo PHONE_PRIMARY; ?></a>
         </div>
@@ -134,9 +137,11 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
             <i class="fa-brands fa-whatsapp"></i>
           </a>
         </div>
-        <div class="top-contact-item top-portal-link">
-          <i class="fa-solid fa-lock"></i>
-          <a href="<?php echo url('web-app'); ?>" title="Staff &amp; Student Web App Portal">Portal Login</a>
+        <div class="top-portal-btn-wrap">
+          <a href="<?php echo url('web-app'); ?>" class="topbar-portal-btn" title="Staff &amp; Student Web App Portal">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Portal Login</span>
+          </a>
         </div>
         <!-- Dark/Light Mode Switcher -->
         <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark and light theme" title="Toggle Theme">
@@ -157,7 +162,7 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
         </div>
         <div class="logo-typography">
           <span class="brand-title">KSV ACADEMY</span>
-          <span class="brand-subtitle">Where Learning Meets Excellence</span>
+          <span class="brand-subtitle"> Where Learning Meets Excellence</span>
         </div>
       </a>
 
@@ -177,6 +182,7 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
           <li class="nav-item has-dropdown">
             <a href="<?php echo url('courses'); ?>" class="nav-link <?php echo is_active('courses'); ?>" id="coursesDropdownToggle">
               <span>Courses</span>
+              <!-- <span class="nav-courses-badge">New Batches</span> -->
               <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
             <div class="dropdown-menu-box" id="coursesDropdownMenu">

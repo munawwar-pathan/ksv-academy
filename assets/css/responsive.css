@@ -507,31 +507,43 @@ img, svg, video {
 
   /* ── Pillars / Why Choose Section ── */
   .pillar-sober-card {
-    padding: 20px 16px !important;
-    border-radius: 14px !important;
+    padding: 24px 20px !important;
+    border-radius: 18px !important;
+  }
+
+  .pillar-sober-icon {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 1.3rem !important;
+    border-radius: 13px !important;
   }
 
   .pillar-sober-title {
-    font-size: 1.12rem !important;
+    font-size: 1.18rem !important;
   }
 
   .pillar-sober-desc {
-    font-size: 0.84rem !important;
-    line-height: 1.48 !important;
+    font-size: 0.86rem !important;
+    line-height: 1.55 !important;
+  }
+
+  .pillar-stat-chip {
+    padding: 8px 12px !important;
+    font-size: 0.76rem !important;
   }
 
   .pillar-sober-list li {
-    font-size: 0.8rem !important;
+    font-size: 0.82rem !important;
   }
 
   .pillars-sober-trust {
-    padding: 16px !important;
-    border-radius: 14px !important;
-    gap: 12px !important;
+    padding: 20px 18px !important;
+    border-radius: 18px !important;
+    gap: 16px !important;
   }
 
   .sober-trust-item {
-    padding: 8px 0 !important;
+    padding: 12px 0 !important;
     border-bottom: 1px solid var(--border-subtle);
   }
 
@@ -539,8 +551,14 @@ img, svg, video {
     border-bottom: none;
   }
 
-  .sober-trust-info strong {
-    font-size: 0.86rem !important;
+  .sober-trust-icon {
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 1.2rem !important;
+  }
+
+  .trust-stat-title {
+    font-size: 0.92rem !important;
   }
 
   .sober-trust-info span {
@@ -597,7 +615,9 @@ img, svg, video {
     gap: 8px !important;
   }
 
-  .course-actions .btn {
+  .course-actions .btn,
+  .course-actions .btn-demo-action,
+  .course-actions .btn-details-action {
     width: 100% !important;
     justify-content: center !important;
     padding: 10px 16px !important;
@@ -610,100 +630,173 @@ img, svg, video {
   }
 
   .faculty-card {
+    padding: 0 !important;
+    border-radius: 18px !important;
+  }
+
+  .faculty-photo-wrapper {
+    height: 250px !important;
+  }
+
+  .faculty-info-block {
     padding: 18px 16px !important;
-    border-radius: 14px !important;
   }
 
   .faculty-name {
-    font-size: 1.12rem !important;
+    font-size: 1.18rem !important;
   }
 
   /* ── Director's Desk Section ── */
-  .director-sober-card {
-    padding: 22px 16px !important;
-    border-radius: 16px !important;
+  .director-executive-card {
+    padding: 26px 18px !important;
+    border-radius: 20px !important;
   }
 
-  .director-sober-portrait-frame {
-    max-width: 200px !important;
-    height: 240px !important;
-    margin: 0 auto 14px !important;
+  .director-executive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
   }
 
-  .director-sober-name {
-    font-size: 1.15rem !important;
+  .director-portrait-box {
+    max-width: 250px !important;
+    height: 310px !important;
+    margin: 0 auto !important;
   }
 
-  .director-sober-quote {
-    font-size: 0.95rem !important;
-    padding: 14px 16px !important;
-    margin: 16px 0 !important;
+  .director-headline {
+    font-size: 1.65rem !important;
+    line-height: 1.3 !important;
   }
 
-  .director-sober-bio {
-    font-size: 0.86rem !important;
-    line-height: 1.5 !important;
+  .director-quote-box {
+    padding: 16px 18px !important;
+    margin: 12px 0 !important;
   }
 
-  .director-sober-creds {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    margin-bottom: 20px !important;
+  .director-quote-text {
+    font-size: 0.92rem !important;
+    line-height: 1.6 !important;
   }
 
-  .director-sober-actions {
+  .director-bio-text {
+    font-size: 0.88rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .director-pillars-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .director-actions-cluster {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
     gap: 10px !important;
   }
 
-  .director-sober-actions .btn {
+  .btn-director-primary,
+  .btn-director-whatsapp {
     width: 100% !important;
     justify-content: center !important;
-    padding: 12px 18px !important;
+    padding: 13px 20px !important;
+  }
+
+  .director-reassurance-note {
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* Legacy fallback */
+  .director-sober-card {
+    padding: 22px 16px !important;
+    border-radius: 16px !important;
+  }
+  .director-sober-portrait-frame {
+    max-width: 200px !important;
+    height: 240px !important;
   }
 
   /* ── Demo 3-Day Free Banner ── */
+  .demo-vip-card {
+    padding: 26px 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .demo-vip-grid {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .demo-headline {
+    font-size: 1.65rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .demo-subheadline {
+    font-size: 0.88rem !important;
+    line-height: 1.6 !important;
+  }
+
+  .demo-benefits-grid {
+    gap: 8px !important;
+  }
+
+  .demo-benefit-card {
+    padding: 10px 12px !important;
+  }
+
+  .benefit-title {
+    font-size: 0.82rem !important;
+  }
+
+  .benefit-desc {
+    font-size: 0.74rem !important;
+  }
+
+  .demo-actions-row {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .btn-demo-primary,
+  .btn-demo-whatsapp {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 13px 20px !important;
+  }
+
+  .demo-guarantee-row {
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 0.74rem !important;
+  }
+
+  .demo-pass-ticket {
+    max-width: 260px !important;
+    padding: 20px 16px !important;
+  }
+
+  .ticket-qr-container {
+    width: 140px !important;
+    height: 140px !important;
+  }
+
+  /* Legacy fallback */
   .demo-banner-card {
     padding: 24px 16px !important;
     border-radius: 16px !important;
     gap: 24px !important;
   }
-
-  .demo-banner-desc {
-    font-size: 0.86rem !important;
-  }
-
-  .demo-points .demo-pt {
-    font-size: 0.82rem !important;
-    gap: 10px !important;
-  }
-
-  .demo-banner-actions {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    gap: 10px !important;
-  }
-
-  .demo-banner-actions .btn {
-    width: 100% !important;
-    justify-content: center !important;
-    padding: 12px 18px !important;
-  }
-
   .demo-qr-box {
     padding: 16px !important;
     border-radius: 14px !important;
     width: 100% !important;
     max-width: 240px !important;
-  }
-
-  .qr-code-placeholder svg {
-    width: 130px !important;
-    height: 130px !important;
   }
 
   /* ── YouTube Digital Classroom ── */
@@ -728,7 +821,57 @@ img, svg, video {
   /* ── Campus Gallery Preview ── */
   .gallery-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
+    gap: 14px !important;
+  }
+
+  .gallery-card {
+    height: 220px !important;
+  }
+
+  /* ── Testimonials & Reviews ── */
+  .test-rating-banner {
+    flex-direction: column !important;
+    gap: 6px !important;
+    border-radius: 16px !important;
+    padding: 12px 18px !important;
+    text-align: center !important;
+  }
+
+  .test-rating-banner .rating-divider {
+    display: none !important;
+  }
+
+  .test-stats-strip {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    padding: 20px 16px !important;
+  }
+
+  .test-stat-sep {
+    display: none !important;
+  }
+
+  /* ── FAQ & Admissions Helpdesk ── */
+  .faq-split-layout {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+
+  .faq-counselor-col {
+    position: static !important;
+  }
+
+  .faq-helpdesk-card {
+    padding: 24px 20px !important;
+  }
+
+  .faq-header {
+    padding: 16px 18px !important;
+  }
+
+  .faq-title {
+    font-size: 0.95rem !important;
   }
 
   /* ── Global Footer ── */

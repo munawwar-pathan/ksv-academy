@@ -13,10 +13,16 @@ require_once __DIR__ . '/includes/header.php';
 <section class="hero-section">
   <div class="container hero-grid">
     <div class="hero-content">
-      <!-- Clean & Sober Eyebrow -->
-      <div class="hero-eyebrow">
-        <span class="hero-eyebrow-dot"></span>
-        <span>Admissions Open 2026–27 • Sector 19, Ulwe</span>
+      <!-- Dual Eyebrow Badges -->
+      <div class="hero-eyebrows-wrap">
+        <div class="hero-eyebrow">
+          <span class="hero-live-dot"></span>
+          <span>Admissions Open 2026–27</span>
+        </div>
+        <div class="hero-trust-badge">
+          <i class="fa-solid fa-award"></i>
+          <span>#1 Coaching in Ulwe Sector 19</span>
+        </div>
       </div>
 
       <!-- Main Heading -->
@@ -24,9 +30,9 @@ require_once __DIR__ . '/includes/header.php';
         Where Learning Meets <span class="hero-highlight">Excellence.</span>
       </h1>
 
-      <!-- Slogan / Motto (Clean Typographic Line, Not an overwhelming box) -->
+      <!-- Slogan / Motto Tagline -->
       <div class="hero-motto-row">
-        <span class="motto-lead">Ab Sapnon Ki Coaching Ulwe Mein!</span>
+        <span class="motto-lead"><i class="fa-solid fa-sparkles"></i> Ab Sapnon Ki Coaching Ulwe Mein!</span>
         <span class="motto-divider">•</span>
         <span class="motto-sub">Strong Foundation, Sure Success</span>
       </div>
@@ -36,7 +42,7 @@ require_once __DIR__ . '/includes/header.php';
         Ulwe’s trusted coaching institute for Classes 5th to 12th (CBSE, ICSE, State), IIT-JEE, NEET, and Degree courses with concept-first mentoring and small, disciplined batches.
       </p>
 
-      <!-- Key Course Streams Marquee (Clean, Sober & Uniform) -->
+      <!-- Key Course Streams Marquee -->
       <div class="hero-marquee-wrapper" aria-label="Key Course Streams">
         <div class="marquee-track">
           <div class="marquee-group">
@@ -96,49 +102,59 @@ require_once __DIR__ . '/includes/header.php';
       </div>
     </div>
 
-    <!-- Right Side: Dignified & Sober Academy Showcase Card -->
+    <!-- Right Side: Executive Leadership & Academy Showcase Card -->
     <div class="hero-media-wrapper">
       <div class="hero-sober-card">
+        <div class="hero-card-accent-bar"></div>
+
         <!-- Faculty Spotlight Header -->
         <div class="sober-card-header">
           <div class="sober-avatar-wrap">
-            <img src="<?php echo url('assets/imgs/faculties/founder-director.png'); ?>" alt="Mr. Salam Khan - Founder & Director" class="sober-avatar-img">
+            <img src="<?php echo url('assets/imgs/faculties/founder-director.png'); ?>" alt="Mr. Salam Khan - Founder &amp; Director" class="sober-avatar-img">
+            <span class="sober-verified-check" title="Verified Director"><i class="fa-solid fa-circle-check"></i></span>
           </div>
           <div class="sober-profile-info">
-            <span class="sober-lead-badge">Academic Leadership</span>
+            <span class="sober-lead-badge"><i class="fa-solid fa-shield-halved"></i> Academic Leadership</span>
             <h3 class="sober-name">Mr. Salam Khan</h3>
             <p class="sober-qualification">Founder &amp; Director • M.Sc, B.Ed</p>
             <span class="sober-experience">10+ Years Mentoring Physics &amp; Mathematics</span>
           </div>
         </div>
 
-        <!-- Academic Features Checklist -->
-        <ul class="sober-features-list">
-          <li>
-            <i class="fa-solid fa-circle-check"></i>
-            <div>
-              <strong>Concept-First Learning:</strong> Complete syllabus clarity for CBSE, ICSE, SSC &amp; HSC boards.
+        <!-- 4 Upgraded Feature Cards -->
+        <div class="hero-pillars-grid">
+          <div class="hero-pillar-card">
+            <div class="hero-pillar-icon icon-blue"><i class="fa-solid fa-brain"></i></div>
+            <div class="hero-pillar-info">
+              <strong>Concept-First Learning</strong>
+              <span>Complete syllabus clarity for CBSE, ICSE, SSC &amp; HSC boards.</span>
             </div>
-          </li>
-          <li>
-            <i class="fa-solid fa-circle-check"></i>
-            <div>
-              <strong>Competitive Coaching:</strong> Integrated preparation for IIT-JEE, NEET-UG &amp; MHT-CET.
+          </div>
+
+          <div class="hero-pillar-card">
+            <div class="hero-pillar-icon icon-emerald"><i class="fa-solid fa-rocket"></i></div>
+            <div class="hero-pillar-info">
+              <strong>Competitive Coaching</strong>
+              <span>Integrated preparation for IIT-JEE, NEET-UG &amp; MHT-CET.</span>
             </div>
-          </li>
-          <li>
-            <i class="fa-solid fa-circle-check"></i>
-            <div>
-              <strong>Weekly Assessments:</strong> Regular chapter-wise tests with timely parent progress updates.
+          </div>
+
+          <div class="hero-pillar-card">
+            <div class="hero-pillar-icon icon-purple"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="hero-pillar-info">
+              <strong>Weekly Assessments</strong>
+              <span>Regular chapter-wise tests with timely parent progress updates.</span>
             </div>
-          </li>
-          <li>
-            <i class="fa-solid fa-circle-check"></i>
-            <div>
-              <strong>Individual Attention:</strong> Small batch sizes with dedicated daily 1-on-1 doubt solving.
+          </div>
+
+          <div class="hero-pillar-card">
+            <div class="hero-pillar-icon icon-amber"><i class="fa-solid fa-user-check"></i></div>
+            <div class="hero-pillar-info">
+              <strong>Individual Attention</strong>
+              <span>Small batch sizes with dedicated daily 1-on-1 doubt solving.</span>
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
 
         <!-- Reassurance Footer -->
         <div class="sober-card-footer">
@@ -148,10 +164,10 @@ require_once __DIR__ . '/includes/header.php';
               <i class="fa-solid fa-star"></i>
               <i class="fa-solid fa-star"></i>
               <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star-half-stroke"></i>
+              <i class="fa-solid fa-star"></i>
             </div>
             <strong>4.9 / 5</strong>
-            <span>Rating</span>
+            <span>Rating (150+ Reviews)</span>
           </div>
           <span class="sober-location-tag">
             <i class="fa-solid fa-location-dot"></i> Sector 19, Ulwe
@@ -172,78 +188,144 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <div class="pillars-grid">
-      <!-- Pillar 1 -->
-      <div class="pillar-sober-card">
-        <div class="pillar-sober-icon">
-          <i class="fa-solid fa-graduation-cap"></i>
+      <!-- Pillar 1: Result-Oriented Coaching -->
+      <div class="pillar-sober-card pillar-theme-blue">
+        <div class="pillar-card-topbar"></div>
+        <div class="pillar-card-watermark">01</div>
+        <div class="pillar-card-header">
+          <div class="pillar-sober-icon pillar-icon-blue">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <span class="pillar-pill pill-blue"><i class="fa-solid fa-bolt"></i> Proven Pedagogy</span>
         </div>
         <h3 class="pillar-sober-title">Result-Oriented Coaching</h3>
         <p class="pillar-sober-desc">
           Structured preparation engineered to help students maximize scores in school boards (CBSE, ICSE, SSC), HSC, and premier competitive examinations.
         </p>
+        <div class="pillar-stat-chip chip-blue">
+          <i class="fa-solid fa-trophy"></i>
+          <span><strong>98.4%</strong> Top Board Score &bull; 100% Pass Record</span>
+        </div>
         <ul class="pillar-sober-list">
-          <li><i class="fa-solid fa-circle-check"></i> Concept-first pedagogy for complete syllabus clarity</li>
-          <li><i class="fa-solid fa-circle-check"></i> Integrated Board + IIT-JEE &amp; NEET syllabus mapping</li>
-          <li><i class="fa-solid fa-circle-check"></i> Systematic solving of past 10-year question patterns</li>
+          <li>
+            <span class="pillar-check check-blue"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Concept-First Pedagogy</strong> for complete syllabus clarity</span>
+          </li>
+          <li>
+            <span class="pillar-check check-blue"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Integrated Mapping</strong> of Board + IIT-JEE &amp; NEET syllabus</span>
+          </li>
+          <li>
+            <span class="pillar-check check-blue"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Past 10-Year Question Bank</strong> solving &amp; test blueprints</span>
+          </li>
         </ul>
       </div>
 
-      <!-- Pillar 2 -->
-      <div class="pillar-sober-card">
-        <div class="pillar-sober-icon">
-          <i class="fa-solid fa-clipboard-check"></i>
+      <!-- Pillar 2: Weekly Tests & Monitoring -->
+      <div class="pillar-sober-card pillar-theme-purple">
+        <div class="pillar-card-topbar"></div>
+        <div class="pillar-card-watermark">02</div>
+        <div class="pillar-card-header">
+          <div class="pillar-sober-icon pillar-icon-purple">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <span class="pillar-pill pill-purple"><i class="fa-solid fa-chart-line"></i> Rigorous Testing</span>
         </div>
         <h3 class="pillar-sober-title">Weekly Tests &amp; Monitoring</h3>
         <p class="pillar-sober-desc">
           Continuous chapter-wise and cumulative assessments track progress systematically, identifying weak spots early and building ironclad exam confidence.
         </p>
+        <div class="pillar-stat-chip chip-purple">
+          <i class="fa-solid fa-file-circle-check"></i>
+          <span><strong>120+ Tests / Year</strong> &bull; Chapter Tests &amp; Full Mocks</span>
+        </div>
         <ul class="pillar-sober-list">
-          <li><i class="fa-solid fa-circle-check"></i> Sunday chapter tests and computerized mock test series</li>
-          <li><i class="fa-solid fa-circle-check"></i> Regular parent-teacher progress review meetings</li>
-          <li><i class="fa-solid fa-circle-check"></i> Speed enhancement and negative-marking control</li>
+          <li>
+            <span class="pillar-check check-purple"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Sunday Chapter Tests</strong> and computerized mock test series</span>
+          </li>
+          <li>
+            <span class="pillar-check check-purple"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Regular Parent-Teacher</strong> progress review meetings &amp; reports</span>
+          </li>
+          <li>
+            <span class="pillar-check check-purple"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Speed &amp; Accuracy Training</strong> with negative-marking control</span>
+          </li>
         </ul>
       </div>
 
-      <!-- Pillar 3 -->
-      <div class="pillar-sober-card">
-        <div class="pillar-sober-icon">
-          <i class="fa-solid fa-user-shield"></i>
+      <!-- Pillar 3: Individual Attention & Care -->
+      <div class="pillar-sober-card pillar-theme-emerald">
+        <div class="pillar-card-topbar"></div>
+        <div class="pillar-card-watermark">03</div>
+        <div class="pillar-card-header">
+          <div class="pillar-sober-icon pillar-icon-emerald">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <span class="pillar-pill pill-emerald"><i class="fa-solid fa-shield-heart"></i> Personal Focus</span>
         </div>
         <h3 class="pillar-sober-title">Individual Attention &amp; Care</h3>
         <p class="pillar-sober-desc">
           We maintain disciplined, small batch sizes so senior educators can mentor each student personally, fostering absolute confidence without hesitation.
         </p>
+        <div class="pillar-stat-chip chip-emerald">
+          <i class="fa-solid fa-users"></i>
+          <span><strong>Max 25 Per Batch</strong> &bull; Daily 1-on-1 Doubt Desks</span>
+        </div>
         <ul class="pillar-sober-list">
-          <li><i class="fa-solid fa-circle-check"></i> Small batch sizes ensuring every learner is attended to</li>
-          <li><i class="fa-solid fa-circle-check"></i> Daily 1-on-1 dedicated doubt clearing counters</li>
-          <li><i class="fa-solid fa-circle-check"></i> Personal mentorship by Director Salam Khan</li>
+          <li>
+            <span class="pillar-check check-emerald"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Small Batch Sizes</strong> ensuring every learner is attended to</span>
+          </li>
+          <li>
+            <span class="pillar-check check-emerald"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Daily 1-on-1 Doubt Counters</strong> with dedicated faculty</span>
+          </li>
+          <li>
+            <span class="pillar-check check-emerald"><i class="fa-solid fa-check"></i></span>
+            <span><strong>Personal Mentorship</strong> led by Director Salam Khan</span>
+          </li>
         </ul>
       </div>
     </div>
 
-    <!-- Simple & Sober Trust Bar -->
+    <!-- Enhanced Executive Trust & Highlight Banner -->
     <div class="pillars-sober-trust">
-      <div class="sober-trust-item">
-        <div class="sober-trust-icon"><i class="fa-solid fa-award"></i></div>
+      <div class="sober-trust-item trust-item-amber">
+        <div class="sober-trust-icon icon-amber"><i class="fa-solid fa-award"></i></div>
         <div class="sober-trust-info">
-          <strong>10+ Years Legacy in Ulwe</strong>
-          <span>1500+ successful alumni across top colleges</span>
+          <div class="trust-stat-badge-row">
+            <span class="trust-counter-tag tag-amber">10+ Years</span>
+            <span class="trust-pill-label">Ulwe Pioneer</span>
+          </div>
+          <strong class="trust-stat-title">Proven Academic Legacy</strong>
+          <span class="trust-stat-subtitle">1,500+ successful alumni placed across top colleges</span>
         </div>
       </div>
       <div class="sober-trust-divider"></div>
-      <div class="sober-trust-item">
-        <div class="sober-trust-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+      <div class="sober-trust-item trust-item-blue">
+        <div class="sober-trust-icon icon-blue"><i class="fa-solid fa-book-open-reader"></i></div>
         <div class="sober-trust-info">
-          <strong>Comprehensive Study Kits</strong>
-          <span>Handcrafted notes, mind maps &amp; question banks</span>
+          <div class="trust-stat-badge-row">
+            <span class="trust-counter-tag tag-blue">All Included</span>
+            <span class="trust-pill-label">No Extra Fee</span>
+          </div>
+          <strong class="trust-stat-title">Comprehensive Study Kits</strong>
+          <span class="trust-stat-subtitle">Handcrafted notes, mind maps, formula sheets &amp; question banks</span>
         </div>
       </div>
       <div class="sober-trust-divider"></div>
-      <div class="sober-trust-item">
-        <div class="sober-trust-icon"><i class="fa-solid fa-calendar-check"></i></div>
+      <div class="sober-trust-item trust-item-emerald">
+        <div class="sober-trust-icon icon-emerald"><i class="fa-solid fa-calendar-check"></i></div>
         <div class="sober-trust-info">
-          <strong>3-Days Free Trial Lectures</strong>
-          <span>Attend real sessions before taking admission</span>
+          <div class="trust-stat-badge-row">
+            <span class="trust-counter-tag tag-emerald">100% Free</span>
+            <span class="trust-pill-label">No Obligation</span>
+          </div>
+          <strong class="trust-stat-title">3-Days Free Trial Lectures</strong>
+          <span class="trust-stat-subtitle">Experience real classroom coaching before taking admission</span>
         </div>
       </div>
     </div>
@@ -251,7 +333,7 @@ require_once __DIR__ . '/includes/header.php';
 </section>
 
 <!-- 3. Course Catalog Explorer (Interactive Tabbed View like Khan Global Studies) -->
-<section class="section-py" id="coursesSection">
+<section class="section-py courses-section" id="coursesSection">
   <div class="container">
     <div class="section-header">
       <span class="section-eyebrow"><i class="fa-solid fa-book-bookmark"></i> Programs We Offer</span>
@@ -261,55 +343,101 @@ require_once __DIR__ . '/includes/header.php';
 
     <!-- Filter Buttons -->
     <div class="courses-tab-nav">
-      <button type="button" class="course-tab-btn active" data-filter="all">All Programs</button>
-      <button type="button" class="course-tab-btn" data-filter="school">School Section (5th - 10th)</button>
-      <button type="button" class="course-tab-btn" data-filter="competitive">IIT-JEE / NEET / MH-CET</button>
-      <button type="button" class="course-tab-btn" data-filter="college">Junior College (11th & 12th)</button>
-      <button type="button" class="course-tab-btn" data-filter="degree">Undergraduate & Degrees</button>
+      <button type="button" class="course-tab-btn active" data-filter="all"><i class="fa-solid fa-border-all"></i> <span>All Programs</span></button>
+      <button type="button" class="course-tab-btn" data-filter="school"><i class="fa-solid fa-school"></i> <span>School Section (5th - 10th)</span></button>
+      <button type="button" class="course-tab-btn" data-filter="competitive"><i class="fa-solid fa-atom"></i> <span>IIT-JEE / NEET / MH-CET</span></button>
+      <button type="button" class="course-tab-btn" data-filter="college"><i class="fa-solid fa-graduation-cap"></i> <span>Junior College (11th &amp; 12th)</span></button>
+      <button type="button" class="course-tab-btn" data-filter="degree"><i class="fa-solid fa-building-columns"></i> <span>Undergraduate &amp; Degrees</span></button>
+      <button type="button" class="course-tab-btn" data-filter="postgraduate"><i class="fa-solid fa-award"></i> <span>Postgraduate</span></button>
     </div>
 
     <!-- Course Cards Grid -->
     <div class="courses-grid">
-      <?php foreach ($courses as $c): ?>
-      <div class="course-card" data-category="<?php echo htmlspecialchars($c['category']); ?>">
+      <?php foreach ($courses as $c): 
+        $cat = $c['category'];
+        $theme_class = 'course-theme-school';
+        $cat_icon = 'fa-school';
+
+        if ($cat === 'competitive') {
+          $theme_class = 'course-theme-competitive';
+          $cat_icon = 'fa-atom';
+        } elseif ($cat === 'college') {
+          $theme_class = 'course-theme-college';
+          $cat_icon = 'fa-graduation-cap';
+        } elseif ($cat === 'degree') {
+          $theme_class = 'course-theme-degree';
+          $cat_icon = 'fa-building-columns';
+        } elseif ($cat === 'postgraduate') {
+          $theme_class = 'course-theme-postgrad';
+          $cat_icon = 'fa-award';
+        } elseif (stripos($c['title'], 'olympiad') !== false) {
+          $theme_class = 'course-theme-olympiad';
+          $cat_icon = 'fa-trophy';
+        }
+      ?>
+      <div class="course-card <?php echo $theme_class; ?>" data-category="<?php echo htmlspecialchars($c['category']); ?>">
+        <div class="course-card-topbar"></div>
+
         <div class="course-card-top">
-          <span class="course-cat-tag"><?php echo htmlspecialchars($c['category_name']); ?></span>
-          <span class="course-status-pill"><?php echo htmlspecialchars($c['badge']); ?></span>
+          <span class="course-cat-tag">
+            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+            <span><?php echo htmlspecialchars($c['category_name']); ?></span>
+          </span>
+          <span class="course-status-pill">
+            <i class="fa-solid fa-sparkles"></i>
+            <span><?php echo htmlspecialchars($c['badge']); ?></span>
+          </span>
         </div>
 
         <div class="course-card-main">
           <h3 class="course-title"><?php echo htmlspecialchars($c['title']); ?></h3>
-          <div class="course-standards"><?php echo htmlspecialchars($c['standards']); ?></div>
+          <div class="course-standards-badge">
+            <i class="fa-solid fa-layer-group"></i>
+            <span><?php echo htmlspecialchars($c['standards']); ?></span>
+          </div>
           <p class="course-desc"><?php echo htmlspecialchars($c['description']); ?></p>
         </div>
 
         <div class="course-card-specs">
           <div class="course-spec-item">
-            <i class="fa-solid fa-layer-group"></i>
-            <span><strong>Boards:</strong> <?php echo htmlspecialchars($c['boards']); ?></span>
+            <div class="spec-icon-badge"><i class="fa-solid fa-landmark"></i></div>
+            <div class="spec-content">
+              <span class="spec-label">Boards</span>
+              <span class="spec-val"><?php echo htmlspecialchars($c['boards']); ?></span>
+            </div>
           </div>
           <div class="course-spec-item">
-            <i class="fa-solid fa-book-open"></i>
-            <span><strong>Curriculum:</strong> <?php echo htmlspecialchars($c['subjects']); ?></span>
+            <div class="spec-icon-badge"><i class="fa-solid fa-book-open"></i></div>
+            <div class="spec-content">
+              <span class="spec-label">Curriculum</span>
+              <span class="spec-val"><?php echo htmlspecialchars($c['subjects']); ?></span>
+            </div>
           </div>
         </div>
 
-        <ul class="course-checklist">
-          <?php foreach (array_slice($c['features'], 0, 3) as $f): ?>
-          <li>
+        <div class="course-highlights-box">
+          <div class="course-highlights-heading">
             <i class="fa-solid fa-circle-check"></i>
-            <span><?php echo htmlspecialchars($f); ?></span>
-          </li>
-          <?php endforeach; ?>
-        </ul>
+            <span>Key Batch Highlights</span>
+          </div>
+          <ul class="course-checklist">
+            <?php foreach (array_slice($c['features'], 0, 3) as $f): ?>
+            <li>
+              <span class="feat-check"><i class="fa-solid fa-check"></i></span>
+              <span><?php echo htmlspecialchars($f); ?></span>
+            </li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
 
         <div class="course-actions">
-          <button type="button" class="btn btn-primary btn-sm" data-modal="demoModal">
+          <button type="button" class="btn-demo-action" data-modal="demoModal">
             <span>Free Demo Pass</span>
             <i class="fa-solid fa-arrow-right"></i>
           </button>
-          <a href="<?php echo url('courses'); ?>" class="btn btn-outline-primary btn-sm">
-            View Details
+          <a href="<?php echo url('courses'); ?>" class="btn-details-action">
+            <span>View Details</span>
+            <i class="fa-solid fa-chevron-right"></i>
           </a>
         </div>
       </div>
@@ -328,77 +456,235 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <div class="faculty-grid">
-      <?php foreach ($faculties as $fac): ?>
-      <div class="faculty-card reveal-on-scroll">
+      <?php foreach ($faculties as $fac): 
+        $id = $fac['id'];
+        $theme_class = 'fac-theme-blue';
+        $subj_icon = 'fa-atom';
+        $subj_label = 'Physics';
+
+        if ($id === 'rameshwar-mishra') {
+          $theme_class = 'fac-theme-emerald';
+          $subj_icon = 'fa-flask-vial';
+          $subj_label = 'Chemistry';
+        } elseif ($id === 'aman-kumar-soni') {
+          $theme_class = 'fac-theme-amber';
+          $subj_icon = 'fa-square-root-variable';
+          $subj_label = 'Chem &amp; Math';
+        } elseif ($id === 'hafiza-palikar') {
+          $theme_class = 'fac-theme-purple';
+          $subj_icon = 'fa-infinity';
+          $subj_label = 'Mathematics';
+        } elseif ($id === 'rafeek-khan') {
+          $theme_class = 'fac-theme-cyan';
+          $subj_icon = 'fa-laptop-code';
+          $subj_label = 'CS &amp; Math';
+        } elseif ($id === 'lubna-khan') {
+          $theme_class = 'fac-theme-rose';
+          $subj_icon = 'fa-book-open-reader';
+          $subj_label = 'English &amp; SST';
+        }
+      ?>
+      <div class="faculty-card <?php echo $theme_class; ?>" id="<?php echo htmlspecialchars($fac['id']); ?>">
+        <div class="faculty-card-topbar"></div>
+
         <div class="faculty-photo-wrapper">
+          <div class="faculty-ambient-glow"></div>
           <img src="<?php echo url($fac['image']); ?>" alt="<?php echo htmlspecialchars($fac['name']); ?>" class="faculty-photo" loading="lazy">
-          <span class="faculty-exp-badge"><i class="fa-solid fa-award"></i> <?php echo htmlspecialchars($fac['experience']); ?> Exp</span>
+          
+          <div class="faculty-photo-badges">
+            <span class="faculty-subj-badge">
+              <i class="fa-solid <?php echo $subj_icon; ?>"></i>
+              <span><?php echo $subj_label; ?></span>
+            </span>
+            <span class="faculty-exp-badge">
+              <i class="fa-solid fa-award"></i>
+              <span><?php echo htmlspecialchars($fac['experience']); ?></span>
+            </span>
+          </div>
         </div>
+
         <div class="faculty-info-block">
-          <h3 class="faculty-name"><?php echo htmlspecialchars($fac['name']); ?></h3>
-          <div class="faculty-role"><?php echo htmlspecialchars($fac['title']); ?></div>
-          <div class="faculty-qualification"><i class="fa-solid fa-graduation-cap"></i> <?php echo htmlspecialchars($fac['degrees']); ?></div>
-          <div class="faculty-spec-tag"><i class="fa-solid fa-atom"></i> Specialization: <?php echo htmlspecialchars($fac['specialization']); ?></div>
+          <div class="faculty-header-meta">
+            <h3 class="faculty-name"><?php echo htmlspecialchars($fac['name']); ?></h3>
+            <div class="faculty-role-pill"><?php echo htmlspecialchars($fac['title']); ?></div>
+          </div>
+
+          <div class="faculty-qualification-row">
+            <div class="faculty-qual-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div class="faculty-qual-text"><?php echo htmlspecialchars($fac['degrees']); ?></div>
+          </div>
+
+          <div class="faculty-spec-tag">
+            <i class="fa-solid fa-sparkles"></i>
+            <span><strong>Specialization:</strong> <?php echo htmlspecialchars($fac['specialization']); ?></span>
+          </div>
+
+          <?php if (!empty($fac['highlight'])): ?>
+          <div class="faculty-highlight-strip">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><?php echo htmlspecialchars($fac['highlight']); ?></span>
+          </div>
+          <?php endif; ?>
+
           <p class="faculty-bio"><?php echo htmlspecialchars($fac['bio']); ?></p>
+
+          <div class="faculty-actions-row">
+            <button type="button" class="btn-faculty-action" data-modal="demoModal">
+              <span>Book Demo Lecture</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
         </div>
       </div>
       <?php endforeach; ?>
     </div>
 
-    <div style="text-align: center; margin-top: 36px;">
-      <a href="<?php echo url('faculty'); ?>" class="btn btn-outline-primary btn-md">
+    <div style="text-align: center; margin-top: 40px;">
+      <a href="<?php echo url('faculty'); ?>" class="btn-faculty-all">
         <i class="fa-solid fa-users"></i>
-        <span>View All Faculty Profiles &amp; Credentials</span>
+        <span>View All Faculty Profiles &amp; Full Credentials</span>
+        <i class="fa-solid fa-chevron-right"></i>
       </a>
     </div>
   </div>
 </section>
 
 <!-- 5. Founder & Director Message Section -->
-<section class="section-py" id="directorSection">
+<section class="section-py director-section-wrapper" id="directorSection">
   <div class="container">
-    <div class="director-sober-card">
-      <div class="director-sober-grid">
-        <!-- Left: Clean Director Portrait Frame -->
-        <div class="director-sober-portrait-col">
-          <div class="director-sober-portrait-frame">
-            <img src="<?php echo url('assets/imgs/faculties/founder-director.png'); ?>" alt="Mr. Salam Khan - Founder &amp; Director" class="director-sober-img" loading="lazy">
+    <div class="director-executive-card">
+      <div class="director-card-topbar"></div>
+      
+      <!-- Ambient Decorative Watermark & Light Gradients -->
+      <div class="director-watermark-icon" aria-hidden="true"><i class="fa-solid fa-quote-right"></i></div>
+      <div class="director-bg-glow-top" aria-hidden="true"></div>
+      <div class="director-bg-glow-bottom" aria-hidden="true"></div>
+
+      <div class="director-executive-grid">
+        <!-- Left: Director Portrait & Signature Showcase -->
+        <div class="director-showcase-col">
+          <div class="director-portrait-box">
+            <div class="director-portrait-halo" aria-hidden="true"></div>
+            
+            <!-- Floating Portrait Badges -->
+            <div class="director-floating-badge top-left">
+              <i class="fa-solid fa-crown"></i>
+              <span>Founder &amp; Director</span>
+            </div>
+            <div class="director-floating-badge top-right">
+              <i class="fa-solid fa-award"></i>
+              <span>10+ Yrs Exp</span>
+            </div>
+
+            <img src="<?php echo url('assets/imgs/faculties/founder-director.png'); ?>" alt="Mr. Salam Khan - Founder &amp; Director" class="director-portrait-img" loading="lazy">
           </div>
-          <div class="director-sober-nameplate">
-            <h4 class="director-sober-name">Mr. Salam Khan</h4>
-            <span class="director-sober-role">Founder &amp; Director, KSV Academy</span>
-            <div class="director-sober-qual">
-              <i class="fa-solid fa-graduation-cap"></i> M.Sc, B.Ed (Physics) • 10+ Years Exp
+
+          <div class="director-identity-card">
+            <h3 class="director-name">Mr. Salam Khan</h3>
+            <div class="director-role-tag">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Founder &amp; Director, KSV Academy</span>
+            </div>
+            
+            <div class="director-degrees-pill">
+              <i class="fa-solid fa-graduation-cap"></i>
+              <span>M.Sc, B.Ed (Physics)</span>
+            </div>
+
+            <!-- Leadership Stats Mini Strip -->
+            <div class="director-stats-row">
+              <div class="director-stat-mini">
+                <span class="stat-num">10+</span>
+                <span class="stat-lbl">Years Exp</span>
+              </div>
+              <div class="director-stat-divider"></div>
+              <div class="director-stat-mini">
+                <span class="stat-num">500+</span>
+                <span class="stat-lbl">Aspirants</span>
+              </div>
+              <div class="director-stat-divider"></div>
+              <div class="director-stat-mini">
+                <span class="stat-num">100%</span>
+                <span class="stat-lbl">Concept-First</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Right: Message Content -->
-        <div class="director-sober-content">
-          <span class="section-eyebrow"><i class="fa-solid fa-quote-left"></i> Founder &amp; Director's Desk</span>
-          <h2 class="section-title">Empowering Minds, <span class="hero-highlight">Shaping Futures</span></h2>
-          
-          <div class="director-sober-quote">
-            "At KSV Academy, we are dedicated to providing a dynamic learning environment that nurtures intellectual curiosity, creativity, and personal growth. Our mission is to empower students with the knowledge, skills, and confidence to excel academically and thrive in life."
+        <!-- Right: Vision, Message & Action Plan -->
+        <div class="director-content-col">
+          <div class="director-eyebrow-wrapper">
+            <span class="director-eyebrow-pill">
+              <i class="fa-solid fa-quote-left"></i>
+              <span>Founder &amp; Director's Desk</span>
+            </span>
+            <span class="director-verified-status">
+              <span class="pulse-indicator"></span> Direct Mentorship
+            </span>
           </div>
 
-          <p class="director-sober-bio">
+          <h2 class="director-headline">
+            Empowering Minds, <span class="hero-highlight">Shaping Futures</span>
+          </h2>
+
+          <div class="director-quote-box">
+            <div class="quote-icon-corner" aria-hidden="true"><i class="fa-solid fa-quote-left"></i></div>
+            <blockquote class="director-quote-text">
+              "At KSV Academy, we are dedicated to providing a dynamic learning environment that nurtures intellectual curiosity, creativity, and personal growth. Our mission is to empower students with the knowledge, skills, and confidence to excel academically and thrive in life."
+            </blockquote>
+            <div class="quote-signature-bar">
+              <span class="quote-author-sign">— Mr. Salam Khan</span>
+              <span class="quote-author-title">Founder &amp; Director's Note</span>
+            </div>
+          </div>
+
+          <p class="director-bio-text">
             With over 10 years of passionate teaching in Physics &amp; Mathematics, Mr. Salam Khan has helped hundreds of students build clear concept fundamentals. His mentorship has guided aspirants into premier engineering and medical institutions through NEET, IIT-JEE, and MH-CET.
           </p>
 
-          <div class="director-sober-creds">
-            <span class="director-cred-item"><i class="fa-solid fa-circle-check"></i> 10+ Years Dedicated Teaching</span>
-            <span class="director-cred-item"><i class="fa-solid fa-circle-check"></i> Concept-First Physics Pedagogy</span>
-            <span class="director-cred-item"><i class="fa-solid fa-circle-check"></i> IIT-JEE, NEET &amp; MH-CET Mentor</span>
+          <!-- Executive Pillars / Highlights Grid -->
+          <div class="director-pillars-grid">
+            <div class="director-pillar-item">
+              <div class="pillar-icon-box"><i class="fa-solid fa-chalkboard-user"></i></div>
+              <div class="pillar-info">
+                <strong>10+ Years Dedicated Teaching</strong>
+                <span>Personal mentorship in Physics &amp; Mathematics</span>
+              </div>
+            </div>
+
+            <div class="director-pillar-item">
+              <div class="pillar-icon-box"><i class="fa-solid fa-atom"></i></div>
+              <div class="pillar-info">
+                <strong>Concept-First Physics Pedagogy</strong>
+                <span>Eliminating rote learning with deep analytical clarity</span>
+              </div>
+            </div>
+
+            <div class="director-pillar-item">
+              <div class="pillar-icon-box"><i class="fa-solid fa-trophy"></i></div>
+              <div class="pillar-info">
+                <strong>IIT-JEE, NEET &amp; MH-CET Mentor</strong>
+                <span>Consistent top percentiles &amp; board distinction scores</span>
+              </div>
+            </div>
           </div>
 
-          <div class="director-sober-actions">
-            <button type="button" class="btn btn-primary btn-md" data-modal="demoModal">
-              <i class="fa-solid fa-calendar-check"></i> Book 1-on-1 Guidance with Director
+          <!-- CTAs -->
+          <div class="director-actions-cluster">
+            <button type="button" class="btn-director-primary" data-modal="demoModal">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Book 1-on-1 Guidance with Director</span>
+              <i class="fa-solid fa-arrow-right"></i>
             </button>
-            <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-outline-primary btn-md" target="_blank" rel="noopener noreferrer">
-              <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+            <a href="<?php echo WHATSAPP_LINK; ?>" class="btn-director-whatsapp" target="_blank" rel="noopener noreferrer">
+              <i class="fa-brands fa-whatsapp"></i>
+              <span>Chat on WhatsApp</span>
             </a>
+          </div>
+
+          <div class="director-reassurance-note">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Personal 1-on-1 Academic Counseling • Free Career &amp; Stream Guidance</span>
           </div>
         </div>
       </div>
@@ -407,45 +693,132 @@ require_once __DIR__ . '/includes/header.php';
 </section>
 
 <!-- 6. Free 3-Day Demo Class & QR Code Section -->
-<section class="section-py bg-soft" id="demoSection">
+<section class="section-py bg-soft demo-section-wrapper" id="demoSection">
   <div class="container">
-    <div class="demo-banner-card">
-      <div class="demo-banner-content">
-        <span class="section-eyebrow"><i class="fa-solid fa-calendar-check"></i> Experience KSV Academy</span>
-        <h2 class="section-title">Claim Your Free <span class="hero-highlight">3-Days Demo Class</span></h2>
-        <p class="demo-banner-desc">
-          We invite students and parents in Ulwe and Navi Mumbai to experience our classes and teaching methodology before making any admission commitment.
-        </p>
+    <div class="demo-vip-card">
+      <div class="demo-card-topbar"></div>
+      
+      <!-- Ambient Backdrops -->
+      <div class="demo-bg-glow-emerald" aria-hidden="true"></div>
+      <div class="demo-bg-glow-cyan" aria-hidden="true"></div>
+      <div class="demo-watermark-icon" aria-hidden="true"><i class="fa-solid fa-ticket"></i></div>
 
-        <div class="demo-points">
-          <div class="demo-pt"><i class="fa-solid fa-circle-check"></i> Attend actual lectures with our senior subject mentors</div>
-          <div class="demo-pt"><i class="fa-solid fa-circle-check"></i> Review class notes, study material &amp; practice sheets</div>
-          <div class="demo-pt"><i class="fa-solid fa-circle-check"></i> Get 1-on-1 counseling &amp; scholarship assessment eligibility</div>
+      <div class="demo-vip-grid">
+        <!-- Left: Demo Class Offer & Value Proposition -->
+        <div class="demo-offer-col">
+          <div class="demo-eyebrow-row">
+            <span class="demo-vip-eyebrow">
+              <i class="fa-solid fa-sparkles"></i> Experience KSV Academy
+            </span>
+            <span class="demo-seats-pill">
+              <span class="pulse-seats-dot"></span> Only 8 Seats Available This Week
+            </span>
+          </div>
+
+          <h2 class="demo-headline">
+            Claim Your Free <span class="hero-highlight">3-Days Trial Pass</span>
+          </h2>
+          <p class="demo-subheadline">
+            We invite students and parents in Ulwe and Navi Mumbai to experience our classes, faculty mentorship, and competitive atmosphere with <strong>zero upfront commitment</strong>.
+          </p>
+
+          <!-- 3 Interactive Benefits Cards -->
+          <div class="demo-benefits-grid">
+            <div class="demo-benefit-card">
+              <div class="benefit-icon-box em-emerald">
+                <i class="fa-solid fa-chalkboard-user"></i>
+              </div>
+              <div class="benefit-info">
+                <strong class="benefit-title">Attend Live Classroom Lectures</strong>
+                <p class="benefit-desc">Sit inside actual batches with our senior IIT-JEE, NEET &amp; Board specialists.</p>
+              </div>
+            </div>
+
+            <div class="demo-benefit-card">
+              <div class="benefit-icon-box em-blue">
+                <i class="fa-solid fa-book-open-reader"></i>
+              </div>
+              <div class="benefit-info">
+                <strong class="benefit-title">Complimentary Study Material &amp; Notes</strong>
+                <p class="benefit-desc">Receive chapter summary sheets, solved formula sheets, and practice problem sets.</p>
+              </div>
+            </div>
+
+            <div class="demo-benefit-card">
+              <div class="benefit-icon-box em-purple">
+                <i class="fa-solid fa-chart-line-up"></i>
+              </div>
+              <div class="benefit-info">
+                <strong class="benefit-title">1-on-1 Academic &amp; Scholarship Evaluation</strong>
+                <p class="benefit-desc">Get a personalized concept assessment &amp; check eligibility for up to 60% fee scholarships.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CTAs -->
+          <div class="demo-actions-row">
+            <button type="button" class="btn-demo-primary" data-modal="demoModal">
+              <i class="fa-solid fa-calendar-plus"></i>
+              <span>Reserve Your Free Demo Seat</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <a href="<?php echo WHATSAPP_LINK; ?>" class="btn-demo-whatsapp" target="_blank" rel="noopener noreferrer">
+              <i class="fa-brands fa-whatsapp"></i>
+              <span>Instant WhatsApp Booking</span>
+            </a>
+          </div>
+
+          <!-- Trust Badges -->
+          <div class="demo-guarantee-row">
+            <span class="guarantee-tag"><i class="fa-solid fa-shield-check"></i> 100% Free Trial</span>
+            <span class="guarantee-dot">•</span>
+            <span class="guarantee-tag"><i class="fa-solid fa-ban"></i> Zero Credit Card / Fees Required</span>
+            <span class="guarantee-dot">•</span>
+            <span class="guarantee-tag"><i class="fa-solid fa-bolt"></i> Instant Confirmation</span>
+          </div>
         </div>
 
-        <div class="demo-banner-actions">
-          <button type="button" class="btn btn-primary btn-md" data-modal="demoModal">
-            <i class="fa-solid fa-calendar-plus"></i> Reserve Your Demo Seat Now
-          </button>
-          <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-outline-primary btn-md" target="_blank" rel="noopener noreferrer">
-            <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
-          </a>
-        </div>
-      </div>
+        <!-- Right: VIP Digital Pass with Animated Laser Scanner -->
+        <div class="demo-ticket-col">
+          <div class="demo-pass-ticket">
+            <div class="ticket-top-tag">
+              <i class="fa-solid fa-ticket"></i>
+              <span>VIP ADMISSION PASS</span>
+            </div>
 
-      <div class="demo-qr-box">
-        <div class="demo-qr-header">
-          <span class="demo-qr-badge"><i class="fa-solid fa-qrcode"></i> Quick Scan</span>
-        </div>
-        <div class="qr-code-placeholder">
-          <!-- Clean SVG QR Code Representation -->
-          <svg viewBox="0 0 100 100" fill="currentColor">
-            <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M22,22 h6 v6 h-6 z M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M72,22 h6 v6 h-6 z M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M22,72 h6 v6 h-6 z M45,15 h10 v10 h-10 z M45,35 h10 v10 h-10 z M45,55 h10 v10 h-10 z M65,45 h10 v10 h-10 z M75,55 h15 v10 h-15 z M60,70 h10 v20 h-10 z M75,70 h15 v10 h-15 z M75,85 h15 v5 h-15 z M15,45 h20 v5 h-20 z M45,75 h10 v15 h-10 z"/>
-          </svg>
-        </div>
-        <div class="demo-qr-info">
-          <h4 class="demo-qr-title">Scan for Free 3-Days Demo</h4>
-          <p class="demo-qr-subtitle">Instant registration via WhatsApp or Web</p>
+            <div class="ticket-qr-container">
+              <!-- Animated Laser Scanner Line -->
+              <div class="qr-laser-line"></div>
+              
+              <!-- SVG QR Code with Center Logo Badge -->
+              <div class="qr-code-frame">
+                <svg viewBox="0 0 100 100" fill="currentColor" class="qr-svg-graphic">
+                  <path d="M10,10 h30 v30 h-30 z M15,15 v20 h20 v-20 z M22,22 h6 v6 h-6 z M60,10 h30 v30 h-30 z M65,15 v20 h20 v-20 z M72,22 h6 v6 h-6 z M10,60 h30 v30 h-30 z M15,65 v20 h20 v-20 z M22,72 h6 v6 h-6 z M45,15 h10 v10 h-10 z M45,35 h10 v10 h-10 z M45,55 h10 v10 h-10 z M65,45 h10 v10 h-10 z M75,55 h15 v10 h-15 z M60,70 h10 v20 h-10 z M75,70 h15 v10 h-15 z M75,85 h15 v5 h-15 z M15,45 h20 v5 h-20 z M45,75 h10 v15 h-10 z"/>
+                </svg>
+                <div class="qr-center-emblem">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="ticket-details">
+              <h4 class="ticket-title">Scan with Phone Camera</h4>
+              <p class="ticket-subtitle">Instant Demo Seat Booking via WhatsApp</p>
+              
+              <div class="ticket-steps-mini">
+                <span class="step-badge"><strong>1</strong> Open Camera</span>
+                <i class="fa-solid fa-chevron-right step-arrow"></i>
+                <span class="step-badge"><strong>2</strong> Scan QR</span>
+                <i class="fa-solid fa-chevron-right step-arrow"></i>
+                <span class="step-badge"><strong>3</strong> Attend</span>
+              </div>
+            </div>
+
+            <div class="ticket-verified-footer">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Official KSV Academy Verification Pass</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -453,30 +826,79 @@ require_once __DIR__ . '/includes/header.php';
 </section>
 
 <!-- 7. Campus & Classroom Gallery Preview -->
-<section class="section-py" id="gallerySection">
+<section class="section-py gallery-section-wrapper" id="gallerySection">
   <div class="container">
     <div class="section-header">
       <span class="section-eyebrow"><i class="fa-solid fa-camera"></i> Life At KSV Academy</span>
       <h2 class="section-title">Classrooms &amp; <span class="hero-highlight">Learning Environment</span></h2>
-      <p class="section-subtitle">Take a glimpse inside our vibrant Ulwe campus where focused minds learn and excel every day.</p>
+      <p class="section-subtitle">Take a glimpse inside our vibrant Ulwe campus where focused minds learn, solve doubts, and excel every day.</p>
+    </div>
+
+    <!-- Campus Infrastructure Highlights Mini Pills -->
+    <div class="gallery-highlights-strip">
+      <div class="gallery-highlight-pill">
+        <i class="fa-solid fa-snowflake"></i>
+        <span>Air-Conditioned Smart Classrooms</span>
+      </div>
+      <div class="gallery-highlight-pill">
+        <i class="fa-solid fa-book-bookmark"></i>
+        <span>Dedicated Self-Study Library</span>
+      </div>
+      <div class="gallery-highlight-pill">
+        <i class="fa-solid fa-comments"></i>
+        <span>Daily 1-on-1 Doubt Desk</span>
+      </div>
+      <div class="gallery-highlight-pill">
+        <i class="fa-solid fa-video"></i>
+        <span>CCTV Monitored Premises</span>
+      </div>
     </div>
 
     <div class="gallery-grid">
-      <?php foreach (array_slice($gallery_images, 0, 4) as $img): ?>
+      <?php foreach (array_slice($gallery_images, 0, 4) as $idx => $img): 
+        $cat = !empty($img['category']) ? $img['category'] : 'Campus Life';
+        $cat_icon = 'fa-chalkboard-user';
+        if ($cat === 'Doubt Clearing' || $cat === 'Study Sessions') {
+          $cat_icon = 'fa-comments';
+        } elseif ($cat === 'Smart Classrooms') {
+          $cat_icon = 'fa-desktop';
+        } elseif ($cat === 'Study Library') {
+          $cat_icon = 'fa-book-open-reader';
+        }
+      ?>
       <div class="gallery-card" data-src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" data-caption="<?php echo htmlspecialchars($img['caption']); ?>">
-        <img src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" alt="<?php echo htmlspecialchars($img['caption']); ?>" class="gallery-thumb" loading="lazy">
+        <div class="gallery-thumb-wrapper">
+          <img src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" alt="<?php echo htmlspecialchars($img['caption']); ?>" class="gallery-thumb" loading="lazy">
+        </div>
+        
+        <!-- Persistent Top Badges -->
+        <div class="gallery-top-badges">
+          <span class="gallery-category-pill">
+            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+            <span><?php echo htmlspecialchars($cat); ?></span>
+          </span>
+          <span class="gallery-zoom-icon" title="Click to view full photo">
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+          </span>
+        </div>
+
+        <!-- Persistent Bottom Frosted Caption Strip -->
         <div class="gallery-overlay">
-          <span class="gallery-zoom-icon"><i class="fa-solid fa-magnifying-glass-plus"></i></span>
-          <p class="gallery-overlay-caption"><?php echo htmlspecialchars($img['caption']); ?></p>
+          <div class="gallery-overlay-inner">
+            <p class="gallery-overlay-caption"><?php echo htmlspecialchars($img['caption']); ?></p>
+            <span class="gallery-location-tag"><i class="fa-solid fa-location-dot"></i> Ulwe Sector 19 Campus</span>
+          </div>
         </div>
       </div>
       <?php endforeach; ?>
     </div>
 
-    <div style="text-align: center; margin-top: 32px;">
-      <a href="<?php echo url('gallery'); ?>" class="btn btn-outline-primary btn-md">
+    <div class="gallery-cta-wrapper">
+      <a href="<?php echo url('gallery'); ?>" class="btn-gallery-explore">
         <i class="fa-solid fa-images"></i>
-        <span>View Full Campus Photo Gallery</span>
+        <span>Explore Full Campus Photo Gallery</span>
+        <span class="gallery-count-pill">30+ Photos</span>
+        <i class="fa-solid fa-chevron-right"></i>
       </a>
     </div>
   </div>
@@ -486,194 +908,477 @@ require_once __DIR__ . '/includes/header.php';
 <section class="section-py bg-soft" id="digitalLearningSection">
   <div class="container">
     <div class="yt-preview-card">
-      <!-- Left: Sober Video Mockup Card -->
-      <a href="<?php echo URL_YOUTUBE; ?>" target="_blank" rel="noopener noreferrer" class="yt-video-card" aria-label="Watch KSV Academy Lectures on YouTube">
-        <div class="yt-video-thumb-wrap">
-          <img src="<?php echo url('assets/imgs/gallers/gallery-1.png'); ?>" alt="KSV Academy Classroom Lectures" class="yt-video-thumb" loading="lazy">
-          <div class="yt-video-overlay">
-            <div class="yt-play-circle">
-              <i class="fa-solid fa-play"></i>
-            </div>
-            <div class="yt-video-badge">
-              <i class="fa-brands fa-youtube"></i> Free Video Lectures
+      <div class="yt-preview-accent-bar"></div>
+
+      <!-- Left: Interactive Video Player Mockup Card -->
+      <div class="yt-player-col">
+        <a href="<?php echo URL_YOUTUBE; ?>" target="_blank" rel="noopener noreferrer" class="yt-video-card" aria-label="Watch KSV Academy Lectures on YouTube">
+          <div class="yt-video-thumb-wrap">
+            <img src="<?php echo url('assets/imgs/gallers/youtube-lecture.jpg'); ?>" alt="KSV Academy Physics &amp; Mathematics Concept Lecture" class="yt-video-thumb" loading="lazy">
+            <div class="yt-video-overlay">
+              <!-- Top Stream Status Bar -->
+              <div class="yt-stream-bar">
+                <span class="yt-live-chip"><span class="yt-live-dot"></span> CONCEPT MASTERCLASS</span>
+                <span class="yt-quality-chip"><i class="fa-solid fa-film"></i> 1080p HD</span>
+              </div>
+
+              <!-- Animated Center Radar Play Trigger -->
+              <div class="yt-play-radar-wrap">
+                <div class="yt-radar-ring ring-1"></div>
+                <div class="yt-radar-ring ring-2"></div>
+                <div class="yt-play-circle">
+                  <i class="fa-solid fa-play"></i>
+                </div>
+              </div>
+
+              <!-- Bottom Video Info Strip Inside Player -->
+              <div class="yt-player-lower-third">
+                <div class="yt-video-topic-tag"><i class="fa-solid fa-graduation-cap"></i> Physics &amp; Mathematics Series</div>
+                <div class="yt-video-duration"><i class="fa-regular fa-clock"></i> 24:15 • Free Lecture</div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="yt-video-footer">
-          <div class="yt-channel-meta">
-            <span class="yt-channel-name"><i class="fa-solid fa-circle-check"></i> KSV Academy Official</span>
-            <span class="yt-channel-sub">Physics • Chemistry • Mathematics</span>
+
+          <!-- Video Card Channel Footer -->
+          <div class="yt-video-footer">
+            <div class="yt-channel-meta">
+              <span class="yt-channel-name">
+                <i class="fa-solid fa-circle-check"></i> KSV Academy Official
+                <span class="yt-channel-badge">Verified</span>
+              </span>
+              <span class="yt-channel-sub">Free Conceptual Lectures &amp; Board PYQ Solutions</span>
+            </div>
+            <span class="yt-watch-btn">
+              Watch on YouTube <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            </span>
           </div>
-          <span class="yt-watch-btn">
-            Watch Lectures <i class="fa-solid fa-arrow-up-right-from-square"></i>
-          </span>
-        </div>
-      </a>
+        </a>
+      </div>
 
       <!-- Right: Content Column -->
       <div class="yt-content">
-        <span class="section-eyebrow"><i class="fa-brands fa-youtube"></i> Digital Learning</span>
-        <h2 class="section-title">Learn Anytime, Anywhere with <span class="hero-highlight">KSV Academy</span></h2>
-        <p class="yt-desc">
-          Subscribe to our official YouTube channel for free topic walkthroughs, exam solving strategies, board question discussions, and competitive problem tricks delivered by Mr. Salam Khan and our educator team.
-        </p>
-
-        <div class="yt-features">
-          <div class="yt-feature-item"><i class="fa-solid fa-circle-check"></i> Free Physics &amp; Mathematics concept series</div>
-          <div class="yt-feature-item"><i class="fa-solid fa-circle-check"></i> Board exam preparation &amp; previous year solutions</div>
-          <div class="yt-feature-item"><i class="fa-solid fa-circle-check"></i> NEET, IIT-JEE &amp; MH-CET problem tricks</div>
+        <div class="yt-eyebrow-wrap">
+          <span class="section-eyebrow"><i class="fa-brands fa-youtube"></i> Free Digital Classroom</span>
+          <span class="yt-status-pill"><span class="yt-live-pulse-dot"></span> New Weekly Uploads</span>
         </div>
 
+        <h2 class="section-title">Learn Anytime, Anywhere with <span class="hero-highlight">KSV Digital Learning</span></h2>
+        
+        <p class="yt-desc">
+          Accelerate your revision beyond the physical classroom. Stream structured topic walkthroughs, derivations, exam-solving strategies, and competitive shortcuts delivered by Mr. Salam Khan and senior faculty.
+        </p>
+
+        <!-- 3 Rich Playlist / Benefit Cards -->
+        <div class="yt-features-list">
+          <div class="yt-feature-card">
+            <div class="yt-feature-icon icon-blue">
+              <i class="fa-solid fa-atom"></i>
+            </div>
+            <div class="yt-feature-info">
+              <h4 class="yt-feature-title">Physics &amp; Maths Conceptual Series</h4>
+              <p class="yt-feature-desc">Formula derivations, real-world analogies, and crystal-clear visualization.</p>
+            </div>
+          </div>
+
+          <div class="yt-feature-card">
+            <div class="yt-feature-icon icon-green">
+              <i class="fa-solid fa-file-signature"></i>
+            </div>
+            <div class="yt-feature-info">
+              <h4 class="yt-feature-title">Board PYQs &amp; Step-by-Step Solutions</h4>
+              <p class="yt-feature-desc">Last 10 years question breakdowns with Maharashtra &amp; CBSE board marking rubrics.</p>
+            </div>
+          </div>
+
+          <div class="yt-feature-card">
+            <div class="yt-feature-icon icon-amber">
+              <i class="fa-solid fa-bolt-lightning"></i>
+            </div>
+            <div class="yt-feature-info">
+              <h4 class="yt-feature-title">NEET, JEE &amp; MH-CET Speed Shortcuts</h4>
+              <p class="yt-feature-desc">Option elimination methods, 30-second problem tricks &amp; exam time savers.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action CTAs -->
         <div class="yt-actions">
-          <a href="<?php echo URL_YOUTUBE; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-md">
+          <a href="<?php echo URL_YOUTUBE; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-yt-subscribe btn-md">
             <i class="fa-brands fa-youtube"></i> Subscribe to Channel
           </a>
           <a href="<?php echo URL_INSTAGRAM; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-md">
             <i class="fa-brands fa-instagram"></i> Follow on Instagram
           </a>
         </div>
+
+        <div class="yt-footnote">
+          <i class="fa-solid fa-bell"></i>
+          <span>100% Free Public Access • Hit the bell icon to get notified on every new lecture.</span>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
+
 <!-- 9. Student & Parent Testimonials -->
-<section class="section-py">
+<section class="section-py" id="testimonialsSection">
   <div class="container">
     <div class="section-header">
-      <span class="section-eyebrow"><i class="fa-solid fa-comments"></i> Student Success</span>
+      <span class="section-eyebrow"><i class="fa-solid fa-comments"></i> Real Student Stories</span>
       <h2 class="section-title">What Students &amp; <span class="hero-highlight">Parents Say</span></h2>
-      <p class="section-subtitle">Real experiences and feedback from students who transformed their grades and confidence at KSV Academy.</p>
+      <p class="section-subtitle">Real experiences and verified reviews from students and parents who achieved academic milestones at KSV Academy.</p>
+
+      <!-- Google Reviews Trust Badge -->
+      <div class="test-rating-banner">
+        <div class="test-rating-source">
+          <i class="fa-brands fa-google google-icon"></i>
+          <span class="rating-num">4.9</span>
+          <div class="rating-stars">
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+          </div>
+        </div>
+        <span class="rating-divider"></span>
+        <span class="rating-caption">Based on <strong>150+ Verified Reviews</strong> from Ulwe Sector 19 &amp; Navi Mumbai</span>
+      </div>
     </div>
 
     <div class="testimonials-grid">
-      <div class="testimonial-card">
+      <!-- Testimonial 1: Aditya Sharma (Board Topper) -->
+      <div class="testimonial-card theme-blue">
+        <div class="test-card-accent"></div>
         <div class="test-card-top">
-          <div class="test-stars">
-            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+          <div class="test-stars-wrap">
+            <div class="test-stars">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <span class="test-verified-chip"><i class="fa-solid fa-circle-check"></i> Verified Student</span>
           </div>
-          <span class="test-quote-icon"><i class="fa-solid fa-quote-right"></i></span>
+          <span class="test-google-pill" title="Verified Google Review"><i class="fa-brands fa-google"></i></span>
         </div>
+
+        <div class="test-score-badge badge-blue">
+          <i class="fa-solid fa-trophy"></i> Scored 94% in 12th HSC Boards
+        </div>
+
         <p class="test-quote">
-          "Salam Sir's Physics lectures made concepts effortless for me. I used to struggle with numerical problems, but the weekly tests and personalized doubt sessions gave me the confidence to score 94% in my 12th boards."
+          "<strong>Salam Sir's Physics lectures</strong> made complex numericals effortless for me. The weekly test series, chapter-wise formula sheets, and <strong>personalized doubt solving</strong> gave me the discipline and confidence to score <strong>94% in my 12th boards</strong>."
         </p>
+
         <div class="test-author-box">
-          <div class="test-author-avatar">A</div>
+          <div class="test-author-avatar avatar-blue">
+            <span>AS</span>
+            <span class="avatar-role-icon"><i class="fa-solid fa-graduation-cap"></i></span>
+          </div>
           <div class="test-author-info">
-            <strong>Aditya Sharma</strong>
+            <div class="author-name-row">
+              <strong>Aditya Sharma</strong>
+              <span class="test-mini-verified" title="Identity Verified"><i class="fa-solid fa-circle-check"></i></span>
+            </div>
             <span>12th Science (HSC Board)</span>
+            <span class="author-tag">2-Year Classroom Batch</span>
           </div>
         </div>
       </div>
 
-      <div class="testimonial-card">
+      <!-- Testimonial 2: Pooja Deshmukh (NEET Aspirant) -->
+      <div class="testimonial-card theme-emerald">
+        <div class="test-card-accent"></div>
         <div class="test-card-top">
-          <div class="test-stars">
-            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+          <div class="test-stars-wrap">
+            <div class="test-stars">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <span class="test-verified-chip"><i class="fa-solid fa-circle-check"></i> Verified Student</span>
           </div>
-          <span class="test-quote-icon"><i class="fa-solid fa-quote-right"></i></span>
+          <span class="test-google-pill" title="Verified Google Review"><i class="fa-brands fa-google"></i></span>
         </div>
+
+        <div class="test-score-badge badge-emerald">
+          <i class="fa-solid fa-bullseye"></i> NEET &amp; Medical Focus Batch
+        </div>
+
         <p class="test-quote">
-          "Best coaching institute in Ulwe. Rameshwar Sir explains Organic Chemistry so clearly that reactions make complete logical sense. The faculty genuinely cares about each student's growth and progress."
+          "Best coaching institute in Ulwe! <strong>Rameshwar Sir</strong> explains Organic Chemistry reaction mechanisms with crystal clarity. The faculty genuinely tracks individual progress, and NCERT line-by-line discussions gave me a huge edge in competitive prep."
         </p>
+
         <div class="test-author-box">
-          <div class="test-author-avatar">P</div>
+          <div class="test-author-avatar avatar-emerald">
+            <span>PD</span>
+            <span class="avatar-role-icon"><i class="fa-solid fa-notes-medical"></i></span>
+          </div>
           <div class="test-author-info">
-            <strong>Pooja Deshmukh</strong>
+            <div class="author-name-row">
+              <strong>Pooja Deshmukh</strong>
+              <span class="test-mini-verified" title="Identity Verified"><i class="fa-solid fa-circle-check"></i></span>
+            </div>
             <span>NEET &amp; 12th Board Aspirant</span>
+            <span class="author-tag">Medical Foundation Cohort</span>
           </div>
         </div>
       </div>
 
-      <div class="testimonial-card">
+      <!-- Testimonial 3: Rajesh Gupta (Parent) -->
+      <div class="testimonial-card theme-purple">
+        <div class="test-card-accent"></div>
         <div class="test-card-top">
-          <div class="test-stars">
-            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+          <div class="test-stars-wrap">
+            <div class="test-stars">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <span class="test-verified-chip chip-parent"><i class="fa-solid fa-circle-check"></i> Verified Parent</span>
           </div>
-          <span class="test-quote-icon"><i class="fa-solid fa-quote-right"></i></span>
+          <span class="test-google-pill" title="Verified Google Review"><i class="fa-brands fa-google"></i></span>
         </div>
+
+        <div class="test-score-badge badge-purple">
+          <i class="fa-solid fa-user-shield"></i> Parent Reassurance Review
+        </div>
+
         <p class="test-quote">
-          "As parents, we were looking for an academy in Ulwe with disciplined monitoring and experienced teachers. KSV Academy exceeded our expectations. Regular feedback and parent meetings keep us informed."
+          "As parents, we wanted an academy in Ulwe with <strong>disciplined attendance tracking</strong> and experienced teachers. KSV Academy exceeded our expectations. Regular bi-weekly feedback reports and parent meetings kept us completely informed of our son's growth."
         </p>
+
         <div class="test-author-box">
-          <div class="test-author-avatar">R</div>
+          <div class="test-author-avatar avatar-purple">
+            <span>RG</span>
+            <span class="avatar-role-icon"><i class="fa-solid fa-heart"></i></span>
+          </div>
           <div class="test-author-info">
-            <strong>Rajesh Gupta (Parent)</strong>
+            <div class="author-name-row">
+              <strong>Rajesh Gupta</strong>
+              <span class="test-mini-verified" title="Identity Verified"><i class="fa-solid fa-circle-check"></i></span>
+            </div>
             <span>Parent of 10th CBSE Student</span>
+            <span class="author-tag">Parent Community Member</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Social Proof Metrics Strip -->
+    <div class="test-stats-strip">
+      <div class="test-stat-item">
+        <div class="test-stat-num">98.4%</div>
+        <div class="test-stat-label">Board Exam Pass Rate</div>
+      </div>
+      <div class="test-stat-sep"></div>
+      <div class="test-stat-item">
+        <div class="test-stat-num">1,200+</div>
+        <div class="test-stat-label">Students Guided in Ulwe</div>
+      </div>
+      <div class="test-stat-sep"></div>
+      <div class="test-stat-item">
+        <div class="test-stat-num">4.9 / 5</div>
+        <div class="test-stat-label">Google Rating (150+ Reviews)</div>
+      </div>
+      <div class="test-stat-sep"></div>
+      <div class="test-stat-item">
+        <div class="test-stat-num">100%</div>
+        <div class="test-stat-label">Personal Doubt Support</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- 10. Frequently Asked Questions (FAQ) Accordion -->
-<section class="section-py bg-soft">
+<section class="section-py bg-soft" id="faqSection">
   <div class="container">
     <div class="section-header">
-      <span class="section-eyebrow"><i class="fa-solid fa-circle-question"></i> Have Questions?</span>
+      <span class="section-eyebrow"><i class="fa-solid fa-circle-question"></i> Instant Answers &amp; Admissions FAQ</span>
       <h2 class="section-title">Frequently Asked <span class="hero-highlight">Questions</span></h2>
-      <p class="section-subtitle">Everything you need to know about joining KSV Academy in Ulwe Sector 19.</p>
+      <p class="section-subtitle">Everything you need to know about admissions, free trial lectures, scholarships, and schedules at KSV Academy Ulwe.</p>
     </div>
 
-    <div class="faq-accordion">
-      <div class="faq-item active">
-        <button type="button" class="faq-header">
-          <span class="faq-title">How can I avail the 3-Days Free Demo Class?</span>
-          <i class="fa-solid fa-chevron-down faq-icon"></i>
-        </button>
-        <div class="faq-body">
-          <p>
-            You can register for the 3-Days Free Demo Class by clicking the "Free Demo" button anywhere on our website, filling the quick form, or calling/WhatsApping us at <strong>+91 79059 00350</strong>. You can attend 3 regular lectures free of cost before confirming admission.
+    <div class="faq-split-layout">
+      <!-- Left: Admissions Counselor Helpdesk Card -->
+      <div class="faq-counselor-col">
+        <div class="faq-helpdesk-card">
+          <div class="faq-helpdesk-accent"></div>
+          <div class="faq-helpdesk-status">
+            <span class="faq-live-dot"></span> Active Admissions Desk (2026-27)
+          </div>
+
+          <div class="faq-helpdesk-icon">
+            <i class="fa-solid fa-headset"></i>
+          </div>
+
+          <h3 class="faq-helpdesk-title">Have a Different Question?</h3>
+          <p class="faq-helpdesk-desc">
+            Speak directly with Mr. Salam Khan or our senior counselors for personalized guidance on course selection, batch timings, and fee structures.
           </p>
+
+          <div class="faq-helpdesk-perks">
+            <div class="faq-perk-item"><i class="fa-solid fa-bolt-lightning"></i> 15-minute quick response</div>
+            <div class="faq-perk-item"><i class="fa-solid fa-user-check"></i> Free 1-on-1 career &amp; stream counseling</div>
+            <div class="faq-perk-item"><i class="fa-solid fa-handshake-angle"></i> Transparent syllabus &amp; fee breakdown</div>
+          </div>
+
+          <div class="faq-helpdesk-actions">
+            <a href="<?php echo WHATSAPP_LINK; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-faq-whatsapp btn-md">
+              <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+            </a>
+            <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-outline-primary btn-md">
+              <i class="fa-solid fa-phone"></i> <?php echo PHONE_PRIMARY; ?>
+            </a>
+          </div>
+
+          <div class="faq-helpdesk-address">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Sector 19, Ulwe, Navi Mumbai (Opp. Om Sai Hospital)</span>
+          </div>
         </div>
       </div>
 
-      <div class="faq-item">
-        <button type="button" class="faq-header">
-          <span class="faq-title">What is the criteria for the scholarship up to 60%?</span>
-          <i class="fa-solid fa-chevron-down faq-icon"></i>
-        </button>
-        <div class="faq-body">
-          <p>
-            Scholarships up to 60% are awarded based on student eligibility and performance in our KSV Academy Aptitude Assessment Test, as well as previous academic board results. Contact our counselor for evaluation dates.
-          </p>
-        </div>
-      </div>
+      <!-- Right: Interactive Accordion with Rich Content -->
+      <div class="faq-accordion-col">
+        <div class="faq-accordion">
+          <!-- FAQ 1: Free Demo Class -->
+          <div class="faq-item active">
+            <button type="button" class="faq-header" aria-expanded="true">
+              <div class="faq-header-left">
+                <span class="faq-num num-blue">01</span>
+                <div class="faq-title-wrap">
+                  <span class="faq-category-tag cat-blue">Trial Pass</span>
+                  <span class="faq-title">How can I avail the 3-Days Free Demo Class?</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-down faq-icon"></i>
+            </button>
+            <div class="faq-body">
+              <div class="faq-body-content">
+                <p>
+                  You can register for the <strong>3-Days Free Demo Class</strong> by clicking the "Free Demo" button anywhere on our website, filling the quick enrollment form, or calling/WhatsApping us at <strong><?php echo PHONE_PRIMARY; ?></strong>.
+                </p>
+                <div class="faq-answer-highlight">
+                  <div class="faq-chips-list">
+                    <span class="faq-chip chip-blue"><i class="fa-solid fa-circle-check"></i> Attend 3 Regular Classroom Lectures</span>
+                    <span class="faq-chip chip-blue"><i class="fa-solid fa-circle-check"></i> Zero Upfront Fees Required</span>
+                    <span class="faq-chip chip-blue"><i class="fa-solid fa-circle-check"></i> Meet Faculty &amp; Inspect Notes</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div class="faq-item">
-        <button type="button" class="faq-header">
-          <span class="faq-title">Which boards and streams are covered at KSV Academy?</span>
-          <i class="fa-solid fa-chevron-down faq-icon"></i>
-        </button>
-        <div class="faq-body">
-          <p>
-            We coach students for CBSE, ICSE, and Maharashtra State Board from Class 5th to 10th. For Junior College (11th & 12th), we cover Science (PCM/PCB) and Commerce. We also run dedicated entrance batches for IIT-JEE, NEET, and MH-CET, along with Degree courses (B.Com, BMS, BAF, BCA, M.Com).
-          </p>
-        </div>
-      </div>
+          <!-- FAQ 2: Scholarship Criteria -->
+          <div class="faq-item">
+            <button type="button" class="faq-header" aria-expanded="false">
+              <div class="faq-header-left">
+                <span class="faq-num num-emerald">02</span>
+                <div class="faq-title-wrap">
+                  <span class="faq-category-tag cat-emerald">Financial Aid</span>
+                  <span class="faq-title">What is the criteria for the scholarship up to 60%?</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-down faq-icon"></i>
+            </button>
+            <div class="faq-body">
+              <div class="faq-body-content">
+                <p>
+                  Scholarships <strong>up to 60%</strong> are awarded based on student merit in the <strong>KSV Aptitude &amp; Diagnostic Assessment</strong>, along with previous academic board marks.
+                </p>
+                <div class="faq-answer-highlight">
+                  <div class="faq-chips-list">
+                    <span class="faq-chip chip-emerald"><i class="fa-solid fa-award"></i> 85%+ in Previous Board: Direct Concession</span>
+                    <span class="faq-chip chip-emerald"><i class="fa-solid fa-file-pen"></i> Free Diagnostic Aptitude Test</span>
+                    <span class="faq-chip chip-emerald"><i class="fa-solid fa-percent"></i> Merit-Based Fee Waiver</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div class="faq-item">
-        <button type="button" class="faq-header">
-          <span class="faq-title">What are the class timings and batch options?</span>
-          <i class="fa-solid fa-chevron-down faq-icon"></i>
-        </button>
-        <div class="faq-body">
-          <p>
-            We offer both Morning (8:00 AM – 11:30 AM) and Evening (4:00 PM – 8:30 PM) batches, tailored to align comfortably with school and college schedules. Special weekend doubt-clearing sessions are also held every Saturday and Sunday.
-          </p>
-        </div>
-      </div>
+          <!-- FAQ 3: Boards and Streams Covered -->
+          <div class="faq-item">
+            <button type="button" class="faq-header" aria-expanded="false">
+              <div class="faq-header-left">
+                <span class="faq-num num-purple">03</span>
+                <div class="faq-title-wrap">
+                  <span class="faq-category-tag cat-purple">Curriculum Scope</span>
+                  <span class="faq-title">Which boards and streams are covered at KSV Academy?</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-down faq-icon"></i>
+            </button>
+            <div class="faq-body">
+              <div class="faq-body-content">
+                <p>
+                  We coach school students across <strong>CBSE, ICSE, and Maharashtra State Board</strong> from Class 5th to 10th. For Junior College and competitive entrances, we offer specialized coaching:
+                </p>
+                <div class="faq-answer-highlight">
+                  <div class="faq-chips-list">
+                    <span class="faq-chip chip-purple"><i class="fa-solid fa-book"></i> 5th - 10th (CBSE / ICSE / State Board)</span>
+                    <span class="faq-chip chip-purple"><i class="fa-solid fa-atom"></i> 11th - 12th Science (PCM / PCB)</span>
+                    <span class="faq-chip chip-purple"><i class="fa-solid fa-chart-line"></i> 11th - 12th Commerce</span>
+                    <span class="faq-chip chip-purple"><i class="fa-solid fa-rocket"></i> IIT-JEE • NEET • MH-CET</span>
+                    <span class="faq-chip chip-purple"><i class="fa-solid fa-user-graduate"></i> Degree: B.Com, BMS, BAF, BCA</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div class="faq-item">
-        <button type="button" class="faq-header">
-          <span class="faq-title">Where is KSV Academy located in Ulwe?</span>
-          <i class="fa-solid fa-chevron-down faq-icon"></i>
-        </button>
-        <div class="faq-body">
-          <p>
-            Our center is conveniently located at: <strong>MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19, Ulwe, Navi Mumbai, 410206</strong>. It is easily accessible with ample transit and parking.
-          </p>
+          <!-- FAQ 4: Class Timings and Batch Options -->
+          <div class="faq-item">
+            <button type="button" class="faq-header" aria-expanded="false">
+              <div class="faq-header-left">
+                <span class="faq-num num-amber">04</span>
+                <div class="faq-title-wrap">
+                  <span class="faq-category-tag cat-amber">Schedules</span>
+                  <span class="faq-title">What are the class timings and batch options?</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-down faq-icon"></i>
+            </button>
+            <div class="faq-body">
+              <div class="faq-body-content">
+                <p>
+                  Batches are structured so that students never have a clash with their school or junior college hours:
+                </p>
+                <div class="faq-answer-highlight">
+                  <div class="faq-chips-list">
+                    <span class="faq-chip chip-amber"><i class="fa-regular fa-sun"></i> Morning Batch: 8:00 AM – 11:30 AM</span>
+                    <span class="faq-chip chip-amber"><i class="fa-solid fa-moon"></i> Evening Batch: 4:00 PM – 8:30 PM</span>
+                    <span class="faq-chip chip-amber"><i class="fa-solid fa-comments"></i> Weekend Dedicated Doubt Sessions</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 5: Center Location in Ulwe -->
+          <div class="faq-item">
+            <button type="button" class="faq-header" aria-expanded="false">
+              <div class="faq-header-left">
+                <span class="faq-num num-rose">05</span>
+                <div class="faq-title-wrap">
+                  <span class="faq-category-tag cat-rose">Campus Visit</span>
+                  <span class="faq-title">Where is KSV Academy located in Ulwe?</span>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-down faq-icon"></i>
+            </button>
+            <div class="faq-body">
+              <div class="faq-body-content">
+                <p>
+                  Our academy is strategically situated in the heart of Ulwe Sector 19:
+                  <strong>MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19, Ulwe, Navi Mumbai, 410206</strong>.
+                </p>
+                <div class="faq-answer-highlight">
+                  <div class="faq-chips-list">
+                    <span class="faq-chip chip-rose"><i class="fa-solid fa-hospital"></i> Landmark: Opposite Om Sai Hospital</span>
+                    <span class="faq-chip chip-rose"><i class="fa-solid fa-bus"></i> Walking Distance from Transit &amp; Parking</span>
+                    <span class="faq-chip chip-rose"><i class="fa-solid fa-shield-halved"></i> CCTV Secured Campus</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

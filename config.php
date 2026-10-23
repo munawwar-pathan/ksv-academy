@@ -299,28 +299,28 @@ $courses = [
 $gallery_images = [
     [
         'file' => 'gallery-1.png',
-        'caption' => 'Interactive Classroom Session at KSV Academy Ulwe',
-        'category' => 'Classrooms'
+        'caption' => 'Interactive Classroom Session with Mr. Salam Khan',
+        'category' => 'Classroom Batches'
     ],
     [
         'file' => 'gallery-7.png',
-        'caption' => 'Focused Concept Problem Solving & Mentorship',
-        'category' => 'Study Sessions'
+        'caption' => 'One-on-One Concept Problem Solving & Doubt Mentorship',
+        'category' => 'Doubt Clearing'
     ],
     [
-        'file' => 'gallery-2.png',
-        'caption' => 'Doubt Clearing & Personalized Attention Session',
-        'category' => 'Classrooms'
+        'file' => 'gallery-3.png',
+        'caption' => 'High School Science Lecture & Physics Fundamentals',
+        'category' => 'Smart Classrooms'
+    ],
+    [
+        'file' => 'gallery-4.png',
+        'caption' => 'Dedicated Self-Study Library & Reference Reading Hall',
+        'category' => 'Study Library'
     ],
     [
         'file' => 'gallery-7.png',
         'caption' => 'Dedicated Faculty Guidance & Board Preparation',
         'category' => 'Mentorship'
-    ],
-    [
-        'file' => 'gallery-7.png',
-        'caption' => 'Director Mr. Salam Khan Mentoring Science Aspirants',
-        'category' => 'Faculty'
     ],
     [
         'file' => 'gallery-8.png',
