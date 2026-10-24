@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initActiveNav();
   initReloadPromoModal();
   initPromoSlider();
+  initTopBarTicker();
 });
 
 
@@ -844,6 +845,47 @@ function initPromoSlider() {
   // Initialize
   showSlide(0);
   startAutoplay();
+}
+
+/* ==========================================================================
+   14. Top Announcement Bar Vertical Slide-Down Rotator
+   ========================================================================== */
+function initTopBarTicker() {
+  const wrapper = document.getElementById('topbarTicker');
+  if (!wrapper) return;
+  const slides = wrapper.querySelectorAll('.ticker-slide');
+  if (slides.length <= 1) return;
+
+  let currentIndex = 0;
+  let isPaused = false;
+
+  wrapper.addEventListener('mouseenter', () => { isPaused = true; });
+  wrapper.addEventListener('mouseleave', () => { isPaused = false; });
+
+  setInterval(() => {
+    if (isPaused) return;
+
+    const currentSlide = slides[currentIndex];
+    currentIndex = (currentIndex + 1) % slides.length;
+    const nextSlide = slides[currentIndex];
+
+    // Current slide transitions out downwards
+    currentSlide.classList.remove('slide-active');
+    currentSlide.classList.add('slide-out-down');
+
+    // Next slide transitions in downwards into place
+    nextSlide.classList.remove('slide-out-down');
+    nextSlide.classList.add('slide-active');
+
+    // After animation finishes, reset the exited slide back to top without transition
+    setTimeout(() => {
+      currentSlide.style.transition = 'none';
+      currentSlide.classList.remove('slide-out-down');
+      // Trigger reflow so transition: none takes effect immediately
+      void currentSlide.offsetHeight;
+      currentSlide.style.transition = '';
+    }, 500);
+  }, 3200);
 }
 
 

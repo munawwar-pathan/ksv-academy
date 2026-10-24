@@ -6,7 +6,7 @@ if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_staff_periods');
 }
 $page_title = 'Staff Periods & Timetable | KSV Academy HRMS';
-$page_heading = 'Staff Periods Allocation';
+$page_heading = 'Staff Periods';
 $page_subheading = 'Faculty Schedules, Subject Class Distribution, Period Timings & Master Timetable';
 $active_menu = 'staff-periods';
 
@@ -601,7 +601,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
     </div>
     <div class="stat-card-footer">
-      <span>Academic Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      <span>Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
       <span style="color:#059669; font-weight:700;"><i class="fa-solid fa-check"></i> Active</span>
     </div>
   </div>
@@ -691,48 +691,52 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </div>
 
-      <!-- Staff Filter -->
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-chalkboard-user"></i>
-        <select name="staff_id" onchange="this.form.submit();">
-          <option value="0">All Faculty Members</option>
-          <?php foreach ($staff_members as $sm): ?>
-            <option value="<?php echo $sm['staff_id']; ?>" <?php echo $filter_staff == $sm['staff_id'] ? 'selected' : ''; ?>>
-              <?php echo htmlspecialchars($sm['full_name']); ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron"></i>
+      <div class="periods-filter-row">
+        <!-- Staff Filter -->
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-chalkboard-user"></i>
+          <select name="staff_id" onchange="this.form.submit();">
+            <option value="0">All Faculty Members</option>
+            <?php foreach ($staff_members as $sm): ?>
+              <option value="<?php echo $sm['staff_id']; ?>" <?php echo $filter_staff == $sm['staff_id'] ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($sm['full_name']); ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        </div>
+
+        <!-- Day Filter -->
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-calendar-day"></i>
+          <select name="day" onchange="this.form.submit();">
+            <option value="all">All Days</option>
+            <option value="Monday" <?php echo $filter_day === 'Monday' ? 'selected' : ''; ?>>Monday</option>
+            <option value="Tuesday" <?php echo $filter_day === 'Tuesday' ? 'selected' : ''; ?>>Tuesday</option>
+            <option value="Wednesday" <?php echo $filter_day === 'Wednesday' ? 'selected' : ''; ?>>Wednesday</option>
+            <option value="Thursday" <?php echo $filter_day === 'Thursday' ? 'selected' : ''; ?>>Thursday</option>
+            <option value="Friday" <?php echo $filter_day === 'Friday' ? 'selected' : ''; ?>>Friday</option>
+            <option value="Saturday" <?php echo $filter_day === 'Saturday' ? 'selected' : ''; ?>>Saturday</option>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        </div>
       </div>
 
-      <!-- Day Filter -->
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-calendar-day"></i>
-        <select name="day" onchange="this.form.submit();">
-          <option value="all">All Days</option>
-          <option value="Monday" <?php echo $filter_day === 'Monday' ? 'selected' : ''; ?>>Monday</option>
-          <option value="Tuesday" <?php echo $filter_day === 'Tuesday' ? 'selected' : ''; ?>>Tuesday</option>
-          <option value="Wednesday" <?php echo $filter_day === 'Wednesday' ? 'selected' : ''; ?>>Wednesday</option>
-          <option value="Thursday" <?php echo $filter_day === 'Thursday' ? 'selected' : ''; ?>>Thursday</option>
-          <option value="Friday" <?php echo $filter_day === 'Friday' ? 'selected' : ''; ?>>Friday</option>
-          <option value="Saturday" <?php echo $filter_day === 'Saturday' ? 'selected' : ''; ?>>Saturday</option>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron"></i>
+      <div class="periods-filter-btn-group">
+        <button type="submit" class="roaster-btn secondary">
+          <i class="fa-solid fa-sliders"></i> Filter
+        </button>
+
+        <?php if (!empty($search) || $filter_staff > 0 || (!empty($filter_day) && $filter_day !== 'all')): ?>
+          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </a>
+        <?php endif; ?>
       </div>
-
-      <button type="submit" class="roaster-btn secondary">
-        <i class="fa-solid fa-sliders"></i> Filter
-      </button>
-
-      <?php if (!empty($search) || $filter_staff > 0 || (!empty($filter_day) && $filter_day !== 'all')): ?>
-        <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
-          <i class="fa-solid fa-rotate-left"></i> Reset
-        </a>
-      <?php endif; ?>
     </form>
 
     <!-- Right: Count Badge & Add Button -->
-    <div class="roaster-toolbar-actions">
+    <div class="roaster-toolbar-actions periods-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot" style="background: #0092df;"></span>
         <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Period' : 'Periods'; ?></span>
@@ -753,25 +757,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
      VIEW 1: PERIOD ALLOCATION MASTER TABLE (Simple & Sober)
      ══════════════════════════════════════════════════════ -->
 <?php if ($view_mode !== 'schedule'): ?>
-  <div class="hrms-card no-print" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card no-print periods-directory-card" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
     
-    <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px; background: #ffffff;">
-      <div>
+    <div class="hrms-card-header periods-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px; background: #ffffff;">
+      <div class="periods-title-block">
         <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
           <i class="fa-solid fa-calendar-check" style="color: #0284c7;"></i>
           Staff Period Master Schedule
-          <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+          <span class="periods-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
             Session <?php echo htmlspecialchars($active_session['session_name']); ?>
           </span>
         </h3>
-        <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+        <p class="periods-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
           Comprehensive timetable of assigned teaching periods, subject allocations, class sections, and venues.
         </p>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      <div class="periods-header-controls" style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <!-- View Switcher -->
-        <div class="sp-view-toggle">
+        <div class="sp-view-toggle periods-view-toggle">
           <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
              class="sp-view-tab <?php echo $view_mode !== 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-table-list"></i>
@@ -784,7 +788,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </a>
         </div>
 
-        <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+        <div class="periods-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
           <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
         </div>
       </div>
@@ -843,17 +847,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php endif; ?>
 
                     <div>
-                      <div style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
+                      <div class="cell-name" style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                         <?php echo htmlspecialchars($p['staff_name']); ?>
                       </div>
-                      <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                      <div class="cell-sub" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
                         <span class="sp-code-pill">
                           <i class="fa-solid fa-hashtag" style="font-size: 0.60rem;"></i>
                           <span><?php echo htmlspecialchars($p['employee_code'] ?? 'KSV-FAC'); ?></span>
                         </span>
                         <?php if (!empty($p['department'])): ?>
                           <span style="color: #94a3b8;">&bull;</span>
-                          <span style="color: #64748b;"><?php echo htmlspecialchars($p['department']); ?></span>
+                          <span class="sp-dept-name" style="color: #64748b;"><?php echo htmlspecialchars($p['department']); ?></span>
                         <?php endif; ?>
                       </div>
                     </div>
@@ -868,7 +872,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </span>
                   <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
                     <i class="fa-solid fa-graduation-cap" style="font-size: 0.68rem; color: #94a3b8;"></i>
-                    <span style="font-weight: 600; color: #475569;"><?php echo htmlspecialchars($p['class_name']); ?></span>
+                    <span class="sp-class-name" style="font-weight: 600; color: #475569;"><?php echo htmlspecialchars($p['class_name']); ?></span>
                   </div>
                 </td>
 
@@ -1001,7 +1005,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <?php endif; ?>
 
       <!-- Legend / Session Status -->
-      <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+      <div class="pagination-legend-text" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
         <span style="display: inline-flex; align-items: center; gap: 6px;">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
           Active Schedule
@@ -1017,24 +1021,24 @@ require_once __DIR__ . '/../includes/layout-header.php';
      VIEW 2: FACULTY TIMETABLE CARDS
      ══════════════════════════════════════════════════════ -->
 <?php else: ?>
-  <div class="hrms-card no-print" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-    <div class="hrms-card-header" style="border-bottom: none; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 20px; background: #ffffff;">
-      <div>
+  <div class="hrms-card no-print periods-directory-card" style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+    <div class="hrms-card-header periods-card-header" style="border-bottom: none; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 20px; background: #ffffff;">
+      <div class="periods-title-block">
         <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
           <i class="fa-solid fa-calendar-days" style="color: #0284c7;"></i>
           Faculty Timetable Registers
-          <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+          <span class="periods-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
             Session <?php echo htmlspecialchars($active_session['session_name']); ?>
           </span>
         </h3>
-        <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+        <p class="periods-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
           Weekly lecture schedules organized per individual faculty member.
         </p>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      <div class="periods-header-controls" style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <!-- View Switcher -->
-        <div class="sp-view-toggle">
+        <div class="sp-view-toggle periods-view-toggle">
           <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
              class="sp-view-tab <?php echo $view_mode !== 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-table-list"></i>
@@ -1047,7 +1051,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </a>
         </div>
 
-        <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+        <div class="periods-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
           <span>Faculty on Timetable: <strong style="color: #0f172a;"><?php echo count($periods_by_staff); ?></strong></span>
         </div>
       </div>
@@ -1055,7 +1059,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
   
   <?php if (empty($periods_by_staff)): ?>
-    <div class="hrms-card no-print" style="padding: 50px 20px; text-align: center; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
+    <div class="hrms-card no-print periods-directory-card" style="padding: 50px 20px; text-align: center; border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff;">
       <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
         <i class="fa-regular fa-calendar-xmark"></i>
       </div>
@@ -1088,10 +1092,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php endif; ?>
 
             <div>
-              <h3 style="margin: 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+              <h3 class="faculty-card-name" style="margin: 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
                 <?php echo htmlspecialchars($st_data['staff_name']); ?>
               </h3>
-              <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <div class="faculty-card-sub" style="font-size: 0.74rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <span class="sp-code-pill">
                   <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
                   <span><?php echo htmlspecialchars($st_data['employee_code']); ?></span>
@@ -1103,7 +1107,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
 
           <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 0.76rem; font-weight: 600; color: #0284c7; background: #f0f9ff; padding: 3px 10px; border-radius: 20px; border: 1px solid #bae6fd;">
+            <span class="faculty-card-badge" style="font-size: 0.76rem; font-weight: 600; color: #0284c7; background: #f0f9ff; padding: 3px 10px; border-radius: 20px; border: 1px solid #bae6fd;">
               <i class="fa-solid fa-clock" style="font-size: 0.70rem;"></i> <?php echo count($st_data['periods']); ?> Periods Assigned
             </span>
           </div>
@@ -1131,7 +1135,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 </span>
               </div>
 
-              <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 5px;">
+              <div class="period-item-class" style="font-size: 0.74rem; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 5px;">
                 <i class="fa-solid fa-graduation-cap" style="color: #94a3b8; font-size: 0.70rem;"></i>
                 <span><?php echo htmlspecialchars($p_item['class_name']); ?></span>
                 <span>&bull;</span>
@@ -1215,7 +1219,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- 2. Subject & Class -->
-        <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <div class="periods-modal-grid-2" style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 16px;">
           <div class="form-group">
             <label class="input-field-label">
               Subject Name <span class="req">*</span>
@@ -1251,7 +1255,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- 3. Period Slot & Time Period -->
-        <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; margin-bottom: 10px;">
+        <div class="periods-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; margin-bottom: 10px;">
           <div class="form-group">
             <label class="input-field-label">
               Period Slot <span class="req">*</span>
@@ -1279,7 +1283,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Quick Time Presets -->
-        <div style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px;">
+        <div class="periods-presets-box" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px;">
           <span style="font-size: 0.68rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 8px;">
             <i class="fa-solid fa-wand-magic-sparkles" style="color: #0092df;"></i> Quick Timing Slot Presets:
           </span>
@@ -1294,7 +1298,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- 4. Schedule Day & Room No -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;">
+        <div class="periods-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;">
           <div class="form-group">
             <label class="input-field-label">
               Day of Week <span class="req">*</span>
@@ -1320,7 +1324,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Actions -->
-        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+        <div class="periods-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
           <button type="button" onclick="closeAssignModal();" class="roaster-btn secondary" style="padding: 9px 18px;">
             Cancel
           </button>
@@ -1380,7 +1384,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Subject & Class -->
-        <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 16px;">
+        <div class="periods-modal-grid-2" style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 16px;">
           <div class="form-group">
             <label class="input-field-label">
               Subject Name <span class="req">*</span>
@@ -1397,7 +1401,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Period Slot & Time Period -->
-        <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; margin-bottom: 10px;">
+        <div class="periods-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 14px; margin-bottom: 10px;">
           <div class="form-group">
             <label class="input-field-label">
               Period Slot <span class="req">*</span>
@@ -1425,7 +1429,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Quick Presets -->
-        <div style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px;">
+        <div class="periods-presets-box" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px;">
           <span style="font-size: 0.68rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 8px;">
             <i class="fa-solid fa-wand-magic-sparkles" style="color: #0092df;"></i> Quick Timing Slot Presets:
           </span>
@@ -1440,7 +1444,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Day of Week & Room No -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;">
+        <div class="periods-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;">
           <div class="form-group">
             <label class="input-field-label">
               Day of Week <span class="req">*</span>
@@ -1466,7 +1470,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Actions -->
-        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+        <div class="periods-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
           <button type="button" onclick="closeEditModal();" class="roaster-btn secondary" style="padding: 9px 18px;">
             Cancel
           </button>

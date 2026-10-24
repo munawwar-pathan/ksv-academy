@@ -571,58 +571,60 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div style="padding: 10px 16px; background: #fffbeb; border-bottom: 1px solid #fef3c7; font-size: 0.76rem; font-weight: 600; color: #92400e; display: flex; align-items: center; gap: 6px;">
           <i class="fa-solid fa-circle-exclamation"></i> Action Required on Pending Requests
         </div>
-        <table class="hrms-table staff-id-table">
-          <thead>
-            <tr>
-              <th style="min-width: 170px;">Applicant</th>
-              <th style="min-width: 110px;">Window</th>
-              <th style="text-align: right; width: 140px;">Decision</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($pending_leave_list as $lv): ?>
+        <div class="table-responsive">
+          <table class="hrms-table staff-id-table">
+            <thead>
               <tr>
-                <td>
-                  <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
-                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
-                    <?php echo htmlspecialchars($lv['leave_type']); ?> &bull; <?php echo htmlspecialchars($lv['department'] ?? 'Faculty'); ?>
-                  </div>
-                  <?php if (!empty($lv['reason'])): ?>
-                    <div style="font-size: 0.72rem; color: #475569; margin-top: 2px; font-style: italic;">
-                      &ldquo;<?php echo htmlspecialchars(mb_strimwidth($lv['reason'], 0, 50, '...')); ?>&rdquo;
-                    </div>
-                  <?php endif; ?>
-                </td>
-                <td>
-                  <div style="font-weight: 600; color: #0f172a; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums;">
-                    <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 0.76rem;"></i>
-                    <?php echo format_date($lv['start_date'], 'd M'); ?> &ndash; <?php echo format_date($lv['end_date'], 'd M'); ?>
-                  </div>
-                </td>
-                <td style="text-align: right;">
-                  <div style="display: flex; gap: 5px; justify-content: flex-end; align-items: center;">
-                    <form method="POST" style="display: inline; margin: 0;">
-                      <input type="hidden" name="action" value="update_leave">
-                      <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
-                      <input type="hidden" name="status" value="Approved">
-                      <button type="submit" class="btn-hrms btn-hrms-success btn-hrms-sm" title="Approve Request" style="padding: 4px 9px; font-size: 0.74rem;">
-                        <i class="fa-solid fa-check"></i> Approve
-                      </button>
-                    </form>
-                    <form method="POST" style="display: inline; margin: 0;">
-                      <input type="hidden" name="action" value="update_leave">
-                      <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
-                      <input type="hidden" name="status" value="Rejected">
-                      <button type="submit" class="btn-hrms btn-hrms-danger btn-hrms-sm" title="Reject Request" style="padding: 4px 8px; font-size: 0.74rem;">
-                        <i class="fa-solid fa-xmark"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
+                <th style="min-width: 170px;">Applicant</th>
+                <th style="min-width: 110px;">Window</th>
+                <th style="text-align: right; min-width: 130px;">Decision</th>
               </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <?php foreach ($pending_leave_list as $lv): ?>
+                <tr>
+                  <td>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
+                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
+                      <?php echo htmlspecialchars($lv['leave_type']); ?> &bull; <?php echo htmlspecialchars($lv['department'] ?? 'Faculty'); ?>
+                    </div>
+                    <?php if (!empty($lv['reason'])): ?>
+                      <div style="font-size: 0.72rem; color: #475569; margin-top: 2px; font-style: italic;">
+                        &ldquo;<?php echo htmlspecialchars(mb_strimwidth($lv['reason'], 0, 50, '...')); ?>&rdquo;
+                      </div>
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: #0f172a; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap;">
+                      <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 0.76rem;"></i>
+                      <?php echo format_date($lv['start_date'], 'd M'); ?> &ndash; <?php echo format_date($lv['end_date'], 'd M'); ?>
+                    </div>
+                  </td>
+                  <td style="text-align: right; white-space: nowrap;">
+                    <div style="display: flex; gap: 5px; justify-content: flex-end; align-items: center;">
+                      <form method="POST" style="display: inline; margin: 0;">
+                        <input type="hidden" name="action" value="update_leave">
+                        <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
+                        <input type="hidden" name="status" value="Approved">
+                        <button type="submit" class="btn-hrms btn-hrms-success btn-hrms-sm" title="Approve Request" style="padding: 4px 9px; font-size: 0.74rem;">
+                          <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                      </form>
+                      <form method="POST" style="display: inline; margin: 0;">
+                        <input type="hidden" name="action" value="update_leave">
+                        <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
+                        <input type="hidden" name="status" value="Rejected">
+                        <button type="submit" class="btn-hrms btn-hrms-danger btn-hrms-sm" title="Reject Request" style="padding: 4px 8px; font-size: 0.74rem;">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
       <?php endif; ?>
 
       <!-- Recent Reviewed Leaves (History/Audit) -->
@@ -632,43 +634,45 @@ require_once __DIR__ . '/../includes/layout-header.php';
             Recent Reviewed Leaves
           </div>
         <?php endif; ?>
-        <table class="hrms-table staff-id-table">
-          <thead>
-            <tr>
-              <th style="min-width: 170px;">Applicant</th>
-              <th style="min-width: 110px;">Window</th>
-              <th style="text-align: right; width: 100px;">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($recent_leave_history as $lv): ?>
+        <div class="table-responsive">
+          <table class="hrms-table staff-id-table">
+            <thead>
               <tr>
-                <td>
-                  <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
-                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
-                    <?php echo htmlspecialchars($lv['leave_type']); ?> &bull; <?php echo htmlspecialchars($lv['department'] ?? 'Faculty'); ?>
-                  </div>
-                  <?php if (!empty($lv['reason'])): ?>
-                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
-                      <?php echo htmlspecialchars(mb_strimwidth($lv['reason'], 0, 45, '...')); ?>
-                    </div>
-                  <?php endif; ?>
-                </td>
-                <td>
-                  <div style="font-weight: 600; color: #0f172a; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums;">
-                    <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 0.76rem;"></i>
-                    <?php echo format_date($lv['start_date'], 'd M'); ?> &ndash; <?php echo format_date($lv['end_date'], 'd M'); ?>
-                  </div>
-                </td>
-                <td style="text-align: right;">
-                  <span class="badge-status <?php echo $lv['status'] === 'Approved' ? 'badge-approved' : 'badge-rejected'; ?>" style="font-size: 0.72rem; padding: 2px 8px;">
-                    <?php echo $lv['status']; ?>
-                  </span>
-                </td>
+                <th style="min-width: 170px;">Applicant</th>
+                <th style="min-width: 110px;">Window</th>
+                <th style="text-align: right; min-width: 90px;">Status</th>
               </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <?php foreach ($recent_leave_history as $lv): ?>
+                <tr>
+                  <td>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($lv['full_name']); ?></div>
+                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
+                      <?php echo htmlspecialchars($lv['leave_type']); ?> &bull; <?php echo htmlspecialchars($lv['department'] ?? 'Faculty'); ?>
+                    </div>
+                    <?php if (!empty($lv['reason'])): ?>
+                      <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
+                        <?php echo htmlspecialchars(mb_strimwidth($lv['reason'], 0, 45, '...')); ?>
+                      </div>
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: #0f172a; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; white-space: nowrap;">
+                      <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 0.76rem;"></i>
+                      <?php echo format_date($lv['start_date'], 'd M'); ?> &ndash; <?php echo format_date($lv['end_date'], 'd M'); ?>
+                    </div>
+                  </td>
+                  <td style="text-align: right;">
+                    <span class="badge-status <?php echo $lv['status'] === 'Approved' ? 'badge-approved' : 'badge-rejected'; ?>" style="font-size: 0.72rem; padding: 2px 8px;">
+                      <?php echo $lv['status']; ?>
+                    </span>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
       <?php elseif (empty($pending_leave_list)): ?>
         <div style="padding: 36px 20px; text-align: center;">
           <div style="width: 40px; height: 40px; border-radius: 50%; background: #f0fdf4; color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.1rem; border: 1px solid #bbf7d0;">

@@ -6,7 +6,7 @@ if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_student_id');
 }
 $page_title = 'Student ID Card | KSV Academy HRMS';
-$page_heading = 'Student Identity Card & Attendance Pass';
+$page_heading = 'Student ID Card';
 $page_subheading = 'Official Academic Identification Badge with Biometric QR Code';
 $active_menu = 'student-id';
 
@@ -839,22 +839,24 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Right: Print and Download Actions -->
-    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <div class="id-card-actions-wrap" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       
-      <!-- Download Front PNG -->
-      <button type="button" onclick="downloadCardImage('card_front_element', 'Front');" class="roaster-btn secondary" style="gap: 6px;" title="Save Front Card as High-Resolution Image">
-        <i class="fa-solid fa-download"></i>
-        <span>Front (PNG)</span>
-      </button>
+      <div class="id-card-download-group" style="display: flex; gap: 8px;">
+        <!-- Download Front PNG -->
+        <button type="button" onclick="downloadCardImage('card_front_element', 'Front');" class="roaster-btn secondary" style="gap: 6px;" title="Save Front Card as High-Resolution Image">
+          <i class="fa-solid fa-download"></i>
+          <span>Front (PNG)</span>
+        </button>
 
-      <!-- Download Back PNG -->
-      <button type="button" onclick="downloadCardImage('card_back_element', 'Back');" class="roaster-btn secondary" style="gap: 6px;" title="Save Back Card with QR Code as High-Resolution Image">
-        <i class="fa-solid fa-download"></i>
-        <span>Back (PNG)</span>
-      </button>
+        <!-- Download Back PNG -->
+        <button type="button" onclick="downloadCardImage('card_back_element', 'Back');" class="roaster-btn secondary" style="gap: 6px;" title="Save Back Card with QR Code as High-Resolution Image">
+          <i class="fa-solid fa-download"></i>
+          <span>Back (PNG)</span>
+        </button>
+      </div>
 
       <!-- Print Both Sides -->
-      <button type="button" onclick="window.print();" class="roaster-add-btn" style="gap: 8px;" title="Print official ID card (Front & Back)">
+      <button type="button" onclick="window.print();" class="roaster-add-btn id-card-print-btn" style="gap: 8px;" title="Print official ID card (Front & Back)">
         <div class="btn-icon-circle"><i class="fa-solid fa-print"></i></div>
         <span>Print ID Card</span>
       </button>
@@ -1060,33 +1062,35 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php endif; ?>
         </div>
 
-        <div class="roaster-select-box">
-          <i class="fa-solid fa-filter"></i>
-          <select name="standard" onchange="this.form.submit()">
-            <option value="">All Academic Standards</option>
-            <?php foreach ($standards as $std): ?>
-              <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-                <?php echo $std; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        <div class="student-id-filter-row" style="display: flex; gap: 8px; align-items: center;">
+          <div class="roaster-select-box">
+            <i class="fa-solid fa-filter"></i>
+            <select name="standard" onchange="this.form.submit()">
+              <option value="">All Academic Standards</option>
+              <?php foreach ($standards as $std): ?>
+                <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
+                  <?php echo $std; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <i class="fa-solid fa-chevron-down select-chevron"></i>
+          </div>
+
+          <button type="submit" class="roaster-btn secondary">
+            <i class="fa-solid fa-sliders"></i> Filter
+          </button>
+
+          <?php if (!empty($search) || !empty($filter_standard)): ?>
+            <a href="<?php echo ADMIN_URL; ?>/student-id<?php 
+              $rp = [];
+              if ($selected_id > 0) $rp['id'] = $selected_id;
+              if ($limit !== 10) $rp['limit'] = $limit;
+              echo !empty($rp) ? '?' . http_build_query($rp) : '';
+            ?>" class="roaster-btn ghost" title="Reset all filters">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+          <?php endif; ?>
         </div>
-
-        <button type="submit" class="roaster-btn secondary">
-          <i class="fa-solid fa-sliders"></i> Filter
-        </button>
-
-        <?php if (!empty($search) || !empty($filter_standard)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/student-id<?php 
-            $rp = [];
-            if ($selected_id > 0) $rp['id'] = $selected_id;
-            if ($limit !== 10) $rp['limit'] = $limit;
-            echo !empty($rp) ? '?' . http_build_query($rp) : '';
-          ?>" class="roaster-btn ghost" title="Reset all filters">
-            <i class="fa-solid fa-rotate-left"></i> Reset
-          </a>
-        <?php endif; ?>
       </form>
 
       <!-- Right: Scholars Live Count & Link to Roster -->
@@ -1096,7 +1100,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span><strong><?php echo $total_records; ?></strong> Scholars</span>
         </div>
 
-        <a href="<?php echo ADMIN_URL; ?>/students" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+        <a href="<?php echo ADMIN_URL; ?>/students" class="roaster-btn secondary roaster-link-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
           <i class="fa-solid fa-users"></i>
           <span>Student Roaster</span>
         </a>
@@ -1108,13 +1112,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <!-- ══════════════════════════════════════════════════════
        STUDENT DATA TABLE (Simple & Sober - Like staff-id.php)
        ══════════════════════════════════════════════════════ -->
-  <div class="hrms-card no-print" id="studentIdDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-    <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-      <div>
+  <div class="hrms-card no-print student-id-directory-card" id="studentIdDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+    <div class="hrms-card-header directory-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+      <div class="directory-title-block">
         <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
           <i class="fa-solid fa-id-card-clip" style="color: #0284c7;"></i>
           Student ID Card Directory
-          <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+          <span class="directory-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
             Session <?php echo htmlspecialchars($active_session['session_name']); ?>
           </span>
         </h3>
@@ -1122,7 +1126,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           Click <strong>View ID Card</strong> on any student row below to load their official PVC badge with biometric QR pass.
         </p>
       </div>
-      <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+      <div class="directory-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
         <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
       </div>
     </div>

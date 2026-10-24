@@ -111,13 +111,17 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
     <div class="container top-bar-container">
       <div class="announcement-ticker">
         <span class="ticker-badge"><i class="fa-solid fa-graduation-cap"></i> Session <?php echo CURRENT_SESSION; ?></span>
-        <div class="ticker-text-wrapper">
-          <span class="ticker-text">
+        <div class="ticker-text-wrapper" id="topbarTicker">
+          <div class="ticker-slide slide-active">
             <span class="topbar-live-dot"></span>
-            <strong>Admissions Open</strong> &bull; 
-            <span class="topbar-chip-gold"><i class="fa-solid fa-sparkles"></i> Up to 60% Scholarship</span> &bull; 
+            <strong>Admissions Open 2026–27</strong>
+          </div>
+          <div class="ticker-slide">
+            <span class="topbar-chip-gold"><i class="fa-solid fa-sparkles"></i> Up to 60% Scholarship</span>
+          </div>
+          <div class="ticker-slide">
             <span class="topbar-chip-white"><i class="fa-solid fa-calendar-check"></i> 3-Days Free Demo</span>
-          </span>
+          </div>
         </div>
       </div>
       <div class="top-bar-right">
@@ -137,7 +141,7 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
             <i class="fa-brands fa-whatsapp"></i>
           </a>
         </div>
-        <div class="top-portal-btn-wrap">
+        <div class="top-portal-btn-wrap d-none-mobile">
           <a href="<?php echo url('web-app'); ?>" class="topbar-portal-btn" title="Staff &amp; Student Web App Portal">
             <i class="fa-solid fa-shield-halved"></i>
             <span>Portal Login</span>

@@ -134,6 +134,12 @@ img, svg, video {
     display: none !important;
   }
 
+  /* Hide Top Bar Portal Button on Tablet & Mobile (Already available in mobile nav header) */
+  .top-portal-btn-wrap,
+  .topbar-portal-btn {
+    display: none !important;
+  }
+
   /* Hero Section Grid */
   .hero-grid {
     grid-template-columns: 1fr !important;
@@ -263,34 +269,38 @@ img, svg, video {
     flex-shrink: 0 !important;
     font-size: 0.68rem !important;
     padding: 2px 7px !important;
+    white-space: nowrap !important;
   }
 
   .ticker-text-wrapper {
     flex: 1 !important;
     min-width: 0 !important;
+    height: 24px !important;
     overflow: hidden !important;
-    white-space: nowrap !important;
     position: relative !important;
-    display: block !important;
-    mask-image: linear-gradient(90deg, transparent, #000 6px, #000 calc(100% - 6px), transparent);
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6px, #000 calc(100% - 6px), transparent);
+    display: flex !important;
+    align-items: center !important;
   }
 
-  .ticker-text {
-    display: inline-block !important;
-    white-space: nowrap !important;
-    padding-left: 100% !important;
-    will-change: transform !important;
-    animation: topBarTickerMarquee 13s linear infinite !important;
-    font-size: 0.78rem !important;
+  .ticker-slide {
+    font-size: 0.74rem !important;
+    gap: 4px !important;
   }
 
-  .ticker-text-wrapper:hover .ticker-text {
-    animation-play-state: paused !important;
+  .ticker-slide strong {
+    font-size: 0.74rem !important;
+  }
+
+  .topbar-chip-gold,
+  .topbar-chip-white {
+    font-size: 0.70rem !important;
+    padding: 1px 7px !important;
   }
 
   .top-contact-item.d-none-mobile,
-  .top-social-links {
+  .top-social-links,
+  .top-portal-btn-wrap,
+  .topbar-portal-btn {
     display: none !important;
   }
 
@@ -1066,20 +1076,189 @@ img, svg, video {
     font-weight: 700;
   }
 
-  /* ── Modal Dialogs on Mobile ── */
-  .modal-overlay {
-    padding: 14px !important;
-    z-index: 2200 !important;
+  /* ── Modal Dialogs on Mobile (Demo Class & General Modals) ── */
+  .modal-backdrop {
+    padding: 12px 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 3100 !important;
   }
 
-  .modal-content,
   .modal-dialog {
+    max-width: min(500px, 100%) !important;
+    width: 100% !important;
+    margin: auto !important;
+    padding: 0 !important;
+    max-height: calc(100vh - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: transparent !important;
+    box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.45) !important;
+  }
+
+  .modal-content {
     max-width: 100% !important;
     width: 100% !important;
-    border-radius: 16px !important;
-    padding: 22px 16px !important;
-    max-height: 90vh !important;
+    max-height: 100% !important;
+    padding: 0 !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background-color: var(--bg-surface, #ffffff) !important;
+    border: 1px solid var(--border-subtle, #e2e8f0) !important;
+  }
+
+  .modal-header {
+    padding: 14px 16px 12px 16px !important;
+    background: linear-gradient(135deg, rgba(2, 69, 122, 0.05) 0%, rgba(0, 146, 223, 0.08) 100%) !important;
+    border-bottom: 1px solid var(--border-subtle, #e2e8f0) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-shrink: 0 !important;
+  }
+
+  [data-theme="dark"] .modal-header {
+    background: rgba(15, 52, 96, 0.35) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .modal-badge {
+    font-size: 0.68rem !important;
+    font-weight: 800 !important;
+    color: var(--accent-emerald, #10b981) !important;
+    letter-spacing: 0.04em !important;
+    margin-bottom: 3px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .modal-title {
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    color: var(--text-main, #0f172a) !important;
+    margin: 0 !important;
+  }
+
+  .modal-close-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    border-radius: 50% !important;
+    background: rgba(15, 23, 42, 0.07) !important;
+    border: none !important;
+    color: var(--text-main, #334155) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.35rem !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    margin: 0 0 0 10px !important;
+    padding: 0 !important;
+    transition: background 0.2s ease, transform 0.2s ease !important;
+  }
+
+  [data-theme="dark"] .modal-close-btn {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+  }
+
+  .modal-close-btn:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #ef4444 !important;
+    transform: rotate(90deg) !important;
+  }
+
+  .modal-body {
+    padding: 14px 16px 18px 16px !important;
     overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 !important;
+    max-height: calc(100dvh - 120px) !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .modal-subtext {
+    font-size: 0.78rem !important;
+    line-height: 1.38 !important;
+    color: var(--text-muted, #64748b) !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px dashed var(--border-subtle, #e2e8f0) !important;
+  }
+
+  .modal-body .form-group {
+    margin-bottom: 10px !important;
+  }
+
+  .modal-body .form-group label {
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    color: var(--text-main, #1e293b) !important;
+  }
+
+  .modal-body .form-control {
+    height: 42px !important;
+    padding: 8px 12px !important;
+    font-size: 15px !important;
+    border-radius: 10px !important;
+    background-color: var(--bg-surface-soft, #f8fafc) !important;
+    border: 1px solid var(--border-strong, #cbd5e1) !important;
+  }
+
+  [data-theme="dark"] .modal-body .form-control {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+    color: #ffffff !important;
+  }
+
+  .modal-body select.form-control {
+    height: 42px !important;
+    padding-right: 28px !important;
+  }
+
+  .modal-body .form-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .modal-body .form-submit-block {
+    margin-top: 14px !important;
+    padding-top: 4px !important;
+  }
+
+  .modal-body .form-submit-block .btn {
+    height: 46px !important;
+    font-size: 0.88rem !important;
+    font-weight: 750 !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-shadow: 0 6px 18px rgba(0, 146, 223, 0.35) !important;
+  }
+
+  .modal-body .form-note {
+    font-size: 0.70rem !important;
+    line-height: 1.35 !important;
+    margin-top: 8px !important;
+    margin-bottom: 0 !important;
+    color: var(--text-muted, #64748b) !important;
+    text-align: center !important;
   }
 
   /* Form Elements - Prevent iOS Zoom */

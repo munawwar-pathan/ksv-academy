@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
 $page_title = 'Leave Management | KSV Academy HRMS';
-$page_heading = 'Faculty Leave Applications';
+$page_heading = 'Staff Leaves';
 $page_subheading = 'Leave Entitlements, Requests & Approvals';
 $active_menu = 'leaves';
 
@@ -318,6 +318,31 @@ require_once __DIR__ . '/../includes/layout-header.php';
   font-family: 'Outfit', sans-serif;
   white-space: nowrap;
 }
+.leave-type-chip.casual {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+.leave-type-chip.medical {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+.leave-type-chip.academic {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #6d28d9;
+}
+.leave-type-chip.emergency {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+.leave-type-chip.other {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
 
 .duration-badge {
   display: inline-flex;
@@ -536,11 +561,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner">
     
     <!-- Left: Filter Form -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/leaves" class="roaster-filter-form">
+    <form method="GET" action="<?php echo ADMIN_URL; ?>/leaves" class="roaster-filter-form leaves-filter-form">
       <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       
       <!-- Search Input -->
-      <div class="roaster-search-box">
+      <div class="roaster-search-box leaves-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search faculty name, code, reason..." autocomplete="off">
         <?php if (!empty($search)): ?>
@@ -548,50 +573,56 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </div>
 
-      <!-- Status Filter Dropdown -->
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-filter"></i>
-        <select name="status" onchange="this.form.submit()">
-          <option value="">All Statuses</option>
-          <option value="Pending" <?php echo $filter_status === 'Pending' ? 'selected' : ''; ?>>Pending Approval</option>
-          <option value="Approved" <?php echo $filter_status === 'Approved' ? 'selected' : ''; ?>>Approved</option>
-          <option value="Rejected" <?php echo $filter_status === 'Rejected' ? 'selected' : ''; ?>>Rejected</option>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron"></i>
+      <!-- Filter Dropdowns Row -->
+      <div class="leaves-filter-row">
+        <!-- Status Filter Dropdown -->
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-filter"></i>
+          <select name="status" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="Pending" <?php echo $filter_status === 'Pending' ? 'selected' : ''; ?>>Pending Approval</option>
+            <option value="Approved" <?php echo $filter_status === 'Approved' ? 'selected' : ''; ?>>Approved</option>
+            <option value="Rejected" <?php echo $filter_status === 'Rejected' ? 'selected' : ''; ?>>Rejected</option>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        </div>
+
+        <!-- Leave Type Filter Dropdown -->
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-tag"></i>
+          <select name="type" onchange="this.form.submit()">
+            <option value="">All Leave Types</option>
+            <option value="Casual Leave" <?php echo $filter_type === 'Casual Leave' ? 'selected' : ''; ?>>Casual Leave (CL)</option>
+            <option value="Medical Leave" <?php echo $filter_type === 'Medical Leave' ? 'selected' : ''; ?>>Medical Leave (ML)</option>
+            <option value="Academic Duty" <?php echo $filter_type === 'Academic Duty' ? 'selected' : ''; ?>>Academic Duty</option>
+            <option value="Emergency Leave" <?php echo $filter_type === 'Emergency Leave' ? 'selected' : ''; ?>>Emergency Leave</option>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        </div>
       </div>
 
-      <!-- Leave Type Filter Dropdown -->
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-tag"></i>
-        <select name="type" onchange="this.form.submit()">
-          <option value="">All Leave Types</option>
-          <option value="Casual Leave" <?php echo $filter_type === 'Casual Leave' ? 'selected' : ''; ?>>Casual Leave (CL)</option>
-          <option value="Medical Leave" <?php echo $filter_type === 'Medical Leave' ? 'selected' : ''; ?>>Medical Leave (ML)</option>
-          <option value="Academic Duty" <?php echo $filter_type === 'Academic Duty' ? 'selected' : ''; ?>>Academic Duty</option>
-          <option value="Emergency Leave" <?php echo $filter_type === 'Emergency Leave' ? 'selected' : ''; ?>>Emergency Leave</option>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron"></i>
+      <!-- Filter Action Buttons -->
+      <div class="leaves-filter-btn-group">
+        <button type="submit" class="roaster-btn secondary">
+          <i class="fa-solid fa-sliders"></i> Filter
+        </button>
+
+        <?php if (!empty($search) || !empty($filter_status) || !empty($filter_type)): ?>
+          <a href="<?php echo ADMIN_URL; ?>/leaves<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </a>
+        <?php endif; ?>
       </div>
-
-      <button type="submit" class="roaster-btn secondary">
-        <i class="fa-solid fa-sliders"></i> Filter
-      </button>
-
-      <?php if (!empty($search) || !empty($filter_status) || !empty($filter_type)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/leaves<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
-          <i class="fa-solid fa-rotate-left"></i> Reset
-        </a>
-      <?php endif; ?>
     </form>
 
     <!-- Right: Applications Live Count & Apply Leave Button -->
-    <div class="roaster-toolbar-actions">
-      <div class="scholars-count-badge">
+    <div class="roaster-toolbar-actions leaves-toolbar-actions">
+      <div class="scholars-count-badge leaves-records-badge">
         <span class="count-dot" style="background: #0284c7;"></span>
         <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Record' : 'Records'; ?></span>
       </div>
 
-      <button type="button" onclick="openApplyLeaveModal();" class="roaster-add-btn" title="Submit New Leave Application">
+      <button type="button" onclick="openApplyLeaveModal();" class="roaster-add-btn leaves-apply-btn" title="Submit New Leave Application">
         <div class="btn-icon-circle"><i class="fa-solid fa-plus"></i></div>
         <span>Apply Leave</span>
       </button>
@@ -603,17 +634,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      LEAVE APPLICATIONS HISTORY TABLE
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 30px;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 22px;">
-    <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.02rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+<div class="hrms-card leaves-directory-card" style="margin-bottom: 30px;">
+  <div class="hrms-card-header leaves-card-header" style="border-bottom: 1px solid var(--hrms-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 22px;">
+    <div class="leaves-title-block">
+      <h3 class="card-title leaves-card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.02rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
         <i class="fa-solid fa-plane-departure" style="color: var(--hrms-primary);"></i>
-        Faculty Leave Applications &amp; Approvals Register
-        <span style="font-size: 0.74rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 20px;">
+        <span>Faculty Leave Applications &amp; Approvals Register</span>
+        <span class="leaves-session-badge" style="font-size: 0.74rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 20px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
-      <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
+      <p class="leaves-subtitle" style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
         Review institutional time-off requests, medical permissions, and academic duty exemptions.
       </p>
     </div>
@@ -698,12 +729,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <?php endif; ?>
 
                   <div>
-                    <div style="font-weight: 700; color: #0f172a; font-size: 0.83rem; line-height: 1.25;">
+                    <div class="cell-name leaves-staff-name" style="font-weight: 700; color: #0f172a; font-size: 0.83rem; line-height: 1.25;">
                       <?php echo htmlspecialchars($lr['full_name']); ?>
                     </div>
                     <div style="display: flex; align-items: center; gap: 5px; margin-top: 2px;">
-                      <span class="emp-code-pill"><?php echo htmlspecialchars($lr['employee_code']); ?></span>
-                      <span style="font-size: 0.70rem; color: #64748b;"><?php echo htmlspecialchars($lr['department']); ?></span>
+                      <span class="emp-code-pill leaves-emp-code"><?php echo htmlspecialchars($lr['employee_code']); ?></span>
+                      <span class="cell-sub leaves-staff-dept" style="font-size: 0.70rem; color: #64748b;"><?php echo htmlspecialchars($lr['department']); ?></span>
                     </div>
                   </div>
                 </div>
@@ -716,7 +747,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid <?php echo $type_icon; ?>"></i>
                     <span><?php echo htmlspecialchars($lr['leave_type']); ?></span>
                   </span>
-                  <div style="font-size: 0.70rem; color: #64748b; margin-top: 2px;">
+                  <div class="cell-sub leaves-designation" style="font-size: 0.70rem; color: #64748b; margin-top: 2px;">
                     <?php echo htmlspecialchars($lr['designation']); ?>
                   </div>
                 </div>
@@ -725,7 +756,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 3. Period & Duration -->
               <td>
                 <div>
-                  <div style="font-size: 0.78rem; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                  <div class="cell-name leaves-period-dates" style="font-size: 0.78rem; font-weight: 700; color: #0f172a; white-space: nowrap;">
                     <?php 
                       $s_ts = strtotime($lr['start_date']);
                       $e_ts = strtotime($lr['end_date']);
@@ -754,7 +785,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 5. Applied Date -->
               <td>
-                <div style="font-size: 0.76rem; font-weight: 600; color: #64748b; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;">
+                <div class="cell-sub leaves-applied-date" style="font-size: 0.76rem; font-weight: 600; color: #64748b; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;">
                   <i class="fa-regular fa-calendar" style="color: #94a3b8; font-size: 0.72rem;"></i>
                   <span><?php echo format_date($lr['created_at']); ?></span>
                 </div>
@@ -903,16 +934,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <!-- Legend / Session Status -->
-    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
-      <span style="display: inline-flex; align-items: center; gap: 6px;">
+    <div class="pagination-legend-group" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+      <span class="pagination-legend-text" style="display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
         Sanctioned
       </span>
-      <span style="display: inline-flex; align-items: center; gap: 6px;">
+      <span class="pagination-legend-text" style="display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #f59e0b;"></span>
         Pending
       </span>
-      <span style="display: inline-flex; align-items: center; gap: 6px;">
+      <span class="pagination-legend-text" style="display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
         Declined
       </span>
@@ -925,15 +956,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL: Apply for Faculty Leave
      ══════════════════════════════════════════════════════ -->
 <div id="applyLeaveModal" class="hrms-modal-overlay" onclick="if (event.target === this) closeApplyLeaveModal();" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
-  <div class="hrms-modal-content" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 580px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
+  <div class="hrms-modal-content leaves-modal-box" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 580px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
     
     <!-- Modal Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
+    <div class="leaves-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
       <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 10px;">
         <i class="fa-solid fa-calendar-plus" style="color: #0092df;"></i>
         <span>Faculty Leave Application</span>
       </h3>
-      <button type="button" onclick="closeApplyLeaveModal();" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
+      <button type="button" onclick="closeApplyLeaveModal();" class="leaves-modal-close" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
 
     <!-- Modal Form -->
@@ -943,7 +974,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <!-- Faculty Member Selection (If Super Admin) -->
       <?php if ($current_user['role'] === 'super_admin'): ?>
         <div style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Select Faculty Member *</label>
+          <label class="leaves-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Select Faculty Member *</label>
           <select name="staff_id" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600;">
             <option value="">-- Choose Faculty Member --</option>
             <?php foreach ($staff_dropdown as $st_opt): ?>
@@ -957,7 +988,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       <!-- Leave Category -->
       <div style="margin-bottom: 16px;">
-        <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Leave Category / Type *</label>
+        <label class="leaves-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Leave Category / Type *</label>
         <select name="leave_type" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600;">
           <option value="Casual Leave">Casual Leave (CL)</option>
           <option value="Medical Leave">Medical Leave (ML / Sick Leave)</option>
@@ -969,28 +1000,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
 
       <!-- Date Range (Start & End) -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+      <div class="leaves-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Start Date *</label>
+          <label class="leaves-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Start Date *</label>
           <input type="date" id="leaveStartDate" name="start_date" value="<?php echo date('Y-m-d'); ?>" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;" onchange="recalculateLeaveDays();">
         </div>
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">End Date *</label>
+          <label class="leaves-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">End Date *</label>
           <input type="date" id="leaveEndDate" name="end_date" value="<?php echo date('Y-m-d'); ?>" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;" onchange="recalculateLeaveDays();">
         </div>
       </div>
 
       <!-- Live Duration Display Banner -->
       <div style="margin-bottom: 16px;">
-        <div style="background: #f0f9ff; border: 1.5px dashed #0092df; border-radius: 10px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-weight: 700; font-size: 0.82rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.5px;">Computed Leave Duration:</span>
+        <div class="leaves-duration-banner" style="background: #f0f9ff; border: 1.5px dashed #0092df; border-radius: 10px; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;">
+          <span class="leaves-duration-label" style="font-weight: 700; font-size: 0.82rem; color: #0369a1; text-transform: uppercase; letter-spacing: 0.5px;">Computed Leave Duration:</span>
           <span id="leaveDaysDisplay" style="font-size: 1.15rem; font-weight: 800; color: #0092df; font-family: 'Outfit', sans-serif;">1 Day</span>
         </div>
       </div>
 
       <!-- Reason Textarea -->
       <div style="margin-bottom: 20px;">
-        <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Reason / Academic Contingency *</label>
+        <label class="leaves-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Reason / Academic Contingency *</label>
         <textarea name="reason" rows="3" required placeholder="Describe the reason for leave and hand-over arrangements if any..." class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;"></textarea>
       </div>
 
@@ -998,14 +1029,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <!-- Pre-Approve Checkbox (Admin Only) -->
         <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" name="pre_approve" id="preApproveCheck" value="1" style="width: 16px; height: 16px; accent-color: #0092df;">
-          <label for="preApproveCheck" style="font-size: 13px; font-weight: 600; color: #334155; cursor: pointer;">
+          <label for="preApproveCheck" class="leaves-field-label" style="font-size: 13px; font-weight: 600; color: #334155; cursor: pointer;">
             Directly mark this leave application as <strong>Approved</strong>
           </label>
         </div>
       <?php endif; ?>
 
       <!-- Footer Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <div class="leaves-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
         <button type="button" onclick="closeApplyLeaveModal();" class="roaster-btn secondary" style="padding: 8px 18px; font-size: 0.85rem; font-weight: 600;">Cancel</button>
         <button type="submit" class="roaster-add-btn" style="padding: 8px 20px; font-size: 0.85rem; font-weight: 700; border-radius: 8px;">
           <i class="fa-solid fa-paper-plane"></i>

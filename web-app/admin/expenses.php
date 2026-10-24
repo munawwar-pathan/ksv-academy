@@ -6,7 +6,7 @@ if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_expenses');
 }
 $page_title = 'Expenses & Vouchers | KSV Academy HRMS';
-$page_heading = 'School Operational Expenses';
+$page_heading = 'Expenses';
 $page_subheading = 'Campus Expenditure Vouchers, Vendor Payments & Ledger Tracking';
 $active_menu = 'expenses';
 
@@ -395,15 +395,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      FILTER & SEARCH ROASTER TOOLBAR
      ══════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════
+     FILTER & SEARCH ROASTER TOOLBAR
+     ══════════════════════════════════════════════════════ -->
 <div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Filter Form -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/expenses" class="roaster-filter-form">
+    <form method="GET" action="<?php echo ADMIN_URL; ?>/expenses" class="roaster-filter-form expenses-filter-form">
       <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       
       <!-- Search Input -->
-      <div class="roaster-search-box">
+      <div class="roaster-search-box expenses-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search title, invoice, vendor..." autocomplete="off">
         <?php if (!empty($search)): ?>
@@ -411,52 +414,58 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </div>
 
-      <!-- Category Filter Dropdown -->
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-folder-tree"></i>
-        <select name="category_id" onchange="this.form.submit()">
-          <option value="">All Categories</option>
-          <?php foreach ($categories as $c): ?>
-            <option value="<?php echo $c['id']; ?>" <?php echo $filter_cat_id == $c['id'] ? 'selected' : ''; ?>>
-              <?php echo htmlspecialchars($c['category_name']); ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron"></i>
+      <!-- Filter Dropdowns Row -->
+      <div class="expenses-filter-row">
+        <!-- Category Filter Dropdown -->
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-folder-tree"></i>
+          <select name="category_id" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            <?php foreach ($categories as $c): ?>
+              <option value="<?php echo $c['id']; ?>" <?php echo $filter_cat_id == $c['id'] ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($c['category_name']); ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        </div>
+
+        <!-- Payment Mode Filter Dropdown -->
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-credit-card"></i>
+          <select name="method" onchange="this.form.submit()">
+            <option value="">All Payment Modes</option>
+            <option value="Cash" <?php echo $filter_method === 'Cash' ? 'selected' : ''; ?>>Cash</option>
+            <option value="UPI" <?php echo $filter_method === 'UPI' ? 'selected' : ''; ?>>UPI / QR</option>
+            <option value="Bank Transfer" <?php echo $filter_method === 'Bank Transfer' ? 'selected' : ''; ?>>Bank Transfer</option>
+            <option value="Cheque" <?php echo $filter_method === 'Cheque' ? 'selected' : ''; ?>>Cheque</option>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        </div>
       </div>
 
-      <!-- Payment Mode Filter Dropdown -->
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-credit-card"></i>
-        <select name="method" onchange="this.form.submit()">
-          <option value="">All Payment Modes</option>
-          <option value="Cash" <?php echo $filter_method === 'Cash' ? 'selected' : ''; ?>>Cash</option>
-          <option value="UPI" <?php echo $filter_method === 'UPI' ? 'selected' : ''; ?>>UPI / QR</option>
-          <option value="Bank Transfer" <?php echo $filter_method === 'Bank Transfer' ? 'selected' : ''; ?>>Bank Transfer</option>
-          <option value="Cheque" <?php echo $filter_method === 'Cheque' ? 'selected' : ''; ?>>Cheque</option>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron"></i>
+      <!-- Filter Action Buttons -->
+      <div class="expenses-filter-btn-group">
+        <button type="submit" class="roaster-btn secondary">
+          <i class="fa-solid fa-sliders"></i> Filter
+        </button>
+
+        <?php if (!empty($search) || $filter_cat_id > 0 || !empty($filter_method) || !empty($filter_start_date) || !empty($filter_end_date)): ?>
+          <a href="<?php echo ADMIN_URL; ?>/expenses<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </a>
+        <?php endif; ?>
       </div>
-
-      <button type="submit" class="roaster-btn secondary">
-        <i class="fa-solid fa-sliders"></i> Filter
-      </button>
-
-      <?php if (!empty($search) || $filter_cat_id > 0 || !empty($filter_method) || !empty($filter_start_date) || !empty($filter_end_date)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/expenses<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
-          <i class="fa-solid fa-rotate-left"></i> Reset
-        </a>
-      <?php endif; ?>
     </form>
 
     <!-- Right: Vouchers Live Count & Add Button -->
-    <div class="roaster-toolbar-actions">
-      <div class="scholars-count-badge">
+    <div class="roaster-toolbar-actions expenses-toolbar-actions">
+      <div class="scholars-count-badge expenses-records-badge">
         <span class="count-dot" style="background: #ef4444;"></span>
         <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Voucher' : 'Vouchers'; ?></span>
       </div>
 
-      <button type="button" onclick="openAddExpenseModal();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Record New Expense Voucher">
+      <button type="button" onclick="openAddExpenseModal();" class="roaster-add-btn expenses-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Record New Expense Voucher">
         <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
         <span>Add Expense</span>
       </button>
@@ -468,30 +477,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      CAMPUS OPERATIONAL EXPENSES TABLE
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-    <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+<div class="hrms-card expenses-directory-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header expenses-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+    <div class="expenses-title-block">
+      <h3 class="card-title expenses-card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
         <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
-        Campus Operational Expenses &amp; Voucher Ledger
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+        <span>Campus Operational Expenses &amp; Voucher Ledger</span>
+        <span class="expenses-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
-      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+      <p class="expenses-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
         Comprehensive breakdown of utility bills, laboratory consignments, vendor payouts, and institutional purchases.
       </p>
     </div>
 
-    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px;">
-      <span>Disbursed: <strong style="color: #dc2626; font-size: 0.95rem; font-family: 'Outfit', sans-serif;"><?php echo format_inr($total_expense_sum); ?></strong></span>
-      <span style="color: #cbd5e1;">|</span>
-      <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
+    <div class="expenses-header-meta" style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+      <span>Disbursed: <strong class="expenses-disbursed-total" style="color: #dc2626; font-size: 0.95rem; font-family: 'Outfit', sans-serif;"><?php echo format_inr($total_expense_sum); ?></strong></span>
+      <span class="expenses-meta-divider" style="color: #cbd5e1;">|</span>
+      <span>Total Records: <strong class="expenses-records-total" style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
     </div>
   </div>
 
   <div class="table-responsive">
-    <table class="hrms-table staff-id-table">
+    <table class="hrms-table staff-id-table expenses-table">
       <thead>
         <tr>
           <th style="min-width: 125px;">Date &amp; Voucher</th>
@@ -553,7 +562,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               
               <!-- 1. Date -->
               <td>
-                <div style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">
+                <div class="cell-name exp-date-text" style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">
                   <?php echo format_date($exp['expense_date']); ?>
                 </div>
                 <div style="margin-top: 2px;">
@@ -563,11 +572,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 2. Expense Title & Details -->
               <td>
-                <div style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; line-height: 1.25;">
+                <div class="cell-name exp-title-text" style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                   <?php echo htmlspecialchars($exp['title']); ?>
                 </div>
                 <?php if (!empty($exp['notes'])): ?>
-                  <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
+                  <div class="cell-sub exp-notes-text" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
                     <i class="fa-solid fa-circle-info" style="color: #94a3b8; font-size: 0.65rem;"></i>
                     <span><?php echo htmlspecialchars($exp['notes']); ?></span>
                   </div>
@@ -584,7 +593,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 4. Vendor / Payee -->
               <td>
-                <div style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #334155; font-size: 0.82rem;">
+                <div class="cell-sub exp-vendor-text" style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #334155; font-size: 0.82rem;">
                   <i class="fa-solid fa-store" style="color: #94a3b8; font-size: 0.70rem;"></i>
                   <span><?php echo htmlspecialchars($exp['vendor_name'] ?: 'Official Vendor'); ?></span>
                 </div>
@@ -604,7 +613,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 6. Amount -->
               <td>
-                <strong style="color: #dc2626; font-size: 0.92rem; font-family: 'Outfit', sans-serif;">
+                <strong class="exp-amount-text" style="color: #dc2626; font-size: 0.92rem; font-family: 'Outfit', sans-serif;">
                   <?php echo format_inr($exp['amount']); ?>
                 </strong>
               </td>
@@ -711,13 +720,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <!-- Legend / Session Status -->
-    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
-      <span style="display: inline-flex; align-items: center; gap: 6px;">
+    <div class="pagination-legend-group" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+      <span class="pagination-legend-text" style="display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
         Verified Ledger
       </span>
-      <span style="color: #cbd5e1;">|</span>
-      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      <span class="expenses-meta-divider" style="color: #cbd5e1;">|</span>
+      <span class="pagination-legend-text">Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
     </div>
 
   </div>
@@ -727,14 +736,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL: Add Expense Voucher Form
      ══════════════════════════════════════════════════════ -->
 <div id="addExpenseModal" class="hrms-modal-overlay" onclick="if (event.target === this) closeAddExpenseModal();" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
-  <div class="hrms-modal-content" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 600px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
+  <div class="hrms-modal-content expenses-modal-box" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 600px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
+    <div class="expenses-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
       <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 10px;">
         <i class="fa-solid fa-file-circle-plus" style="color: #0092df;"></i>
         <span>Record New Expense Voucher</span>
       </h3>
-      <button type="button" onclick="closeAddExpenseModal();" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
+      <button type="button" onclick="closeAddExpenseModal();" class="expenses-modal-close" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/expenses" id="addExpenseForm">
@@ -742,14 +751,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       <!-- Expense Title -->
       <div style="margin-bottom: 16px;">
-        <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Expense Title / Purpose *</label>
+        <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Expense Title / Purpose *</label>
         <input type="text" name="title" required placeholder="e.g. Science Lab Reagents, Electricity Bill, Generator Fuel" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
       </div>
 
       <!-- Category & Amount -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+      <div class="expenses-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Expense Category *</label>
+          <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Expense Category *</label>
           <select name="category_id" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600;">
             <option value="">-- Select Category --</option>
             <?php foreach ($categories as $c): ?>
@@ -758,19 +767,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </select>
         </div>
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Amount (₹) *</label>
+          <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Amount (₹) *</label>
           <input type="number" step="0.01" min="0.01" name="amount" required placeholder="0.00" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 800; color: #dc2626;">
         </div>
       </div>
 
       <!-- Date & Payment Mode -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+      <div class="expenses-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Expense Date *</label>
+          <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Expense Date *</label>
           <input type="date" name="expense_date" value="<?php echo date('Y-m-d'); ?>" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
         </div>
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Payment Mode *</label>
+          <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Payment Mode *</label>
           <select name="payment_method" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600;">
             <option value="Cash">Cash Payment</option>
             <option value="UPI">UPI / Digital QR</option>
@@ -781,28 +790,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
 
       <!-- Vendor & Invoice Ref -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
+      <div class="expenses-modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Vendor / Payee Name</label>
+          <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Vendor / Payee Name</label>
           <input type="text" name="vendor_name" placeholder="e.g. Apex Scientific Supplies" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
         </div>
         <div>
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Invoice / Bill Number</label>
+          <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Invoice / Bill Number</label>
           <input type="text" name="invoice_ref" placeholder="e.g. INV-2025-9901" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;">
         </div>
       </div>
 
       <!-- Itemization / Notes -->
       <div style="margin-bottom: 22px;">
-        <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Itemization &amp; Approval Notes</label>
+        <label class="expenses-field-label" style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Itemization &amp; Approval Notes</label>
         <textarea name="notes" rows="2" placeholder="Itemization, purpose, or departmental remarks..." class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;"></textarea>
       </div>
 
       <!-- Footer Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" onclick="closeAddExpenseModal();" class="action-btn" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #475569;">Cancel</button>
-        <button type="submit" class="action-primary-btn" style="background: #0092df; color: #ffffff; border: none; padding: 9px 24px; border-radius: 8px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 146, 223, 0.25);">
-          <i class="fa-solid fa-check"></i> Record Voucher
+      <div class="expenses-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" onclick="closeAddExpenseModal();" class="roaster-btn secondary expenses-cancel-btn" style="padding: 9px 18px; border-radius: 8px; font-weight: 600;">Cancel</button>
+        <button type="submit" class="roaster-add-btn expenses-submit-btn" style="padding: 9px 24px; border-radius: 8px; font-weight: 700;">
+          <i class="fa-solid fa-check"></i> <span>Record Voucher</span>
         </button>
       </div>
 
@@ -814,14 +823,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL: View Voucher Details
      ══════════════════════════════════════════════════════ -->
 <div id="voucherModal" class="hrms-modal-overlay" onclick="if (event.target === this) closeVoucherModal();" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
-  <div class="hrms-modal-content" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 500px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
+  <div class="hrms-modal-content voucher-modal-box" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 500px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
+    <div class="voucher-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
       <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 10px;">
         <i class="fa-solid fa-receipt" style="color: #0092df;"></i>
         <span>Official Expense Voucher</span>
       </h3>
-      <button type="button" onclick="closeVoucherModal();" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
+      <button type="button" onclick="closeVoucherModal();" class="voucher-modal-close" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
 
     <!-- Voucher Details Body -->
@@ -829,11 +838,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <!-- Populated via Javascript -->
     </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
-      <button type="button" onclick="window.print();" class="roaster-btn secondary" style="gap: 6px;">
-        <i class="fa-solid fa-print"></i> Print Voucher
+    <div class="voucher-modal-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+      <button type="button" onclick="window.print();" class="roaster-btn secondary voucher-print-btn" style="gap: 6px;">
+        <i class="fa-solid fa-print"></i> <span>Print Voucher</span>
       </button>
-      <button type="button" onclick="closeVoucherModal();" class="action-btn" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #475569;">Close</button>
+      <button type="button" onclick="closeVoucherModal();" class="roaster-btn secondary voucher-close-btn" style="padding: 8px 18px; border-radius: 8px; font-weight: 600;">Close</button>
     </div>
 
   </div>
@@ -858,51 +867,51 @@ function openVoucherModal(exp) {
   const amtFormatted = '₹' + parseFloat(exp.amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
   body.innerHTML = `
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+    <div class="voucher-receipt-card" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
         <div>
-          <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">VOUCHER REF</span>
-          <div style="font-family: monospace; font-size: 14px; font-weight: 800; color: #0284c7;">#EXP-${String(exp.id).padStart(4, '0')}</div>
+          <span class="voucher-meta-label" style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">VOUCHER REF</span>
+          <div class="voucher-ref-code" style="font-family: monospace; font-size: 14px; font-weight: 800; color: #0284c7;">#EXP-${String(exp.id).padStart(4, '0')}</div>
         </div>
         <div style="text-align: right;">
-          <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">DATE</span>
-          <div style="font-weight: 700; color: #0f172a;">${exp.expense_date}</div>
+          <span class="voucher-meta-label" style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">DATE</span>
+          <div class="voucher-date-text" style="font-weight: 700; color: #0f172a;">${exp.expense_date}</div>
         </div>
       </div>
 
       <div style="margin-bottom: 12px;">
-        <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">${exp.title}</div>
-        <div style="color: #64748b; font-size: 12px; margin-top: 3px;">Category: <strong>${exp.category_name}</strong></div>
+        <div class="voucher-title-text" style="font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">${exp.title}</div>
+        <div class="voucher-cat-text" style="color: #64748b; font-size: 12px; margin-top: 3px;">Category: <strong>${exp.category_name}</strong></div>
       </div>
 
-      <div style="border-top: 1px dashed #cbd5e1; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: 800; color: #334155; font-size: 13px;">AMOUNT PAID:</span>
-        <span style="font-size: 1.35rem; font-weight: 900; color: #dc2626; font-family: 'Outfit', sans-serif;">${amtFormatted}</span>
+      <div class="voucher-amount-row" style="border-top: 1px dashed #cbd5e1; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span class="voucher-amount-label" style="font-weight: 800; color: #334155; font-size: 13px;">AMOUNT PAID:</span>
+        <span class="voucher-amount-val" style="font-size: 1.35rem; font-weight: 900; color: #dc2626; font-family: 'Outfit', sans-serif;">${amtFormatted}</span>
       </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
-        <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Vendor / Payee</span>
-        <div style="font-weight: 700; color: #0f172a; margin-top: 2px;">${exp.vendor_name || 'Official Institution'}</div>
+    <div class="voucher-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+      <div class="voucher-subcard" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+        <span class="voucher-subcard-label" style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Vendor / Payee</span>
+        <div class="voucher-subcard-val" style="font-weight: 700; color: #0f172a; margin-top: 2px;">${exp.vendor_name || 'Official Institution'}</div>
       </div>
-      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
-        <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Payment Mode</span>
-        <div style="font-weight: 700; color: #0284c7; margin-top: 2px;">${exp.payment_method}</div>
+      <div class="voucher-subcard" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+        <span class="voucher-subcard-label" style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Payment Mode</span>
+        <div class="voucher-subcard-mode" style="font-weight: 700; color: #0284c7; margin-top: 2px;">${exp.payment_method}</div>
       </div>
     </div>
 
     ${exp.invoice_ref ? `
-      <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 9px 12px; margin-bottom: 12px;">
-        <span style="font-size: 10px; font-weight: 700; color: #0369a1; text-transform: uppercase;">Invoice / Bill Number:</span>
-        <span style="font-family: monospace; font-weight: 800; color: #0284c7; margin-left: 6px;">${exp.invoice_ref}</span>
+      <div class="voucher-invoice-box" style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 9px 12px; margin-bottom: 12px;">
+        <span class="voucher-invoice-label" style="font-size: 10px; font-weight: 700; color: #0369a1; text-transform: uppercase;">Invoice / Bill Number:</span>
+        <span class="voucher-invoice-ref" style="font-family: monospace; font-weight: 800; color: #0284c7; margin-left: 6px;">${exp.invoice_ref}</span>
       </div>
     ` : ''}
 
     ${exp.notes ? `
-      <div style="background: #f8fafc; border-left: 3px solid #0092df; border-radius: 0 6px 6px 0; padding: 8px 12px;">
-        <span style="font-size: 11px; font-weight: 700; color: #475569;">Remarks / Purpose:</span>
-        <p style="margin: 3px 0 0; color: #1e293b; font-size: 12px;">${exp.notes}</p>
+      <div class="voucher-notes-box" style="background: #f8fafc; border-left: 3px solid #0092df; border-radius: 0 6px 6px 0; padding: 8px 12px;">
+        <span class="voucher-notes-label" style="font-size: 11px; font-weight: 700; color: #475569;">Remarks / Purpose:</span>
+        <p class="voucher-notes-text" style="margin: 3px 0 0; color: #1e293b; font-size: 12px;">${exp.notes}</p>
       </div>
     ` : ''}
   `;

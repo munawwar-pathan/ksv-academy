@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
 $page_title = 'Faculty & Staff Directory | KSV Academy HRMS';
-$page_heading = 'Faculty & Staff Management';
+$page_heading = 'Staff Management';
 $page_subheading = 'Academic Mentors, Lecturers, Department Heads & Administrative Staff Directory';
 $active_menu = 'staff';
 
@@ -803,13 +803,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      FACULTY & STAFF DIRECTORY TABLE (Simple & Sober - Like staff-id)
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-    <div>
+<div class="hrms-card staff-directory-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header staff-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+    <div class="staff-title-block">
       <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
         <i class="fa-solid fa-chalkboard-user" style="color: #0284c7;"></i>
         Faculty &amp; Staff Directory
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+        <span class="staff-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
@@ -817,7 +817,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         Academic lecturers, department chairs, and administrative leadership registered in the academy.
       </p>
     </div>
-    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+    <div class="staff-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
       <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
     </div>
   </div>
@@ -1200,7 +1200,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+      <div class="hrms-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
         <button type="button" onclick="closeModal('addStaffModal');" class="btn-hrms btn-hrms-outline">Cancel</button>
         <button type="submit" class="action-primary-btn" style="background: #0092df; color: #ffffff; border: none; padding: 9px 24px; border-radius: 8px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 146, 223, 0.25);">Register Faculty Member</button>
       </div>
@@ -1232,7 +1232,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="hrms-modal-body" style="padding: 24px; max-height: calc(85vh - 140px); overflow-y: auto;">
       
       <!-- Profile Header Banner -->
-      <div style="display: flex; align-items: center; gap: 18px; padding: 18px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 14px; margin-bottom: 20px;">
+      <div class="view-staff-banner" style="display: flex; align-items: center; gap: 18px; padding: 18px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 14px; margin-bottom: 20px;">
         <div id="view_sm_avatar" style="width: 64px; height: 64px; border-radius: 50%; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; font-family: 'Outfit', sans-serif; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0; background: linear-gradient(135deg, #0092df 0%, #007cbd 100%);">
           A
         </div>
@@ -1244,7 +1244,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <span>Active</span>
             </span>
           </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.75rem;">
+          <div class="view-staff-meta" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.75rem;">
             <span style="background: #ffffff; color: #0369a1; padding: 3px 9px; border-radius: 6px; font-weight: 700; border: 1px solid #bae6fd;">
               <i class="fa-solid fa-graduation-cap"></i> <span id="view_sm_dept">—</span>
             </span>
@@ -1304,7 +1304,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Modal Footer Actions -->
-    <div style="display: flex; justify-content: flex-end; align-items: center; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+    <div class="hrms-modal-footer" style="display: flex; justify-content: flex-end; align-items: center; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
       <button type="button" onclick="closeModal('viewStaffModal')" class="btn-hrms btn-hrms-outline">
         Close
       </button>
@@ -1602,7 +1602,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+      <div class="hrms-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
         <button type="button" onclick="closeModal('editStaffModal');" class="btn-hrms btn-hrms-outline">Cancel</button>
         <button type="submit" class="login-submit-btn" style="width: auto; margin-top: 0; padding: 10px 24px;">
           <i class="fa-solid fa-check"></i> Save Changes
@@ -1679,7 +1679,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+      <div class="hrms-modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #f8fafc; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
         <button type="button" onclick="closeModal('changeStaffPasswordModal')" class="btn-hrms btn-hrms-outline">Cancel</button>
         <button type="submit" class="roaster-add-btn" style="padding: 8px 20px; font-size: 0.82rem;">
           <i class="fa-solid fa-key"></i> <span>Update Password</span>

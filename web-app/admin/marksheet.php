@@ -1463,10 +1463,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Right: Exam Selector & Action Buttons -->
-  <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+  <div class="marksheet-top-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
     
     <?php if (!empty($student_marksheets)): ?>
-      <form method="GET" action="<?php echo ADMIN_URL; ?>/marksheet" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+      <form method="GET" action="<?php echo ADMIN_URL; ?>/marksheet" class="marksheet-exam-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
         <input type="hidden" name="student_id" value="<?php echo $selected_student_id; ?>">
         <?php if (!empty($search)): ?>
           <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
@@ -1483,7 +1483,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <label style="font-size: 13px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;">
           <i class="fa-solid fa-book-bookmark" style="color: #0092df;"></i> <span>Exam:</span>
         </label>
-        <select name="marksheet_id" onchange="this.form.submit()" class="hrms-input" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; border: 1.5px solid #cbd5e1; background: #f8fafc;">
+        <select name="marksheet_id" onchange="this.form.submit()" class="hrms-input marksheet-exam-select" style="padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; border: 1.5px solid #cbd5e1; background: #f8fafc;">
           <?php foreach ($student_marksheets as $m_item): ?>
             <option value="<?php echo $m_item['id']; ?>" <?php echo ($active_marksheet && $m_item['id'] == $active_marksheet['id']) ? 'selected' : ''; ?>>
               <?php echo htmlspecialchars($m_item['exam_name']); ?> (<?php echo $m_item['percentage']; ?>% • <?php echo $m_item['overall_grade']; ?>)
@@ -1494,7 +1494,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <?php if ($active_marksheet): ?>
-      <button type="button" onclick="window.print();" class="action-primary-btn" style="background: #0092df; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0, 146, 223, 0.25);">
+      <button type="button" onclick="window.print();" class="action-primary-btn marksheet-print-btn" style="background: #0092df; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0, 146, 223, 0.25);">
         <i class="fa-solid fa-print"></i>
         <span>Print Marksheet</span>
       </button>
@@ -1614,7 +1614,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Statement of Marks Table -->
-    <div style="position: relative; z-index: 1;">
+    <div class="report-table-responsive" style="position: relative; z-index: 1;">
       <table class="report-table">
         <thead>
           <tr>
@@ -1753,77 +1753,79 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </div>
 
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-filter"></i>
-        <select name="standard" onchange="this.form.submit()">
-          <option value="">All Academic Standards</option>
-          <?php foreach ($standards as $std): ?>
-            <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-              <?php echo $std; ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron"></i>
+        <div class="marksheet-filter-row" style="display: flex; gap: 8px; align-items: center;">
+          <div class="roaster-select-box">
+            <i class="fa-solid fa-filter"></i>
+            <select name="standard" onchange="this.form.submit()">
+              <option value="">All Academic Standards</option>
+              <?php foreach ($standards as $std): ?>
+                <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
+                  <?php echo $std; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <i class="fa-solid fa-chevron-down select-chevron"></i>
+          </div>
+
+          <button type="submit" class="roaster-btn secondary">
+            <i class="fa-solid fa-sliders"></i> Filter
+          </button>
+
+          <?php if (!empty($search) || !empty($filter_standard)): ?>
+            <a href="<?php echo ADMIN_URL; ?>/marksheet<?php 
+              $rp = [];
+              if ($selected_student_id > 0) $rp['student_id'] = $selected_student_id;
+              if ($selected_marksheet_id > 0) $rp['marksheet_id'] = $selected_marksheet_id;
+              if ($limit !== 10) $rp['limit'] = $limit;
+              echo !empty($rp) ? '?' . http_build_query($rp) : '';
+            ?>" class="roaster-btn ghost" title="Reset all filters">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+          <?php endif; ?>
+        </div>
+      </form>
+
+      <!-- Right: Scholars Live Count & Quick Switch to ID Cards -->
+      <div class="roaster-toolbar-actions">
+        <div class="scholars-count-badge">
+          <span class="count-dot"></span>
+          <span><strong><?php echo $total_records; ?></strong> Scholars</span>
+        </div>
       </div>
 
-      <button type="submit" class="roaster-btn secondary">
-        <i class="fa-solid fa-sliders"></i> Filter
-      </button>
-
-      <?php if (!empty($search) || !empty($filter_standard)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/marksheet<?php 
-          $rp = [];
-          if ($selected_student_id > 0) $rp['student_id'] = $selected_student_id;
-          if ($selected_marksheet_id > 0) $rp['marksheet_id'] = $selected_marksheet_id;
-          if ($limit !== 10) $rp['limit'] = $limit;
-          echo !empty($rp) ? '?' . http_build_query($rp) : '';
-        ?>" class="roaster-btn ghost" title="Reset all filters">
-          <i class="fa-solid fa-rotate-left"></i> Reset
-        </a>
-      <?php endif; ?>
-    </form>
-
-    <!-- Right: Scholars Live Count & Quick Switch to ID Cards -->
-    <div class="roaster-toolbar-actions">
-      <div class="scholars-count-badge">
-        <span class="count-dot"></span>
-        <span><strong><?php echo $total_records; ?></strong> Scholars</span>
-      </div>
     </div>
-
   </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════
-     STUDENT DATA TABLE (Simple & Sober - Like student-id.php)
-     ══════════════════════════════════════════════════════ -->
-<div class="hrms-card no-print" id="marksheetDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-    <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
-        <i class="fa-solid fa-graduation-cap" style="color: #0284c7;"></i>
-        Scholar Academic Directory &amp; Marksheet Register
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+  <!-- ══════════════════════════════════════════════════════
+       STUDENT DATA TABLE (Simple & Sober - Like student-id.php)
+       ══════════════════════════════════════════════════════ -->
+  <div class="hrms-card no-print marksheet-directory-card" id="marksheetDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+    <div class="hrms-card-header marksheet-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+      <div class="marksheet-title-block">
+        <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+          <i class="fa-solid fa-graduation-cap" style="color: #0284c7;"></i>
+          Scholar Academic Directory &amp; Marksheet Register
+          <span class="marksheet-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+            Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          </span>
+        </h3>
+        <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+          Click <strong>View Marksheet</strong> on any student row below to load their official report card above.
+        </p>
+      </div>
+
+      <div class="marksheet-actions-wrap" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span class="marksheet-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+          Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong>
         </span>
-      </h3>
-      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
-        Click <strong>View Marksheet</strong> on any student row below to load their official report card above.
-      </p>
+        <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
+          <button type="button" onclick="openCreateMarksheetModal(<?php echo $selected_student_id; ?>);" class="ms-btn-action ms-btn-secondary ms-generate-btn" style="font-size: 0.76rem; gap: 5px;">
+            <i class="fa-solid fa-file-circle-plus" style="color: #059669;"></i>
+            <span>New Evaluation</span>
+          </button>
+        <?php endif; ?>
+      </div>
     </div>
-
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-      <span style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
-        Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong>
-      </span>
-      <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
-        <button type="button" onclick="openCreateMarksheetModal(<?php echo $selected_student_id; ?>);" class="ms-btn-action ms-btn-secondary" style="font-size: 0.76rem; gap: 5px;">
-          <i class="fa-solid fa-file-circle-plus" style="color: #059669;"></i>
-          <span>New Evaluation</span>
-        </button>
-      <?php endif; ?>
-    </div>
-  </div>
 
   <div class="table-responsive">
     <table class="hrms-table marksheet-table">

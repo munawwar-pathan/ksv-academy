@@ -1,0 +1,3585 @@
+/**
+ * KSV ACADEMY - HRMS Web Application Responsive Stylesheet
+ * Optimized for Mobile (320px - 768px), Tablet (769px - 991px), and Desktop
+ * Covers: Top Header, Session Switcher, Executive Ribbon, Stat Cards, Roaster Toolbar, Data Tables & Modals
+ */
+
+/* ==========================================================================
+   1. GLOBAL RESPONSIVE DEFAULTS & BASE STYLES
+   ========================================================================== */
+.header-session-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 146, 223, 0.08);
+  border: 1px solid rgba(0, 146, 223, 0.22);
+  border-radius: 8px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
+.header-session-picker .session-icon {
+  color: var(--primary-600, #0284c7);
+  font-size: 14px;
+}
+
+.header-session-picker .session-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-700, #334155);
+}
+
+.header-session-picker .session-select {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-700, #0369a1);
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   2. TABLET & LAPTOP SCREENS (max-width: 991px)
+   ========================================================================== */
+@media (max-width: 991px) {
+  /* Layout Base */
+  .hrms-app-wrapper {
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .hrms-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    z-index: 1000 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 0 32px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  .hrms-sidebar.open {
+    transform: translateX(0) !important;
+  }
+
+  .hrms-main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Top Header Alignment */
+  .hrms-top-header {
+    height: auto !important;
+    min-height: 64px !important;
+    padding: 10px 18px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 90 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+
+  .header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .mobile-menu-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 8px !important;
+    background: var(--hrms-bg, #f8fafc) !important;
+    border: 1px solid var(--hrms-border, #e2e8f0) !important;
+    color: var(--hrms-navy, #0f172a) !important;
+    font-size: 1.15rem !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+  }
+
+  .mobile-menu-btn:hover {
+    background: #e2e8f0 !important;
+  }
+
+  .header-title-wrap {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .page-title {
+    font-size: 1.20rem !important;
+    font-weight: 800 !important;
+    color: var(--hrms-navy, #0f172a) !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .page-subtitle {
+    font-size: 0.76rem !important;
+    color: var(--hrms-text-muted, #64748b) !important;
+    margin: 2px 0 0 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .header-date-badge {
+    display: none !important;
+  }
+
+  /* Page Content Container */
+  .hrms-page-body {
+    padding: 20px 16px !important;
+  }
+
+  /* Grids */
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+}
+
+/* ==========================================================================
+   3. MOBILE PHONES (max-width: 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Top Navigation Bar */
+  .hrms-top-header {
+    padding: 8px 12px !important;
+    min-height: 58px !important;
+    gap: 8px !important;
+  }
+
+  .header-left {
+    gap: 8px !important;
+  }
+
+  .mobile-menu-btn {
+    width: 35px !important;
+    height: 35px !important;
+    min-width: 35px !important;
+    font-size: 1.05rem !important;
+  }
+
+  .page-title {
+    font-size: 1.05rem !important;
+  }
+
+  /* Hide subtitle on mobile to prevent line squishing & vertical overlap */
+  .page-subtitle {
+    display: none !important;
+  }
+
+  .header-right {
+    gap: 6px !important;
+  }
+
+  /* Session Switcher Pill */
+  .header-session-picker {
+    padding: 4px 8px !important;
+    border-radius: 7px !important;
+    gap: 5px !important;
+  }
+
+  .header-session-picker .session-icon {
+    font-size: 12px !important;
+  }
+
+  .header-session-picker .session-label {
+    display: none !important; /* Hides "Session:" word to save space */
+  }
+
+  .header-session-picker .session-select {
+    font-size: 0.76rem !important;
+    max-width: 135px !important;
+  }
+
+  /* Theme Toggle Button */
+  .header-theme-toggle {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    border-radius: 7px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Page Body */
+  .hrms-page-body {
+    padding: 14px 12px 30px 12px !important;
+  }
+
+  /* Executive Command Ribbon */
+  .admin-welcome-ribbon {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .welcome-meta-badge {
+    font-size: 0.68rem !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    margin-bottom: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+  }
+
+  .welcome-title {
+    font-size: 1.15rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+    color: var(--hrms-text-muted, #64748b) !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Quick Actions: Clean 2x2 symmetrical grid */
+  .welcome-ribbon-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+  }
+
+  .ribbon-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Stat Metric Cards - Clean 2x2 Grid on Mobile */
+  .stat-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .stat-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    min-height: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .stat-card-top {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .stat-label {
+    font-size: 0.65rem !important;
+    letter-spacing: 0.03em !important;
+    margin-bottom: 2px !important;
+    line-height: 1.2 !important;
+  }
+
+  .stat-number {
+    font-size: 1.35rem !important;
+    line-height: 1.15 !important;
+    font-weight: 800 !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    border-radius: 7px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .stat-card-progress {
+    height: 3px !important;
+    margin-top: 6px !important;
+    border-radius: 2px !important;
+  }
+
+  .stat-card-footer {
+    margin-top: 8px !important;
+    padding-top: 6px !important;
+    border-top: 1px dashed var(--hrms-border, #e2e8f0) !important;
+    font-size: 0.68rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .stat-card-footer span:first-child {
+    flex: 1 !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .stat-card-footer span:last-child {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .stat-card-link {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+  }
+
+  /* ── Enhanced Student Roaster Toolbar on Mobile ── */
+  .roaster-toolbar-card {
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .roaster-toolbar-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .roaster-filter-form {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .roaster-search-box {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .roaster-select-box {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    font-size: 0.80rem !important;
+    padding: 8px 28px 8px 30px !important;
+    border-radius: 10px !important;
+  }
+
+  .roaster-btn.secondary {
+    height: 40px !important;
+    padding: 0 16px !important;
+    font-size: 0.80rem !important;
+    border-radius: 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  .roaster-btn.ghost {
+    grid-column: 1 / -1 !important;
+    height: 32px !important;
+    width: 100% !important;
+    justify-content: center !important;
+    font-size: 0.76rem !important;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Symmetrical Toolbar Actions: 50% Count Badge | 50% Add Student Button */
+  .roaster-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 2px !important;
+    align-items: center !important;
+  }
+
+  .scholars-count-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.76rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+  }
+
+  .roaster-add-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+  }
+
+  .roaster-add-btn .btn-icon-circle {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.70rem !important;
+  }
+
+  /* Dashboard Cards & Table Headers */
+  .dashboard-grid-2 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .hrms-card {
+    border-radius: 12px !important;
+  }
+
+  .hrms-card-header {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .hrms-card-header > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .hrms-card-header > div:last-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .hrms-card-header h3.card-title {
+    font-size: 0.94rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .hrms-card-header h3.card-title span {
+    white-space: nowrap !important;
+    font-size: 0.68rem !important;
+  }
+
+  .table-search-box {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .table-search-box input {
+    width: 100% !important;
+    font-size: 0.78rem !important;
+    padding: 6px 10px 6px 30px !important;
+    height: 34px !important;
+  }
+
+  .btn-hrms-sm {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+    height: 34px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Touch Scrollable Data Tables */
+  .hrms-card,
+  .hrms-card-body,
+  .dashboard-grid-2 > div {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    position: relative !important;
+  }
+
+  .staff-id-table thead th,
+  .staff-periods-table thead th,
+  .student-id-table thead th {
+    padding: 8px 10px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .staff-id-table tbody td,
+  .staff-periods-table tbody td,
+  .student-id-table tbody td {
+    padding: 8px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .user-cell {
+    gap: 8px !important;
+  }
+
+  .cell-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .cell-name {
+    font-size: 0.80rem !important;
+  }
+
+  .cell-sub {
+    font-size: 0.68rem !important;
+  }
+
+  .sid-action-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .btn-student-login,
+  .btn-student-pwd {
+    padding: 4px 8px !important;
+    font-size: 0.70rem !important;
+    gap: 4px !important;
+  }
+
+  /* Table Footer, Legend & Pagination */
+  .roaster-table-legend {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-size: 0.70rem !important;
+    padding: 8px 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .legend-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 0.70rem !important;
+  }
+
+  /* ── HRMS Modals on Mobile (Add Student Modal) ── */
+  .hrms-modal {
+    padding: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .hrms-modal-card {
+    width: 100% !important;
+    max-width: 520px !important;
+    margin: auto !important;
+    max-height: calc(100vh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .hrms-modal-header {
+    padding: 14px 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .hrms-modal-header h3 {
+    font-size: 1.05rem !important;
+  }
+
+  .hrms-modal-body {
+    padding: 14px 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 !important;
+    max-height: calc(100dvh - 120px) !important;
+  }
+
+  .hrms-modal-body div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .hrms-modal-footer {
+    padding: 12px 16px !important;
+    flex-shrink: 0 !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .hrms-modal-footer .btn-hrms,
+  .hrms-modal-footer button,
+  .hrms-modal-footer .action-primary-btn,
+  .hrms-modal-footer .login-submit-btn,
+  .hrms-modal-footer .roaster-add-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+
+  /* ── Student Attendance Responsive Workstation (Attendance Register) ── */
+  .attendance-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .attendance-title-block {
+    width: 100% !important;
+  }
+
+  .attendance-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .attendance-title-block .attendance-date-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .attendance-title-block p {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .attendance-header-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .attendance-filter-form {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .att-filter-date-wrap {
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  .att-filter-date,
+  .att-filter-select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  .att-scanner-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    border-radius: 8px !important;
+    margin-top: 2px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Quick Punch Action Buttons */
+  .punch-pill-group {
+    display: inline-flex !important;
+    gap: 3px !important;
+    padding: 2px 3px !important;
+  }
+
+  .punch-action-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+  }
+
+  /* Attendance Table Pagination & Per-Page Controls */
+  .pagination-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  .pagination-meta-group {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    font-size: 0.74rem !important;
+    gap: 8px !important;
+  }
+
+  .pagination-limit-box {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .pagination-limit-select {
+    padding: 4px 8px !important;
+    font-size: 0.74rem !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+  }
+
+  .pagination-nav {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 2px 0 !important;
+  }
+
+  .pagination-btn {
+    min-width: 30px !important;
+    height: 30px !important;
+    font-size: 0.74rem !important;
+    padding: 0 4px !important;
+  }
+
+  .roaster-footer-summary {
+    text-align: center !important;
+    width: 100% !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Camera Scanner Modal Responsive */
+  #scannerModal .hrms-modal-card {
+    max-width: 95% !important;
+    width: 100% !important;
+    border-radius: 14px !important;
+    margin: 10px auto !important;
+  }
+
+  #scannerModal .hrms-modal-header {
+    padding: 12px 14px !important;
+  }
+
+  #scannerModal .hrms-modal-body {
+    padding: 12px 14px !important;
+  }
+
+  #scannerModal .scanner-viewport-box {
+    max-height: 240px !important;
+  }
+
+  #scannerModal .scanner-control-btn {
+    font-size: 0.76rem !important;
+    padding: 7px 10px !important;
+  }
+
+  #scannerModal .scanner-manual-wrap {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  #scannerModal .manual-punch-input {
+    flex: 1 !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    padding: 6px 12px !important;
+    font-size: 0.82rem !important;
+  }
+
+  #scannerModal .manual-punch-btn {
+    width: auto !important;
+    min-width: 80px !important;
+    height: 38px !important;
+    flex-shrink: 0 !important;
+    padding: 0 16px !important;
+    margin-top: 0 !important;
+  }
+
+  /* Late Punch Tooltip Modal Mobile Alignment */
+  .late-punch-tooltip {
+    max-width: calc(100vw - 24px) !important;
+    z-index: 1050 !important;
+  }
+
+  /* ── Fee Management Responsive Workstation ── */
+  .fee-filter-selects {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .fee-filter-selects .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .fee-filter-selects .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-right: 24px !important;
+  }
+
+  .fee-filter-actions {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .fee-filter-actions .roaster-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    height: 38px !important;
+  }
+
+  .fee-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .fee-title-block {
+    width: 100% !important;
+  }
+
+  .fee-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .fee-title-block .fee-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .fee-title-block p {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .fee-records-count {
+    font-size: 0.74rem !important;
+  }
+
+  /* Collect Fee Modal Responsive */
+  #collectFeeModal .hrms-modal-card {
+    max-width: 95% !important;
+    width: 100% !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 16px !important;
+    margin: 10px auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #collectFeeModal .hrms-modal-header {
+    padding: 14px 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #collectFeeModal .hrms-modal-body {
+    padding: 14px 16px 20px 16px !important;
+    max-height: calc(100dvh - 90px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #collectFeeModal .collect-modal-actions {
+    display: flex !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  #collectFeeModal .collect-cancel-btn {
+    flex: 1 !important;
+    height: 42px !important;
+    justify-content: center !important;
+    font-size: 0.82rem !important;
+  }
+
+  #collectFeeModal .collect-submit-btn {
+    flex: 2 !important;
+    width: auto !important;
+    height: 42px !important;
+    justify-content: center !important;
+    font-size: 0.82rem !important;
+    margin: 0 !important;
+  }
+
+  /* Receipt Print Modal Responsive */
+  #receiptPrintModal .receipt-modal-card {
+    max-width: 95% !important;
+    width: 100% !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 16px !important;
+    margin: 10px auto !important;
+  }
+
+  #receiptPrintModal .hrms-modal-header {
+    padding: 12px 14px !important;
+  }
+
+  #receiptPrintModal .hrms-modal-body {
+    padding: 10px !important;
+    max-height: calc(100dvh - 130px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  #receiptPrintModal .no-print[style*="grid-template-columns"] {
+    padding: 10px 14px !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #receiptPrintModal .no-print .btn-hrms,
+  #receiptPrintModal .no-print .roaster-add-btn {
+    height: 38px !important;
+    font-size: 0.78rem !important;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* ── Student ID Card Responsive Workstation ── */
+  .id-card-actions-wrap {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .id-card-download-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .id-card-download-group .roaster-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 38px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .id-card-print-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    margin-top: 0 !important;
+  }
+
+  .id-card-stage {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 24px !important;
+    padding: 10px 0 !important;
+  }
+
+  .id-badge-holder {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 326px !important;
+  }
+
+  .pvc-card {
+    max-width: 100% !important;
+  }
+
+  .staff-id-filter-row,
+  .student-id-filter-row {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+    align-items: center !important;
+  }
+
+  .staff-id-filter-row .roaster-select-box,
+  .student-id-filter-row .roaster-select-box {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .staff-id-filter-row .roaster-btn,
+  .student-id-filter-row .roaster-btn {
+    flex-shrink: 0 !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+  }
+
+  .roaster-link-btn {
+    flex: 1 !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+
+  .directory-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .directory-title-block {
+    width: 100% !important;
+  }
+
+  .directory-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .directory-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .directory-title-block p {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .directory-records-count {
+    font-size: 0.74rem !important;
+  }
+
+  /* ── Staff Periods Master Schedule & Timetable Responsive ── */
+  .periods-filter-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .periods-filter-row .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .periods-filter-btn-group {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .periods-filter-btn-group .roaster-btn {
+    flex: 1 !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+
+  .periods-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .periods-title-block {
+    width: 100% !important;
+  }
+
+  .periods-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .periods-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .periods-title-block p,
+  .periods-subtitle {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .periods-header-controls {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    align-items: stretch !important;
+  }
+
+  .periods-view-toggle {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .periods-view-toggle .sp-view-tab {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 7px 8px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .periods-records-count {
+    width: 100% !important;
+    font-size: 0.74rem !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+  }
+
+  /* Faculty Schedule Cards (View 2) */
+  .faculty-schedule-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .faculty-card-badge {
+    align-self: flex-start !important;
+  }
+
+  .period-timeline-strip {
+    padding: 12px 12px !important;
+    gap: 10px !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .period-timeline-item {
+    padding: 10px 12px !important;
+  }
+
+  /* Modals */
+  .periods-modal-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .periods-modal-footer {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .periods-modal-footer .roaster-btn,
+  .periods-modal-footer .roaster-add-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  .periods-presets-box {
+    padding: 8px 10px !important;
+  }
+
+  .preset-slot-btn {
+    font-size: 0.70rem !important;
+    padding: 4px 7px !important;
+  }
+
+  /* ── Faculty Leaves Management Responsive ── */
+  .leaves-filter-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .leaves-filter-row .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .leaves-filter-btn-group {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .leaves-filter-btn-group .roaster-btn {
+    flex: 1 !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+
+  .leaves-toolbar-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .leaves-records-badge {
+    margin: 0 !important;
+    font-size: 0.74rem !important;
+  }
+
+  .leaves-apply-btn {
+    flex: 1 !important;
+    max-width: 180px !important;
+    justify-content: center !important;
+    height: 38px !important;
+  }
+
+  .leaves-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .leaves-title-block {
+    width: 100% !important;
+  }
+
+  .leaves-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .leaves-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .leaves-subtitle {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .leaves-table thead th {
+    padding: 8px 10px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .leaves-table tbody td {
+    padding: 8px 10px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .leaves-user-cell {
+    gap: 8px !important;
+  }
+
+  .leaves-staff-name {
+    font-size: 0.80rem !important;
+  }
+
+  .leaves-period-dates {
+    font-size: 0.75rem !important;
+  }
+
+  .reason-quote-box {
+    max-width: 140px !important;
+    font-size: 0.72rem !important;
+    padding: 4px 6px !important;
+  }
+
+  /* Leaves Modal Responsive */
+  .leaves-modal-box {
+    padding: 18px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .leaves-modal-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .leaves-modal-footer {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .leaves-modal-footer .roaster-btn,
+  .leaves-modal-footer .roaster-add-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* ── Operational Expenses & Vouchers Responsive ── */
+  .expenses-filter-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .expenses-filter-row .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .expenses-filter-btn-group {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .expenses-filter-btn-group .roaster-btn {
+    flex: 1 !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+
+  .expenses-toolbar-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .expenses-records-badge {
+    margin: 0 !important;
+    font-size: 0.74rem !important;
+  }
+
+  .expenses-add-btn {
+    flex: 1 !important;
+    max-width: 180px !important;
+    justify-content: center !important;
+    height: 38px !important;
+  }
+
+  .expenses-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .expenses-title-block {
+    width: 100% !important;
+  }
+
+  .expenses-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .expenses-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .expenses-subtitle {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .expenses-header-meta {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 0.74rem !important;
+    padding-top: 6px !important;
+    border-top: 1px dashed #e2e8f0;
+  }
+
+  .expenses-table thead th,
+  .staff-id-table thead th {
+    padding: 8px 10px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .expenses-table tbody td,
+  .staff-id-table tbody td {
+    padding: 8px 10px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .exp-title-text {
+    font-size: 0.82rem !important;
+  }
+
+  .exp-date-text {
+    font-size: 0.78rem !important;
+  }
+
+  /* Expenses Add Modal Responsive */
+  .expenses-modal-box {
+    padding: 18px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .expenses-modal-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .expenses-modal-footer {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .expenses-modal-footer .expenses-cancel-btn,
+  .expenses-modal-footer .expenses-submit-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* Voucher View Modal Responsive */
+  .voucher-modal-box {
+    padding: 18px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .voucher-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .voucher-modal-footer {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .voucher-modal-footer .voucher-print-btn,
+  .voucher-modal-footer .voucher-close-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* ── Expense Categories & Heads Responsive ── */
+  .exp-cat-filter-form {
+    width: 100% !important;
+  }
+
+  .exp-cat-search-box {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .exp-cat-toolbar-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .exp-cat-records-badge {
+    margin: 0 !important;
+    font-size: 0.74rem !important;
+  }
+
+  .exp-cat-add-btn {
+    flex: 1 !important;
+    max-width: 180px !important;
+    justify-content: center !important;
+    height: 38px !important;
+  }
+
+  .exp-cat-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .exp-cat-title-block {
+    width: 100% !important;
+  }
+
+  .exp-cat-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .exp-cat-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .exp-cat-subtitle {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .exp-cat-header-meta {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 0.74rem !important;
+    padding-top: 6px !important;
+    border-top: 1px dashed #e2e8f0;
+  }
+
+  .exp-cat-table thead th {
+    padding: 8px 10px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .exp-cat-table tbody td {
+    padding: 8px 10px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .cat-head-title {
+    font-size: 0.82rem !important;
+  }
+
+  .cat-scope-desc {
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Expense Categories Modals */
+  .exp-cat-modal-box {
+    padding: 18px 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .exp-cat-modal-footer {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .exp-cat-modal-footer .roaster-btn,
+  .exp-cat-modal-footer .roaster-add-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+
+  /* ── Marksheet Management Responsive Enhancements ── */
+  .scholar-control-card {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .current-scholar-pill {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .marksheet-top-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .marksheet-exam-form {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .marksheet-exam-select {
+    flex: 1 !important;
+    width: 100% !important;
+    height: 38px !important;
+    min-width: 0 !important;
+    font-size: 0.78rem !important;
+  }
+
+  .marksheet-print-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    margin: 0 !important;
+  }
+
+  .report-card-container {
+    padding: 14px 12px !important;
+    margin: 0 auto 20px !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .report-brand-row {
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .report-brand-row img.school-logo-img {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .report-school-title {
+    font-size: 15px !important;
+    line-height: 1.2 !important;
+  }
+
+  .report-school-tagline {
+    font-size: 8.5px !important;
+  }
+
+  .report-school-subinfo {
+    font-size: 8px !important;
+    line-height: 1.3 !important;
+  }
+
+  .verification-qr-wrap {
+    width: 48px !important;
+  }
+
+  .verification-qr-wrap img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .verification-qr-wrap .qr-verify-badge {
+    font-size: 6.5px !important;
+  }
+
+  .report-session-ribbon {
+    font-size: 8.5px !important;
+    padding: 4px 8px !important;
+    margin-top: 8px !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .report-details-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .detail-item {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-size: 12px !important;
+    padding: 3px 0 !important;
+    border-bottom: 1px dashed #e2e8f0;
+  }
+
+  .detail-item:last-child {
+    border-bottom: none !important;
+  }
+
+  .detail-item strong {
+    min-width: auto !important;
+    font-size: 11.5px !important;
+    color: #475569 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .detail-item span {
+    font-size: 12px !important;
+    text-align: right !important;
+    word-break: break-word !important;
+  }
+
+  .report-table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: 10px 0 14px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0;
+  }
+
+  .report-table {
+    min-width: 480px !important;
+    width: 100% !important;
+  }
+
+  .report-summary-kpi-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .summary-kpi-card {
+    padding: 8px 4px !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+  }
+
+  .summary-kpi-card .kpi-title {
+    font-size: 7.5px !important;
+    letter-spacing: 0.01em !important;
+    margin-bottom: 2px !important;
+    line-height: 1.1 !important;
+  }
+
+  .summary-kpi-card .kpi-val {
+    font-size: 13px !important;
+  }
+
+  .summary-kpi-card .kpi-val i {
+    font-size: 0.9rem !important;
+  }
+
+  .report-remarks-card {
+    padding: 8px 10px !important;
+    margin-bottom: 14px !important;
+    font-size: 11px !important;
+    gap: 8px !important;
+  }
+
+  .report-signatures-row {
+    padding-top: 10px !important;
+    margin-top: 10px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+  }
+
+  .sig-block {
+    width: 31% !important;
+    text-align: center !important;
+  }
+
+  .sig-crest-circle {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 6.5px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .sig-crest-lbl {
+    font-size: 7.5px !important;
+  }
+
+  .sig-line {
+    font-size: 8px !important;
+    padding-top: 2px !important;
+  }
+
+  .sig-principal-name {
+    font-size: 12px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+  }
+
+  .sig-spacer {
+    height: 20px !important;
+  }
+
+  .marksheet-filter-row {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+    align-items: center !important;
+  }
+
+  .marksheet-filter-row .roaster-select-box {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .marksheet-filter-row .roaster-btn {
+    flex-shrink: 0 !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+  }
+
+  .marksheet-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .marksheet-title-block {
+    width: 100% !important;
+  }
+
+  .marksheet-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .marksheet-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .marksheet-title-block p {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .marksheet-actions-wrap {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .marksheet-records-count {
+    font-size: 0.74rem !important;
+  }
+
+  .ms-generate-btn {
+    height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 0.75rem !important;
+  }
+
+  #createMarksheetModal {
+    padding: 10px !important;
+  }
+
+  #createMarksheetModal .hrms-modal-content {
+    max-width: 100% !important;
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+    margin: 10px auto !important;
+    max-height: calc(100dvh - 20px) !important;
+    overflow-y: auto !important;
+  }
+
+  #createMarksheetModal div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  #modalSubjectsTable {
+    font-size: 11.5px !important;
+  }
+
+  #modalSubjectsTable th,
+  #modalSubjectsTable td {
+    padding: 5px 4px !important;
+  }
+
+  #modalSubjectsTable input {
+    padding: 6px 4px !important;
+    font-size: 11px !important;
+  }
+
+  /* ── Faculty & Staff Management Responsive Enhancements ── */
+  .staff-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .staff-title-block {
+    width: 100% !important;
+  }
+
+  .staff-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .staff-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .staff-title-block p {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .staff-records-count {
+    font-size: 0.74rem !important;
+  }
+
+  .sid-login-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .btn-student-login,
+  .btn-student-pwd {
+    font-size: 0.70rem !important;
+    padding: 4px 7px !important;
+  }
+
+  .sid-action-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .view-staff-banner {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 10px !important;
+    padding: 14px 12px !important;
+  }
+
+  .view-staff-banner #view_sm_avatar {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 1.3rem !important;
+    margin: 0 auto !important;
+  }
+
+  .view-staff-banner .view-staff-meta {
+    justify-content: center !important;
+  }
+
+  .perm-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .perm-card {
+    padding: 8px 10px !important;
+  }
+
+  .perm-card-text {
+    font-size: 0.76rem !important;
+  }
+
+  /* ── Faculty Salary & Payroll Management Responsive Enhancements ── */
+  .payroll-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .payroll-title-block {
+    width: 100% !important;
+  }
+
+  .payroll-title-block .card-title {
+    font-size: 0.95rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .payroll-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  .payroll-title-block p {
+    font-size: 0.72rem !important;
+    margin-top: 3px !important;
+  }
+
+  .payroll-records-count {
+    font-size: 0.74rem !important;
+  }
+
+  .pay-receipt {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .pay-receipt .ri-title {
+    font-size: 15px !important;
+  }
+
+  .pay-receipt .receipt-meta-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+
+  .pay-receipt .rmg-label {
+    font-size: 7.5px !important;
+  }
+
+  .pay-receipt .rmg-val {
+    font-size: 11px !important;
+  }
+
+  .payslip-modal-footer {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+
+  .payslip-modal-footer button {
+    height: 38px !important;
+    font-size: 0.78rem !important;
+    padding: 0 6px !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   4. EXTRA SMALL SCREENS (max-width: 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+  .hrms-top-header {
+    padding: 8px 10px !important;
+  }
+
+  .page-title {
+    font-size: 1.02rem !important;
+  }
+
+  .header-session-picker .session-select {
+    max-width: 110px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .welcome-title {
+    font-size: 1.05rem !important;
+  }
+
+  .welcome-ribbon-actions {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .ribbon-btn {
+    font-size: 0.74rem !important;
+    padding: 8px 6px !important;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .stat-card {
+    padding: 10px 12px !important;
+  }
+
+  .stat-number {
+    font-size: 1.25rem !important;
+  }
+
+  .roaster-toolbar-card {
+    padding: 10px 12px !important;
+  }
+
+  .roaster-add-btn span {
+    font-size: 0.76rem !important;
+  }
+
+  .hrms-page-body {
+    padding: 12px 10px 24px 10px !important;
+  }
+
+  .attendance-card-header {
+    padding: 10px 12px !important;
+  }
+
+  .att-filter-date,
+  .att-filter-select {
+    font-size: 0.74rem !important;
+    padding: 5px 8px !important;
+    height: 36px !important;
+  }
+
+  .att-scanner-btn {
+    font-size: 0.76rem !important;
+    height: 36px !important;
+  }
+}
+
+/* ==========================================================================
+   5. DARK THEME HARMONY FOR RESPONSIVE ELEMENTS
+   ========================================================================== */
+[data-theme="dark"] .mobile-menu-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .mobile-menu-btn:hover {
+  background: #334155 !important;
+}
+
+[data-theme="dark"] .header-session-picker {
+  background: rgba(14, 165, 233, 0.12) !important;
+  border-color: rgba(56, 189, 248, 0.28) !important;
+}
+
+[data-theme="dark"] .header-session-picker .session-icon {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .header-session-picker .session-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .header-session-picker .session-select {
+  color: #7dd3fc !important;
+}
+
+[data-theme="dark"] .header-session-picker .session-select option {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .admin-welcome-ribbon {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .welcome-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .welcome-meta-badge {
+  background: rgba(14, 165, 233, 0.15) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .ribbon-btn.glass,
+[data-theme="dark"] .ribbon-btn.outline {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .ribbon-btn.glass:hover,
+[data-theme="dark"] .ribbon-btn.outline:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .stat-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #1e293b !important;
+}
+
+[data-theme="dark"] .hrms-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .hrms-card-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .card-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table thead th,
+[data-theme="dark"] .student-id-table thead th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td,
+[data-theme="dark"] .student-id-table tbody td {
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr:hover,
+[data-theme="dark"] .student-id-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="dark"] .cell-name {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .roaster-search-box {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .roaster-select-box select {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .scholars-count-badge {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .hrms-modal-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .hrms-modal-header {
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .hrms-modal-footer {
+  border-top-color: #1e293b !important;
+}
+
+/* ── Dark Theme Rules for Student Attendance ── */
+[data-theme="dark"] .attendance-register-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .attendance-card-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .attendance-date-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .att-filter-date,
+[data-theme="dark"] .att-filter-select {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .att-pill-chip.high {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .att-pill-chip.medium {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .att-pill-chip.low {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .att-time-badge,
+[data-theme="dark"] .unmarked-pill,
+[data-theme="dark"] .sid-std-pill {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sid-roll-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="dark"] .punch-pill-group {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #0f172a !important;
+  border-top-color: #1e293b !important;
+}
+
+[data-theme="dark"] .pagination-limit-select {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pagination-btn {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--hrms-primary) !important;
+}
+
+[data-theme="dark"] .late-punch-tooltip {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .late-tooltip-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .late-tooltip-header span,
+[data-theme="dark"] #lateStudentName,
+[data-theme="dark"] #lateStaffName {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .late-preset-btn {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+/* ── Dark Theme Rules for Fee Management ── */
+[data-theme="dark"] .fee-ledger-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .fee-card-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .fee-session-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sid-receipt-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-feehead-pill {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sid-mode-pill {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sid-mode-pill.cash {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-mode-pill.upi {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-mode-pill.netbanking,
+[data-theme="dark"] .sid-mode-pill.bank {
+  background: rgba(147, 51, 234, 0.15) !important;
+  color: #c084fc !important;
+  border-color: rgba(147, 51, 234, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-mode-pill.cheque {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-btn-primary {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-btn-primary:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sid-btn-secondary {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-btn-secondary:hover {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] #collectFeeModal .collect-modal-actions {
+  border-top-color: #1e293b !important;
+}
+
+/* ── Dark Theme Rules for Student & Staff ID Card ── */
+[data-theme="dark"] .staff-id-directory-card,
+[data-theme="dark"] .student-id-directory-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .directory-card-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .directory-session-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .directory-subtitle {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .directory-records-count {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .directory-records-count strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .card-label-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .roaster-person-title,
+[data-theme="dark"] .roaster-person-title span {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sid-dept-pill {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sid-qr-chip {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr.active-staff-row {
+  background-color: rgba(2, 132, 199, 0.16) !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr.active-staff-row td:first-child {
+  border-left: 3px solid #0284c7 !important;
+}
+
+[data-theme="dark"] .staff-avatar-init {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sid-designation {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sid-btn-secondary {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .sid-btn-secondary:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sid-btn-viewing {
+  background: rgba(2, 132, 199, 0.22) !important;
+  border-color: rgba(2, 132, 199, 0.45) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .pagination-legend-text {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pagination-legend-text strong {
+  color: #f8fafc !important;
+}
+
+/* ── Dark Theme Rules for Marksheet Management ── */
+[data-theme="dark"] .scholar-control-card,
+[data-theme="dark"] .marksheet-directory-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .marksheet-card-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .marksheet-session-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .marksheet-exam-select {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .marksheet-exam-select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .report-card-container {
+  background: #0f172a !important;
+  border-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .report-details-grid {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .detail-item {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .detail-item strong {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .detail-item span {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .report-table-responsive {
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .report-table thead th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .report-table tbody td {
+  border-bottom-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .report-remarks-card {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-left-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .report-remarks-card div > div {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .marksheet-table thead th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .marksheet-table tbody td {
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .marksheet-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] #createMarksheetModal h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #createMarksheetModal label {
+  color: #94a3b8 !important;
+}
+
+/* ── Dark Theme Rules for Faculty & Staff Management ── */
+[data-theme="dark"] .staff-directory-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .staff-card-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .staff-session-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sid-dept-pill {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sid-action-btn {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .perm-box-container {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .perm-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .perm-card:hover {
+  background: #1e293b !important;
+  border-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .perm-card-text {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .btn-perm-toggle {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .view-staff-banner {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(14, 165, 233, 0.08) 100%) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-theme="dark"] #viewStaffModal .hrms-modal-body > div[style*="background: #f8fafc"],
+[data-theme="dark"] #changeStaffPasswordModal div[style*="background: #f8fafc"] {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] #viewStaffModal strong,
+[data-theme="dark"] #changeStaffPasswordModal strong {
+  color: #f8fafc !important;
+}
+
+/* ── Dark Theme Rules for Faculty Salary & Payroll Management ── */
+[data-theme="dark"] .payroll-directory-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .payroll-card-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .payroll-session-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] #paySalaryModal .hrms-modal-card,
+[data-theme="dark"] #payslipViewModal .hrms-modal-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] #paySalaryModal .hrms-modal-header,
+[data-theme="dark"] #payslipViewModal .hrms-modal-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] #paySalaryModal .hrms-modal-header h4,
+[data-theme="dark"] #payslipViewModal .hrms-modal-header h4 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #paySalaryModal label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .payslip-modal-footer {
+  background: #0f172a !important;
+  border-top-color: #1e293b !important;
+}
+
+[data-theme="dark"] .pay-receipt {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .ri-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-meta-grid {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .rmg-val {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table td {
+  border-bottom-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-words-box {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .words-val {
+  color: #f8fafc !important;
+}
+
+/* ── Dark Theme Rules for Staff Periods & Timetable ── */
+[data-theme="dark"] .periods-directory-card,
+[data-theme="dark"] .faculty-schedule-card {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+[data-theme="dark"] .periods-card-header,
+[data-theme="dark"] .faculty-schedule-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .periods-session-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-subtitle {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-records-count {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-records-count strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .sp-view-toggle {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .sp-view-tab {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sp-view-tab:hover {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .sp-view-tab.active {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+}
+
+[data-theme="dark"] .staff-periods-table thead th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .staff-periods-table tbody td {
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] .staff-periods-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="dark"] .sp-slot-pill {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .sp-time-chip {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sp-day-pill,
+[data-theme="dark"] .sp-venue-pill {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .sp-btn-action {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .sp-btn-action:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sp-btn-action.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .period-timeline-item {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .period-timeline-item:hover {
+  border-color: #475569 !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2) !important;
+}
+
+[data-theme="dark"] .faculty-card-name {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .faculty-card-sub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .faculty-card-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .period-item-class {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-presets-box {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .preset-slot-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .preset-slot-btn:hover {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+  border-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .periods-modal-footer {
+  border-top-color: #1e293b !important;
+}
+
+[data-theme="dark"] .sp-class-name {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .sp-dept-name {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #assignPeriodModal .hrms-modal-header,
+[data-theme="dark"] #editPeriodModal .hrms-modal-header {
+  background: #0f172a !important;
+  border-bottom-color: #1e293b !important;
+}
+
+[data-theme="dark"] #assignPeriodModal .hrms-modal-header h3,
+[data-theme="dark"] #editPeriodModal .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #assignPeriodModal label,
+[data-theme="dark"] #editPeriodModal label {
+  color: #94a3b8 !important;
+}
+
+/* ── Dark Theme Rules for Faculty Leaves Management ── */
+[data-theme="dark"] .leaves-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .leaves-card-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .leaves-card-title,
+[data-theme="dark"] .leaves-staff-name,
+[data-theme="dark"] .leaves-period-dates {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .leaves-session-badge {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .leaves-subtitle,
+[data-theme="dark"] .leaves-staff-dept,
+[data-theme="dark"] .leaves-designation,
+[data-theme="dark"] .leaves-applied-date {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .leaves-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .leaves-table tbody td {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .leaves-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="dark"] .emp-code-pill.leaves-emp-code,
+[data-theme="dark"] .duration-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .reason-quote-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  border-left-color: #0284c7 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Leave chips dark mode */
+[data-theme="dark"] .leave-type-chip.casual {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .leave-type-chip.medical {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.35) !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .leave-type-chip.academic {
+  background: rgba(124, 58, 237, 0.15) !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
+  color: #c084fc !important;
+}
+
+[data-theme="dark"] .leave-type-chip.emergency {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .leave-type-chip.other {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Status badges dark mode */
+[data-theme="dark"] .status-badge-leave.approved {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .status-badge-leave.pending {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .status-badge-leave.rejected {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+
+/* Action buttons dark mode */
+[data-theme="dark"] .leave-action-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .leave-action-btn:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .leave-action-btn.btn-approve {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .leave-action-btn.btn-approve:hover {
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #6ee7b7 !important;
+}
+
+[data-theme="dark"] .leave-action-btn.btn-reject {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .leave-action-btn.btn-reject:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .leave-action-btn.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+/* Modal dark mode */
+[data-theme="dark"] .leaves-modal-box {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .leaves-modal-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .leaves-modal-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .leaves-modal-close {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .leaves-field-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .leaves-duration-banner {
+  background: #0f172a !important;
+  border-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .leaves-duration-label {
+  color: #38bdf8 !important;
+}
+
+/* ── Dark Theme Rules for Operational Expenses & Vouchers ── */
+[data-theme="dark"] .expenses-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .expenses-card-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .expenses-card-title,
+[data-theme="dark"] .exp-date-text,
+[data-theme="dark"] .exp-title-text,
+[data-theme="dark"] .expenses-records-total {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .expenses-session-badge {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .expenses-subtitle,
+[data-theme="dark"] .exp-notes-text,
+[data-theme="dark"] .expenses-header-meta {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .expenses-header-meta {
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .expenses-meta-divider {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .expenses-table thead th,
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .expenses-table tbody td,
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .expenses-table tbody tr:hover,
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="dark"] .exp-vendor-text {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .voucher-id-pill,
+[data-theme="dark"] .exp-cat-badge,
+[data-theme="dark"] .mode-pill-chip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .ref-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sid-action-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .sid-action-btn:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sid-action-btn.view {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sid-action-btn.view:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sid-action-btn.delete {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .sid-action-btn.delete:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* Modals dark mode */
+[data-theme="dark"] .expenses-modal-box,
+[data-theme="dark"] .voucher-modal-box {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .expenses-modal-header,
+[data-theme="dark"] .voucher-modal-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .expenses-modal-header h3,
+[data-theme="dark"] .voucher-modal-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .expenses-modal-close,
+[data-theme="dark"] .voucher-modal-close {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .expenses-field-label {
+  color: #cbd5e1 !important;
+}
+
+/* Voucher Receipt Details Card in Modal */
+[data-theme="dark"] .voucher-receipt-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .voucher-meta-label,
+[data-theme="dark"] .voucher-cat-text {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .voucher-date-text,
+[data-theme="dark"] .voucher-title-text,
+[data-theme="dark"] .voucher-amount-label {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .voucher-amount-row {
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .voucher-subcard {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .voucher-subcard-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .voucher-subcard-val {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .voucher-invoice-box {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+}
+
+[data-theme="dark"] .voucher-notes-box {
+  background: #0f172a !important;
+  border-left-color: #0092df !important;
+}
+
+[data-theme="dark"] .voucher-notes-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .voucher-notes-text {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .voucher-modal-footer {
+  border-top-color: #334155 !important;
+}
+
+/* ── Dark Theme Rules for Expense Categories & Heads ── */
+[data-theme="dark"] .exp-cat-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-card-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-card-title,
+[data-theme="dark"] .cat-head-title,
+[data-theme="dark"] .exp-cat-heads-total {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .exp-cat-session-badge {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-subtitle,
+[data-theme="dark"] .cat-lifetime-count,
+[data-theme="dark"] .cat-scope-desc,
+[data-theme="dark"] .cat-scope-empty,
+[data-theme="dark"] .exp-cat-header-meta {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .exp-cat-header-meta {
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-meta-divider {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .exp-cat-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-table tbody td {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+[data-theme="dark"] .cat-code-pill,
+[data-theme="dark"] .cat-percent-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .cat-vouchers-pill,
+[data-theme="dark"] .cat-vouchers-zero {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .cat-progress-track {
+  background: #0f172a !important;
+}
+
+[data-theme="dark"] .sid-action-btn.edit {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  color: #818cf8 !important;
+}
+
+[data-theme="dark"] .sid-action-btn.edit:hover {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sid-action-btn.locked {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #64748b !important;
+}
+
+/* Modals dark mode */
+[data-theme="dark"] .exp-cat-modal-box {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-modal-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-modal-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .exp-cat-modal-sub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .exp-cat-modal-close {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .exp-cat-field-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .exp-cat-modal-footer {
+  border-top-color: #334155 !important;
+}
+
+
+

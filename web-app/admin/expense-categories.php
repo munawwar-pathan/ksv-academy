@@ -6,7 +6,7 @@ if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_expense_categories');
 }
 $page_title = 'Expense Categories & Heads | KSV Academy HRMS';
-$page_heading = 'Expense Categories & Heads';
+$page_heading = 'Expense Categories';
 $page_subheading = 'Classify School Expenditures, Accounting Heads & Budget Classifications';
 $active_menu = 'expense-categories';
 
@@ -457,9 +457,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Search Box -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/expense-categories" class="roaster-filter-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <form method="GET" action="<?php echo ADMIN_URL; ?>/expense-categories" class="roaster-filter-form exp-cat-filter-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <input type="hidden" name="limit" value="<?php echo $limit; ?>">
-      <div class="roaster-search-box">
+      <div class="roaster-search-box exp-cat-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" name="search" id="catSearchInput" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search category name, scope, keywords..." autocomplete="off" oninput="filterCategories()">
         <?php if (!empty($search)): ?>
@@ -469,13 +469,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </form>
 
     <!-- Right: Count Badge & Add Category Button -->
-    <div class="roaster-toolbar-actions">
-      <div class="scholars-count-badge">
+    <div class="roaster-toolbar-actions exp-cat-toolbar-actions">
+      <div class="scholars-count-badge exp-cat-records-badge">
         <span class="count-dot" style="background: #0092df;"></span>
         <span><strong id="visibleCatCount"><?php echo $total_matching_categories; ?></strong> <?php echo $total_matching_categories === 1 ? 'Category' : 'Categories'; ?></span>
       </div>
 
-      <button type="button" onclick="openAddCatModal();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Add Expense Category Head">
+      <button type="button" onclick="openAddCatModal();" class="roaster-add-btn exp-cat-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Add Expense Category Head">
         <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
         <span>Add Category</span>
       </button>
@@ -487,30 +487,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      CATEGORIES LEDGER TABLE
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-    <div>
-      <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+<div class="hrms-card exp-cat-directory-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header exp-cat-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+    <div class="exp-cat-title-block">
+      <h3 class="card-title exp-cat-card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
         <i class="fa-solid fa-sitemap" style="color: #0284c7;"></i>
-        Expense Heads &amp; Accounting Classifications
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+        <span>Expense Heads &amp; Accounting Classifications</span>
+        <span class="exp-cat-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
-      <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+      <p class="exp-cat-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
         Official cost-center chart of accounts for auditing institutional procurement, utilities, maintenance, and student welfare.
       </p>
     </div>
 
-    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px;">
-      <span>Total Spent: <strong style="color: #dc2626; font-size: 0.95rem; font-family: 'Outfit', sans-serif;"><?php echo format_inr($session_total_spent); ?></strong></span>
-      <span style="color: #cbd5e1;">|</span>
-      <span>Total Heads: <strong style="color: #0f172a;"><?php echo $total_categories_count; ?></strong></span>
+    <div class="exp-cat-header-meta" style="font-size: 0.78rem; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+      <span>Total Spent: <strong class="exp-cat-spent-total" style="color: #dc2626; font-size: 0.95rem; font-family: 'Outfit', sans-serif;"><?php echo format_inr($session_total_spent); ?></strong></span>
+      <span class="exp-cat-meta-divider" style="color: #cbd5e1;">|</span>
+      <span>Total Heads: <strong class="exp-cat-heads-total" style="color: #0f172a;"><?php echo $total_categories_count; ?></strong></span>
     </div>
   </div>
 
   <div class="table-responsive">
-    <table class="hrms-table staff-id-table" id="categoriesTable">
+    <table class="hrms-table staff-id-table exp-cat-table" id="categoriesTable">
       <thead>
         <tr>
           <th style="min-width: 240px;">Category Head</th>
@@ -551,13 +551,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid <?php echo $style_info['icon']; ?>"></i>
                   </div>
                   <div>
-                    <div style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; line-height: 1.25;">
+                    <div class="cell-name cat-head-title" style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                       <?php echo htmlspecialchars($cat['category_name']); ?>
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
                       <span class="cat-code-pill">HEAD-<?php echo str_pad($cat['id'], 2, '0', STR_PAD_LEFT); ?></span>
                       <?php if ($cat['lifetime_expense_count'] > 0): ?>
-                        <span style="font-size: 0.72rem; color: #64748b;">(<?php echo $cat['lifetime_expense_count']; ?> all-time)</span>
+                        <span class="cat-lifetime-count" style="font-size: 0.72rem; color: #64748b;">(<?php echo $cat['lifetime_expense_count']; ?> all-time)</span>
                       <?php endif; ?>
                     </div>
                   </div>
@@ -567,11 +567,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- Scope & Purpose -->
               <td>
                 <?php if (!empty($cat['description'])): ?>
-                  <div style="font-size: 0.82rem; color: #475569; line-height: 1.4;">
+                  <div class="cell-sub cat-scope-desc" style="font-size: 0.82rem; color: #475569; line-height: 1.4;">
                     <?php echo htmlspecialchars($cat['description']); ?>
                   </div>
                 <?php else: ?>
-                  <span style="font-size: 0.78rem; color: #94a3b8; font-style: italic;">No specific scope instructions registered</span>
+                  <span class="cat-scope-empty" style="font-size: 0.78rem; color: #94a3b8; font-style: italic;">No specific scope instructions registered</span>
                 <?php endif; ?>
               </td>
 
@@ -583,7 +583,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <span><?php echo $cat['expense_count']; ?> vouchers</span>
                   </span>
                 <?php else: ?>
-                  <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; color: #94a3b8; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 4px;">
+                  <span class="cat-vouchers-zero" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; color: #94a3b8; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 4px;">
                     0 vouchers
                   </span>
                 <?php endif; ?>
@@ -592,11 +592,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- Expenditure & Percentage Bar -->
               <td>
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                  <strong style="color: <?php echo $spent_amt > 0 ? '#dc2626' : '#94a3b8'; ?>; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
+                  <strong class="cat-spent-text" style="color: <?php echo $spent_amt > 0 ? '#dc2626' : '#94a3b8'; ?>; font-size: 0.88rem; font-family: 'Outfit', sans-serif;">
                     <?php echo format_inr($spent_amt); ?>
                   </strong>
                   <?php if ($spent_amt > 0): ?>
-                    <span style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px;">
+                    <span class="cat-percent-badge" style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px;">
                       <?php echo $pct_spent; ?>%
                     </span>
                   <?php endif; ?>
@@ -721,9 +721,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL: ADD EXPENSE CATEGORY
      ══════════════════════════════════════════════════════ -->
 <div id="addCategoryModal" class="hrms-modal-overlay" style="display: none;">
-  <div class="hrms-modal-content" style="max-width: 500px; padding: 26px;">
+  <div class="hrms-modal-content exp-cat-modal-box" style="max-width: 500px; padding: 26px;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
+    <div class="exp-cat-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <div style="width: 36px; height: 36px; border-radius: 9px; background: rgba(0, 146, 223, 0.12); color: #0092df; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
           <i class="fa-solid fa-folder-plus"></i>
@@ -732,30 +732,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
             Create Expense Category
           </h3>
-          <span style="font-size: 0.76rem; color: #64748b;">Add a new institutional expenditure head</span>
+          <span class="exp-cat-modal-sub" style="font-size: 0.76rem; color: #64748b;">Add a new institutional expenditure head</span>
         </div>
       </div>
-      <button type="button" onclick="closeAddCatModal();" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #94a3b8;">&times;</button>
+      <button type="button" onclick="closeAddCatModal();" class="exp-cat-modal-close" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #94a3b8;">&times;</button>
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories">
       <input type="hidden" name="action" value="add_category">
 
       <div class="form-group" style="margin-bottom: 16px;">
-        <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
+        <label class="exp-cat-field-label" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
           Category Head Title <span style="color: #ef4444;">*</span>
         </label>
         <input type="text" name="category_name" class="hrms-input" required placeholder="e.g. Science Laboratory Consumables" style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem;">
       </div>
 
       <div class="form-group" style="margin-bottom: 22px;">
-        <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
+        <label class="exp-cat-field-label" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
           Budget Scope &amp; Accounting Notes
         </label>
         <textarea name="description" rows="3" class="hrms-input" placeholder="Specify permissible expenditures, vendor categories, or departmental allocation rules..." style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+      <div class="exp-cat-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
         <button type="button" onclick="closeAddCatModal();" class="roaster-btn secondary" style="padding: 9px 18px;">
           Cancel
         </button>
@@ -772,9 +772,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL: EDIT EXPENSE CATEGORY
      ══════════════════════════════════════════════════════ -->
 <div id="editCategoryModal" class="hrms-modal-overlay" style="display: none;">
-  <div class="hrms-modal-content" style="max-width: 500px; padding: 26px;">
+  <div class="hrms-modal-content exp-cat-modal-box" style="max-width: 500px; padding: 26px;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
+    <div class="exp-cat-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <div style="width: 36px; height: 36px; border-radius: 9px; background: rgba(124, 58, 237, 0.12); color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
           <i class="fa-solid fa-pen-to-square"></i>
@@ -783,10 +783,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
             Edit Category Head
           </h3>
-          <span style="font-size: 0.76rem; color: #64748b;">Modify accounting head details and descriptions</span>
+          <span class="exp-cat-modal-sub" style="font-size: 0.76rem; color: #64748b;">Modify accounting head details and descriptions</span>
         </div>
       </div>
-      <button type="button" onclick="closeEditCatModal();" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #94a3b8;">&times;</button>
+      <button type="button" onclick="closeEditCatModal();" class="exp-cat-modal-close" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #94a3b8;">&times;</button>
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories">
@@ -794,20 +794,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <input type="hidden" name="category_id" id="edit_category_id" value="">
 
       <div class="form-group" style="margin-bottom: 16px;">
-        <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
+        <label class="exp-cat-field-label" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
           Category Head Title <span style="color: #ef4444;">*</span>
         </label>
         <input type="text" name="category_name" id="edit_category_name" class="hrms-input" required style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem;">
       </div>
 
       <div class="form-group" style="margin-bottom: 22px;">
-        <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
+        <label class="exp-cat-field-label" style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
           Budget Scope &amp; Accounting Notes
         </label>
         <textarea name="description" id="edit_category_desc" rows="3" class="hrms-input" style="width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+      <div class="exp-cat-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
         <button type="button" onclick="closeEditCatModal();" class="roaster-btn secondary" style="padding: 9px 18px;">
           Cancel
         </button>

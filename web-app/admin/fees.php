@@ -6,7 +6,7 @@ if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_fees');
 }
 $page_title = 'Fee Management & Accounts';
-$page_heading = 'Student Fee Management & Accounts';
+$page_heading = 'Fee Management';
 $page_subheading = 'Tuition Invoices, Payment Receipts, Outstanding Balances & Ledger Records';
 $active_menu = 'fees';
 
@@ -884,41 +884,45 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </div>
 
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-school"></i>
-        <select name="standard" onchange="this.form.submit()" style="min-width: 155px; padding: 7px 28px 7px 30px; font-size: 0.82rem;">
-          <option value="">All Standards</option>
-          <?php foreach ($standards as $std): ?>
-            <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-              <?php echo $std; ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron" style="right: 10px;"></i>
+      <div class="fee-filter-selects" style="display: flex; gap: 8px; align-items: center;">
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-school"></i>
+          <select name="standard" onchange="this.form.submit()" style="min-width: 155px; padding: 7px 28px 7px 30px; font-size: 0.82rem;">
+            <option value="">All Standards</option>
+            <?php foreach ($standards as $std): ?>
+              <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
+                <?php echo $std; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron" style="right: 10px;"></i>
+        </div>
+
+        <div class="roaster-select-box">
+          <i class="fa-solid fa-wallet"></i>
+          <select name="method" onchange="this.form.submit()" style="min-width: 145px; padding: 7px 28px 7px 30px; font-size: 0.82rem;">
+            <option value="">All Modes</option>
+            <option value="Cash" <?php echo $filter_method === 'Cash' ? 'selected' : ''; ?>>Cash</option>
+            <option value="UPI" <?php echo $filter_method === 'UPI' ? 'selected' : ''; ?>>UPI / QR</option>
+            <option value="Net Banking" <?php echo $filter_method === 'Net Banking' ? 'selected' : ''; ?>>Net Banking</option>
+            <option value="Cheque" <?php echo $filter_method === 'Cheque' ? 'selected' : ''; ?>>Cheque</option>
+            <option value="Credit Card" <?php echo $filter_method === 'Credit Card' ? 'selected' : ''; ?>>Credit Card</option>
+          </select>
+          <i class="fa-solid fa-chevron-down select-chevron" style="right: 10px;"></i>
+        </div>
       </div>
 
-      <div class="roaster-select-box">
-        <i class="fa-solid fa-wallet"></i>
-        <select name="method" onchange="this.form.submit()" style="min-width: 145px; padding: 7px 28px 7px 30px; font-size: 0.82rem;">
-          <option value="">All Modes</option>
-          <option value="Cash" <?php echo $filter_method === 'Cash' ? 'selected' : ''; ?>>Cash</option>
-          <option value="UPI" <?php echo $filter_method === 'UPI' ? 'selected' : ''; ?>>UPI / QR</option>
-          <option value="Net Banking" <?php echo $filter_method === 'Net Banking' ? 'selected' : ''; ?>>Net Banking</option>
-          <option value="Cheque" <?php echo $filter_method === 'Cheque' ? 'selected' : ''; ?>>Cheque</option>
-          <option value="Credit Card" <?php echo $filter_method === 'Credit Card' ? 'selected' : ''; ?>>Credit Card</option>
-        </select>
-        <i class="fa-solid fa-chevron-down select-chevron" style="right: 10px;"></i>
+      <div class="fee-filter-actions" style="display: flex; gap: 8px; align-items: center;">
+        <button type="submit" class="roaster-btn secondary" style="padding: 7px 14px; font-size: 0.82rem;">
+          <i class="fa-solid fa-sliders"></i> Filter
+        </button>
+
+        <?php if (!empty($search) || !empty($filter_standard) || !empty($filter_method) || $filter_student_id > 0): ?>
+          <a href="<?php echo ADMIN_URL; ?>/fees<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" style="padding: 7px 12px; font-size: 0.82rem;" title="Reset all filters">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </a>
+        <?php endif; ?>
       </div>
-
-      <button type="submit" class="roaster-btn secondary" style="padding: 7px 14px; font-size: 0.82rem;">
-        <i class="fa-solid fa-sliders"></i> Filter
-      </button>
-
-      <?php if (!empty($search) || !empty($filter_standard) || !empty($filter_method) || $filter_student_id > 0): ?>
-        <a href="<?php echo ADMIN_URL; ?>/fees<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" style="padding: 7px 12px; font-size: 0.82rem;" title="Reset all filters">
-          <i class="fa-solid fa-rotate-left"></i> Reset
-        </a>
-      <?php endif; ?>
     </form>
 
     <!-- Right: Receipts Live Count & Collect Fee Button -->
@@ -939,15 +943,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
 </div>
 
 <!-- Main Fee Payment Ledger Card (Simple & Sober - Like student-id) -->
-<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+<div class="hrms-card fee-ledger-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
 
   <!-- Card Header -->
-  <div class="hrms-card-header no-print" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-    <div>
+  <div class="hrms-card-header no-print fee-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+    <div class="fee-title-block">
       <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
         <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
         Fee Payment Ledger &amp; Receipts
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+        <span class="fee-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
@@ -955,7 +959,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         Verified student fee vouchers, ledger transactions &amp; official receipt generation.
       </p>
     </div>
-    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+    <div class="fee-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
       <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
     </div>
   </div>
@@ -1372,11 +1376,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Modal Submit & Cancel Buttons -->
-        <div style="display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" onclick="closeCollectModal();" class="btn-hrms btn-hrms-outline" style="padding: 9px 18px; font-weight: 600;">
+        <div class="collect-modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
+          <button type="button" onclick="closeCollectModal();" class="btn-hrms btn-hrms-outline collect-cancel-btn" style="padding: 9px 18px; font-weight: 600;">
             Cancel
           </button>
-          <button type="submit" class="roaster-add-btn" style="padding: 9px 22px; font-size: 0.85rem; gap: 8px;">
+          <button type="submit" class="roaster-add-btn collect-submit-btn" style="padding: 9px 22px; font-size: 0.85rem; gap: 8px;">
             <i class="fa-solid fa-check"></i>
             <span>Record &amp; Issue Receipt</span>
           </button>

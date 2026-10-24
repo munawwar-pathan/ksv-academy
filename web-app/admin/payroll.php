@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
 $page_title = 'Staff Salary Management & Payroll | KSV Academy HRMS';
-$page_heading = 'Faculty Salary & Payroll Management';
+$page_heading = 'Payroll Management';
 $page_subheading = 'Monthly Payroll Generation, Earnings, Deductions & Official Printable Salary Slips';
 $active_menu = 'payroll';
 
@@ -951,12 +951,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <?php endif; ?>
     </form>
 
-    <!-- Right: Records Count Badge -->
+    <!-- Right: Records Count Badge & Pay Salary Button -->
     <div class="roaster-toolbar-actions">
       <div class="scholars-count-badge">
         <span class="count-dot" style="background: #0284c7;"></span>
         <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Slip' : 'Slips'; ?></span>
       </div>
+
+      <?php if ($current_user['role'] === 'super_admin'): ?>
+        <button type="button" class="roaster-add-btn" onclick="openPaySalaryModal()">
+          <div class="btn-icon-circle"><i class="fa-solid fa-plus"></i></div>
+          <span>Pay Salary</span>
+        </button>
+      <?php endif; ?>
     </div>
 
   </div>
@@ -965,13 +972,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      FACULTY SALARY LEDGER TABLE
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-    <div>
+<div class="hrms-card payroll-directory-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header payroll-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+    <div class="payroll-title-block">
       <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
         <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
         Faculty Salary &amp; Payroll Ledger
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+        <span class="payroll-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
@@ -979,7 +986,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         Official statement of monthly salary disbursements, earnings, deductions, and downloadable payslips.
       </p>
     </div>
-    <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+    <div class="payroll-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
       <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
     </div>
   </div>
@@ -1255,7 +1262,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <form method="POST" action="<?php echo ADMIN_URL; ?>/payroll" id="paySalaryForm" style="display: flex; flex-direction: column; overflow-y: auto; margin: 0;">
       <input type="hidden" name="action" value="pay_salary">
 
-      <div style="padding: 22px 24px; display: flex; flex-direction: column; gap: 16px;">
+      <div class="hrms-modal-body" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 16px;">
         
         <div>
           <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Faculty Member *</label>
@@ -1332,7 +1339,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
 
       <!-- Footer Actions -->
-      <div style="padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
+      <div class="hrms-modal-footer" style="padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
         <button type="button" onclick="closePaySalaryModal();" class="roaster-btn secondary" style="padding: 8px 16px; font-size: 0.82rem; font-weight: 600;">Cancel</button>
         <button type="submit" class="roaster-add-btn" style="padding: 8px 20px; font-size: 0.82rem;">
           <i class="fa-solid fa-check"></i>
@@ -1380,7 +1387,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div id="payslipRenderContainer" style="position: fixed; left: -9999px; top: 0; width: 480px;"></div>
 
     <!-- Modal Footer Action Buttons (Print, Download, Share) -->
-    <div class="no-print" style="padding: 12px 18px; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+    <div class="payslip-modal-footer no-print" style="padding: 12px 18px; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
       
       <!-- Print Button -->
       <button type="button" onclick="printPayslip();" class="btn-hrms btn-hrms-outline btn-hrms-sm" style="font-weight: 700; gap: 6px; justify-content: center; padding: 9px 12px; font-size: 0.82rem; border-color: #cbd5e1;" title="Print on printer or save as PDF">

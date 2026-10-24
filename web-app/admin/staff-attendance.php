@@ -6,7 +6,7 @@ if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_staff_attendance');
 }
 $page_title = 'Faculty Attendance & QR Biometric Scanner | KSV Academy HRMS';
-$page_heading = 'Faculty & Staff Attendance Register';
+$page_heading = 'Staff Attendance';
 $page_subheading = 'Real-time Camera QR Biometric Punch-In, Daily Roll Register & Automated Logging';
 $active_menu = 'staff-attendance';
 
@@ -528,13 +528,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      MAIN ATTENDANCE REGISTER WORKSTATION (Full Width)
      ══════════════════════════════════════════════════════ -->
-<div class="hrms-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-  <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-    <div>
+<div class="hrms-card attendance-register-card" style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+  <div class="hrms-card-header attendance-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+    <div class="attendance-title-block">
       <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
         <i class="fa-solid fa-clipboard-user" style="color: #0284c7;"></i>
         Faculty &amp; Staff Attendance Register
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+        <span class="attendance-date-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
       </h3>
@@ -544,14 +544,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Date, Department Filter & Quick Actions -->
-    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-      <form method="GET" action="<?php echo ADMIN_URL; ?>/staff-attendance" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+    <div class="attendance-header-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <form method="GET" action="<?php echo ADMIN_URL; ?>/staff-attendance" class="attendance-filter-form" style="display: flex; gap: 8px; align-items: center; margin: 0;">
         <input type="hidden" name="limit" value="<?php echo $limit; ?>">
-        <div style="position: relative;">
-          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date); ?>" onchange="this.form.submit()" class="hrms-input" style="padding: 6px 10px; font-size: 0.80rem; border: 1px solid #e2e8f0; border-radius: 6px; width: 140px; background: #ffffff;">
+        <div class="att-filter-date-wrap" style="position: relative;">
+          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date); ?>" onchange="this.form.submit()" class="hrms-input att-filter-date" style="padding: 6px 10px; font-size: 0.80rem; border: 1px solid #e2e8f0; border-radius: 6px; width: 140px; background: #ffffff;">
         </div>
         
-        <select name="department" onchange="this.form.submit()" class="hrms-input" style="padding: 6px 12px; font-size: 0.80rem; border: 1px solid #e2e8f0; border-radius: 6px; min-width: 155px; background: #ffffff;">
+        <select name="department" onchange="this.form.submit()" class="hrms-input att-filter-select" style="padding: 6px 12px; font-size: 0.80rem; border: 1px solid #e2e8f0; border-radius: 6px; min-width: 155px; background: #ffffff;">
           <option value="">All Departments</option>
           <?php foreach ($departments as $dept): ?>
             <option value="<?php echo $dept; ?>" <?php echo $filter_dept === $dept ? 'selected' : ''; ?>>
@@ -562,8 +562,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </form>
 
       <!-- Start Camera Scanner Button (Opens Floating Popup Modal) -->
-      <button type="button" onclick="openScannerModal();" class="roaster-add-btn" style="padding: 6px 14px; font-size: 0.80rem; gap: 6px;" title="Open Camera Scanner Popup">
-        <i class="fa-solid fa-camera"></i>
+      <button type="button" onclick="openScannerModal();" class="roaster-add-btn att-scanner-btn" style="padding: 6px 14px; font-size: 0.80rem; gap: 6px;" title="Open Camera Scanner Popup">
+        <div class="btn-icon-circle"><i class="fa-solid fa-camera"></i></div>
         <span>Camera Scanner</span>
       </button>
     </div>
@@ -887,9 +887,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <i class="fa-solid fa-keyboard" style="color: #7c3aed;"></i>
           Or Type Employee Code / QR Hash Manually:
         </label>
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="manualQrInput" placeholder="e.g. KSV-FAC-001 or STAFF-KSV-FAC-001" class="hrms-input" style="flex: 1; padding: 8px 12px; font-size: 0.85rem;" onkeypress="if(event.key==='Enter') submitManualQr();">
-          <button type="button" onclick="submitManualQr();" class="roaster-add-btn" style="padding: 8px 16px; font-size: 0.82rem; background: #7c3aed;">
+        <div class="scanner-manual-wrap" style="display: flex; gap: 8px;">
+          <input type="text" id="manualQrInput" placeholder="e.g. KSV-FAC-001 or STAFF-KSV-FAC-001" class="hrms-input manual-punch-input" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 0.85rem;" onkeypress="if(event.key==='Enter') submitManualQr();">
+          <button type="button" onclick="submitManualQr();" class="roaster-add-btn manual-punch-btn" style="padding: 8px 16px; font-size: 0.82rem; background: #7c3aed; white-space: nowrap;">
             <span>Punch</span>
           </button>
         </div>

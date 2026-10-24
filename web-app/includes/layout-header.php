@@ -39,6 +39,8 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
   
   <!-- HRMS Stylesheet -->
   <link rel="stylesheet" href="<?php echo HRMS_URL; ?>/assets/css/hrms.css?v=<?php echo time(); ?>">
+  <!-- HRMS Responsive Stylesheet -->
+  <link rel="stylesheet" href="<?php echo HRMS_URL; ?>/assets/css/responsive.css?v=<?php echo time(); ?>">
   <link rel="icon" type="image/jpeg" href="<?php echo htmlspecialchars($school_settings['logo_url']); ?>">
 
   <!-- Early Theme Initialization (Prevents theme flickering) -->
@@ -520,19 +522,19 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
         <button id="mobileMenuToggle" class="mobile-menu-btn" aria-label="Toggle Navigation">
           <i class="fa-solid fa-bars"></i>
         </button>
-        <div>
+        <div class="header-title-wrap">
           <h1 class="page-title"><?php echo htmlspecialchars($page_heading ?? 'Dashboard Overview'); ?></h1>
           <p class="page-subtitle"><?php echo htmlspecialchars($page_subheading ?? 'Welcome to KSV Academy Management Portal'); ?></p>
         </div>
       </div>
 
-      <div class="header-right" style="display:flex; align-items:center; gap:12px;">
+      <div class="header-right">
         
         <!-- ACADEMIC SESSION SWITCHER (Session Management) -->
-        <div class="header-session-picker" style="display:flex; align-items:center; gap:8px; background:rgba(0,146,223,0.08); border:1px solid rgba(0,146,223,0.22); border-radius:8px; padding:6px 12px;">
-          <i class="fa-solid fa-calendar-week" style="color:var(--primary-600); font-size:14px;"></i>
-          <span style="font-size:12px; font-weight:700; color:var(--neutral-700);">Session:</span>
-          <select id="sessionSwitcher" onchange="if(this.value) window.location.href='?switch_session=' + this.value" style="font-size:13px; font-weight:700; color:var(--primary-700); background:transparent; border:none; outline:none; cursor:pointer;">
+        <div class="header-session-picker">
+          <i class="fa-solid fa-calendar-week session-icon"></i>
+          <span class="session-label">Session:</span>
+          <select id="sessionSwitcher" class="session-select" onchange="if(this.value) window.location.href='?switch_session=' + this.value">
             <?php foreach ($all_sessions as $sess_item): ?>
               <option value="<?php echo $sess_item['id']; ?>" <?php echo $sess_item['id'] == $active_session['id'] ? 'selected' : ''; ?>>
                 <?php echo htmlspecialchars($sess_item['session_name']); ?><?php echo $sess_item['is_current'] ? ' (Active)' : ''; ?>

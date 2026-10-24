@@ -869,36 +869,38 @@ require_once __DIR__ . '/../includes/layout-header.php';
     
     <!-- Left: Selected Faculty Member Label -->
     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-      <h3 style="margin: 0; font-size: 1.08rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+      <h3 class="roaster-person-title" style="margin: 0; font-size: 1.08rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
         <i class="fa-solid fa-id-card" style="color: var(--hrms-primary);"></i>
         <span><?php echo htmlspecialchars($staff['full_name'] ?? 'Faculty Member'); ?></span>
-        <span style="font-size: 0.78rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+        <span class="sid-code-pill" style="font-size: 0.78rem; font-weight: 800; padding: 2px 8px; border-radius: 6px;">
           <?php echo htmlspecialchars($staff['employee_code'] ?? ''); ?>
         </span>
-        <span style="font-size: 0.78rem; font-weight: 700; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 9px; border-radius: 6px;">
+        <span class="sid-dept-pill" style="font-size: 0.78rem; font-weight: 700; padding: 2px 9px; border-radius: 6px;">
           <?php echo htmlspecialchars($staff['department'] ?? 'Faculty'); ?>
         </span>
       </h3>
     </div>
 
     <!-- Right: Print and Download Actions -->
-    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <div class="id-card-actions-wrap" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       
-      <!-- Download Front PNG -->
-      <button type="button" onclick="downloadCardImage('card_front_element', 'Front');" class="roaster-btn secondary" style="gap: 6px;" title="Save Front Card as High-Resolution Image">
-        <i class="fa-solid fa-download"></i>
-        <span>Front (PNG)</span>
-      </button>
+      <div class="id-card-download-group" style="display: flex; gap: 8px;">
+        <!-- Download Front PNG -->
+        <button type="button" onclick="downloadCardImage('card_front_element', 'Front');" class="roaster-btn secondary" style="gap: 6px;" title="Save Front Card as High-Resolution Image">
+          <i class="fa-solid fa-download"></i>
+          <span>Front (PNG)</span>
+        </button>
 
-      <!-- Download Back PNG -->
-      <button type="button" onclick="downloadCardImage('card_back_element', 'Back');" class="roaster-btn secondary" style="gap: 6px;" title="Save Back Card with QR Code as High-Resolution Image">
-        <i class="fa-solid fa-download"></i>
-        <span>Back (PNG)</span>
-      </button>
+        <!-- Download Back PNG -->
+        <button type="button" onclick="downloadCardImage('card_back_element', 'Back');" class="roaster-btn secondary" style="gap: 6px;" title="Save Back Card with QR Code as High-Resolution Image">
+          <i class="fa-solid fa-download"></i>
+          <span>Back (PNG)</span>
+        </button>
+      </div>
 
       <!-- Print Both Sides -->
-      <button type="button" onclick="window.print();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official ID card (Front &amp; Back)">
-        <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
+      <button type="button" onclick="window.print();" class="roaster-add-btn id-card-print-btn" style="gap: 8px;" title="Print official ID card (Front &amp; Back)">
+        <div class="btn-icon-circle"><i class="fa-solid fa-print"></i></div>
         <span>Print ID Card</span>
       </button>
 
@@ -1096,34 +1098,36 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php endif; ?>
         </div>
 
-        <!-- Department Filter Dropdown -->
-        <div class="roaster-select-box">
-          <i class="fa-solid fa-filter"></i>
-          <select name="department" onchange="this.form.submit()">
-            <option value="">All Departments</option>
-            <?php foreach ($departments as $dept): ?>
-              <option value="<?php echo $dept; ?>" <?php echo $filter_dept === $dept ? 'selected' : ''; ?>>
-                <?php echo $dept; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-          <i class="fa-solid fa-chevron-down select-chevron"></i>
+        <div class="staff-id-filter-row" style="display: flex; gap: 8px; align-items: center;">
+          <!-- Department Filter Dropdown -->
+          <div class="roaster-select-box">
+            <i class="fa-solid fa-filter"></i>
+            <select name="department" onchange="this.form.submit()">
+              <option value="">All Departments</option>
+              <?php foreach ($departments as $dept): ?>
+                <option value="<?php echo $dept; ?>" <?php echo $filter_dept === $dept ? 'selected' : ''; ?>>
+                  <?php echo $dept; ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <i class="fa-solid fa-chevron-down select-chevron"></i>
+          </div>
+
+          <button type="submit" class="roaster-btn secondary">
+            <i class="fa-solid fa-sliders"></i> Filter
+          </button>
+
+          <?php if (!empty($search) || !empty($filter_dept)): ?>
+            <a href="<?php echo ADMIN_URL; ?>/staff-id<?php 
+              $rp = [];
+              if ($selected_id > 0) $rp['id'] = $selected_id;
+              if ($limit !== 10) $rp['limit'] = $limit;
+              echo !empty($rp) ? '?' . http_build_query($rp) : '';
+            ?>" class="roaster-btn ghost" title="Reset all filters">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+          <?php endif; ?>
         </div>
-
-        <button type="submit" class="roaster-btn secondary">
-          <i class="fa-solid fa-sliders"></i> Filter
-        </button>
-
-        <?php if (!empty($search) || !empty($filter_dept)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/staff-id<?php 
-            $rp = [];
-            if ($selected_id > 0) $rp['id'] = $selected_id;
-            if ($limit !== 10) $rp['limit'] = $limit;
-            echo !empty($rp) ? '?' . http_build_query($rp) : '';
-          ?>" class="roaster-btn ghost" title="Reset all filters">
-            <i class="fa-solid fa-rotate-left"></i> Reset
-          </a>
-        <?php endif; ?>
       </form>
 
       <!-- Right: Faculty Live Count & Link to Roster -->
@@ -1133,7 +1137,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span><strong><?php echo $total_records; ?></strong> Faculty Members</span>
         </div>
 
-        <a href="<?php echo ADMIN_URL; ?>/staff" class="roaster-btn secondary" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+        <a href="<?php echo ADMIN_URL; ?>/staff" class="roaster-btn secondary roaster-link-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
           <i class="fa-solid fa-user-tie"></i>
           <span>Faculty Directory</span>
         </a>
@@ -1145,21 +1149,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <!-- ══════════════════════════════════════════════════════
        FACULTY DATA TABLE (Simple & Sober)
        ══════════════════════════════════════════════════════ -->
-  <div class="hrms-card no-print" id="staffIdDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
-    <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
-      <div>
+  <div class="hrms-card no-print staff-id-directory-card" id="staffIdDirectoryCard" style="margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); background: #ffffff; overflow: hidden;">
+    <div class="hrms-card-header directory-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
+      <div class="directory-title-block">
         <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
           <i class="fa-solid fa-id-card-clip" style="color: #0284c7;"></i>
           Faculty ID Card Directory
-          <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+          <span class="directory-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
             Session <?php echo htmlspecialchars($active_session['session_name']); ?>
           </span>
         </h3>
-        <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+        <p class="directory-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
           Click <strong>View ID Card</strong> on any faculty row below to load their official PVC badge with biometric QR pass.
         </p>
       </div>
-      <div style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+      <div class="directory-records-count" style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
         <span>Total Records: <strong style="color: #0f172a;"><?php echo $total_records; ?></strong></span>
       </div>
     </div>
@@ -1229,10 +1233,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php endif; ?>
 
                     <div>
-                      <div style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
+                      <div class="cell-name" style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                         <?php echo htmlspecialchars($st['full_name']); ?>
                       </div>
-                      <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
+                      <div class="cell-sub" style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
                         <span><?php echo htmlspecialchars($st['email'] ?: $st['user_email']); ?></span>
                       </div>
                     </div>
@@ -1245,7 +1249,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
                     <span><?php echo htmlspecialchars($st['employee_code']); ?></span>
                   </span>
-                  <div style="font-size: 0.76rem; font-weight: 600; color: #475569; margin-top: 4px;">
+                  <div class="sid-designation" style="font-size: 0.76rem; font-weight: 600; color: #475569; margin-top: 4px;">
                     <?php echo htmlspecialchars($st['designation']); ?>
                   </div>
                 </td>
@@ -1299,7 +1303,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td style="text-align: right;">
                   <div style="display: inline-flex; gap: 6px; justify-content: flex-end; align-items: center;">
                     <?php if ($is_cur_viewing): ?>
-                      <button type="button" onclick="document.getElementById('id-card-stage').scrollIntoView({behavior: 'smooth'});" class="sid-btn-action sid-btn-secondary" style="background: #f0f9ff; border-color: #bae6fd; color: #0284c7;" title="Currently loaded into preview">
+                      <button type="button" onclick="document.getElementById('id-card-stage').scrollIntoView({behavior: 'smooth'});" class="sid-btn-action sid-btn-secondary sid-btn-viewing" style="background: #f0f9ff; border-color: #bae6fd; color: #0284c7;" title="Currently loaded into preview">
                         <i class="fa-solid fa-eye" style="font-size: 0.72rem;"></i>
                         <span>Viewing</span>
                       </button>
@@ -1389,7 +1393,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <?php endif; ?>
 
       <!-- Legend / Session Status -->
-      <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+      <div class="pagination-legend-text" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
         <span style="display: inline-flex; align-items: center; gap: 6px;">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
           Official PVC Pass

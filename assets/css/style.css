@@ -225,6 +225,8 @@ button, input, select, textarea {
   gap: 12px;
   overflow: hidden;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .ticker-badge {
@@ -241,6 +243,51 @@ button, input, select, textarea {
   letter-spacing: 0.03em;
   box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.ticker-text-wrapper {
+  position: relative;
+  height: 26px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ticker-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease;
+  pointer-events: none;
+}
+
+.ticker-slide.slide-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.ticker-slide.slide-out-down {
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+
+.ticker-slide strong {
+  color: #ffffff;
+  font-weight: 750;
 }
 
 .topbar-live-dot {
@@ -252,20 +299,7 @@ button, input, select, textarea {
   margin-right: 4px;
   box-shadow: 0 0 6px #10b981;
   animation: liveDotPulse 1.8s infinite;
-}
-
-.ticker-text {
-  color: #ffffff;
-  font-size: 0.82rem;
-  letter-spacing: 0.01em;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ticker-text strong {
-  color: #ffffff;
-  font-weight: 750;
+  flex-shrink: 0;
 }
 
 .topbar-chip-gold {

@@ -6,7 +6,7 @@ if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_students');
 }
 $page_title = 'Student Roaster & Profiles';
-$page_heading = 'Student Roaster & Academic Records';
+$page_heading = 'Student Roaster';
 $page_subheading = 'Enrolled Scholars, Academic Batches, Admission Profiles & Document Repositories';
 $active_menu = 'students';
 
