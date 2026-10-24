@@ -25,7 +25,9 @@ $selected_id = intval($_GET['id'] ?? 0);
 
 // If student or parent role logged in, lock to their student profile
 if ($current_user['role'] === 'student' || $current_user['role'] === 'parent') {
-    $my_stu = $db->query("SELECT id FROM students WHERE parent_user_id = {$current_user['id']} LIMIT 1")->fetch();
+    $stmt_mstu = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? LIMIT 1");
+    $stmt_mstu->execute([$current_user['id']]);
+    $my_stu = $stmt_mstu->fetch();
     if ($my_stu) {
         $selected_id = $my_stu['id'];
     }

@@ -40,7 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if ($current_user['role'] === 'super_admin') {
         $staff_id = intval($_POST['staff_id'] ?? 0);
     } else {
-        $staff = $db->query("SELECT id FROM staff_profiles WHERE user_id = {$current_user['id']}")->fetch();
+        $stmt_stf = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1");
+        $stmt_stf->execute([$current_user['id']]);
+        $staff = $stmt_stf->fetch();
         if ($staff) {
             $staff_id = $staff['id'];
         }
@@ -175,13 +177,17 @@ function get_leaves_pagination_url($target_page, $search, $filter_status, $filte
     return ADMIN_URL . '/leaves' . $query_str;
 }
 
-// Also compute overall global metrics for the KPI grid
+// Also compute overall global metrics for the KPI grid (Prepared Statement)
 $stat_query = "SELECT status, COUNT(*) as cnt FROM leave_requests";
+$stat_params = [];
 if ($current_user['role'] === 'staff') {
-    $stat_query .= " WHERE staff_id IN (SELECT id FROM staff_profiles WHERE user_id = {$current_user['id']})";
+    $stat_query .= " WHERE staff_id IN (SELECT id FROM staff_profiles WHERE user_id = ?)";
+    $stat_params[] = $current_user['id'];
 }
 $stat_query .= " GROUP BY status";
-$stats_raw = $db->query($stat_query)->fetchAll(PDO::FETCH_KEY_PAIR);
+$stmt_stat = $db->prepare($stat_query);
+$stmt_stat->execute($stat_params);
+$stats_raw = $stmt_stat->fetchAll(PDO::FETCH_KEY_PAIR);
 
 $metric_total = array_sum($stats_raw);
 $metric_pending = $stats_raw['Pending'] ?? 0;

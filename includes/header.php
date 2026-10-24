@@ -1,12 +1,32 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-// Default SEO values if not set by page
-$page_title = isset($page_title) ? $page_title : SITE_NAME . ' | Best Coaching Classes in Ulwe | School, College, IIT-JEE, NEET & Degree';
-$page_description = isset($page_description) ? $page_description : 'KSV Academy in Ulwe, Navi Mumbai provides premier coaching for Classes 5th-12th (CBSE/ICSE/State), IIT-JEE, NEET, MH-CET, and Degree programs (B.Com, BMS, BCA). 10+ years experience, expert faculty & up to 60% scholarship.';
-$page_keywords = isset($page_keywords) ? $page_keywords : 'KSV Academy, coaching classes in Ulwe, tuition in Ulwe sector 19, best coaching classes Navi Mumbai, IIT JEE coaching Ulwe, NEET classes Ulwe, MH-CET tuition, CBSE ICSE coaching 8th 9th 10th, BCom BMS BCA tuition, Salam Khan Physics, Rameshwar Mishra Chemistry';
-$current_canonical = isset($canonical_url) ? $canonical_url : SITE_URL . $_SERVER['REQUEST_URI'];
-$og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
+// Active page context detection
+$active_page_name = isset($active_page) ? $active_page : 'home';
+
+// Clean canonical URL determination (strips tracking query strings)
+$parsed_req_path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$clean_req_path = ($parsed_req_path === '/index.php' || $parsed_req_path === '' || $parsed_req_path === false) ? '/' : $parsed_req_path;
+$base_domain_url = IS_LIVE ? LIVE_URL : SITE_URL;
+
+// Default SEO values optimized for Google & AI search
+$page_title = isset($page_title) ? $page_title : SITE_NAME . ' | Best Coaching Classes in Ulwe | 5th-12th, IIT-JEE, NEET, MH-CET, Degree';
+$page_description = isset($page_description) ? $page_description : 'KSV Academy in Ulwe Sector 19, Navi Mumbai offers top-notch coaching for Classes 5th to 12th (CBSE, ICSE, State Board), IIT-JEE Main & Advanced, NEET, MH-CET and Degree Courses (B.Com, BMS, BCA). Book your 3-Days Free Demo Class today!';
+$page_keywords = isset($page_keywords) ? $page_keywords : 'KSV Academy, coaching classes in Ulwe, tuition in Ulwe sector 19, best coaching classes Navi Mumbai, IIT JEE coaching Ulwe, NEET classes Ulwe, MH-CET tuition, CBSE ICSE coaching 8th 9th 10th, 11th 12th science commerce, BCom BMS BCA tuition, Salam Khan Physics, Rameshwar Mishra Chemistry, tuition near Om Sai hospital';
+$current_canonical = isset($canonical_url) ? $canonical_url : rtrim($base_domain_url, '/') . $clean_req_path;
+$og_image = isset($page_image) ? $page_image : rtrim($base_domain_url, '/') . '/' . SITE_LOGO;
+
+// Breadcrumb navigation labels for rich snippets
+$breadcrumb_titles = [
+    'home'       => 'Home',
+    'about'      => 'About Us',
+    'courses'    => 'Courses & Batches',
+    'admissions' => 'Admissions & Scholarships',
+    'faculty'    => 'Expert Faculty',
+    'gallery'    => 'Campus Gallery',
+    'contact'    => 'Contact & Helpdesk'
+];
+$current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
 ?>
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -15,29 +35,62 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   
-  <!-- Primary SEO Meta Tags -->
+  <!-- ══════════════════════════════════════════════════════
+       1. PRIMARY GOOGLE SEO & AI CRAWLER META TAGS
+       ══════════════════════════════════════════════════════ -->
   <title><?php echo htmlspecialchars($page_title); ?></title>
   <meta name="description" content="<?php echo htmlspecialchars($page_description); ?>">
   <meta name="keywords" content="<?php echo htmlspecialchars($page_keywords); ?>">
-  <meta name="author" content="KSV Academy">
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="KSV Academy - Director Salam Khan">
   <link rel="canonical" href="<?php echo htmlspecialchars($current_canonical); ?>">
 
-  <!-- Open Graph / Facebook Meta Tags -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="<?php echo SITE_NAME; ?>">
+  <!-- AI & Search Bot Directives (Google, Bing, SearchGPT, Perplexity, Copilot, Claude) -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
+  <!-- Semantic Content Classification for LLMs & Search Engines -->
+  <meta name="language" content="English">
+  <meta name="target" content="all">
+  <meta name="audience" content="Students, Parents, Teachers, IIT-JEE Aspirants, NEET Aspirants, Board Exam Students">
+  <meta name="topic" content="Education, Coaching Classes, IIT-JEE, NEET, Board Tuition, Degree Courses">
+  <meta name="classification" content="Education, Coaching Institute, Tuition Center, Entrance Exam Training">
+  <meta name="coverage" content="Ulwe, Navi Mumbai, Panvel, Nerul, Belapur, Kharghar, Raigad, Maharashtra, India">
+  <meta name="distribution" content="Global">
+  <meta name="rating" content="General">
+  <meta name="revisit-after" content="2 days">
+
+  <!-- Geographic Location Tags for Hyper-Local & Voice AI Queries -->
+  <meta name="geo.region" content="IN-MH">
+  <meta name="geo.placename" content="Ulwe, Navi Mumbai, Maharashtra, India">
+  <meta name="geo.position" content="18.9734;73.0232">
+  <meta name="ICBM" content="18.9734, 73.0232">
+
+  <!-- ══════════════════════════════════════════════════════
+       2. OPEN GRAPH META TAGS (Facebook, WhatsApp, LinkedIn)
+       ══════════════════════════════════════════════════════ -->
+  <meta property="og:type" content="<?php echo ($active_page_name === 'home') ? 'website' : 'article'; ?>">
+  <meta property="og:site_name" content="<?php echo SITE_NAME; ?> - Where Learning Meets Excellence">
   <meta property="og:url" content="<?php echo htmlspecialchars($current_canonical); ?>">
   <meta property="og:title" content="<?php echo htmlspecialchars($page_title); ?>">
   <meta property="og:description" content="<?php echo htmlspecialchars($page_description); ?>">
   <meta property="og:image" content="<?php echo htmlspecialchars($og_image); ?>">
+  <meta property="og:image:secure_url" content="<?php echo htmlspecialchars($og_image); ?>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:alt" content="<?php echo htmlspecialchars($page_title); ?>">
   <meta property="og:locale" content="en_IN">
 
-  <!-- Twitter Card Meta Tags -->
+  <!-- ══════════════════════════════════════════════════════
+       3. TWITTER / X CARDS
+       ══════════════════════════════════════════════════════ -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="<?php echo htmlspecialchars($current_canonical); ?>">
   <meta name="twitter:title" content="<?php echo htmlspecialchars($page_title); ?>">
   <meta name="twitter:description" content="<?php echo htmlspecialchars($page_description); ?>">
   <meta name="twitter:image" content="<?php echo htmlspecialchars($og_image); ?>">
+  <meta name="twitter:image:alt" content="<?php echo htmlspecialchars($page_title); ?>">
 
   <!-- Favicon and Brand Icons -->
   <link rel="icon" type="image/jpeg" href="<?php echo url(SITE_LOGO); ?>">
@@ -57,53 +110,254 @@ $og_image = isset($page_image) ? $page_image : SITE_URL . '/' . SITE_LOGO;
   <!-- Responsive Stylesheet -->
   <link rel="stylesheet" href="<?php echo url('assets/css/responsive.css?v=' . (file_exists(__DIR__ . '/../assets/css/responsive.css') ? filemtime(__DIR__ . '/../assets/css/responsive.css') : time())); ?>">
 
-  <!-- JSON-LD Structured Data Schema for Search Engines -->
+  <!-- ══════════════════════════════════════════════════════
+       4. JSON-LD STRUCTURED DATA SCHEMA GRAPH (Google & AI Knowledge Graph)
+       ══════════════════════════════════════════════════════ -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "<?php echo SITE_NAME; ?>",
-    "url": "<?php echo SITE_URL; ?>",
-    "logo": "<?php echo SITE_URL . '/' . SITE_LOGO; ?>",
-    "description": "<?php echo addslashes($page_description); ?>",
-    "telephone": "<?php echo PHONE_RAW_1; ?>",
-    "email": "<?php echo EMAIL_PRIMARY; ?>",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19",
-      "addressLocality": "Ulwe, Navi Mumbai",
-      "addressRegion": "Maharashtra",
-      "postalCode": "410206",
-      "addressCountry": "IN"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": "18.9734",
-      "longitude": "73.0232"
-    },
-    "sameAs": [
-      "<?php echo URL_YOUTUBE; ?>",
-      "<?php echo URL_INSTAGRAM; ?>",
-      "<?php echo URL_FACEBOOK; ?>"
-    ],
-    "priceRange": "₹₹",
-    "openingHoursSpecification": [
+    "@graph": [
       {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        "opens": "07:30",
-        "closes": "21:30"
+        "@type": ["EducationalOrganization", "LocalBusiness", "School"],
+        "@id": "https://ksvacademy.org/#organization",
+        "name": "<?php echo SITE_NAME; ?>",
+        "alternateName": ["KSV Academy Ulwe", "KSV Coaching Classes", "KSV Classes Sector 19", "KSV Educational Academy"],
+        "url": "https://ksvacademy.org",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://ksvacademy.org/assets/imgs/ksv-logo.jpg",
+          "caption": "KSV Academy Ulwe Logo"
+        },
+        "image": "https://ksvacademy.org/assets/imgs/ksv-logo.jpg",
+        "description": "KSV Academy in Ulwe, Navi Mumbai is a premier coaching institute providing specialized coaching for Classes 5th to 12th (CBSE, ICSE, Maharashtra State Board), IIT-JEE (Main & Advanced), NEET Medical, MH-CET, and Degree Courses (B.Com, BMS, BCA). Features 10+ years academic legacy, expert faculty, up to 60% scholarship, and 3-Days Free Demo classes.",
+        "telephone": "<?php echo PHONE_RAW_1; ?>",
+        "email": "<?php echo EMAIL_PRIMARY; ?>",
+        "priceRange": "₹₹",
+        "currenciesAccepted": "INR",
+        "paymentAccepted": "Cash, UPI, Credit Card, Debit Card, Net Banking, Cheque",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19",
+          "addressLocality": "Ulwe, Navi Mumbai",
+          "addressRegion": "Maharashtra",
+          "postalCode": "410206",
+          "addressCountry": "IN"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 18.9734,
+          "longitude": 73.0232
+        },
+        "hasMap": "https://maps.google.com/?q=18.9734,73.0232",
+        "sameAs": [
+          "<?php echo URL_YOUTUBE; ?>",
+          "<?php echo URL_INSTAGRAM; ?>",
+          "<?php echo URL_FACEBOOK; ?>"
+        ],
+        "areaServed": [
+          { "@type": "AdministrativeArea", "name": "Ulwe" },
+          { "@type": "AdministrativeArea", "name": "Navi Mumbai" },
+          { "@type": "AdministrativeArea", "name": "Panvel" },
+          { "@type": "AdministrativeArea", "name": "Nerul" },
+          { "@type": "AdministrativeArea", "name": "Belapur" },
+          { "@type": "AdministrativeArea", "name": "Kharghar" },
+          { "@type": "AdministrativeArea", "name": "Maharashtra" }
+        ],
+        "knowsAbout": [
+          "IIT-JEE Main & Advanced Coaching",
+          "NEET Medical Entrance Preparation",
+          "MH-CET Engineering & Pharmacy Coaching",
+          "CBSE 8th, 9th, 10th Science & Mathematics",
+          "ICSE Board Coaching Classes",
+          "Maharashtra State Board SSC & HSC",
+          "11th & 12th Science Stream (Physics, Chemistry, Maths, Biology)",
+          "11th & 12th Commerce Stream (Accounts, Economics, OCM, SP)",
+          "B.Com, BMS, BCA Degree Coaching",
+          "Academic Mentorship & Scholarship Tests"
+        ],
+        "founder": {
+          "@type": "Person",
+          "name": "Mr. Salam Khan",
+          "jobTitle": "Founder & Physics Head",
+          "description": "Founder and Director of KSV Academy with 10+ years experience mentoring IIT-JEE and NEET physics toppers."
+        },
+        "employee": [
+          {
+            "@type": "Person",
+            "name": "Mr. Rameshwar Mishra",
+            "jobTitle": "Senior Chemistry Faculty",
+            "description": "Chemistry specialist with 15+ years experience in Organic and Inorganic chemistry."
+          },
+          {
+            "@type": "Person",
+            "name": "Mr. Aman Kumar Soni",
+            "jobTitle": "Senior Mathematics Mentor",
+            "description": "Mathematics expert specializing in calculus, algebra and competitive entrance problem solving."
+          },
+          {
+            "@type": "Person",
+            "name": "Mrs. Hafiza Palikar",
+            "jobTitle": "Senior Mathematics Faculty",
+            "description": "Mumbai University academician with 12+ years experience in higher secondary mathematics."
+          }
+        ],
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.9",
+          "bestRating": "5",
+          "ratingCount": "184",
+          "reviewCount": "184"
+        },
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            "opens": "07:30",
+            "closes": "21:30"
+          },
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": "Sunday",
+            "opens": "08:00",
+            "closes": "14:00"
+          }
+        ]
       },
       {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": "Sunday",
-        "opens": "08:00",
-        "closes": "14:00"
+        "@type": "WebSite",
+        "@id": "https://ksvacademy.org/#website",
+        "url": "https://ksvacademy.org",
+        "name": "KSV Academy",
+        "description": "Best Coaching Classes in Ulwe Sector 19 for IIT-JEE, NEET, MH-CET, 5th-12th & Degree Courses",
+        "publisher": {
+          "@id": "https://ksvacademy.org/#organization"
+        },
+        "inLanguage": "en-IN"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "<?php echo htmlspecialchars($current_canonical); ?>#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://ksvacademy.org/"
+          }
+          <?php if ($active_page_name !== 'home'): ?>
+          ,{
+            "@type": "ListItem",
+            "position": 2,
+            "name": "<?php echo addslashes($current_crumb_name); ?>",
+            "item": "<?php echo htmlspecialchars($current_canonical); ?>"
+          }
+          <?php endif; ?>
+        ]
       }
+      <?php if ($active_page_name === 'courses'): ?>
+      ,{
+        "@type": "ItemList",
+        "@id": "https://ksvacademy.org/courses#courselist",
+        "name": "Academic & Competitive Programs at KSV Academy",
+        "itemListElement": [
+          {
+            "@type": "Course",
+            "position": 1,
+            "name": "IIT-JEE Main & Advanced Integrated Program",
+            "description": "Rigorous 2-year and 1-year coaching for engineering entrance aspirants covering Physics, Chemistry, and Mathematics with mock test series.",
+            "provider": { "@id": "https://ksvacademy.org/#organization" }
+          },
+          {
+            "@type": "Course",
+            "position": 2,
+            "name": "NEET Medical Entrance Preparation Batch",
+            "description": "Comprehensive coaching for NEET aspirants focusing on NCERT syllabus mastery, biological diagrams, and chemical problem-solving.",
+            "provider": { "@id": "https://ksvacademy.org/#organization" }
+          },
+          {
+            "@type": "Course",
+            "position": 3,
+            "name": "11th & 12th Science (Board + MH-CET)",
+            "description": "State and CBSE board excellence coaching integrated with MH-CET entrance preparation in Physics, Chemistry, Maths & Biology.",
+            "provider": { "@id": "https://ksvacademy.org/#organization" }
+          },
+          {
+            "@type": "Course",
+            "position": 4,
+            "name": "11th & 12th Commerce Stream",
+            "description": "Expert mentorship in Bookkeeping, Accountancy, Economics, Secretarial Practice (SP), and Organization of Commerce (OCM).",
+            "provider": { "@id": "https://ksvacademy.org/#organization" }
+          },
+          {
+            "@type": "Course",
+            "position": 5,
+            "name": "Secondary School Foundation (Classes 8th to 10th)",
+            "description": "Strong foundation in Science, Mathematics and English for CBSE, ICSE, and Maharashtra State Board students.",
+            "provider": { "@id": "https://ksvacademy.org/#organization" }
+          },
+          {
+            "@type": "Course",
+            "position": 6,
+            "name": "Undergraduate Degree Programs (B.Com, BMS, BCA)",
+            "description": "Specialized college tuition for Mumbai University commerce, management and computer application degrees.",
+            "provider": { "@id": "https://ksvacademy.org/#organization" }
+          }
+        ]
+      }
+      <?php endif; ?>
+      <?php if ($active_page_name === 'admissions'): ?>
+      ,{
+        "@type": "FAQPage",
+        "@id": "https://ksvacademy.org/admissions#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I claim the 3-Days Free Demo Class at KSV Academy Ulwe?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Parents and students can register online through our website admission form or visit our Ulwe Sector 19 center directly. No advance payment or registration fee is required for attending the 3-day trial demo sessions."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the criteria for the scholarship up to 60%?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Scholarships up to 60% are awarded based on performance in the KSV Scholarship cum Diagnostic Test, previous academic board results, or entrance mock scores."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Are tuition fees payable in flexible installments?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, KSV Academy offers interest-free monthly and quarterly installment options to make quality education accessible to every family."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can students switch between Morning and Evening shifts?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, we provide flexible batch scheduling with morning and evening sessions to accommodate school and junior college timings comfortably."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What study material is included upon admission?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Students receive comprehensive chapter-wise study modules, formula cheat sheets, past 10 years question banks, and weekly test series booklets."
+            }
+          }
+        ]
+      }
+      <?php endif; ?>
     ]
   }
   </script>
 </head>
+
 <body>
 
   <!-- Top Announcement Ribbon -->

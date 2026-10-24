@@ -111,11 +111,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mkdir($docs_dir, 0777, true);
             }
 
+            $allowed_doc_exts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'webp', 'txt'];
             for ($i = 0; $i < $file_count; $i++) {
                 if ($files_array['error'][$i] === UPLOAD_ERR_OK) {
                     $orig_name = $files_array['name'][$i];
                     $tmp_doc = $files_array['tmp_name'][$i];
                     $doc_ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
+                    if (!in_array($doc_ext, $allowed_doc_exts)) {
+                        continue;
+                    }
                     $safe_doc_name = 'doc_' . time() . '_' . rand(100, 999) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
                     $dest_doc = $docs_dir . '/' . $safe_doc_name;
                     if (move_uploaded_file($tmp_doc, $dest_doc)) {
@@ -258,11 +262,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         mkdir($docs_dir, 0777, true);
                     }
 
+                    $allowed_doc_exts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'webp', 'txt'];
                     for ($i = 0; $i < $file_count; $i++) {
                         if ($files_array['error'][$i] === UPLOAD_ERR_OK) {
                             $orig_name = $files_array['name'][$i];
                             $tmp_doc = $files_array['tmp_name'][$i];
                             $doc_ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
+                            if (!in_array($doc_ext, $allowed_doc_exts)) {
+                                continue;
+                            }
                             $safe_doc_name = 'doc_' . time() . '_' . rand(100, 999) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
                             $dest_doc = $docs_dir . '/' . $safe_doc_name;
                             if (move_uploaded_file($tmp_doc, $dest_doc)) {
@@ -346,16 +354,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch roaster metrics for active session
-$stats_res = $db->query("
+// Fetch roaster metrics for active session using prepared statement
+$stats_stmt = $db->prepare("
     SELECT 
         COUNT(*) as total_students,
         COALESCE(SUM(total_fees), 0) as total_fees,
         COALESCE(SUM(paid_fees), 0) as paid_fees,
         COALESCE(AVG(attendance_percentage), 0) as avg_attendance
     FROM students 
-    WHERE session_id = {$session_id}
-")->fetch(PDO::FETCH_ASSOC);
+    WHERE session_id = ?
+");
+$stats_stmt->execute([$session_id]);
+$stats_res = $stats_stmt->fetch(PDO::FETCH_ASSOC);
 
 $total_stu_count = intval($stats_res['total_students'] ?? 0);
 $total_fees_amount = floatval($stats_res['total_fees'] ?? 0);

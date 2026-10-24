@@ -44,11 +44,19 @@ function send_response($success, $message, $data = [], $redirect_url = '') {
     }
 
     if (!empty($redirect_url)) {
-        header('Location: ' . $redirect_url);
+        $safe_redirect = preg_replace('/[\r\n]/', '', $redirect_url);
+        header('Location: ' . $safe_redirect);
         exit;
     }
 
     $ref = $_SERVER['HTTP_REFERER'] ?? '/';
+    // Strip control characters to prevent HTTP response splitting
+    $ref = preg_replace('/[\r\n]/', '', $ref);
+    // Ensure redirect stays within site
+    $parsed_ref = parse_url($ref);
+    if (!empty($parsed_ref['host']) && $parsed_ref['host'] !== ($_SERVER['HTTP_HOST'] ?? '')) {
+        $ref = '/';
+    }
     $joiner = (strpos($ref, '?') !== false) ? '&' : '?';
     header('Location: ' . $ref . $joiner . 'form_status=' . ($success ? 'success' : 'error'));
     exit;

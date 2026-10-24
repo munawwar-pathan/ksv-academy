@@ -28,7 +28,9 @@ $page = max(1, intval($_GET['page'] ?? 1));
 
 // If staff role, restrict to own profile
 if ($current_user['role'] === 'staff') {
-    $my_prof = $db->query("SELECT id FROM staff_profiles WHERE user_id = {$current_user['id']} LIMIT 1")->fetch();
+    $stmt_mprof = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1");
+    $stmt_mprof->execute([$current_user['id']]);
+    $my_prof = $stmt_mprof->fetch();
     if ($my_prof) {
         $filter_staff_id = $my_prof['id'];
     }
@@ -71,8 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                 $stmt->execute([$session_id, $staff_id, $month, $year, $basic_salary, $allowances, $deductions, $net_salary, $payment_status, $payment_date, $payment_method]);
             }
 
-            // Fetch faculty name for friendly confirmation
-            $fac_name = $db->query("SELECT u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = {$staff_id}")->fetchColumn() ?: "Faculty Member";
+            // Fetch faculty name for friendly confirmation (Prepared Statement)
+            $stmt_fn = $db->prepare("SELECT u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
+            $stmt_fn->execute([$staff_id]);
+            $fac_name = $stmt_fn->fetchColumn() ?: "Faculty Member";
 
             set_flash('success', "Salary payment of " . format_inr($net_salary) . " for {$fac_name} ({$month} {$year}) processed successfully!");
             header("Location: " . ADMIN_URL . "/payroll?month={$month}&year={$year}");

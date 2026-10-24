@@ -148,7 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
 
         if ($staff_id > 0 && !empty($full_name)) {
             try {
-                $user_id = $db->query("SELECT user_id FROM staff_profiles WHERE id = {$staff_id}")->fetchColumn();
+                $stmt_uid = $db->prepare("SELECT user_id FROM staff_profiles WHERE id = ?");
+                $stmt_uid->execute([$staff_id]);
+                $user_id = $stmt_uid->fetchColumn();
                 if ($user_id) {
                     $stmt_u = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
                     $stmt_u->execute([$full_name, $email, $phone, $user_id]);
@@ -179,7 +181,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
     if ($action === 'delete_staff') {
         $staff_id = intval($_POST['staff_id'] ?? 0);
         if ($staff_id > 0) {
-            $user_id = $db->query("SELECT user_id FROM staff_profiles WHERE id = {$staff_id}")->fetchColumn();
+            $stmt_uid = $db->prepare("SELECT user_id FROM staff_profiles WHERE id = ?");
+            $stmt_uid->execute([$staff_id]);
+            $user_id = $stmt_uid->fetchColumn();
             $db->prepare("DELETE FROM staff_profiles WHERE id = ?")->execute([$staff_id]);
             if ($user_id) {
                 $db->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);

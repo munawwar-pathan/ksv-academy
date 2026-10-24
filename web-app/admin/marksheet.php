@@ -26,7 +26,9 @@ $selected_marksheet_id = intval($_GET['marksheet_id'] ?? 0);
 
 // If logged in as student or parent, restrict to their student
 if ($current_user['role'] === 'student' || $current_user['role'] === 'parent') {
-    $my_stu = $db->query("SELECT id FROM students WHERE parent_user_id = {$current_user['id']} LIMIT 1")->fetch();
+    $stmt_mstu = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? LIMIT 1");
+    $stmt_mstu->execute([$current_user['id']]);
+    $my_stu = $stmt_mstu->fetch();
     if ($my_stu) {
         $selected_student_id = $my_stu['id'];
     }

@@ -34,7 +34,9 @@ $standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '
 
 // If parent or student role, limit to their student
 if ($current_user['role'] === 'student' || $current_user['role'] === 'parent') {
-    $my_stu = $db->query("SELECT id FROM students WHERE parent_user_id = {$current_user['id']} LIMIT 1")->fetch();
+    $stmt_mstu = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? LIMIT 1");
+    $stmt_mstu->execute([$current_user['id']]);
+    $my_stu = $stmt_mstu->fetch();
     if ($my_stu) {
         $filter_student_id = $my_stu['id'];
     }
@@ -184,11 +186,20 @@ foreach ($payments as &$p) {
 }
 unset($p);
 
-// Total collections in this session
-$total_collected = floatval($db->query("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = {$session_id}")->fetchColumn());
-$total_receivable = floatval($db->query("SELECT COALESCE(SUM(total_fees), 0) FROM students WHERE session_id = {$session_id}")->fetchColumn());
+// Total collections in this session (Prepared Statements)
+$stmt_tc = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = ?");
+$stmt_tc->execute([$session_id]);
+$total_collected = floatval($stmt_tc->fetchColumn());
+
+$stmt_tr = $db->prepare("SELECT COALESCE(SUM(total_fees), 0) FROM students WHERE session_id = ?");
+$stmt_tr->execute([$session_id]);
+$total_receivable = floatval($stmt_tr->fetchColumn());
+
 $total_dues = max(0, $total_receivable - $total_collected);
-$receipts_count = intval($db->query("SELECT COUNT(*) FROM fee_payments WHERE session_id = {$session_id}")->fetchColumn());
+
+$stmt_rc = $db->prepare("SELECT COUNT(*) FROM fee_payments WHERE session_id = ?");
+$stmt_rc->execute([$session_id]);
+$receipts_count = intval($stmt_rc->fetchColumn());
 
 $collection_rate = $total_receivable > 0 ? round(($total_collected / $total_receivable) * 100, 1) : 0;
 $dues_rate = $total_receivable > 0 ? round(($total_dues / $total_receivable) * 100, 1) : 0;

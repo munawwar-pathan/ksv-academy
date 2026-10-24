@@ -121,13 +121,11 @@ require_once __DIR__ . '/../config.php';
 </div>
 
 <?php
-// Load dynamic promo popup slides cleanly from database without session conflict
+// Load dynamic promo popup slides cleanly from database using central configuration
 $active_popup_slides = [];
 try {
-    $ps_pdo = new PDO("mysql:host=127.0.0.1;port=3306;dbname=ksvacademy;charset=utf8mb4", "root", "myPassword$10", [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
+    require_once __DIR__ . '/../web-app/config.php';
+    $ps_pdo = get_db_connection();
     $ps_stmt = $ps_pdo->query("SELECT * FROM popup_sliders WHERE status = 'active' ORDER BY sort_order ASC, id ASC");
     if ($ps_stmt) {
         $active_popup_slides = $ps_stmt->fetchAll();

@@ -75,7 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_category') {
         $cat_id = intval($_POST['category_id'] ?? 0);
         if ($cat_id > 0) {
-            $has_exp = $db->query("SELECT COUNT(*) FROM expenses WHERE category_id = {$cat_id}")->fetchColumn();
+            $stmt_he = $db->prepare("SELECT COUNT(*) FROM expenses WHERE category_id = ?");
+            $stmt_he->execute([$cat_id]);
+            $has_exp = $stmt_he->fetchColumn();
             if ($has_exp > 0) {
                 set_flash('error', "Cannot delete category: {$has_exp} expense entries are attached to it.");
             } else {
@@ -88,14 +90,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Compute overall stats across all categories for active session
-$all_categories = $db->query("
+// Compute overall stats across all categories for active session (Prepared Statement)
+$stmt_all_cat = $db->prepare("
     SELECT c.id, c.category_name,
-        (SELECT COUNT(*) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as expense_count,
-        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as total_spent
+        (SELECT COUNT(*) FROM expenses WHERE category_id = c.id AND session_id = ?) as expense_count,
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = c.id AND session_id = ?) as total_spent
     FROM expense_categories c
     ORDER BY c.category_name ASC
-")->fetchAll();
+");
+$stmt_all_cat->execute([$session_id, $session_id]);
+$all_categories = $stmt_all_cat->fetchAll();
 
 $total_categories_count = count($all_categories);
 $active_in_use_count = 0;

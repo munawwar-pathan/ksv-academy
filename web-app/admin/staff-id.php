@@ -26,7 +26,9 @@ $selected_id = intval($_GET['id'] ?? 0);
 
 // If staff role, restrict strictly to their own profile
 if ($current_user['role'] === 'staff') {
-    $my_prof = $db->query("SELECT id FROM staff_profiles WHERE user_id = {$current_user['id']} LIMIT 1")->fetch();
+    $stmt_mp = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1");
+    $stmt_mp->execute([$current_user['id']]);
+    $my_prof = $stmt_mp->fetch();
     if ($my_prof) {
         $selected_id = $my_prof['id'];
     }

@@ -44,6 +44,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch();
 
             if ($user && ($password === $user['password'] || password_verify($password, $user['password']))) {
+                // Prevent Session Fixation
+                session_regenerate_id(true);
+
+                // Auto-upgrade legacy plaintext password to secure bcrypt hash
+                if ($password === $user['password'] && !password_verify($password, $user['password'])) {
+                    $new_hash = password_hash($password, PASSWORD_DEFAULT);
+                    $upd_pwd = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
+                    $upd_pwd->execute([$new_hash, $user['id']]);
+                }
+
                 // Set session
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
@@ -78,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
   <title>HRMS &amp; Academic Portal Login | KSV Academy</title>
   
   <!-- Fonts -->
@@ -88,8 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   
-  <!-- HRMS Stylesheet -->
+  <!-- HRMS Stylesheet & Responsive Styles -->
   <link rel="stylesheet" href="<?php echo HRMS_URL; ?>/assets/css/hrms.css?v=<?php echo time(); ?>">
+  <link rel="stylesheet" href="<?php echo HRMS_URL; ?>/assets/css/responsive.css?v=<?php echo time(); ?>">
   <link rel="icon" type="image/jpeg" href="/assets/imgs/ksv-logo.jpg">
 </head>
 <body class="hrms-login-body">
@@ -281,6 +293,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="login-security-notice">
         <i class="fa-solid fa-shield-halved"></i>
         <span>Authorized portal access only. All authentication attempts are logged.</span>
+      </div>
+
+      <!-- Back to Home page -->
+      <div class="login-back-home-wrap">
+        <a href="/" class="login-back-home-link">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Home page</span>
+        </a>
       </div>
 
     </div>

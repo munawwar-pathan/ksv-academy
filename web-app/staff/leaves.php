@@ -22,7 +22,9 @@ if (!$staff_profile) {
     $emp_code = 'KSV-FAC-0' . $current_user['id'];
     $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present')");
     $stmt->execute([$current_user['id'], $emp_code]);
-    $staff_profile = $db->query("SELECT * FROM staff_profiles WHERE user_id = {$current_user['id']}")->fetch();
+    $stmt_sp = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ?");
+    $stmt_sp->execute([$current_user['id']]);
+    $staff_profile = $stmt_sp->fetch();
 }
 $staff_id = $staff_profile['id'];
 

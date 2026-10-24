@@ -15,35 +15,47 @@ $active_session = get_active_session();
 $session_id = $active_session['id'];
 $school_settings = get_school_settings();
 
-// Summary calculations for the active session
-$total_fees = floatval($db->query("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = {$session_id}")->fetchColumn());
-$total_expenses = floatval($db->query("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE session_id = {$session_id}")->fetchColumn());
-$total_payroll = floatval($db->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll WHERE session_id = {$session_id} AND payment_status = 'Paid'")->fetchColumn());
+// Summary calculations for the active session (Prepared Statements)
+$stmt_tf = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = ?");
+$stmt_tf->execute([$session_id]);
+$total_fees = floatval($stmt_tf->fetchColumn());
+
+$stmt_te = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE session_id = ?");
+$stmt_te->execute([$session_id]);
+$total_expenses = floatval($stmt_te->fetchColumn());
+
+$stmt_tp = $db->prepare("SELECT COALESCE(SUM(net_salary), 0) FROM payroll WHERE session_id = ? AND payment_status = 'Paid'");
+$stmt_tp->execute([$session_id]);
+$total_payroll = floatval($stmt_tp->fetchColumn());
 
 $net_operating_balance = $total_fees - ($total_expenses + $total_payroll);
 $total_disbursed = $total_expenses + $total_payroll;
 
 // Category-wise Breakdown
-$cat_breakdown = $db->query("
+$stmt_cat = $db->prepare("
     SELECT c.id, c.category_name, COALESCE(SUM(e.amount), 0) as total_amount, COUNT(e.id) as vouchers_count
     FROM expense_categories c
-    LEFT JOIN expenses e ON c.id = e.category_id AND e.session_id = {$session_id}
+    LEFT JOIN expenses e ON c.id = e.category_id AND e.session_id = ?
     GROUP BY c.id, c.category_name
     HAVING total_amount > 0
     ORDER BY total_amount DESC
-")->fetchAll();
+");
+$stmt_cat->execute([$session_id]);
+$cat_breakdown = $stmt_cat->fetchAll();
 
 // Monthly Breakdown
-$monthly_expenses = $db->query("
+$stmt_month = $db->prepare("
     SELECT DATE_FORMAT(expense_date, '%M %Y') as month_label,
            DATE_FORMAT(expense_date, '%Y-%m') as month_key,
            COUNT(id) as voucher_count,
            SUM(amount) as monthly_total
     FROM expenses
-    WHERE session_id = {$session_id}
+    WHERE session_id = ?
     GROUP BY month_key, month_label
     ORDER BY month_key DESC
-")->fetchAll();
+");
+$stmt_month->execute([$session_id]);
+$monthly_expenses = $stmt_month->fetchAll();
 
 // Payment Method Distribution
 $method_breakdown = $db->query("

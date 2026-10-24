@@ -75,7 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (!empty($_POST['ajax'])) {
                 header('Content-Type: application/json');
-                $staff_info = $db->query("SELECT u.full_name, sp.employee_code, sp.department FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = {$staff_id}")->fetch(PDO::FETCH_ASSOC);
+                $stmt_sinfo = $db->prepare("SELECT u.full_name, sp.employee_code, sp.department FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
+                $stmt_sinfo->execute([$staff_id]);
+                $staff_info = $stmt_sinfo->fetch(PDO::FETCH_ASSOC);
 
                 // Get updated counts for the page date
                 $stats_stmt = $db->prepare("

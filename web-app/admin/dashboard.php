@@ -76,11 +76,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch Key Dashboard Metrics
-$total_staff = intval($db->query("SELECT COUNT(*) FROM staff_profiles WHERE session_id = {$session_id}")->fetchColumn());
-$present_staff = intval($db->query("SELECT COUNT(*) FROM staff_profiles WHERE session_id = {$session_id} AND today_status = 'Present'")->fetchColumn());
-$total_students = intval($db->query("SELECT COUNT(*) FROM students WHERE session_id = {$session_id}")->fetchColumn());
-$fee_stats = $db->query("SELECT SUM(total_fees) as total, SUM(paid_fees) as paid FROM students WHERE session_id = {$session_id}")->fetch();
+// Fetch Key Dashboard Metrics (Prepared Statements)
+$stmt_staff = $db->prepare("SELECT COUNT(*) FROM staff_profiles WHERE session_id = ?");
+$stmt_staff->execute([$session_id]);
+$total_staff = intval($stmt_staff->fetchColumn());
+
+$stmt_pstaff = $db->prepare("SELECT COUNT(*) FROM staff_profiles WHERE session_id = ? AND today_status = 'Present'");
+$stmt_pstaff->execute([$session_id]);
+$present_staff = intval($stmt_pstaff->fetchColumn());
+
+$stmt_stu = $db->prepare("SELECT COUNT(*) FROM students WHERE session_id = ?");
+$stmt_stu->execute([$session_id]);
+$total_students = intval($stmt_stu->fetchColumn());
+
+$stmt_fee = $db->prepare("SELECT SUM(total_fees) as total, SUM(paid_fees) as paid FROM students WHERE session_id = ?");
+$stmt_fee->execute([$session_id]);
+$fee_stats = $stmt_fee->fetch();
 $total_fees = floatval($fee_stats['total'] ?? 0);
 $paid_fees = floatval($fee_stats['paid'] ?? 0);
 $pending_leaves = intval($db->query("SELECT COUNT(*) FROM leave_requests WHERE status = 'Pending'")->fetchColumn());

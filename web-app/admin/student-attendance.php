@@ -91,7 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Return JSON if AJAX request
             if (!empty($_POST['ajax'])) {
                 header('Content-Type: application/json');
-                $stu_info = $db->query("SELECT student_name, roll_no, standard FROM students WHERE id = {$student_id}")->fetch(PDO::FETCH_ASSOC);
+                $stmt_sinfo = $db->prepare("SELECT student_name, roll_no, standard FROM students WHERE id = ?");
+                $stmt_sinfo->execute([$student_id]);
+                $stu_info = $stmt_sinfo->fetch(PDO::FETCH_ASSOC);
 
                 // Get updated counts for the page date
                 $stats_stmt = $db->prepare("

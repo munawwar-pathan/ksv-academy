@@ -1,0 +1,42 @@
+# ==============================================================================
+# Robots.txt for KSV Academy (https://ksvacademy.org)
+# Optimized for Google Search and Modern AI Engines (SearchGPT, Gemini, Perplexity)
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Disallow: /web-app/
+Disallow: /includes/
+Disallow: /submit-form.php
+
+# OpenAI (SearchGPT & ChatGPT Web Browsing)
+User-agent: GPTBot
+Allow: /
+Disallow: /web-app/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /web-app/
+
+# Perplexity AI Search Engine
+User-agent: PerplexityBot
+Allow: /
+Disallow: /web-app/
+
+# Anthropic Claude Search & Crawling
+User-agent: ClaudeBot
+Allow: /
+Disallow: /web-app/
+
+# Google AI Overview & Extended Crawlers
+User-agent: Google-Extended
+Allow: /
+Disallow: /web-app/
+
+# Apple Search & Siri Knowledge Graph
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /web-app/
+
+# Canonical Sitemap Location
+Sitemap: https://ksvacademy.org/sitemap.xml
