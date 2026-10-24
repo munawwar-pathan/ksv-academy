@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPromoSlider();
 });
 
+
 /* ==========================================================================
    1. Light / Dark Mode Toggle with localStorage
    ========================================================================== */
@@ -729,10 +730,8 @@ function initPromoSlider() {
     }
     currentIndex = index;
 
-    // Apply exact pixel translation based on active wrapper width
-    const wrapper = sliderContainer.querySelector('.promo-slides-wrapper') || sliderContainer;
-    const slideWidth = wrapper.offsetWidth || (slides[0] ? slides[0].offsetWidth : 0);
-    track.style.transform = `translateX(-${currentIndex * slideWidth}px)`;
+    // Apply exact percentage translation based on slide index (immune to scaling/timing)
+    track.style.transform = `translateX(-${currentIndex * 100}%)`;
 
     // Toggle active state for slides (for focus and active scaling)
     slides.forEach((slide, i) => {

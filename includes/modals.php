@@ -163,52 +163,93 @@ if (empty($active_popup_slides)) {
 <!-- 3. Automatic Reload Scholarship & Admission Popup Modal -->
 <div class="modal-backdrop promo-modal-backdrop" id="reloadPromoModal" role="dialog" aria-modal="true" aria-labelledby="promoModalTitle">
   <div class="promo-modal-dialog">
+    <!-- Close Button -->
     <button type="button" class="promo-close-btn" data-close="modal" aria-label="Close popup" title="Close">
       <i class="fa-solid fa-xmark"></i>
     </button>
-    <div class="promo-modal-body">
-      <!-- Left Column: Scholarship Headline & Admission CTA (Simple & Sober) -->
-      <div class="promo-content-col">
-        <span class="section-eyebrow"><i class="fa-solid fa-graduation-cap"></i> Admissions Open <?php echo CURRENT_SESSION; ?></span>
 
+    <div class="promo-modal-body">
+      <!-- Left Column: Elegant Admissions & Scholarship Showcase -->
+      <div class="promo-content-col">
+        <!-- Dual Eyebrow Badges -->
+        <div class="promo-eyebrows-wrap">
+          <div class="hero-eyebrow promo-eyebrow">
+            <span class="hero-live-dot"></span>
+            <span>Admissions Open <?php echo CURRENT_SESSION; ?></span>
+          </div>
+          <div class="hero-trust-badge promo-trust-badge">
+            <i class="fa-solid fa-sparkles"></i>
+            <span>Ab Sapnon Ki Coaching Ulwe Mein!</span>
+          </div>
+        </div>
+
+        <!-- Heading -->
         <h2 class="promo-title" id="promoModalTitle">
-          Scholarship Up to <span class="hero-highlight">60%</span>
+          Scholarship Up to <span class="promo-highlight-gold">60%</span>
         </h2>
         
         <p class="promo-desc">
           Empowering ambitious students in Ulwe with concept-focused learning, expert mentorship, and merit scholarship benefits.
         </p>
 
-        <!-- Academic Offer Pillars -->
-        <div class="promo-sober-points">
-          <div class="promo-pt">
+        <!-- Clean Academic Points -->
+        <div class="promo-points-list">
+          <div class="promo-point-row">
             <i class="fa-solid fa-circle-check"></i>
-            <span>Classes 5th to 12th (CBSE / ICSE / State)</span>
+            <span><strong>Classes 5th to 12th</strong> (CBSE / ICSE / Maharashtra State)</span>
           </div>
-          <div class="promo-pt">
+          <div class="promo-point-row">
             <i class="fa-solid fa-circle-check"></i>
-            <span>IIT-JEE, NEET-UG &amp; MH-CET Special Batches</span>
+            <span><strong>IIT-JEE, NEET-UG &amp; MH-CET</strong> Special Batches</span>
           </div>
-          <div class="promo-pt">
+          <div class="promo-point-row">
             <i class="fa-solid fa-circle-check"></i>
-            <span>Mentored by Mr. Salam Khan &amp; Senior Faculty</span>
+            <span><strong>Mentored by Mr. Salam Khan</strong> &amp; Senior Faculty</span>
+          </div>
+          <div class="promo-point-row">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><strong>Small Disciplined Batches</strong> with Individual Attention</span>
+          </div>
+        </div>
+
+        <!-- Trust Stats Strip -->
+        <div class="promo-trust-strip">
+          <div class="promo-trust-stat">
+            <span class="pts-val">10+ Yrs</span>
+            <span class="pts-lbl">Ulwe Legacy</span>
+          </div>
+          <div class="pts-sep"></div>
+          <div class="promo-trust-stat">
+            <span class="pts-val">1500+</span>
+            <span class="pts-lbl">Students Guided</span>
+          </div>
+          <div class="pts-sep"></div>
+          <div class="promo-trust-stat">
+            <span class="pts-val">98%</span>
+            <span class="pts-lbl">Success Rate</span>
           </div>
         </div>
 
         <!-- Call to Action Buttons -->
         <div class="promo-btn-container">
-          <a href="<?php echo url('admissions'); ?>" class="btn btn-primary btn-md">
-            <i class="fa-solid fa-user-graduate"></i> Apply for Admission
+          <a href="<?php echo url('admissions'); ?>" class="btn btn-primary btn-md promo-btn-apply">
+            <i class="fa-solid fa-user-graduate"></i>
+            <span>Apply for Admission</span>
           </a>
-          <button type="button" class="btn btn-outline-primary btn-md btn-demo-trigger" data-modal="demoModal">
-            <i class="fa-solid fa-calendar-check"></i> Book Free Demo
+          <button type="button" class="btn btn-outline-primary btn-md btn-demo-trigger promo-btn-demo" data-modal="demoModal">
+            <i class="fa-solid fa-calendar-check"></i>
+            <span>Book Free Demo</span>
           </button>
         </div>
 
-        <!-- Helpline & Location -->
+        <!-- Helpline & Location Footer -->
         <div class="promo-micro-footer">
           <a href="tel:<?php echo PHONE_RAW_1; ?>" class="promo-phone-link">
             <i class="fa-solid fa-phone"></i> <?php echo PHONE_PRIMARY; ?>
+          </a>
+          <span class="dot-separator">•</span>
+          <a href="<?php echo WHATSAPP_LINK; ?>" target="_blank" rel="noopener" class="promo-wa-link">
+            <i class="fa-brands fa-whatsapp"></i> WhatsApp
           </a>
           <span class="dot-separator">•</span>
           <span class="promo-loc"><i class="fa-solid fa-location-dot"></i> Ulwe Sector 19</span>

@@ -34,6 +34,76 @@ img, svg, video {
 }
 
 /* ==========================================================================
+   1B. MEDIUM DESKTOP / LAPTOP NAV BALANCING (Prevents Header Overflow)
+   ========================================================================== */
+@media (min-width: 1121px) and (max-width: 1280px) {
+  .nav-container {
+    gap: 12px !important;
+  }
+  .logo-symbol-wrapper {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .brand-title {
+    font-size: 1.25rem !important;
+  }
+  .brand-subtitle {
+    font-size: 0.62rem !important;
+  }
+  .nav-menu-list {
+    gap: 2px !important;
+  }
+  .nav-link {
+    padding: 6px 8px !important;
+    font-size: 0.86rem !important;
+  }
+  .nav-action-buttons {
+    gap: 8px !important;
+  }
+  .nav-action-buttons .btn {
+    padding: 7px 12px !important;
+    font-size: 0.84rem !important;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1120px) {
+  .nav-container {
+    gap: 8px !important;
+  }
+  .brand-logo {
+    gap: 8px !important;
+  }
+  .logo-symbol-wrapper {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .brand-title {
+    font-size: 1.12rem !important;
+  }
+  .brand-subtitle {
+    display: none !important;
+  }
+  .nav-menu-list {
+    gap: 1px !important;
+  }
+  .nav-link {
+    padding: 5px 6px !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0 !important;
+  }
+  .nav-action-buttons {
+    gap: 6px !important;
+  }
+  .nav-action-buttons .btn {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+  }
+  .nav-action-buttons .btn i {
+    font-size: 0.78rem !important;
+  }
+}
+
+/* ==========================================================================
    2. TABLET / SMALL LAPTOPS (max-width: 991px)
    ========================================================================== */
 @media (max-width: 991px) {

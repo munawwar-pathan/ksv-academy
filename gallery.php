@@ -9,22 +9,66 @@ $page_keywords = 'KSV Academy gallery, coaching photos Ulwe, classroom photos Ul
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<!-- Gallery Hero Header -->
-<section class="section-py-sm page-header-banner">
+<!-- 1. Gallery Hero Header Banner (Attractive Design Matching Home & About) -->
+<section class="about-hero-banner">
   <div class="container text-center">
-    <span class="section-eyebrow" style="background: rgba(255, 255, 255, 0.1); color: #bae6fd; border: 1px solid rgba(255, 255, 255, 0.18); margin-bottom: 14px;">
-      <i class="fa-solid fa-camera-retro"></i> Campus Life &amp; Facilities
-    </span>
-    <h1 style="color: #ffffff; font-size: 2.8rem; font-weight: 800; margin-bottom: 14px; letter-spacing: -0.02em;">
-      Our Campus <span class="hero-highlight">Gallery</span>
-    </h1>
-    <p style="color: #cbd5e1; max-width: 680px; margin: 0 auto; font-size: 1.08rem; line-height: 1.6;">
-      Experience the vibrant learning environment of our Ulwe campus — where passionate educators, interactive classrooms, and disciplined study habits converge.
-    </p>
+    <div class="about-banner-content">
+      <!-- Dual Eyebrows -->
+      <div class="hero-eyebrows-wrap" style="justify-content: center; margin-bottom: 16px;">
+        <div class="hero-eyebrow">
+          <span class="hero-live-dot"></span>
+          <span>Campus Life • Sector 19, Ulwe</span>
+        </div>
+        <div class="hero-trust-badge">
+          <i class="fa-solid fa-camera-retro"></i>
+          <span>Modern Infrastructure &amp; Smart Classrooms</span>
+        </div>
+      </div>
+
+      <!-- Main Heading -->
+      <h1 class="about-banner-title">
+        Our Campus <span class="hero-highlight">Gallery &amp; Spaces</span>
+      </h1>
+
+      <!-- Slogan / Motto Tagline -->
+      <div class="hero-motto-row" style="justify-content: center; margin-bottom: 16px;">
+        <span class="motto-lead"><i class="fa-solid fa-sparkles"></i> Where Ambition Meets World-Class Atmosphere</span>
+        <span class="motto-divider">•</span>
+        <span class="motto-sub">Air-Conditioned Classrooms &amp; Reference Library</span>
+      </div>
+
+      <!-- Lead Description -->
+      <p class="about-banner-desc">
+        Experience the vibrant learning environment of our Ulwe campus — where passionate educators, interactive classrooms, and disciplined study habits converge.
+      </p>
+
+      <!-- Quick Stats Counter Strip -->
+      <div class="hero-stats-row" style="max-width: 760px; margin: 0 auto;">
+        <div class="stat-item">
+          <span class="stat-number" data-target="8" data-suffix="+">8+</span>
+          <span class="stat-label">Campus Spaces</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number" data-target="100" data-suffix="%">100%</span>
+          <span class="stat-label">AC Classrooms</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number" data-target="1" data-prefix="1:" data-suffix="">1:1</span>
+          <span class="stat-label">Doubt Counters</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number" data-target="49" data-prefix="4." data-suffix="/5">4.9/5</span>
+          <span class="stat-label">Campus Rating</span>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- Main Gallery Grid -->
+<!-- 2. Main Gallery Grid -->
 <section class="section-py">
   <div class="container">
     <div class="section-header">
@@ -33,14 +77,28 @@ require_once __DIR__ . '/includes/header.php';
       <p class="section-subtitle">A glimpse into our classrooms, faculty interactions, student workshops, and milestone celebrations in Ulwe Sector 19.</p>
     </div>
 
-    <div class="gallery-grid" style="grid-template-columns: repeat(3, 1fr); gap: 24px;">
+    <div class="gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
       <?php foreach ($gallery_images as $img): ?>
-      <div class="gallery-card" style="height: 280px;" data-src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" data-caption="<?php echo htmlspecialchars($img['caption']); ?>">
-        <img src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" alt="<?php echo htmlspecialchars($img['caption']); ?>" class="gallery-thumb" loading="lazy">
+      <div class="gallery-card" data-src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" data-caption="<?php echo htmlspecialchars($img['caption']); ?>">
+        <div class="gallery-thumb-wrapper">
+          <img src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" alt="<?php echo htmlspecialchars($img['caption']); ?>" class="gallery-thumb" loading="lazy">
+        </div>
+        
+        <div class="gallery-top-badges">
+          <span class="gallery-category-pill">
+            <i class="fa-solid fa-tag"></i>
+            <span><?php echo htmlspecialchars($img['category']); ?></span>
+          </span>
+          <span class="gallery-zoom-icon" title="View Fullscreen">
+            <i class="fa-solid fa-expand"></i>
+          </span>
+        </div>
+
         <div class="gallery-overlay">
-          <span class="gallery-zoom-icon"><i class="fa-solid fa-expand"></i></span>
-          <span class="gallery-category-pill"><?php echo htmlspecialchars($img['category']); ?></span>
-          <p class="gallery-overlay-caption"><?php echo htmlspecialchars($img['caption']); ?></p>
+          <div class="gallery-overlay-inner">
+            <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">KSV Academy • Ulwe Sector 19</span>
+            <p class="gallery-overlay-caption"><?php echo htmlspecialchars($img['caption']); ?></p>
+          </div>
         </div>
       </div>
       <?php endforeach; ?>
@@ -48,7 +106,7 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<!-- Classroom Infrastructure Features -->
+<!-- 3. Classroom Infrastructure Features -->
 <section class="section-py bg-soft">
   <div class="container">
     <div class="section-header">
@@ -58,42 +116,83 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <div class="features-grid">
+      <!-- 1. Classrooms -->
       <div class="methodology-card">
-        <div class="methodology-icon"><i class="fa-solid fa-chair"></i></div>
+        <div class="methodology-topbar bar-blue"></div>
+        <div class="methodology-icon icon-blue"><i class="fa-solid fa-chair"></i></div>
+        <div class="methodology-tag"><i class="fa-solid fa-snowflake"></i> Fully Air-Conditioned</div>
         <h3>Ergonomic Classrooms</h3>
         <p>Spacious, well-ventilated, and air-conditioned classrooms ensuring maximum concentration during long problem-solving sessions.</p>
+        <ul class="methodology-checklist">
+          <li><i class="fa-solid fa-check"></i> Ergonomic seating &amp; daylight balanced lighting</li>
+          <li><i class="fa-solid fa-check"></i> Disciplined small batches for focused learning</li>
+        </ul>
       </div>
 
+      <!-- 2. Teaching Boards -->
       <div class="methodology-card">
-        <div class="methodology-icon"><i class="fa-solid fa-chalkboard"></i></div>
+        <div class="methodology-topbar bar-emerald"></div>
+        <div class="methodology-icon icon-emerald"><i class="fa-solid fa-chalkboard"></i></div>
+        <div class="methodology-tag"><i class="fa-solid fa-display"></i> Visual Teaching Aids</div>
         <h3>High-Clarity Teaching Boards</h3>
         <p>State-of-the-art visual instruction aids and demonstration tools to clarify physics circuits, chemistry reaction trees, and mathematical geometry.</p>
+        <ul class="methodology-checklist">
+          <li><i class="fa-solid fa-check"></i> High-contrast step-by-step concept boards</li>
+          <li><i class="fa-solid fa-check"></i> Hands-on scientific models &amp; proofs</li>
+        </ul>
       </div>
 
+      <!-- 3. Library -->
       <div class="methodology-card">
-        <div class="methodology-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+        <div class="methodology-topbar bar-amber"></div>
+        <div class="methodology-icon icon-amber"><i class="fa-solid fa-book-bookmark"></i></div>
+        <div class="methodology-tag"><i class="fa-solid fa-book-open-reader"></i> Self-Study Space</div>
         <h3>Comprehensive Study Library</h3>
         <p>Extensive reference library housing NCERT solutions, previous 10-year question banks, HC Verma physics, and competitive entrance modules.</p>
+        <ul class="methodology-checklist">
+          <li><i class="fa-solid fa-check"></i> Free access to comprehensive book bank</li>
+          <li><i class="fa-solid fa-check"></i> Quiet self-study and revision counters</li>
+        </ul>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Visit Us CTA -->
-<section class="section-py" style="text-align: center;">
+<!-- 4. Visit Us CTA (Attractive Banner Card Matching Home & About) -->
+<section class="section-py">
   <div class="container">
-    <div class="section-header" style="max-width: 720px; margin: 0 auto 30px auto;">
-      <span class="section-eyebrow"><i class="fa-solid fa-location-dot"></i> Experience It Live</span>
-      <h2 class="section-title">Visit Our Ulwe Campus <span class="hero-highlight">in Person</span></h2>
-      <p class="section-subtitle">Walk in with your parents to see the classrooms, meet the faculties, and tour our facilities at MGM Residency, Sector 19, Ulwe.</p>
-    </div>
-    <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
-      <a href="<?php echo url('contact'); ?>" class="btn btn-primary btn-lg">
-        <i class="fa-solid fa-map-location-dot"></i> Get Directions &amp; Contact
-      </a>
-      <button type="button" class="btn btn-outline-primary btn-lg" data-modal="demoModal">
-        <i class="fa-regular fa-calendar-check"></i> Book 3-Days Free Demo
-      </button>
+    <div class="demo-banner-card" style="background: linear-gradient(135deg, #02457a 0%, #0077b6 55%, #0092df 100%); border-radius: 28px; padding: 48px 40px; color: #ffffff; display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 32px; align-items: center; box-shadow: 0 20px 48px -10px rgba(0, 146, 223, 0.35); position: relative; overflow: hidden;">
+      <div style="position: absolute; right: -50px; bottom: -50px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%); pointer-events: none;"></div>
+      
+      <div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); padding: 5px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.04em;">
+          <i class="fa-solid fa-sparkles"></i> Experience It Live
+        </div>
+        <h2 style="font-size: 2.2rem; font-weight: 800; line-height: 1.2; margin-bottom: 12px; color: #ffffff;">
+          Visit Our Ulwe Campus <span style="color: #38bdf8;">in Person</span>
+        </h2>
+        <p style="font-size: 1.02rem; color: rgba(255,255,255,0.9); line-height: 1.6; margin: 0 0 22px;">
+          Walk in with your parents to see the classrooms, meet Director Mr. Salam Khan and our faculty team, and tour our facilities at MGM Residency, Sector 19, Ulwe.
+        </p>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+          <a href="<?php echo url('contact'); ?>" class="btn btn-warning btn-lg" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
+            <i class="fa-solid fa-map-location-dot"></i> Get Directions &amp; Contact
+          </a>
+          <button type="button" class="btn btn-outline-white btn-lg" data-modal="demoModal" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
+            <i class="fa-regular fa-calendar-check"></i> Book 3-Days Free Demo
+          </button>
+        </div>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 26px; backdrop-filter: blur(8px); text-align: center;">
+        <div style="font-size: 2.2rem; font-weight: 800; color: #ffffff; line-height: 1;">4.9 / 5.0</div>
+        <div style="color: #fbbf24; font-size: 1.1rem; margin: 8px 0;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+        <div style="font-size: 0.9rem; font-weight: 700; color: #ffffff;">Top-Rated Campus in Ulwe</div>
+        <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.8); margin: 6px 0 16px;">150+ Verified Google &amp; Parent Reviews</p>
+        <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
+          <i class="fa-solid fa-phone"></i> Call: <?php echo PHONE_PRIMARY; ?>
+        </a>
+      </div>
     </div>
   </div>
 </section>
