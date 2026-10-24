@@ -1538,7 +1538,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <input type="checkbox" name="permissions[]" value="admin_marksheet" class="edit-staff-perm-cb">
                 <span class="perm-card-text">
                   <i class="fa-solid fa-file-lines"></i>
-                  <span>Marksheet Management</span>
+                  <span>Report Card</span>
                 </span>
               </label>
 

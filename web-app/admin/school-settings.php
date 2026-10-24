@@ -731,11 +731,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      ROASTER TOOLBAR CARD & TAB NAVIGATOR
      ══════════════════════════════════════════════════════ -->
-<div class="roaster-toolbar-card no-print" style="margin-bottom: 24px;">
-  <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+<div class="roaster-toolbar-card settings-toolbar-card no-print" style="margin-bottom: 24px;">
+  <div class="roaster-toolbar-inner settings-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Segmented Tab Buttons -->
-    <div style="display: flex; gap: 8px; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 11px;">
+    <div class="settings-tab-nav-wrapper" style="display: flex; gap: 8px; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 11px;">
       
       <button type="button" class="settings-tab-pill <?php echo $current_tab === 'general' ? 'active' : ''; ?>" onclick="switchSettingsTab('general')">
         <i class="fa-solid fa-sliders"></i>
@@ -756,8 +756,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Right: Context Action -->
-    <div class="roaster-toolbar-actions">
-      <div class="scholars-count-badge" id="tabStatusBadge">
+    <div class="roaster-toolbar-actions settings-toolbar-actions">
+      <div class="scholars-count-badge settings-tab-status-badge" id="tabStatusBadge">
         <?php if ($current_tab === 'sessions'): ?>
           <span class="count-dot" style="background: #10b981;"></span>
           <span>Academic Calendar Mode</span>
@@ -770,22 +770,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </div>
 
-      <div id="generalActions" style="<?php echo $current_tab === 'general' ? '' : 'display: none;'; ?>">
-        <button type="button" onclick="document.getElementById('generalSettingsForm').submit();" class="roaster-add-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Save School Settings">
+      <div id="generalActions" class="settings-tab-action-wrap" style="<?php echo $current_tab === 'general' ? '' : 'display: none;'; ?>">
+        <button type="button" onclick="document.getElementById('generalSettingsForm').submit();" class="roaster-add-btn settings-action-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Save School Settings">
           <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-floppy-disk"></i></div>
           <span>Save Changes</span>
         </button>
       </div>
 
-      <div id="sessionActions" style="<?php echo $current_tab === 'sessions' ? '' : 'display: none;'; ?>">
-        <button type="button" onclick="openNewSessionModal();" class="roaster-add-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Create New Academic Session">
+      <div id="sessionActions" class="settings-tab-action-wrap" style="<?php echo $current_tab === 'sessions' ? '' : 'display: none;'; ?>">
+        <button type="button" onclick="openNewSessionModal();" class="roaster-add-btn settings-action-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Create New Academic Session">
           <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
           <span>Create Session</span>
         </button>
       </div>
 
-      <div id="securityActions" style="<?php echo $current_tab === 'security' ? '' : 'display: none;'; ?>">
-        <button type="button" onclick="document.getElementById('changePasswordForm').submit();" class="roaster-add-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Update Password">
+      <div id="securityActions" class="settings-tab-action-wrap" style="<?php echo $current_tab === 'security' ? '' : 'display: none;'; ?>">
+        <button type="button" onclick="document.getElementById('changePasswordForm').submit();" class="roaster-add-btn settings-action-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Update Password">
           <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-key"></i></div>
           <span>Update Password</span>
         </button>
@@ -800,10 +800,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
      ══════════════════════════════════════════════════════ -->
 <div id="pane-general" class="settings-tab-pane <?php echo $current_tab === 'general' ? 'active' : ''; ?>">
   
-  <div style="display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; margin-bottom: 30px;">
+  <div class="settings-main-layout">
     
     <!-- Left Column: Live Academy Identity Preview Card & Appearance Setting -->
-    <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div class="settings-preview-col" style="display: flex; flex-direction: column; gap: 20px;">
       
       <div class="academy-preview-card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -833,7 +833,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Metadata List -->
-        <div style="background: #ffffff; border-radius: 10px; padding: 12px 14px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+        <div class="academy-meta-box" style="border-radius: 10px; padding: 12px 14px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
           
           <div class="academy-meta-row">
             <div class="academy-meta-icon"><i class="fa-solid fa-user-tie"></i></div>
@@ -962,7 +962,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Right Column: Settings Form Groups -->
-    <div>
+    <div class="settings-form-col">
       <form id="generalSettingsForm" method="POST" action="<?php echo ADMIN_URL; ?>/school-settings">
         <input type="hidden" name="action" value="save_settings">
         <input type="hidden" name="theme_mode" id="generalThemeModeInput" value="<?php echo htmlspecialchars($school_settings['theme_mode'] ?? 'light'); ?>">
@@ -983,7 +983,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="settings-form-row two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
               <label class="input-field-label">School / Academy Name <span class="req">*</span></label>
               <input type="text" name="school_name" id="input_school_name" value="<?php echo htmlspecialchars($school_settings['school_name']); ?>" required class="settings-input" placeholder="e.g. KSV Academy" oninput="syncPreview('previewName', this.value, 'KSV Academy')">
@@ -995,7 +995,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="settings-form-row two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
               <label class="input-field-label">Board Affiliation &amp; Reg No.</label>
               <input type="text" name="affiliation" id="input_affiliation" value="<?php echo htmlspecialchars($school_settings['affiliation']); ?>" class="settings-input" placeholder="e.g. CBSE Affiliated - Reg #KSV-ACAD-2024" oninput="syncPreviewAffiliation(this.value)">
@@ -1029,7 +1029,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="settings-form-row three-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
             <div class="form-group">
               <label class="input-field-label">Contact Phone</label>
               <input type="text" name="phone" id="input_phone" value="<?php echo htmlspecialchars($school_settings['phone']); ?>" class="settings-input" placeholder="+91 98765 43210" oninput="syncPreview('previewPhone', this.value, '—')">
@@ -1063,7 +1063,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+          <div class="settings-form-row brand-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
             <div class="form-group">
               <label class="input-field-label">School Logo Path / URL</label>
               <input type="text" name="logo_url" id="input_logo_url" value="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" class="settings-input" placeholder="/assets/imgs/ksv-logo.jpg" oninput="syncLogoPreview(this.value)">
@@ -1077,8 +1077,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Submit Button Footer -->
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
-          <button type="submit" class="roaster-add-btn" style="padding: 10px 24px; font-size: 0.88rem;">
+        <div class="settings-form-footer" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+          <button type="submit" class="roaster-add-btn settings-save-btn" style="padding: 10px 24px; font-size: 0.88rem;">
             <div class="btn-icon-circle"><i class="fa-solid fa-floppy-disk"></i></div>
             <span>Save General Settings</span>
           </button>
@@ -1115,9 +1115,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Sessions Directory Table Card -->
-  <div class="hrms-card" style="margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; background: #ffffff;">
+  <div class="hrms-card settings-sessions-card" style="margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; background: #ffffff;">
     
-    <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; background: #ffffff;">
+    <div class="hrms-card-header settings-sessions-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; background: #ffffff;">
       <div>
         <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
           <i class="fa-solid fa-timeline" style="color: #0284c7;"></i>
@@ -1136,8 +1136,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="hrms-table staff-id-table">
+    <div class="table-responsive settings-table-wrap">
+      <table class="hrms-table staff-id-table settings-sessions-table">
         <thead>
           <tr>
             <th style="min-width: 220px;">Session Name</th>
@@ -1340,10 +1340,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
      ══════════════════════════════════════════════════════ -->
 <div id="pane-security" class="settings-tab-pane <?php echo $current_tab === 'security' ? 'active' : ''; ?>">
   
-  <div style="display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; margin-bottom: 30px;">
+  <div class="settings-main-layout">
     
     <!-- Left Column: Administrator Security Profile Card -->
-    <div>
+    <div class="settings-preview-col">
       <div class="academy-preview-card" style="margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 0.72rem; font-weight: 800; background: #ede9fe; color: #6d28d9; padding: 2px 10px; border-radius: 12px; border: 1px solid #ddd6fe;">
@@ -1378,7 +1378,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Account Info Details -->
-        <div style="background: #ffffff; border-radius: 10px; padding: 14px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+        <div class="academy-meta-box" style="border-radius: 10px; padding: 14px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
           <div class="academy-meta-row" style="padding-top: 0;">
             <div class="academy-meta-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-envelope"></i></div>
             <div style="min-width: 0; flex: 1;">
@@ -1403,7 +1403,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Security Best Practices -->
-        <div style="background: #f8fafc; border-radius: 10px; padding: 14px; border: 1px dashed #cbd5e1;">
+        <div class="academy-guidelines-box" style="border-radius: 10px; padding: 14px; border: 1px dashed #cbd5e1;">
           <h4 style="margin: 0 0 10px 0; font-size: 0.78rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i> Password Guidelines
           </h4>
@@ -1418,11 +1418,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Right Column: Change Password Forms -->
-    <div>
+    <div class="settings-form-col">
       
       <!-- Primary Card: Change Current Admin Password -->
       <div class="hrms-card" style="margin-bottom: 24px; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
-        <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 18px 24px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div>
             <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
               <i class="fa-solid fa-key" style="color: #0092df;"></i>
@@ -1455,7 +1455,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <span class="input-help-text">Verify your current login password before updating.</span>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px;">
+            <div class="settings-form-row two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px;">
               <!-- New Password -->
               <div class="form-group">
                 <label class="input-field-label">
@@ -1495,76 +1495,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
 
             <!-- Action Footer -->
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 18px;">
+            <div class="settings-form-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 18px;">
               <button type="reset" class="roaster-btn secondary" style="padding: 10px 18px;" onclick="resetStrengthMeter()">
                 <i class="fa-solid fa-rotate-left"></i> Reset
               </button>
-              <button type="submit" class="roaster-add-btn" style="padding: 10px 24px; font-size: 0.88rem;">
+              <button type="submit" class="roaster-add-btn settings-save-btn" style="padding: 10px 24px; font-size: 0.88rem;">
                 <div class="btn-icon-circle"><i class="fa-solid fa-key"></i></div>
                 <span>Update Password</span>
               </button>
-            </div>
-
-          </form>
-        </div>
-      </div>
-
-      <!-- Secondary Card: Quick Reset for Staff / User Accounts -->
-      <div class="hrms-card" style="border-radius: 14px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;">
-        <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 18px 24px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.02rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-              <i class="fa-solid fa-users-gear" style="color: #6366f1;"></i>
-              Staff &amp; Portal Accounts Credential Reset
-            </h3>
-            <p style="margin: 4px 0 0; font-size: 0.8rem; color: #64748b;">
-              Directly reset access passwords for teachers, accountants, or parents if they get locked out.
-            </p>
-          </div>
-          <span style="font-size: 0.74rem; font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 4px 12px; border-radius: 20px; border: 1px solid #c7d2fe;">
-            <i class="fa-solid fa-crown"></i> Super Admin Control
-          </span>
-        </div>
-
-        <div style="padding: 24px;">
-          <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings?tab=security" onsubmit="return confirm('Are you sure you want to reset password for this user account?');">
-            <input type="hidden" name="action" value="reset_user_password">
-
-            <div style="display: grid; grid-template-columns: 1.2fr 1fr auto; gap: 16px; align-items: end;">
-              
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="input-field-label">
-                  Select User Account <span class="req">*</span>
-                </label>
-                <select name="target_user_id" class="settings-input" required>
-                  <option value="">-- Choose Account to Reset --</option>
-                  <?php foreach ($all_system_users as $usr): ?>
-                    <option value="<?php echo $usr['id']; ?>" <?php echo $usr['id'] == $current_user['id'] ? 'disabled' : ''; ?>>
-                      <?php echo htmlspecialchars($usr['full_name']); ?> (@<?php echo htmlspecialchars($usr['username']); ?>) &ndash; [<?php echo strtoupper($usr['role']); ?>]
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="input-field-label">
-                  New Temporary Password <span class="req">*</span>
-                </label>
-                <div class="password-input-group">
-                  <input type="password" name="target_new_password" id="user_new_pass" class="settings-input" required placeholder="Min 6 characters" minlength="6">
-                  <button type="button" class="password-toggle-btn" onclick="togglePassVisibility('user_new_pass', this)" title="Show/Hide Password">
-                    <i class="fa-regular fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <button type="submit" class="roaster-add-btn" style="padding: 10px 20px; font-size: 0.85rem; height: 42px;">
-                  <div class="btn-icon-circle"><i class="fa-solid fa-rotate"></i></div>
-                  <span>Reset Password</span>
-                </button>
-              </div>
-
             </div>
 
           </form>
@@ -1611,7 +1549,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <input type="text" name="session_name" class="settings-input" required placeholder="YYYY-YYYY e.g. 2026-2027">
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
+        <div class="settings-form-row two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;">
           <div class="form-group">
             <label class="input-field-label">Start Date <span class="req">*</span></label>
             <input type="date" name="start_date" class="settings-input" required value="<?php echo date('Y-04-01', strtotime('+1 year')); ?>">

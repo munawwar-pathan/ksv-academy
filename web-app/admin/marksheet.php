@@ -5,8 +5,8 @@ $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
 if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_marksheet');
 }
-$page_title = 'Marksheet Management | KSV Academy HRMS';
-$page_heading = 'Marksheet Management';
+$page_title = 'Report Card | KSV Academy HRMS';
+$page_heading = 'Report Card';
 $page_subheading = 'Official Academic Statement of Marks, Examination Registers & Printable Report Cards';
 $active_menu = 'marksheet';
 
@@ -1496,7 +1496,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php if ($active_marksheet): ?>
       <button type="button" onclick="window.print();" class="action-primary-btn marksheet-print-btn" style="background: #0092df; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0, 146, 223, 0.25);">
         <i class="fa-solid fa-print"></i>
-        <span>Print Marksheet</span>
+        <span>Print Report Card</span>
       </button>
     <?php endif; ?>
 
@@ -1810,7 +1810,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </span>
         </h3>
         <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
-          Click <strong>View Marksheet</strong> on any student row below to load their official report card above.
+          Click <strong>View Report Card</strong> on any student row below to load their official report card above.
         </p>
       </div>
 
@@ -2009,7 +2009,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <?php else: ?>
                     <a href="<?php echo $switch_url; ?>" class="ms-btn-action ms-btn-secondary" title="Load student report card into preview">
                       <i class="fa-solid fa-file-lines" style="color: #0284c7; font-size: 0.72rem;"></i>
-                      <span>View Marksheet</span>
+                      <span>View Report Card</span>
                     </a>
                   <?php endif; ?>
 

@@ -127,7 +127,7 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
           <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
             <a href="<?php echo ADMIN_URL; ?>/marksheet">
               <i class="fa-solid fa-file-lines"></i>
-              <span>Marksheet Management</span>
+              <span>Report Card</span>
             </a>
           </li>
         </ul>
@@ -346,7 +346,7 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
               <a href="<?php echo ADMIN_URL; ?>/marksheet">
                 <i class="fa-solid fa-file-lines"></i>
-                <span>Marksheet Management</span>
+                <span>Report Card</span>
               </a>
             </li>
           <?php endif; ?>
@@ -542,12 +542,6 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             <?php endforeach; ?>
           </select>
         </div>
-
-        <!-- QUICK LIGHT / DARK THEME TOGGLE -->
-        <button type="button" id="headerThemeToggle" class="header-theme-toggle" aria-label="Toggle Theme" title="Toggle Light / Dark Mode" onclick="toggleAppTheme()">
-          <i class="fa-solid fa-moon theme-icon-moon"></i>
-          <i class="fa-solid fa-sun theme-icon-sun"></i>
-        </button>
 
         <div class="header-date-badge">
           <i class="fa-regular fa-calendar"></i>

@@ -13,7 +13,7 @@ require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'admin']);
 $page_title = 'Form Data Management';
-$page_heading = 'Website Form Submissions & Leads';
+$page_heading = 'Form Submissions';
 $page_subheading = 'Track and manage Demo Class bookings, Candidate Admissions, and Inquiries from the website';
 $active_menu = 'form-data';
 
@@ -460,9 +460,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════════
      FORM DATA TABS & FILTER TOOLBAR
      ══════════════════════════════════════════════════════════ -->
-<div class="roaster-toolbar-card no-print" style="margin-bottom: 20px; padding: 14px 18px; background: #ffffff; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+<div class="roaster-toolbar-card fd-toolbar-card no-print">
   
-  <div>
+  <div class="fd-tabs-wrapper">
     <!-- Tabs for the 3 Forms + All -->
     <div class="fd-tabs-nav">
       
@@ -498,52 +498,51 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Secondary Filter Bar: Status Filter, Search, Sort -->
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+  <div class="fd-secondary-toolbar">
     
     <!-- Status Filter Buttons -->
-    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-      <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-right: 4px;">Status:</span>
+    <div class="fd-status-filter-group">
+      <span class="fd-status-filter-label">Status:</span>
       
-      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'all', $search, $sort, $limit)); ?>" style="text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: <?php echo $filter_status === 'all' ? '#0284c7' : '#64748b'; ?>; background: <?php echo $filter_status === 'all' ? '#e0f2fe' : '#f8fafc'; ?>; border: 1px solid <?php echo $filter_status === 'all' ? '#bae6fd' : '#e2e8f0'; ?>;">
+      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'all', $search, $sort, $limit)); ?>" class="fd-status-filter-btn <?php echo $filter_status === 'all' ? 'active-all' : ''; ?>">
         All (<?php echo $counts['all']; ?>)
       </a>
 
-      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'unread', $search, $sort, $limit)); ?>" style="text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: <?php echo $filter_status === 'unread' ? '#dc2626' : '#64748b'; ?>; background: <?php echo $filter_status === 'unread' ? '#fef2f2' : '#f8fafc'; ?>; border: 1px solid <?php echo $filter_status === 'unread' ? '#fecaca' : '#e2e8f0'; ?>;">
+      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'unread', $search, $sort, $limit)); ?>" class="fd-status-filter-btn <?php echo $filter_status === 'unread' ? 'active-unread' : ''; ?>">
         Unread (<?php echo $counts['unread']; ?>)
       </a>
 
-      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'contacted', $search, $sort, $limit)); ?>" style="text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: <?php echo $filter_status === 'contacted' ? '#2563eb' : '#64748b'; ?>; background: <?php echo $filter_status === 'contacted' ? '#eff6ff' : '#f8fafc'; ?>; border: 1px solid <?php echo $filter_status === 'contacted' ? '#bfdbfe' : '#e2e8f0'; ?>;">
+      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'contacted', $search, $sort, $limit)); ?>" class="fd-status-filter-btn <?php echo $filter_status === 'contacted' ? 'active-contacted' : ''; ?>">
         Contacted (<?php echo $counts['contacted']; ?>)
       </a>
 
-      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'enrolled', $search, $sort, $limit)); ?>" style="text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: <?php echo $filter_status === 'enrolled' ? '#059669' : '#64748b'; ?>; background: <?php echo $filter_status === 'enrolled' ? '#ecfdf5' : '#f8fafc'; ?>; border: 1px solid <?php echo $filter_status === 'enrolled' ? '#a7f3d0' : '#e2e8f0'; ?>;">
+      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'enrolled', $search, $sort, $limit)); ?>" class="fd-status-filter-btn <?php echo $filter_status === 'enrolled' ? 'active-enrolled' : ''; ?>">
         Enrolled (<?php echo $counts['enrolled']; ?>)
       </a>
 
-      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'closed', $search, $sort, $limit)); ?>" style="text-decoration: none; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; color: <?php echo $filter_status === 'closed' ? '#475569' : '#64748b'; ?>; background: <?php echo $filter_status === 'closed' ? '#f1f5f9' : '#f8fafc'; ?>; border: 1px solid <?php echo $filter_status === 'closed' ? '#cbd5e1' : '#e2e8f0'; ?>;">
+      <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, 'closed', $search, $sort, $limit)); ?>" class="fd-status-filter-btn <?php echo $filter_status === 'closed' ? 'active-closed' : ''; ?>">
         Closed (<?php echo $counts['closed']; ?>)
       </a>
 
     </div>
 
     <!-- Search Input Form -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/form-data" style="display: flex; align-items: center; gap: 8px; margin: 0;">
+    <form method="GET" action="<?php echo ADMIN_URL; ?>/form-data" class="fd-search-form">
       <input type="hidden" name="tab" value="<?php echo htmlspecialchars($active_tab); ?>">
       <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
       <input type="hidden" name="limit" value="<?php echo $limit; ?>">
       
-      <div style="position: relative; display: flex; align-items: center;">
-        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; color: #94a3b8; font-size: 0.8rem; pointer-events: none;"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, phone, course..." style="padding: 6px 12px 6px 30px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.82rem; outline: none; width: 220px; background: #ffffff;">
+      <div class="fd-search-box">
+        <i class="fa-solid fa-magnifying-glass fd-search-icon"></i>
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, phone, course..." class="fd-search-input">
+        <?php if (!empty($search)): ?>
+          <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, $filter_status, '', $sort, $limit)); ?>" class="fd-search-clear" title="Clear Search">
+            <i class="fa-solid fa-xmark"></i>
+          </a>
+        <?php endif; ?>
       </div>
 
-      <?php if (!empty($search)): ?>
-        <a href="<?php echo htmlspecialchars(get_form_data_pagination_url(1, $active_tab, $filter_status, '', $sort, $limit)); ?>" class="btn-hrms" style="padding: 6px 10px; font-size: 0.78rem; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca;" title="Clear Search">
-          <i class="fa-solid fa-xmark"></i>
-        </a>
-      <?php endif; ?>
-
-      <select name="sort" onchange="this.form.submit()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.82rem; background: #ffffff; color: #475569; outline: none;">
+      <select name="sort" onchange="this.form.submit()" class="fd-sort-select">
         <option value="newest" <?php echo $sort === 'newest' ? 'selected' : ''; ?>>Newest First</option>
         <option value="oldest" <?php echo $sort === 'oldest' ? 'selected' : ''; ?>>Oldest First</option>
       </select>
@@ -556,9 +555,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════════
      FORM DATA TABLE & PAGINATION
      ══════════════════════════════════════════════════════════ -->
-<div class="hrms-card">
-  <div class="hrms-card-header" style="display: flex; justify-content: space-between; align-items: center;">
-    <div style="display: flex; align-items: center; gap: 10px;">
+<div class="hrms-card fd-table-card">
+  <div class="hrms-card-header fd-table-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
       <h2 class="card-title" style="margin: 0;">
         <i class="fa-solid fa-table-list" style="color: #0284c7;"></i>
         <?php 
@@ -570,25 +569,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
           };
         ?>
       </h2>
-      <span style="font-size: 0.8rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 8px;">
+      <span class="fd-records-badge" style="font-size: 0.8rem; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 8px;">
         Total <?php echo $total_records; ?> record<?php echo $total_records !== 1 ? 's' : ''; ?>
       </span>
     </div>
   </div>
 
   <div class="hrms-card-body" style="padding: 0;">
-    <div class="table-responsive">
-      <table class="hrms-table">
+    <div class="table-responsive fd-table-responsive">
+      <table class="hrms-table staff-id-table fd-table">
         <thead>
           <tr>
             <th style="width: 50px;">#ID</th>
             <th>Applicant / Student</th>
             <th>Form Type</th>
-            <th>Course &amp; Preferred Shift</th>
-            <th>School / Inquiry Details</th>
+            <th class="col-course">Course &amp; Preferred Shift</th>
+            <th class="col-school">School / Inquiry Details</th>
             <th>Status</th>
-            <th>Date &amp; Time</th>
-            <th style="text-align: right; min-width: 110px;">Actions</th>
+            <th class="col-date">Date &amp; Time</th>
+            <th style="text-align: right; min-width: 100px;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -640,7 +639,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   default     => 'status-unread'
                 };
               ?>
-              <tr style="<?php echo $sub['status'] === 'unread' ? 'background: #fefefe; border-left: 4px solid #ef4444;' : ''; ?>">
+              <tr class="<?php echo $sub['status'] === 'unread' ? 'row-unread' : ''; ?>">
                 <!-- ID -->
                 <td style="font-weight: 700; color: #64748b; font-size: 0.82rem;">
                   #<?php echo $sub['id']; ?>
@@ -680,7 +679,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 </td>
 
                 <!-- Course & Preferred Shift -->
-                <td>
+                <td class="col-course">
                   <?php if (!empty($sub['course'])): ?>
                     <div style="font-weight: 700; font-size: 0.85rem; color: #0f172a;">
                       <?php echo htmlspecialchars($sub['course']); ?>
@@ -697,7 +696,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 </td>
 
                 <!-- School / Inquiry Details -->
-                <td>
+                <td class="col-school">
                   <?php if (!empty($sub['school_name'])): ?>
                     <div style="font-size: 0.82rem; color: #334155; font-weight: 600;">
                       <i class="fa-solid fa-school"></i> <?php echo htmlspecialchars($sub['school_name']); ?>
@@ -732,7 +731,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 </td>
 
                 <!-- Submitted Date -->
-                <td>
+                <td class="col-date">
                   <div style="font-size: 0.82rem; font-weight: 600; color: #1e293b;">
                     <?php echo format_date($sub['created_at'], 'd M Y'); ?>
                   </div>
@@ -847,7 +846,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL 1: VIEW FULL DETAILS MODAL
      ══════════════════════════════════════════════════════════ -->
 <div class="hrms-modal" id="viewDetailModal">
-  <div class="hrms-modal-card" style="max-width: 620px;">
+  <div class="hrms-modal-card fd-modal-card" style="max-width: 620px;">
     <div class="hrms-modal-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px;">
       <div>
         <span class="badge-form-type" id="detailTypeBadge" style="margin-bottom: 6px;">Form Type</span>
@@ -937,7 +936,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL 2: UPDATE STATUS & COUNSELOR NOTES MODAL
      ══════════════════════════════════════════════════════════ -->
 <div class="hrms-modal" id="statusModal">
-  <div class="hrms-modal-card" style="max-width: 480px;">
+  <div class="hrms-modal-card fd-modal-card" style="max-width: 480px;">
     <div class="hrms-modal-header">
       <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0;">
         <i class="fa-solid fa-pen-to-square" style="color: #0284c7;"></i> Update Lead Status

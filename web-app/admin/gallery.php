@@ -559,34 +559,42 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      TOP TOOLBAR CARD & CONTROLS
      ══════════════════════════════════════════════════════ -->
-<div class="roaster-toolbar-card no-print" style="margin-bottom: 24px;">
-  <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+<div class="roaster-toolbar-card gallery-toolbar-card no-print" style="margin-bottom: 24px;">
+  <div class="roaster-toolbar-inner gallery-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
-    <!-- Left: Category Pills with Icons -->
-    <div style="display: flex; gap: 6px; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 12px; flex-wrap: wrap;">
-      
-      <a href="?category=all&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo (empty($filter_category) || $filter_category === 'all') ? 'active' : ''; ?>">
-        <i class="fa-solid fa-layer-group"></i>
-        <span>All Photos</span>
-        <span class="tab-badge"><?php echo $total_all_count; ?></span>
-      </a>
+    <!-- Left: Category Pills with Icons & Scroll Controls -->
+    <div class="gallery-categories-wrapper">
+      <button type="button" class="gallery-nav-scroll-btn left" aria-label="Scroll categories left" title="Scroll left">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
 
-      <?php foreach ($category_counts as $cat_name => $count): ?>
-        <?php $cat_icon = get_category_icon($cat_name); ?>
-        <a href="?category=<?php echo urlencode($cat_name); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo $filter_category === $cat_name ? 'active' : ''; ?>">
-          <i class="fa-solid <?php echo $cat_icon; ?>"></i>
-          <span><?php echo htmlspecialchars($cat_name); ?></span>
-          <span class="tab-badge"><?php echo $count; ?></span>
+      <div class="gallery-categories-nav">
+        <a href="?category=all&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo (empty($filter_category) || $filter_category === 'all') ? 'active' : ''; ?>">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>All Photos</span>
+          <span class="tab-badge"><?php echo $total_all_count; ?></span>
         </a>
-      <?php endforeach; ?>
 
+        <?php foreach ($category_counts as $cat_name => $count): ?>
+          <?php $cat_icon = get_category_icon($cat_name); ?>
+          <a href="?category=<?php echo urlencode($cat_name); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo $filter_category === $cat_name ? 'active' : ''; ?>">
+            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+            <span><?php echo htmlspecialchars($cat_name); ?></span>
+            <span class="tab-badge"><?php echo $count; ?></span>
+          </a>
+        <?php endforeach; ?>
+      </div>
+
+      <button type="button" class="gallery-nav-scroll-btn right" aria-label="Scroll categories right" title="Scroll right">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
     </div>
 
     <!-- Right: Search, View Switcher & Add Button -->
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <div class="gallery-toolbar-right">
       
       <!-- Search Form -->
-      <form method="GET" action="<?php echo ADMIN_URL; ?>/gallery" style="display: flex; align-items: center; position: relative;">
+      <form method="GET" action="<?php echo ADMIN_URL; ?>/gallery" class="gallery-search-form">
         <?php if (!empty($filter_category)): ?>
           <input type="hidden" name="category" value="<?php echo htmlspecialchars($filter_category); ?>">
         <?php endif; ?>
@@ -595,30 +603,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <input type="hidden" name="limit" value="<?php echo $limit; ?>">
         <?php endif; ?>
         
-        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; color: #94a3b8; font-size: 0.82rem; pointer-events: none;"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search photos..." style="padding: 7px 14px 7px 32px; border-radius: 9px; border: 1.5px solid #cbd5e1; font-size: 0.82rem; outline: none; width: 180px; background: #ffffff; transition: border-color 0.2s ease;">
+        <i class="fa-solid fa-magnifying-glass gallery-search-icon"></i>
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search photos..." class="gallery-search-input">
         <?php if (!empty($search)): ?>
-          <a href="?category=<?php echo urlencode($filter_category); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" style="position: absolute; right: 10px; color: #94a3b8; text-decoration: none; font-size: 0.85rem;" title="Clear search">&times;</a>
+          <a href="?category=<?php echo urlencode($filter_category); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-search-clear" title="Clear search">&times;</a>
         <?php endif; ?>
       </form>
 
-      <!-- View Switcher -->
-      <div style="display: flex; background: #f1f5f9; padding: 3px; border-radius: 9px; border: 1px solid #e2e8f0;">
-        <a href="?view=table<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'table' ? 'primary' : 'secondary'; ?>" style="padding: 6px 12px; border: none; <?php echo $view_mode === 'table' ? '' : 'background: transparent; color: #64748b;'; ?>" title="Table View">
-          <i class="fa-solid fa-table-list"></i>
-          <span>Table</span>
-        </a>
-        <a href="?view=grid<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'grid' ? 'primary' : 'secondary'; ?>" style="padding: 6px 12px; border: none; <?php echo $view_mode === 'grid' ? '' : 'background: transparent; color: #64748b;'; ?>" title="Grid View">
-          <i class="fa-solid fa-grip"></i>
-          <span>Grid</span>
-        </a>
-      </div>
+      <div class="gallery-toolbar-actions-group">
+        <!-- View Switcher -->
+        <div class="gallery-view-switcher">
+          <a href="?view=table<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'table' ? 'primary' : 'secondary'; ?>" title="Table View">
+            <i class="fa-solid fa-table-list"></i>
+            <span>Table</span>
+          </a>
+          <a href="?view=grid<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'grid' ? 'primary' : 'secondary'; ?>" title="Grid View">
+            <i class="fa-solid fa-grip"></i>
+            <span>Grid</span>
+          </a>
+        </div>
 
-      <!-- Upload Button -->
-      <button type="button" onclick="openAddModal();" class="roaster-add-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Add Photo to Gallery">
-        <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
-        <span>Upload Photo</span>
-      </button>
+        <!-- Upload Button -->
+        <button type="button" onclick="openAddModal();" class="roaster-add-btn gallery-upload-btn" title="Add Photo to Gallery">
+          <div class="btn-icon-circle"><i class="fa-solid fa-plus"></i></div>
+          <span>Upload Photo</span>
+        </button>
+      </div>
 
     </div>
 
@@ -792,29 +802,29 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <!-- ══════════════════════════════════════════════════════
          VIEW MODE 2: DIRECTORY TABLE (Default)
          ══════════════════════════════════════════════════════ -->
-    <div class="hrms-card" style="margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; background: #ffffff;">
+    <div class="hrms-card gallery-table-card" style="margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
       
-      <div class="hrms-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; background: #ffffff;">
+      <div class="hrms-card-header gallery-table-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px;">
         <div>
-          <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
+          <h3 class="card-title gallery-table-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
             <i class="fa-solid fa-images" style="color: #0284c7;"></i>
             Media Directory &amp; Photo Records
           </h3>
-          <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
+          <p class="gallery-table-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
             Manage and catalog all campus photography, event archives, and visual records.
           </p>
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.74rem; font-weight: 600; color: #475569; background: #f8fafc; padding: 3px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <span class="gallery-total-badge" style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.74rem; font-weight: 600; color: #475569; background: #f8fafc; padding: 3px 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
             <i class="fa-solid fa-photo-film" style="color: #0284c7; font-size: 0.72rem;"></i>
             <?php echo $total_records; ?> Total Photos
           </span>
         </div>
       </div>
 
-      <div class="table-responsive">
-        <table class="hrms-table staff-id-table">
+      <div class="table-responsive gallery-table-responsive">
+        <table class="hrms-table staff-id-table gallery-table">
           <thead>
             <tr>
               <th style="width: 76px; text-align: center;">Photo</th>
@@ -1039,9 +1049,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
             Upload Image File <span style="color: #ef4444;">*</span>
           </label>
           <div class="gallery-dropzone" onclick="document.getElementById('addImageFile').click();">
-            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.8rem; color: #0092df; margin-bottom: 8px;"></i>
-            <div style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">Click to browse image file</div>
-            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Supports JPG, PNG, WEBP, AVIF</div>
+            <i class="fa-solid fa-cloud-arrow-up gallery-dropzone-icon" style="font-size: 1.8rem; color: #0092df; margin-bottom: 8px;"></i>
+            <div class="gallery-dropzone-title" style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">Click to browse image file</div>
+            <div class="gallery-dropzone-sub" style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Supports JPG, PNG, WEBP, AVIF</div>
             <input type="file" name="image_file" id="addImageFile" accept="image/*" style="display: none;" onchange="previewUploadImage(this, 'addImgPreview');">
           </div>
         </div>
@@ -1051,13 +1061,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
             Or Image URL / Relative Path
           </label>
-          <input type="text" name="image_url" id="addImageUrl" placeholder="/assets/imgs/gallers/gallery-1.png" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;" oninput="previewUrlImage(this.value, 'addImgPreview');">
+          <input type="text" name="image_url" id="addImageUrl" placeholder="/assets/imgs/gallers/gallery-1.png" class="form-control" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;" oninput="previewUrlImage(this.value, 'addImgPreview');">
         </div>
 
         <!-- Live Preview Box -->
-        <div id="addImgPreviewWrap" style="margin-bottom: 22px; display: none; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px;">
+        <div id="addImgPreviewWrap" class="gallery-live-preview-box" style="margin-bottom: 22px; display: none; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px;">
           <img id="addImgPreview" src="" alt="Preview" style="max-height: 140px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-          <div style="font-size: 0.74rem; color: #64748b; margin-top: 6px;">Selected Image Preview</div>
+          <div class="gallery-live-preview-hint" style="font-size: 0.74rem; color: #64748b; margin-top: 6px;">Selected Image Preview</div>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
@@ -1131,11 +1141,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- 3. Current Image Preview & Replace Option -->
-        <div style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
-          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Current Image</label>
+        <div class="gallery-current-preview-box" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+          <label class="gallery-current-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Current Image</label>
           <div style="display: flex; align-items: center; gap: 14px;">
             <img id="edit_preview_img" src="" alt="Current Image" style="width: 90px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
-            <div style="font-size: 0.76rem; color: #64748b; line-height: 1.4;">
+            <div class="gallery-current-hint" style="font-size: 0.76rem; color: #64748b; line-height: 1.4;">
               To change this photo, select a new file below or enter a new image path.
             </div>
           </div>
@@ -1284,6 +1294,74 @@ window.addEventListener('keydown', function(e) {
     closeLightbox();
   }
 });
+
+// Category Navigation Left/Right Scroll Enhancement
+(function initGalleryNavScroll() {
+  const nav = document.querySelector('.gallery-categories-nav');
+  const btnLeft = document.querySelector('.gallery-nav-scroll-btn.left');
+  const btnRight = document.querySelector('.gallery-nav-scroll-btn.right');
+  if (!nav) return;
+
+  function updateScrollButtons() {
+    const maxScroll = nav.scrollWidth - nav.clientWidth;
+    if (maxScroll > 4) {
+      if (btnLeft) btnLeft.style.display = nav.scrollLeft > 6 ? 'inline-flex' : 'none';
+      if (btnRight) btnRight.style.display = (nav.scrollLeft < maxScroll - 6) ? 'inline-flex' : 'none';
+    } else {
+      if (btnLeft) btnLeft.style.display = 'none';
+      if (btnRight) btnRight.style.display = 'none';
+    }
+  }
+
+  // Convert vertical mousewheel to horizontal scroll over the nav
+  nav.addEventListener('wheel', function(e) {
+    if (e.deltaY !== 0) {
+      e.preventDefault();
+      nav.scrollLeft += e.deltaY;
+      updateScrollButtons();
+    }
+  }, { passive: false });
+
+  // Mouse drag-to-scroll
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  nav.addEventListener('mousedown', function(e) {
+    isDown = true;
+    startX = e.pageX - nav.offsetLeft;
+    scrollLeft = nav.scrollLeft;
+  });
+  window.addEventListener('mouseup', function() { isDown = false; });
+  nav.addEventListener('mousemove', function(e) {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - nav.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    nav.scrollLeft = scrollLeft - walk;
+    updateScrollButtons();
+  });
+
+  nav.addEventListener('scroll', updateScrollButtons);
+  window.addEventListener('resize', updateScrollButtons);
+  setTimeout(updateScrollButtons, 50);
+
+  // Chevron click handlers
+  if (btnLeft) {
+    btnLeft.addEventListener('click', function(e) {
+      e.preventDefault();
+      nav.scrollBy({ left: -160, behavior: 'smooth' });
+      setTimeout(updateScrollButtons, 300);
+    });
+  }
+  if (btnRight) {
+    btnRight.addEventListener('click', function(e) {
+      e.preventDefault();
+      nav.scrollBy({ left: 160, behavior: 'smooth' });
+      setTimeout(updateScrollButtons, 300);
+    });
+  }
+})();
 </script>
 
 <?php require_once __DIR__ . '/../includes/layout-footer.php'; ?>

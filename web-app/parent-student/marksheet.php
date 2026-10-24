@@ -730,10 +730,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <span>Download (PNG)</span>
       </button>
 
-      <!-- Print Marksheet -->
+      <!-- Print Report Card -->
       <button type="button" onclick="window.print();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official A4 Statement of Marks">
         <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
-        <span>Print Marksheet</span>
+        <span>Print Report Card</span>
       </button>
     <?php endif; ?>
 
