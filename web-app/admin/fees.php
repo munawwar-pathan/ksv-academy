@@ -1717,6 +1717,207 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
+/* ── Dark Theme for Pay Receipt Card (Screen View inside Receipt Modal) ── */
+[data-theme="dark"] .pay-receipt {
+  background: #0f172a !important;
+  border: 1.5px solid #334155 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="dark"] .pay-receipt .ri-brand-row {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .ri-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .ri-sub {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .ri-address {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .ri-logo-box {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Document Type & Session Banner */
+[data-theme="dark"] .pay-receipt .receipt-doc-band {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-doc-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-doc-title i {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-doc-session {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+
+/* Student & Voucher Meta Grid */
+[data-theme="dark"] .pay-receipt .receipt-meta-grid {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val.bold {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val.mono-badge {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+/* Particulars Table */
+[data-theme="dark"] .pay-receipt .receipt-table-wrapper {
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td {
+  border-bottom: 1px solid #1e293b !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="background: #e0f2fe"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="background:#e0f2fe"] {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td div[style*="color: #64748b"],
+[data-theme="dark"] .pay-receipt .receipt-table td div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td div[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .receipt-table td div[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+/* Table Total Row (fixes washed-out white bar) */
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td {
+  background: #1e293b !important;
+  border-top: 1.5px solid #334155 !important;
+  border-bottom: none !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td:last-child {
+  color: #34d399 !important;
+}
+
+/* Course Fee & Due Balance Strip (fixes white rectangle) */
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] span[style*="color: #64748b"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] span[style*="color:#64748b"],
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] span,
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong,
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] strong[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong[style*="color: #dc2626"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] strong[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong[style*="color: #059669"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] strong[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+
+/* Words Box */
+[data-theme="dark"] .pay-receipt .receipt-words-box {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px dashed rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-words-box .words-label {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-words-box .words-val,
+[data-theme="dark"] .pay-receipt .words-val {
+  color: #a7f3d0 !important;
+}
+
+/* Signatures & Seal Section */
+[data-theme="dark"] .pay-receipt .auth-sign-line {
+  border-bottom: 1.5px dashed #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .auth-sign-line[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .auth-sign-line[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .auth-sign-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .auth-seal-badge {
+  border-color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+[data-theme="dark"] .pay-receipt .seal-text-top {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .seal-text-mid {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .pay-receipt .seal-text-bot {
+  color: #38bdf8 !important;
+}
+
+/* Security QR & Terms Bottom Bar */
+[data-theme="dark"] .pay-receipt .receipt-bottom-bar {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .rb-qr-wrap {
+  background: #ffffff !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .pay-receipt .rb-notes {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .rb-notes strong {
+  color: #f8fafc !important;
+}
+
 </style>
 
 <!-- Financial KPI Stat Metric Cards -->
@@ -2957,11 +3158,12 @@ function downloadReceiptPNG() {
 
   // Pre-load image blob to avoid CORS issues in canvas
   const imgEl = renderContainer.querySelector('#dl_qr_image');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const runExport = () => {
     html2canvas(cardEl, {
       scale: 2,
       useCORS: true,
-      backgroundColor: '#ffffff'
+      backgroundColor: isDark ? '#0f172a' : '#ffffff'
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = filename;
@@ -3040,8 +3242,9 @@ function shareReceipt() {
   renderContainer.innerHTML = buildPaymentReceipt(p);
   const cardEl = renderContainer.firstElementChild;
   const filename = `Fee_Receipt-${(p.student_name || 'Student').replace(/\s+/g, '_')}-${p.receipt_no}.png`;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-  html2canvas(cardEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
+  html2canvas(cardEl, { scale: 2, useCORS: true, backgroundColor: isDark ? '#0f172a' : '#ffffff' })
     .then(canvas => {
       canvas.toBlob(blob => {
         const file = new File([blob], filename, { type: 'image/png' });
