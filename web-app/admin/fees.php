@@ -1584,13 +1584,45 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* 6. Collect Fee Modal (#collectFeeModal) */
+.due-banner {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+.due-banner.is-due {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+.due-banner.is-due strong {
+  font-size: 0.9rem;
+  font-family: 'Outfit', sans-serif;
+  color: #991b1b;
+}
+.due-banner.is-cleared {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+.due-banner.is-cleared strong {
+  font-size: 0.88rem;
+  font-family: 'Outfit', sans-serif;
+  color: #059669;
+}
+
 [data-theme="dark"] #collectFeeModal .hrms-modal-card {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
 }
 [data-theme="dark"] #collectFeeModal .hrms-modal-header {
   background: #1e293b !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] #collectFeeModal .hrms-modal-header > div > div:first-child {
   background: rgba(2, 132, 199, 0.15) !important;
@@ -1604,9 +1636,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 [data-theme="dark"] #collectFeeModal .modal-close-btn {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
   color: #cbd5e1 !important;
+  transition: all 0.2s ease !important;
 }
 [data-theme="dark"] #collectFeeModal .modal-close-btn:hover {
   background: #334155 !important;
@@ -1614,7 +1647,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #475569 !important;
 }
 [data-theme="dark"] #collectFeeModal label.form-label {
-  color: #cbd5e1 !important;
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] #collectFeeModal label.form-label span[style*="color: #dc2626"],
+[data-theme="dark"] #collectFeeModal label.form-label span[style*="color:#dc2626"] {
+  color: #f87171 !important;
 }
 [data-theme="dark"] #collectFeeModal input.hrms-input,
 [data-theme="dark"] #collectFeeModal select.hrms-input {
@@ -1624,9 +1661,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #collectFeeModal input.hrms-input:focus,
 [data-theme="dark"] #collectFeeModal select.hrms-input:focus {
-  background: #0f172a !important;
+  background: #18263e !important;
   border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] #collectFeeModal input::placeholder {
+  color: #64748b !important;
 }
 [data-theme="dark"] #collectFeeModal select.hrms-input option {
   background: #0f172a !important;
@@ -1637,27 +1678,75 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #34d399 !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] #collectFeeModal #collectAmountInput:focus {
+  background: #18263e !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+[data-theme="dark"] #collectFeeModal #collectAmountInput::placeholder {
+  color: #475569 !important;
+}
 [data-theme="dark"] #collectFeeModal span[style*="color: #059669"],
 [data-theme="dark"] #collectFeeModal span[style*="color:#059669"] {
   color: #34d399 !important;
 }
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] #collectFeeModal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] #collectFeeModal input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(1);
+}
+[data-theme="dark"] .due-banner.is-due,
+[data-theme="dark"] #studentDueBanner.is-due,
 [data-theme="dark"] #studentDueBanner {
-  background: rgba(220, 38, 38, 0.15) !important;
-  border-color: rgba(220, 38, 38, 0.35) !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
   color: #f87171 !important;
 }
-[data-theme="dark"] #bannerDueAmount {
+[data-theme="dark"] .due-banner.is-due strong,
+[data-theme="dark"] #studentDueBanner.is-due #bannerDueAmount,
+[data-theme="dark"] #studentDueBanner #bannerDueAmount {
   color: #fca5a5 !important;
 }
+[data-theme="dark"] .due-banner.is-cleared,
+[data-theme="dark"] #studentDueBanner.is-cleared {
+  background: rgba(16, 185, 129, 0.14) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .due-banner.is-cleared strong,
+[data-theme="dark"] #studentDueBanner.is-cleared #bannerDueAmount {
+  color: #6ee7b7 !important;
+}
 [data-theme="dark"] #collectFeeModal .collect-cancel-btn {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
   color: #cbd5e1 !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
 }
 [data-theme="dark"] #collectFeeModal .collect-cancel-btn:hover {
   background: #334155 !important;
   border-color: #475569 !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] #collectFeeModal .collect-submit-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+[data-theme="dark"] #collectFeeModal .collect-submit-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5) !important;
+  transform: translateY(-1px);
 }
 
 /* 7. Official Receipt Modal (#receiptPrintModal) */
@@ -2459,9 +2548,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </select>
 
           <!-- Dynamic Due Banner -->
-          <div id="studentDueBanner" style="display: none; margin-top: 8px; padding: 8px 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; font-size: 0.78rem; color: #991b1b; display: flex; justify-content: space-between; align-items: center;">
-            <span><i class="fa-solid fa-clock-rotate-left"></i> Current Outstanding Due:</span>
-            <strong id="bannerDueAmount" style="font-size: 0.9rem; font-family: 'Outfit', sans-serif;">₹0.00</strong>
+          <div id="studentDueBanner" class="due-banner" style="display: none;">
+            <span id="bannerDueLabel"><i class="fa-solid fa-clock-rotate-left"></i> Current Outstanding Due:</span>
+            <strong id="bannerDueAmount">₹0.00</strong>
           </div>
         </div>
 
@@ -3311,40 +3400,62 @@ function shareReceipt() {
 function openCollectModal(preselectStudentId) {
   const modal = document.getElementById('collectFeeModal');
   if (modal) modal.classList.add('show');
-  if (preselectStudentId) {
-    const sel = document.getElementById('collectStudentSelect');
-    if (sel) {
+  const sel = document.getElementById('collectStudentSelect');
+  if (sel) {
+    if (preselectStudentId) {
       sel.value = preselectStudentId;
-      updateStudentDueDisplay(sel);
+    } else {
+      sel.value = '';
     }
+    updateStudentDueDisplay(sel);
   }
 }
 
 function closeCollectModal() {
   const modal = document.getElementById('collectFeeModal');
   if (modal) modal.classList.remove('show');
+  const sel = document.getElementById('collectStudentSelect');
+  if (sel) {
+    sel.value = '';
+    updateStudentDueDisplay(sel);
+  }
 }
 
 function updateStudentDueDisplay(select) {
+  if (!select) return;
   const opt = select.options[select.selectedIndex];
-  const due = parseFloat(opt.getAttribute('data-due') || 0);
   const banner = document.getElementById('studentDueBanner');
+  const labelEl = document.getElementById('bannerDueLabel');
+  const amountEl = document.getElementById('bannerDueAmount');
   const amountInput = document.getElementById('collectAmountInput');
 
-  if (opt.value && due > 0) {
+  if (!banner) return;
+
+  if (opt && opt.value) {
+    const due = parseFloat(opt.getAttribute('data-due') || 0);
     banner.style.display = 'flex';
-    document.getElementById('bannerDueAmount').innerText = '₹' + due.toLocaleString('en-IN');
-    if (!amountInput.value || parseFloat(amountInput.value) <= 0) {
-      amountInput.value = due;
+    banner.style.removeProperty('background');
+    banner.style.removeProperty('border-color');
+    banner.style.removeProperty('color');
+
+    if (due > 0) {
+      banner.className = 'due-banner is-due';
+      if (labelEl) labelEl.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Current Outstanding Due:';
+      if (amountEl) amountEl.innerText = '₹' + due.toLocaleString('en-IN');
+      if (amountInput && (!amountInput.value || parseFloat(amountInput.value) <= 0)) {
+        amountInput.value = due;
+      }
+    } else {
+      banner.className = 'due-banner is-cleared';
+      if (labelEl) labelEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account Status:';
+      if (amountEl) amountEl.innerText = 'Fully Paid / Cleared (₹0.00)';
     }
-  } else if (opt.value) {
-    banner.style.display = 'flex';
-    banner.style.background = '#ecfdf5';
-    banner.style.borderColor = '#a7f3d0';
-    banner.style.color = '#065f46';
-    document.getElementById('bannerDueAmount').innerText = '₹0.00 (Cleared)';
   } else {
     banner.style.display = 'none';
+    banner.className = 'due-banner';
+    banner.style.removeProperty('background');
+    banner.style.removeProperty('border-color');
+    banner.style.removeProperty('color');
   }
 }
 
