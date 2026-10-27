@@ -339,6 +339,357 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .strength-meter-bar {
   background: #273952;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE & RESPONSIVE REFINEMENTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Settings Tab Navigation Bar */
+  .settings-nav-bar {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    padding: 6px !important;
+    box-sizing: border-box !important;
+    margin-bottom: 16px !important;
+  }
+  .settings-tab-pill {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 9px 12px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* 2-Column Grid Layout in Both Tabs */
+  .settings-grid-layout,
+  .settings-tab-pane > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Left Appearance Card */
+  .settings-group-card,
+  .appearance-card {
+    padding: 16px 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 16px !important;
+  }
+  .form-section-header {
+    gap: 10px !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  .form-section-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Theme Switch Options */
+  .theme-switch-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .theme-option-box {
+    padding: 8px !important;
+    border-radius: 10px !important;
+  }
+  .theme-wireframe {
+    height: 54px !important;
+  }
+  .theme-status-footer {
+    margin-top: 12px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Academic Profile Summary Card */
+  .academic-profile-card,
+  .hrms-card {
+    border-radius: 12px !important;
+  }
+  .hrms-card-header {
+    padding: 14px 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .hrms-card-header .card-title {
+    font-size: 0.96rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .hrms-card-header > span {
+    align-self: flex-start !important;
+  }
+  .card-body-padding,
+  .academic-profile-card > div:nth-child(2) {
+    padding: 16px 14px !important;
+  }
+  .profile-details-grid,
+  .academic-profile-card div[style*="grid-template-columns"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .profile-details-grid > div,
+  .profile-info-box {
+    padding: 10px 12px !important;
+  }
+
+  /* Tab 2: Security Profile Preview Card */
+  .academy-preview-card {
+    padding: 16px 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 16px !important;
+  }
+  .academy-preview-card .user-avatar-circle,
+  .academy-preview-card div[style*="width: 76px"] {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 1.5rem !important;
+    margin-bottom: 10px !important;
+  }
+  .academy-meta-row {
+    padding: 8px 0 !important;
+    font-size: 0.78rem !important;
+  }
+  .academy-meta-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.78rem !important;
+  }
+  .academy-meta-val {
+    font-size: 0.80rem !important;
+  }
+
+  /* Change Password Card & Form */
+  .change-password-card .hrms-card-header {
+    padding: 14px 16px !important;
+  }
+  .change-password-form,
+  .change-password-card form {
+    padding: 16px 14px !important;
+  }
+  .password-form-inner,
+  .change-password-card form > div {
+    max-width: 100% !important;
+    gap: 14px !important;
+  }
+  .settings-input {
+    height: 40px !important;
+    font-size: 0.84rem !important;
+    padding: 8px 40px 8px 12px !important;
+  }
+  .password-submit-btn,
+  .roaster-add-btn,
+  .change-password-card button[type="submit"] {
+    width: 100% !important;
+    height: 42px !important;
+    justify-content: center !important;
+    font-size: 0.84rem !important;
+    border-radius: 9px !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Micro Devices (<= 480px) */
+@media (max-width: 480px) {
+  .profile-details-grid,
+  .academic-profile-card div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Extra Small Devices (<= 360px) */
+@media (max-width: 360px) {
+  .theme-switch-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR PARENT & STUDENT SETTINGS
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .settings-nav-bar {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .settings-tab-pill {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .settings-tab-pill:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+[data-theme="dark"] .settings-tab-pill.active {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #0092df 0%, #0066aa 100%) !important;
+}
+
+[data-theme="dark"] .settings-group-card,
+[data-theme="dark"] .appearance-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .form-section-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .form-section-header h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .theme-option-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .theme-option-box.active {
+  border-color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.12) !important;
+}
+[data-theme="dark"] .theme-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .dark-wireframe {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .dark-wireframe .wireframe-header {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .dark-wireframe .wireframe-sidebar {
+  background: #1e293b !important;
+}
+[data-theme="dark"] .dark-wireframe .wireframe-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .theme-tips-box,
+[data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] {
+  background: rgba(2, 132, 199, 0.1) !important;
+  border-color: rgba(2, 132, 199, 0.25) !important;
+}
+[data-theme="dark"] .theme-tips-box p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .academic-profile-card,
+[data-theme="dark"] .change-password-card,
+[data-theme="dark"] .hrms-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-card-header .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-card-header > span {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .profile-info-box,
+[data-theme="dark"] .profile-details-grid > div,
+[data-theme="dark"] .academic-profile-card div[style*="background: var(--hrms-bg)"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .profile-info-box > div:first-child,
+[data-theme="dark"] .profile-details-grid > div > div:first-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .profile-info-box > div:last-child,
+[data-theme="dark"] .profile-details-grid > div > div:last-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .profile-details-grid div[style*="color: #0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .card-body-padding > div:last-child {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .card-body-padding > div:last-child > div {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .academy-preview-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .academy-preview-card .user-avatar-circle,
+[data-theme="dark"] .academy-preview-card div[style*="border: 3px solid #ffffff"] {
+  border-color: #1e293b !important;
+}
+[data-theme="dark"] .academy-preview-card .user-profile-name,
+[data-theme="dark"] .academy-preview-card h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .academy-preview-card p[style*="font-family: monospace"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .academy-preview-card span[style*="background: #f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .academy-preview-card span[style*="background: #ede9fe"] {
+  background: rgba(139, 92, 246, 0.15) !important;
+  border-color: rgba(139, 92, 246, 0.35) !important;
+  color: #c084fc !important;
+}
+[data-theme="dark"] .security-meta-box,
+[data-theme="dark"] .academy-preview-card div[style*="background: var(--hrms-bg)"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .academy-meta-row {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .academy-meta-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .academy-meta-val {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .security-guidelines-box,
+[data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="dark"] .security-guidelines-box h4 {
+  color: #f59e0b !important;
+}
+[data-theme="dark"] .security-guidelines-box ul li {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .input-field-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .settings-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .settings-input:focus {
+  border-color: #0092df !important;
+}
+[data-theme="dark"] .password-toggle-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .password-toggle-btn:hover {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #strengthLabel {
+  color: #94a3b8 !important;
+}
 </style>
 
 <!-- Top Settings Tabs Header -->
@@ -358,7 +709,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
      ══════════════════════════════════════════════════════ -->
 <div id="pane-general" class="settings-tab-pane <?php echo $current_tab === 'general' ? 'active' : ''; ?>">
   
-  <div style="display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; margin-bottom: 30px;">
+  <div class="settings-grid-layout" style="display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; margin-bottom: 30px;">
     
     <!-- Left Column: Appearance Card (Light or Dark Mode) -->
     <div>
@@ -438,7 +789,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
 
       <!-- Quick Tips Card -->
-      <div style="background: rgba(0, 146, 223, 0.05); border: 1px solid rgba(0, 146, 223, 0.18); border-radius: 12px; padding: 14px 16px;">
+      <div class="theme-tips-box" style="background: rgba(0, 146, 223, 0.05); border: 1px solid rgba(0, 146, 223, 0.18); border-radius: 12px; padding: 14px 16px;">
         <div style="display: flex; align-items: center; gap: 8px; font-size: 0.80rem; font-weight: 700; color: #0284c7; margin-bottom: 6px;">
           <i class="fa-solid fa-circle-info"></i>
           <span>Theme Tips</span>
@@ -451,7 +802,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <!-- Right Column: Student / Parent Academic Profile Summary Card -->
     <div>
-      <div class="hrms-card" style="border-radius: 14px; overflow: hidden; box-shadow: var(--hrms-shadow-sm); border: 1px solid var(--hrms-border);">
+      <div class="academic-profile-card hrms-card" style="border-radius: 14px; overflow: hidden; box-shadow: var(--hrms-shadow-sm); border: 1px solid var(--hrms-border);">
         <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 18px 24px; background: var(--hrms-card); display: flex; justify-content: space-between; align-items: center;">
           <div>
             <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; font-family: 'Outfit', sans-serif;">
@@ -467,59 +818,59 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </span>
         </div>
 
-        <div style="padding: 24px;">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px;">
+        <div class="card-body-padding" style="padding: 24px;">
+          <div class="profile-details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px;">
             
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Student Name</div>
               <div style="font-size: 0.95rem; font-weight: 800; color: var(--hrms-text); font-family: 'Outfit', sans-serif;">
                 <?php echo htmlspecialchars($student['student_name'] ?? $current_user['full_name']); ?>
               </div>
             </div>
 
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Roll / Student ID</div>
               <div style="font-size: 0.95rem; font-weight: 800; color: #0284c7; font-family: monospace;">
                 <?php echo htmlspecialchars($student['roll_no'] ?? $current_user['username']); ?>
               </div>
             </div>
 
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Standard / Class</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
                 <?php echo htmlspecialchars($student['standard'] ?? '10th Standard'); ?>
               </div>
             </div>
 
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Section</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
                 Section <?php echo htmlspecialchars($student['section'] ?? 'A'); ?>
               </div>
             </div>
 
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Parent / Guardian</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
                 <?php echo htmlspecialchars($student['parent_name'] ?? 'Guardian'); ?>
               </div>
             </div>
 
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Parent Mobile</div>
               <div style="font-size: 0.88rem; font-weight: 600; color: var(--hrms-text);">
                 <?php echo htmlspecialchars($student['parent_mobile'] ?? '—'); ?>
               </div>
             </div>
 
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Account Username</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text); font-family: monospace;">
                 @<?php echo htmlspecialchars($current_user['username']); ?>
               </div>
             </div>
 
-            <div style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
+            <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Registered Email</div>
               <div style="font-size: 0.88rem; font-weight: 600; color: var(--hrms-text);">
                 <?php echo htmlspecialchars($current_user['email'] ?? ($student['email'] ?? '—')); ?>
@@ -546,7 +897,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
      ══════════════════════════════════════════════════════ -->
 <div id="pane-security" class="settings-tab-pane <?php echo $current_tab === 'security' ? 'active' : ''; ?>">
   
-  <div style="display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; margin-bottom: 30px;">
+  <div class="settings-grid-layout" style="display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; margin-bottom: 30px;">
     
     <!-- Left Column: Security Context Profile -->
     <div>
@@ -561,7 +912,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <div style="text-align: center; margin: 18px 0 14px;">
-          <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #0092df, #005a9c); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.85rem; font-weight: 800; margin: 0 auto 12px; box-shadow: 0 8px 20px rgba(0, 146, 223, 0.25); border: 3px solid #ffffff;">
+          <div class="user-avatar-circle" style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #0092df, #005a9c); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.85rem; font-weight: 800; margin: 0 auto 12px; box-shadow: 0 8px 20px rgba(0, 146, 223, 0.25); border: 3px solid #ffffff;">
             <?php 
               $initials = 'S';
               if (!empty($current_user['full_name'])) {
@@ -571,7 +922,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               echo $initials;
             ?>
           </div>
-          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--hrms-text); font-family: 'Outfit', sans-serif;">
+          <h3 class="user-profile-name" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--hrms-text); font-family: 'Outfit', sans-serif;">
             <?php echo htmlspecialchars($current_user['full_name']); ?>
           </h3>
           <p style="margin: 3px 0 8px; font-size: 0.8rem; color: #64748b; font-family: monospace;">
@@ -583,7 +934,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Security Meta -->
-        <div style="background: var(--hrms-bg); border-radius: 10px; padding: 14px; border: 1px solid var(--hrms-border); margin-bottom: 16px;">
+        <div class="security-meta-box" style="background: var(--hrms-bg); border-radius: 10px; padding: 14px; border: 1px solid var(--hrms-border); margin-bottom: 16px;">
           <div class="academy-meta-row" style="padding-top: 0;">
             <div class="academy-meta-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-user"></i></div>
             <div style="min-width: 0; flex: 1;">
@@ -608,7 +959,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Guidelines -->
-        <div style="background: rgba(245, 158, 11, 0.05); border-radius: 10px; padding: 14px; border: 1px dashed rgba(245, 158, 11, 0.35);">
+        <div class="security-guidelines-box" style="background: rgba(245, 158, 11, 0.05); border-radius: 10px; padding: 14px; border: 1px dashed rgba(245, 158, 11, 0.35);">
           <h4 style="margin: 0 0 8px 0; font-size: 0.78rem; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-shield"></i> Security Guidelines
           </h4>
@@ -623,7 +974,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <!-- Right Column: Change Password Form -->
     <div>
-      <div class="hrms-card" style="border-radius: 14px; overflow: hidden; box-shadow: var(--hrms-shadow-sm); border: 1px solid var(--hrms-border);">
+      <div class="change-password-card hrms-card" style="border-radius: 14px; overflow: hidden; box-shadow: var(--hrms-shadow-sm); border: 1px solid var(--hrms-border);">
         <div class="hrms-card-header" style="border-bottom: 1px solid var(--hrms-border); padding: 18px 24px; background: var(--hrms-card); display: flex; justify-content: space-between; align-items: center;">
           <div>
             <h3 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 800; font-family: 'Outfit', sans-serif;">
@@ -636,10 +987,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
         </div>
 
-        <form method="POST" action="<?php echo PARENT_URL; ?>/settings?tab=security" style="padding: 24px;">
+        <form class="change-password-form" method="POST" action="<?php echo PARENT_URL; ?>/settings?tab=security" style="padding: 24px;">
           <input type="hidden" name="action" value="change_password">
 
-          <div style="max-width: 520px; display: flex; flex-direction: column; gap: 18px;">
+          <div class="password-form-inner" style="max-width: 520px; display: flex; flex-direction: column; gap: 18px;">
             
             <!-- Current Password -->
             <div class="form-group">
@@ -682,7 +1033,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
 
             <div style="padding-top: 10px;">
-              <button type="submit" class="roaster-add-btn" style="padding: 11px 26px; font-size: 0.88rem;">
+              <button type="submit" class="roaster-add-btn password-submit-btn" style="padding: 11px 26px; font-size: 0.88rem;">
                 <div class="btn-icon-circle"><i class="fa-solid fa-lock"></i></div>
                 <span>Update Password</span>
               </button>
