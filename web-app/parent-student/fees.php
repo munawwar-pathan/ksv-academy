@@ -388,6 +388,464 @@ require_once __DIR__ . '/../includes/layout-header.php';
   font-size: 0.82rem;
   color: #854d0e;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR STUDENT & PARENT FEE LEDGER
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Impersonation & Child Selector Banners */
+  .impersonation-notice-bar {
+    padding: 10px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+  .impersonation-notice-bar .roaster-btn {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 6px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .child-selector-banner {
+    padding: 10px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+  .child-selector-banner > div {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .child-selector-banner .roaster-btn {
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* 4 Financial KPI Stat Cards */
+  .periods-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .stat-card {
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-label {
+    font-size: 0.68rem !important;
+  }
+
+  .stat-number {
+    font-size: 1.15rem !important;
+    margin-top: 2px !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.88rem !important;
+  }
+
+  .stat-card-progress {
+    margin: 8px 0 6px !important;
+    height: 4px !important;
+  }
+
+  .stat-card-footer {
+    font-size: 0.68rem !important;
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* Filter & Search Toolbar */
+  .roaster-toolbar-card {
+    padding: 12px 14px !important;
+    margin-bottom: 16px !important;
+    border-radius: 10px !important;
+  }
+
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .roaster-filter-form {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .roaster-toolbar-card .roaster-search-box {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .roaster-toolbar-card .roaster-select-box {
+    width: 100% !important;
+  }
+
+  .roaster-toolbar-card .roaster-select-box select {
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .roaster-toolbar-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .roaster-add-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  /* Periods Card */
+  .periods-card {
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .periods-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .periods-card-header > div:last-child {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  /* Table & Scrolling */
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: 0 !important;
+  }
+
+  .staff-id-table {
+    min-width: 720px !important;
+  }
+
+  .staff-id-table thead th {
+    padding: 8px 8px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .staff-id-table tbody td {
+    padding: 8px 8px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .sid-code-pill,
+  .sid-mode-badge,
+  .sid-status-verified {
+    font-size: 0.70rem !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Card Footer: Pagination & Stats */
+  .periods-card-footer {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .periods-card-footer > div:first-child {
+    width: 100% !important;
+    justify-content: space-between !important;
+    font-size: 0.76rem !important;
+    gap: 8px !important;
+  }
+
+  .pagination-nav {
+    width: 100% !important;
+    justify-content: center !important;
+    margin: 4px 0 !important;
+  }
+
+  .periods-card-footer > div:last-child {
+    width: 100% !important;
+    margin-left: 0 !important;
+    justify-content: space-between !important;
+    font-size: 0.72rem !important;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px !important;
+    flex-wrap: wrap !important;
+  }
+}
+
+/* Micro Devices (<= 480px) */
+@media (max-width: 480px) {
+  .hrms-modal-card {
+    width: 94% !important;
+    max-width: 94% !important;
+    margin: 16px auto !important;
+  }
+
+  .hrms-modal-body > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
+
+/* Micro Devices (<= 380px) */
+@media (max-width: 380px) {
+  .periods-stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR STUDENT & PARENT FEE LEDGER
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .impersonation-notice-bar {
+  background: rgba(202, 138, 4, 0.15) !important;
+  border-color: rgba(202, 138, 4, 0.35) !important;
+  color: #fde047 !important;
+}
+
+[data-theme="dark"] .child-selector-banner {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .child-selector-banner > span {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .periods-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-card-header p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-header > div:last-child {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-header > div:last-child strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr:hover td {
+  background: #192339 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #334155"] {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #1e293b"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #64748b"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sid-mode-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(22, 101, 52, 0.25) !important;
+  color: #4ade80 !important;
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-card-footer {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-footer span {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-footer strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-card-footer > div:last-child {
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .pagination-btn.active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .pagination-btn:hover:not(.disabled):not(.active) {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pagination-btn.disabled {
+  opacity: 0.4 !important;
+}
+
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .hrms-modal-header {
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .modal-close-btn {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .hrms-modal-body .form-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .hrms-modal-body .hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table td[colspan] div[style*="background: #f1f5f9"] {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .staff-id-table td[colspan] h4 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table td[colspan] p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -627,7 +1085,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Table Body -->
-  <div style="overflow-x: auto;">
+  <div class="table-responsive" style="overflow-x: auto;">
     <table class="staff-id-table">
       <thead>
         <tr>
