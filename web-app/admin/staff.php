@@ -651,6 +651,574 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #94a3b8;
   color: #0f172a;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK MODE ENHANCEMENTS — FACULTY & STAFF DIRECTORY
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Stat Metric Cards Strip */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#7c3aed"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #7c3aed"] {
+  color: #a78bfa !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"] {
+  color: #fbbf24 !important;
+}
+
+/* 2. Faculty Search & Filter Toolbar */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box:focus-within {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-search-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  background: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box > i:first-child,
+[data-theme="dark"] .roaster-select-box .select-chevron {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select:focus {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+
+/* 3. Main Directory Card & Table Header */
+[data-theme="dark"] .staff-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .staff-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .staff-title-block .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .staff-records-count {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .staff-records-count strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* User cell & Avatar */
+[data-theme="dark"] .staff-id-table tbody td .user-cell img {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div:first-child[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div:first-child[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div > div:first-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div > div:last-child {
+  color: #94a3b8 !important;
+}
+
+/* Table Text & Values */
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #475569"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color:#475569"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #334155"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color:#334155"] {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table tbody td:nth-child(5) div[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td:nth-child(5) div[style*="color:#0f172a"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td a[style*="color: #334155"],
+[data-theme="dark"] .staff-id-table tbody td a[style*="color:#334155"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td a[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table tbody td a[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+/* Badges & Pills */
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-dept-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-dept-pill i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border-color: rgba(225, 29, 72, 0.3) !important;
+  color: #fb7185 !important;
+}
+[data-theme="dark"] .sid-status-active {
+  background: rgba(22, 101, 52, 0.2) !important;
+  color: #4ade80 !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+}
+[data-theme="dark"] .btn-student-login {
+  background: rgba(22, 101, 52, 0.2) !important;
+  color: #4ade80 !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+}
+[data-theme="dark"] .btn-student-login:hover {
+  background: rgba(22, 101, 52, 0.35) !important;
+  color: #86efac !important;
+  border-color: rgba(22, 101, 52, 0.6) !important;
+}
+[data-theme="dark"] .btn-student-pwd {
+  background: rgba(202, 138, 4, 0.2) !important;
+  color: #facc15 !important;
+  border-color: rgba(202, 138, 4, 0.4) !important;
+}
+[data-theme="dark"] .btn-student-pwd:hover {
+  background: rgba(202, 138, 4, 0.35) !important;
+  color: #fef08a !important;
+  border-color: rgba(202, 138, 4, 0.6) !important;
+}
+
+/* Action Buttons */
+[data-theme="dark"] .sid-action-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sid-action-btn.view {
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  background: rgba(2, 132, 199, 0.1) !important;
+}
+[data-theme="dark"] .sid-action-btn.view:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+[data-theme="dark"] .sid-action-btn.edit {
+  color: #a5b4fc !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+[data-theme="dark"] .sid-action-btn.edit:hover {
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  border-color: #6366f1 !important;
+}
+[data-theme="dark"] .sid-action-btn.delete {
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+[data-theme="dark"] .sid-action-btn.delete:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+[data-theme="dark"] .sid-action-btn.idcard {
+  color: #22d3ee !important;
+  border-color: rgba(6, 182, 212, 0.4) !important;
+  background: rgba(6, 182, 212, 0.1) !important;
+}
+[data-theme="dark"] .sid-action-btn.idcard:hover {
+  background: #0891b2 !important;
+  color: #ffffff !important;
+  border-color: #0891b2 !important;
+}
+
+/* Empty State */
+[data-theme="dark"] .staff-id-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table tbody td p strong {
+  color: #f8fafc !important;
+}
+
+/* Pagination & Controls */
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #64748b !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
+[data-theme="dark"] .pagination-controls-wrap div[style*="color: #64748b"],
+[data-theme="dark"] .pagination-controls-wrap div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+/* 4. Modals General Structure */
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="dark"] .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .modal-close-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-body {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-footer {
+  background: #0f172a !important;
+  border-top: 1px solid #334155 !important;
+}
+[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline,
+[data-theme="dark"] .hrms-modal-card .btn-hrms-outline {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline:hover,
+[data-theme="dark"] .hrms-modal-card .btn-hrms-outline:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+/* Modal Inputs & Labels */
+[data-theme="dark"] .hrms-modal .form-group label,
+[data-theme="dark"] .hrms-modal label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal input.hrms-input,
+[data-theme="dark"] .hrms-modal select.hrms-input,
+[data-theme="dark"] .hrms-modal textarea.hrms-input,
+[data-theme="dark"] .hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal input.hrms-input:focus,
+[data-theme="dark"] .hrms-modal select.hrms-input:focus,
+[data-theme="dark"] .hrms-modal textarea.hrms-input:focus,
+[data-theme="dark"] .hrms-input:focus {
+  border-color: var(--hrms-primary, #0092df) !important;
+  background: #0f172a !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
+}
+[data-theme="dark"] .hrms-modal input.hrms-input::placeholder,
+[data-theme="dark"] .hrms-modal textarea.hrms-input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .hrms-modal select.hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #edit_employee_code {
+  background: #0b1329 !important;
+  border-color: #334155 !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] input[name="salary"] {
+  color: #34d399 !important;
+}
+
+/* 5. Modal 2: #viewStaffModal (Faculty Profile Details) */
+[data-theme="dark"] #viewStaffModal .view-staff-banner {
+  background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%) !important;
+  border-color: #0369a1 !important;
+}
+[data-theme="dark"] #viewStaffModal #view_sm_name {
+  color: #ffffff !important;
+}
+[data-theme="dark"] #viewStaffModal .view-staff-meta span {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #viewStaffModal .view-staff-meta span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #viewStaffModal .view-staff-meta span #view_sm_username {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #viewStaffModal .view-staff-meta span #view_sm_dept {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #viewStaffModal .hrms-modal-body div[style*="background: #f8fafc"],
+[data-theme="dark"] #viewStaffModal .hrms-modal-body div[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #viewStaffModal .hrms-modal-body h5 {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #viewStaffModal .hrms-modal-body span[style*="color: #64748b"],
+[data-theme="dark"] #viewStaffModal .hrms-modal-body span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #viewStaffModal .hrms-modal-body strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #viewStaffModal #view_sm_salary {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #viewStaffModal #view_sm_blood {
+  color: #fb7185 !important;
+}
+[data-theme="dark"] #viewStaffModal #view_sm_qr {
+  color: #38bdf8 !important;
+}
+
+/* 6. Modal 3: #editStaffModal Permissions UI */
+[data-theme="dark"] #editStaffModal label[style*="color: #0f172a"],
+[data-theme="dark"] #editStaffModal label[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #editStaffModal div[style*="color: #64748b"],
+[data-theme="dark"] #editStaffModal div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .perm-box-container {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .perm-section-label {
+  color: #94a3b8 !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .perm-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .perm-card:hover {
+  background: #1e3a5f !important;
+  border-color: #0284c7 !important;
+}
+[data-theme="dark"] .perm-card-text {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .perm-card-text i {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .btn-perm-toggle {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .btn-perm-toggle:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+/* 7. Modal 4: #changeStaffPasswordModal */
+[data-theme="dark"] #changeStaffPasswordModal .hrms-modal-header > div > div:first-child {
+  background: rgba(202, 138, 4, 0.15) !important;
+  border-color: rgba(202, 138, 4, 0.3) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] #changeStaffPasswordModal div[style*="background: #f8fafc"],
+[data-theme="dark"] #changeStaffPasswordModal div[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #pwd_staff_name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #pwd_staff_username {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #changeStaffPasswordModal div[style*="color: #64748b"],
+[data-theme="dark"] #changeStaffPasswordModal div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #changeStaffPasswordModal button[title="Show/Hide password"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #changeStaffPasswordModal button[title="Show/Hide password"]:hover {
+  color: #f8fafc !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
