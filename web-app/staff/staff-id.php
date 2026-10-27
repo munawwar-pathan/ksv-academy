@@ -574,6 +574,182 @@ require_once __DIR__ . '/../includes/layout-header.php';
     display: none !important;
   }
 }
+
+/* ── Staff ID Toolbar Styles ── */
+.staff-id-toolbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.staff-id-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.staff-id-faculty-title {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.staff-id-select-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  flex-wrap: wrap;
+}
+.staff-id-select-input {
+  min-width: 260px;
+  padding: 6px 12px;
+  font-size: 0.84rem;
+  border-radius: 6px;
+}
+.staff-id-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR STAFF ID
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  .roaster-toolbar-card {
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .staff-id-toolbar-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .staff-id-toolbar-left {
+    width: 100%;
+  }
+  .staff-id-select-form {
+    width: 100%;
+  }
+  .staff-id-select-input {
+    flex: 1;
+    min-width: 0 !important;
+  }
+  .staff-id-toolbar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .staff-id-toolbar-actions .roaster-btn,
+  .staff-id-toolbar-actions .roaster-add-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.80rem;
+    white-space: nowrap;
+  }
+  .staff-id-btn-print {
+    grid-column: span 2;
+  }
+  .id-card-stage {
+    gap: 24px;
+    padding: 6px 0 24px;
+  }
+}
+
+/* Mobile Phones (<= 576px) */
+@media (max-width: 576px) {
+  .roaster-toolbar-card {
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+  .staff-id-faculty-title {
+    font-size: 0.95rem;
+    gap: 6px;
+  }
+  .staff-id-faculty-title span {
+    line-height: 1.3;
+  }
+  .staff-id-select-form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .staff-id-select-input {
+    width: 100%;
+  }
+  .id-card-stage {
+    gap: 20px;
+  }
+  .id-badge-holder {
+    width: 100%;
+    max-width: min(326px, 100%);
+  }
+  .pvc-card {
+    width: min(326px, 100%) !important;
+    max-width: 100% !important;
+    border-radius: 16px;
+  }
+  .cf-val {
+    word-break: break-word;
+  }
+  .cf-val-email {
+    word-break: break-all !important;
+    font-size: 9.5px !important;
+  }
+}
+
+/* Micro Phones (<= 340px) */
+@media (max-width: 340px) {
+  .staff-id-toolbar-actions {
+    grid-template-columns: 1fr;
+  }
+  .staff-id-btn-print {
+    grid-column: span 1;
+  }
+  .pvc-card {
+    border-radius: 14px;
+  }
+  .card-front-header {
+    padding: 8px 12px 34px;
+  }
+  .card-front-body {
+    padding: 6px 14px 12px;
+  }
+  .card-back-body {
+    padding: 10px 14px 10px;
+  }
+}
+
+/* ── Dark Mode Adaptations ── */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .staff-id-faculty-title {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .staff-id-select-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+[data-theme="dark"] .card-label-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -581,16 +757,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
      ══════════════════════════════════════════════════════ -->
 
 <div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
-  <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div class="roaster-toolbar-inner staff-id-toolbar-inner">
     
     <!-- Left: Selected Faculty Member Label or Switcher -->
-    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <div class="staff-id-toolbar-left">
       <?php if ($current_user['role'] === 'super_admin'): ?>
-        <form method="GET" action="<?php echo STAFF_URL; ?>/staff-id" style="display: flex; align-items: center; gap: 10px; margin: 0;">
-          <label style="font-size: 13px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px;">
+        <form method="GET" action="<?php echo STAFF_URL; ?>/staff-id" class="staff-id-select-form">
+          <label style="font-size: 13px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
             <i class="fa-solid fa-id-badge" style="color: #0284c7;"></i> Select Faculty:
           </label>
-          <select name="id" onchange="this.form.submit()" class="hrms-input" style="min-width: 260px; padding: 6px 12px; font-size: 0.84rem; border-radius: 6px;">
+          <select name="id" onchange="this.form.submit()" class="hrms-input staff-id-select-input">
             <?php foreach ($staff_list as $st_item): ?>
               <option value="<?php echo $st_item['id']; ?>" <?php echo $st_item['id'] == $selected_id ? 'selected' : ''; ?>>
                 <?php echo htmlspecialchars($st_item['full_name']); ?> (<?php echo htmlspecialchars($st_item['employee_code']); ?>)
@@ -599,7 +775,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </select>
         </form>
       <?php else: ?>
-        <h3 style="margin: 0; font-size: 1.08rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+        <h3 class="staff-id-faculty-title">
           <i class="fa-solid fa-id-card" style="color: var(--hrms-primary);"></i>
           <span><?php echo htmlspecialchars($staff['full_name'] ?? 'Faculty Member'); ?></span>
           <span style="font-size: 0.78rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
@@ -613,22 +789,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Right: Print and Download Actions -->
-    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <div class="staff-id-toolbar-actions">
       
       <!-- Download Front PNG -->
-      <button type="button" onclick="downloadCardImage('card_front_element', 'Front');" class="roaster-btn secondary" style="gap: 6px;" title="Save Front Card as High-Resolution Image">
+      <button type="button" onclick="downloadCardImage('card_front_element', 'Front');" class="roaster-btn secondary staff-id-btn-front" style="gap: 6px;" title="Save Front Card as High-Resolution Image">
         <i class="fa-solid fa-download"></i>
         <span>Front (PNG)</span>
       </button>
 
       <!-- Download Back PNG -->
-      <button type="button" onclick="downloadCardImage('card_back_element', 'Back');" class="roaster-btn secondary" style="gap: 6px;" title="Save Back Card with QR Code as High-Resolution Image">
+      <button type="button" onclick="downloadCardImage('card_back_element', 'Back');" class="roaster-btn secondary staff-id-btn-back" style="gap: 6px;" title="Save Back Card with QR Code as High-Resolution Image">
         <i class="fa-solid fa-download"></i>
         <span>Back (PNG)</span>
       </button>
 
       <!-- Print Both Sides -->
-      <button type="button" onclick="window.print();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official ID card (Front &amp; Back)">
+      <button type="button" onclick="window.print();" class="roaster-add-btn staff-id-btn-print" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official ID card (Front &amp; Back)">
         <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
         <span>Print ID Card</span>
       </button>
@@ -714,7 +890,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Official Email</span>
-              <span class="cf-val" style="font-size: 10px;"><?php echo htmlspecialchars($staff['email'] ?: $staff['user_email']); ?></span>
+              <span class="cf-val cf-val-email" style="font-size: 10px;"><?php echo htmlspecialchars($staff['email'] ?: $staff['user_email']); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Blood Group</span>
