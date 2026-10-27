@@ -195,16 +195,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
   gap: 16px;
   margin-bottom: 22px;
 }
-@media (max-width: 1024px) {
-  .periods-stat-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 600px) {
-  .periods-stat-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
 .periods-card {
   background: #ffffff;
@@ -375,6 +365,444 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #fee2e2;
   border-color: #fca5a5;
   color: #b91c1c;
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE & RESPONSIVE REFINEMENTS
+   ══════════════════════════════════════════════════════ */
+
+/* Tablet Screens (<= 1024px) */
+@media (max-width: 1024px) {
+  .periods-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* 2x2 Stat Cards */
+  .periods-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+  .periods-stat-grid .stat-card {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+  }
+  .periods-stat-grid .stat-label {
+    font-size: 0.65rem !important;
+  }
+  .periods-stat-grid .stat-number {
+    font-size: 1.25rem !important;
+    line-height: 1.15 !important;
+  }
+  .periods-stat-grid .stat-icon-wrapper {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    font-size: 0.80rem !important;
+    border-radius: 8px !important;
+  }
+  .periods-stat-grid .stat-card-footer {
+    font-size: 0.65rem !important;
+    margin-top: 6px !important;
+    padding-top: 5px !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+  }
+
+  /* Toolbar & Filter Improvements */
+  .roaster-toolbar-card {
+    margin-top: 0 !important;
+    margin-bottom: 14px !important;
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .roaster-filter-form {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .roaster-toolbar-card .roaster-search-box {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+  }
+  .roaster-select-box {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .roaster-toolbar-card .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+  }
+  .roaster-btn.secondary {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+  .roaster-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+  }
+  .scholars-count-badge {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 38px !important;
+    font-size: 0.78rem !important;
+    box-sizing: border-box !important;
+  }
+  .roaster-toolbar-actions .btn-hrms {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 38px !important;
+    font-size: 0.78rem !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+  }
+
+  /* Directory Card Header */
+  .periods-card {
+    border-radius: 10px !important;
+    margin-bottom: 20px !important;
+  }
+  .periods-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .periods-card-header > div:first-child {
+    width: 100% !important;
+  }
+  .periods-card-header h3.card-title {
+    font-size: 0.90rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .periods-card-header p {
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+  .periods-card-header > div:last-child {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Responsive Table */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .staff-id-table {
+    min-width: 860px;
+  }
+  .staff-id-table thead th {
+    padding: 9px 8px !important;
+    font-size: 0.68rem !important;
+  }
+  .staff-id-table tbody td {
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+  }
+  .col-leave-dates {
+    min-width: 165px !important;
+    white-space: nowrap !important;
+  }
+  .reason-quote-box {
+    max-width: 200px !important;
+    font-size: 0.73rem !important;
+    padding: 4px 8px !important;
+  }
+  .duration-pill {
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+  }
+  .leave-action-btn {
+    padding: 4px 9px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Empty state */
+  .staff-id-table tbody td[colspan] {
+    padding: 30px 14px !important;
+  }
+
+  /* Pagination Controls */
+  .pagination-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+  .pagination-meta-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .pagination-limit-box {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .pagination-nav {
+    justify-content: center !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .pagination-btn {
+    min-width: 32px !important;
+    height: 32px !important;
+    font-size: 0.76rem !important;
+    padding: 0 6px !important;
+  }
+  .leaves-pagination-legend {
+    margin-left: 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    font-size: 0.72rem !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+  }
+
+  /* Modal Mobile Responsiveness */
+  .hrms-modal-card {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    margin: 12px auto !important;
+    border-radius: 12px !important;
+  }
+  .hrms-modal-header {
+    padding: 12px 16px !important;
+  }
+  .hrms-modal-body {
+    padding: 16px 14px !important;
+  }
+  .modal-actions-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .modal-actions-row button {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 9px 12px !important;
+  }
+}
+
+/* Micro Phones (<= 420px) */
+@media (max-width: 420px) {
+  .roaster-filter-form {
+    grid-template-columns: 1fr !important;
+  }
+  .roaster-toolbar-actions {
+    grid-template-columns: 1fr !important;
+  }
+  .modal-dates-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+/* Micro Phones (<= 360px) */
+@media (max-width: 360px) {
+  .periods-stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .periods-card-header h3.card-title {
+    font-size: 0.86rem !important;
+  }
+  .pagination-btn {
+    min-width: 28px !important;
+    height: 28px !important;
+    font-size: 0.72rem !important;
+    padding: 0 4px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   DARK MODE REFINEMENTS
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .periods-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .periods-card-header h3.card-title {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .periods-card-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .periods-card-header span[style*="background: #f8fafc"],
+[data-theme="dark"] .periods-card-header span[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .periods-card-header > div:last-child {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .periods-card-header > div:last-child strong {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.25) !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table td div[style*="color:#0f172a"],
+[data-theme="dark"] .staff-id-table td h4[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table td h4[style*="color:#0f172a"] {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="color: #1e293b"],
+[data-theme="dark"] .staff-id-table td div[style*="color:#1e293b"] {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table td div[style*="color:#64748b"],
+[data-theme="dark"] .staff-id-table td p[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table td p[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="color: #475569"],
+[data-theme="dark"] .staff-id-table td div[style*="color:#475569"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-id-table td div[style*="background:#f1f5f9"] {
+  background: #0f172a !important;
+  color: #64748b !important;
+}
+[data-theme="dark"] .reason-quote-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  border-left-color: #0284c7 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .duration-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .leave-action-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .leave-action-btn.btn-reject {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .leaves-pagination-legend {
+  color: #94a3b8 !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .leaves-pagination-legend span[style*="color: #cbd5e1"],
+[data-theme="dark"] .leaves-pagination-legend span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
+[data-theme="dark"] .leaves-pagination-legend strong {
+  color: #f1f5f9 !important;
+}
+
+/* Modal Dark Mode */
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .hrms-modal-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-modal-header h3 {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .hrms-modal-card .form-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal-card select.hrms-input,
+[data-theme="dark"] .hrms-modal-card input.hrms-input,
+[data-theme="dark"] .hrms-modal-card textarea.hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .hrms-modal-card div[style*="background: #f8fafc"],
+[data-theme="dark"] .hrms-modal-card div[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-modal-card div[style*="background: #f8fafc"] span,
+[data-theme="dark"] .hrms-modal-card div[style*="background:#f8fafc"] span {
+  color: #94a3b8 !important;
 }
 </style>
 
@@ -564,12 +992,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <tr>
           <th style="width: 40px; text-align: center;">#</th>
           <th style="width: 140px;">Leave Type</th>
-          <th style="width: 175px;">Leave Duration</th>
-          <th style="width: 85px;">Days</th>
+          <th class="col-leave-dates" style="width: 175px; min-width: 175px;">Leave Duration</th>
+          <th style="width: 85px; min-width: 85px; text-align: center;">Days</th>
           <th style="min-width: 190px;">Reason / Justification</th>
           <th style="width: 115px;">Applied Date</th>
           <th style="width: 95px; text-align: center;">Status</th>
-          <th style="width: 90px; text-align: right;">Action</th>
+          <th style="width: 90px; min-width: 90px; text-align: right;">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -618,18 +1046,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- 3. Leave Duration & Dates -->
-              <td>
-                <div style="font-weight: 700; color: #0f172a; font-size: 0.82rem; display: flex; align-items: center; gap: 5px; line-height: 1.35;">
+              <td class="col-leave-dates">
+                <div style="font-weight: 700; color: #0f172a; font-size: 0.82rem; display: flex; align-items: center; gap: 5px; line-height: 1.35; white-space: nowrap;">
                   <i class="fa-regular fa-calendar-days" style="color: #0284c7; font-size: 0.70rem;"></i>
                   <span><?php echo date('d M Y', $start_ts); ?> &ndash; <?php echo date('d M Y', $end_ts); ?></span>
                 </div>
-                <div style="font-size: 0.71rem; color: #64748b; margin-top: 2px;">
+                <div style="font-size: 0.71rem; color: #64748b; margin-top: 2px; white-space: nowrap;">
                   <?php echo date('l', $start_ts); ?> to <?php echo date('l', $end_ts); ?>
                 </div>
               </td>
 
               <!-- 4. Number of Days -->
-              <td>
+              <td style="text-align: center;">
                 <span class="duration-pill">
                   <i class="fa-regular fa-clock" style="font-size: 0.62rem;"></i>
                   <span><?php echo $num_days; ?> <?php echo $num_days === 1 ? 'Day' : 'Days'; ?></span>
@@ -645,10 +1073,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <!-- 6. Applied Date -->
               <td>
-                <div style="color: #475569; font-size: 0.80rem; font-weight: 500;">
+                <div style="color: #475569; font-size: 0.80rem; font-weight: 500; white-space: nowrap;">
                   <?php echo !empty($lr['created_at']) ? date('d M Y', strtotime($lr['created_at'])) : '—'; ?>
                 </div>
-                <div style="font-size: 0.70rem; color: #94a3b8; margin-top: 1px;">
+                <div style="font-size: 0.70rem; color: #94a3b8; margin-top: 1px; white-space: nowrap;">
                   <?php echo !empty($lr['created_at']) ? date('h:i A', strtotime($lr['created_at'])) : ''; ?>
                 </div>
               </td>
@@ -671,7 +1099,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- 8. Action (Withdraw if pending, or decisions if admin) -->
-              <td style="text-align: right;">
+              <td style="text-align: right; white-space: nowrap;">
                 <?php if ($lr['status'] === 'Pending'): ?>
                   <form method="POST" action="<?php echo STAFF_URL; ?>/leaves" onsubmit="return confirm('Withdraw this pending leave application?');" style="display: inline;">
                     <input type="hidden" name="action" value="cancel_leave">
@@ -758,7 +1186,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <!-- Legend / Leave Balances -->
-    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 14px; margin-left: auto;">
+    <div class="leaves-pagination-legend" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 14px; margin-left: auto;">
       <span style="display: inline-flex; align-items: center; gap: 6px;">
         <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
         Active Ledger
@@ -801,7 +1229,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </select>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div class="modal-dates-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
           <div class="form-group">
             <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Start Date</label>
             <input type="date" name="start_date" id="modalStartDate" class="hrms-input" value="<?php echo date('Y-m-d'); ?>" required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;" onchange="recalculateLeaveDays()">
@@ -823,7 +1251,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <textarea name="reason" class="hrms-input" rows="3" placeholder="State reason for absence, emergency details or academic duty..." required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; line-height: 1.4;"></textarea>
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
+        <div class="modal-actions-row" style="display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
           <button type="button" class="roaster-btn secondary" onclick="closeModal('applyLeaveModal')" style="padding: 9px 16px; border-radius: 8px; font-size: 0.84rem; cursor: pointer;">Cancel</button>
           <button type="submit" class="btn-hrms btn-hrms-primary" style="padding: 9px 20px; border-radius: 8px; font-size: 0.84rem; font-weight: 700; cursor: pointer;">
             <i class="fa-solid fa-paper-plane"></i> Submit Application
