@@ -469,11 +469,493 @@ require_once __DIR__ . '/../includes/layout-header.php';
   padding-top: 8px;
   border-top: 1px solid #f1f5f9;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR STUDENT & PARENT PORTAL
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Admin Impersonation Banner */
+  .admin-impersonation-bar {
+    padding: 10px 14px !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+    border-radius: 10px !important;
+  }
+  .admin-impersonation-bar > div {
+    font-size: 0.78rem !important;
+  }
+  .admin-impersonation-bar .roaster-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 7px 12px !important;
+    font-size: 0.76rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Multi-Child Switcher Bar */
+  .child-switcher-bar {
+    padding: 10px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+    border-radius: 10px !important;
+  }
+  .child-switcher-btns {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .child-switcher-btns .roaster-btn {
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Student Hero Profile Card */
+  .student-hero-card {
+    padding: 16px 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 16px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+
+  .student-hero-left {
+    gap: 12px !important;
+    align-items: center !important;
+  }
+
+  .student-avatar-box {
+    width: 54px !important;
+    height: 54px !important;
+    font-size: 1.45rem !important;
+  }
+
+  .student-hero-meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .student-hero-meta h2 {
+    font-size: 1.15rem !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .student-badges-row {
+    gap: 6px !important;
+  }
+
+  .student-badges-row > span,
+  .hero-badge {
+    font-size: 0.70rem !important;
+    padding: 2px 7px !important;
+  }
+
+  /* Hero Navigation Actions Grid */
+  .student-hero-actions {
+    width: 100% !important;
+    margin-left: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .student-hero-actions .roaster-btn,
+  .hero-action-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 8px 6px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 4 Academic & Financial KPI Cards */
+  .periods-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .stat-card {
+    padding: 12px 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-label {
+    font-size: 0.68rem !important;
+  }
+
+  .stat-number {
+    font-size: 1.15rem !important;
+    margin-top: 2px !important;
+  }
+
+  .stat-icon-wrapper {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.88rem !important;
+  }
+
+  .stat-card-progress {
+    margin: 8px 0 6px !important;
+    height: 4px !important;
+  }
+
+  .stat-card-footer {
+    font-size: 0.68rem !important;
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* Two Column Grid Sections */
+  .portal-two-col-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Card Containers */
+  .periods-card {
+    border-radius: 12px !important;
+  }
+
+  .periods-card-header {
+    padding: 12px 14px !important;
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .periods-card-header h3.card-title {
+    font-size: 0.88rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .periods-card-header p {
+    font-size: 0.71rem !important;
+  }
+
+  .periods-card-header .roaster-btn {
+    font-size: 0.70rem !important;
+    padding: 4px 8px !important;
+    align-self: flex-start !important;
+  }
+
+  .periods-card-footer {
+    padding: 8px 12px !important;
+    font-size: 0.70rem !important;
+    gap: 6px !important;
+  }
+
+  /* Tables */
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: 0 !important;
+  }
+
+  .staff-id-table {
+    min-width: 480px !important;
+  }
+
+  .staff-id-table thead th {
+    padding: 7px 8px !important;
+    font-size: 0.66rem !important;
+  }
+
+  .staff-id-table tbody td {
+    padding: 7px 8px !important;
+    font-size: 0.74rem !important;
+  }
+
+  /* Circular Notices */
+  .notice-list {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+
+  .notice-item {
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .notice-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .notice-title {
+    font-size: 0.82rem !important;
+  }
+
+  .notice-time {
+    font-size: 0.67rem !important;
+  }
+
+  .notice-desc {
+    font-size: 0.75rem !important;
+    line-height: 1.42 !important;
+    margin: 0 0 6px !important;
+  }
+
+  .notice-footer-meta {
+    font-size: 0.67rem !important;
+    padding-top: 6px !important;
+  }
+}
+
+/* Micro Devices (<= 380px) */
+@media (max-width: 380px) {
+  .periods-stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .student-hero-actions .roaster-btn,
+  .hero-action-btn {
+    font-size: 0.70rem !important;
+    padding: 7px 4px !important;
+    gap: 4px !important;
+  }
+
+  .student-avatar-box {
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 1.25rem !important;
+  }
+
+  .student-hero-meta h2 {
+    font-size: 1.05rem !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR PARENT & STUDENT PORTAL
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .student-hero-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .student-hero-meta h2 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .student-avatar-box {
+  background: #0f172a !important;
+  border-color: #0284c7 !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2) !important;
+}
+
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sid-dept-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .student-badges-row > span[style*="background: #f8fafc"],
+[data-theme="dark"] .hero-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .sid-status-active,
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(22, 101, 52, 0.25) !important;
+  color: #4ade80 !important;
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-status-late {
+  background: rgba(217, 119, 6, 0.2) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+[data-theme="dark"] .sid-status-absent {
+  background: rgba(220, 38, 38, 0.2) !important;
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.3) !important;
+}
+
+[data-theme="dark"] .child-switcher-bar {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .child-switcher-bar > span {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .admin-impersonation-bar {
+  background: rgba(2, 132, 199, 0.12) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .admin-impersonation-bar strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-header h3.card-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-card-header p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-header .card-title > span {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-footer {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-footer span strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr:hover td {
+  background: #192339 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #1e293b"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #334155"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td div[style*="background: #e2e8f0"] {
+  background: #334155 !important;
+}
+
+[data-theme="dark"] .notice-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  border-left-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .notice-item:hover {
+  background: #152033 !important;
+  border-color: #475569 !important;
+  border-left-color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .notice-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .notice-time {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-desc {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .notice-footer-meta {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .table-responsive td[colspan] div[style*="background: #f1f5f9"],
+[data-theme="dark"] .periods-card > div > div[style*="background: #f1f5f9"] {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .table-responsive td[colspan] h4,
+[data-theme="dark"] .periods-card > div > div h4 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .table-responsive td[colspan] p,
+[data-theme="dark"] .periods-card > div > div p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .roaster-btn.primary {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
 </style>
 
 <!-- Admin Impersonation Notice (If Active) -->
 <?php if (!empty($_SESSION['impersonated_student'])): ?>
-  <div style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 10px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+  <div class="admin-impersonation-bar" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 10px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
     <div style="display: flex; align-items: center; gap: 10px; font-size: 0.84rem;">
       <i class="fa-solid fa-circle-user" style="color: #0284c7; font-size: 1.1rem;"></i>
       <span>Logged in via Admin Impersonation: <strong><?php echo htmlspecialchars($student['student_name']); ?></strong> (Roll: <?php echo htmlspecialchars($student['roll_no']); ?>)</span>
@@ -510,20 +992,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       <div class="student-badges-row">
         <!-- Class & Stream -->
-        <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #334155; font-size: 0.74rem; font-weight: 600; padding: 3px 9px; border-radius: 6px;">
+        <span class="hero-badge standard-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #334155; font-size: 0.74rem; font-weight: 600; padding: 3px 9px; border-radius: 6px;">
           <i class="fa-solid fa-graduation-cap" style="color: #0284c7;"></i>
           <?php echo htmlspecialchars($student['standard']); ?>
         </span>
 
         <!-- Batch Timing -->
-        <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; font-weight: 500; padding: 3px 9px; border-radius: 6px;">
+        <span class="hero-badge timing-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; font-weight: 500; padding: 3px 9px; border-radius: 6px;">
           <i class="fa-regular fa-clock" style="color: #64748b;"></i>
           <?php echo htmlspecialchars($student['batch_timing'] ?: '07:30 AM - 01:30 PM'); ?>
         </span>
 
         <!-- Guardian Info -->
         <?php if (!empty($student['parent_name'])): ?>
-          <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; font-weight: 500; padding: 3px 9px; border-radius: 6px;">
+          <span class="hero-badge guardian-badge" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; font-weight: 500; padding: 3px 9px; border-radius: 6px;">
             <i class="fa-solid fa-user-shield" style="color: #64748b;"></i>
             Guardian: <strong><?php echo htmlspecialchars($student['parent_name']); ?></strong>
           </span>
@@ -539,16 +1021,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
   <!-- Right: Quick Navigation Actions (2 Rows, 2 Buttons per Row) -->
   <div class="student-hero-actions">
-    <a href="<?php echo PARENT_URL; ?>/student-id" class="roaster-btn secondary" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
+    <a href="<?php echo PARENT_URL; ?>/student-id" class="roaster-btn secondary hero-action-btn" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
       <i class="fa-solid fa-id-card" style="color: #0284c7;"></i> Student ID
     </a>
-    <a href="<?php echo PARENT_URL; ?>/marksheet" class="roaster-btn secondary" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
+    <a href="<?php echo PARENT_URL; ?>/marksheet" class="roaster-btn secondary hero-action-btn" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
       <i class="fa-solid fa-file-invoice" style="color: #0284c7;"></i> Report Card
     </a>
-    <a href="<?php echo PARENT_URL; ?>/fees" class="roaster-btn secondary" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
+    <a href="<?php echo PARENT_URL; ?>/fees" class="roaster-btn secondary hero-action-btn" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
       <i class="fa-solid fa-wallet" style="color: #0284c7;"></i> Fee Ledger
     </a>
-    <a href="<?php echo PARENT_URL; ?>/attendance" class="roaster-btn secondary" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
+    <a href="<?php echo PARENT_URL; ?>/attendance" class="roaster-btn secondary hero-action-btn" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
       <i class="fa-solid fa-calendar-check" style="color: #0284c7;"></i> Attendance
     </a>
   </div>
@@ -557,11 +1039,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 <!-- Multi-Child Switcher for Parents with multiple wards -->
 <?php if ($current_user['role'] === 'parent' && count($parent_children) > 1): ?>
-  <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 16px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+  <div class="child-switcher-bar" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 16px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
     <span style="font-size: 0.80rem; font-weight: 600; color: #475569;">
       <i class="fa-solid fa-users" style="color: #0284c7;"></i> Switch Enrolled Child:
     </span>
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <div class="child-switcher-btns" style="display: flex; gap: 8px; flex-wrap: wrap;">
       <?php foreach ($parent_children as $pc): ?>
         <a href="<?php echo PARENT_URL; ?>/dashboard?student_id=<?php echo $pc['id']; ?>" 
            class="roaster-btn <?php echo $pc['id'] == $student_id ? 'primary' : 'secondary'; ?>" 
