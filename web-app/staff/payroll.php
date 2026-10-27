@@ -163,16 +163,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
   gap: 16px;
   margin-bottom: 22px;
 }
-@media (max-width: 1024px) {
-  .periods-stat-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 600px) {
-  .periods-stat-grid {
-    grid-template-columns: 1fr;
-  }
-}
 
 .periods-card {
   background: #ffffff;
@@ -264,6 +254,407 @@ require_once __DIR__ . '/../includes/layout-header.php';
   padding: 2px 8px;
   border-radius: 14px;
   white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE & RESPONSIVE REFINEMENTS
+   ══════════════════════════════════════════════════════ */
+
+/* Tablet Screens (<= 1024px) */
+@media (max-width: 1024px) {
+  .periods-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* 2x2 Stat Cards */
+  .periods-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+  .periods-stat-grid .stat-card {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+  }
+  .periods-stat-grid .stat-label {
+    font-size: 0.65rem !important;
+  }
+  .periods-stat-grid .stat-number {
+    font-size: 1.25rem !important;
+    line-height: 1.15 !important;
+  }
+  .periods-stat-grid .stat-icon-wrapper {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    font-size: 0.80rem !important;
+    border-radius: 8px !important;
+  }
+  .periods-stat-grid .stat-card-footer {
+    font-size: 0.65rem !important;
+    margin-top: 6px !important;
+    padding-top: 5px !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+  }
+
+  /* Toolbar & Filter Improvements */
+  .roaster-toolbar-card {
+    margin-top: 0 !important;
+    margin-bottom: 14px !important;
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .roaster-filter-form {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .roaster-toolbar-card .roaster-search-box {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+  }
+  .roaster-select-box {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .roaster-toolbar-card .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+  }
+  .roaster-btn.secondary {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+  .roaster-toolbar-actions {
+    display: flex !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    gap: 8px !important;
+  }
+  .scholars-count-badge {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 38px !important;
+    font-size: 0.78rem !important;
+    box-sizing: border-box !important;
+  }
+  .roaster-toolbar-actions .btn-hrms {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 38px !important;
+    font-size: 0.78rem !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+  }
+
+  /* Directory Card Header */
+  .periods-card {
+    border-radius: 10px !important;
+    margin-bottom: 20px !important;
+  }
+  .periods-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .periods-card-header > div:first-child {
+    width: 100% !important;
+  }
+  .periods-card-header h3.card-title {
+    font-size: 0.90rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .periods-card-header p {
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+  .periods-card-header > div:last-child {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Responsive Table */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .staff-id-table {
+    min-width: 860px;
+  }
+  .staff-id-table thead th {
+    padding: 9px 8px !important;
+    font-size: 0.68rem !important;
+  }
+  .staff-id-table tbody td {
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap;
+  }
+  .staff-id-table tbody td .roaster-btn.secondary {
+    padding: 4px 9px !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Empty state */
+  .staff-id-table tbody td[colspan] {
+    padding: 30px 14px !important;
+    white-space: normal !important;
+  }
+
+  /* Pagination Controls */
+  .pagination-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+  .pagination-meta-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .pagination-limit-box {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .pagination-nav {
+    justify-content: center !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .pagination-btn {
+    min-width: 32px !important;
+    height: 32px !important;
+    font-size: 0.76rem !important;
+    padding: 0 6px !important;
+  }
+  .payroll-pagination-legend {
+    margin-left: 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    font-size: 0.72rem !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+  }
+
+  /* Modal Mobile Responsiveness */
+  .hrms-modal-card {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    margin: 12px auto !important;
+    border-radius: 12px !important;
+  }
+  .hrms-modal-header {
+    padding: 12px 16px !important;
+  }
+  .hrms-modal-body {
+    padding: 16px 14px !important;
+  }
+  .modal-actions-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .modal-actions-row button {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 9px 12px !important;
+  }
+}
+
+/* Micro Phones (<= 420px) */
+@media (max-width: 420px) {
+  .roaster-filter-form {
+    grid-template-columns: 1fr !important;
+  }
+  .roaster-toolbar-actions {
+    flex-direction: column !important;
+  }
+  .modal-grid-2 {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+/* Micro Phones (<= 360px) */
+@media (max-width: 360px) {
+  .periods-stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .periods-card-header h3.card-title {
+    font-size: 0.86rem !important;
+  }
+  .pagination-btn {
+    min-width: 28px !important;
+    height: 28px !important;
+    font-size: 0.72rem !important;
+    padding: 0 4px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   DARK MODE REFINEMENTS
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .periods-card {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .periods-card-header h3.card-title {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .periods-card-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .periods-card-header span[style*="background: #f8fafc"],
+[data-theme="dark"] .periods-card-header span[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .periods-card-header > div:last-child {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .periods-card-header > div:last-child strong {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.25) !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table td div[style*="color:#0f172a"],
+[data-theme="dark"] .staff-id-table td h4[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table td h4[style*="color:#0f172a"] {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="color: #1e293b"],
+[data-theme="dark"] .staff-id-table td div[style*="color:#1e293b"] {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .staff-id-table td span[style*="color: #334155"],
+[data-theme="dark"] .staff-id-table td span[style*="color:#334155"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table td div[style*="color:#64748b"],
+[data-theme="dark"] .staff-id-table td p[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table td p[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .staff-id-table td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-id-table td div[style*="background:#f1f5f9"] {
+  background: #0f172a !important;
+  color: #64748b !important;
+}
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .payroll-pagination-legend {
+  color: #94a3b8 !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .payroll-pagination-legend span[style*="color: #cbd5e1"],
+[data-theme="dark"] .payroll-pagination-legend span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
+[data-theme="dark"] .payroll-pagination-legend strong {
+  color: #f1f5f9 !important;
+}
+
+/* Modal Dark Mode */
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .hrms-modal-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-modal-header h3 {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .hrms-modal-card .form-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal-card select.hrms-input,
+[data-theme="dark"] .hrms-modal-card input.hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
 }
 </style>
 
@@ -628,7 +1019,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <!-- Legend / Financial Stats -->
-    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 14px; margin-left: auto;">
+    <div class="payroll-pagination-legend" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 14px; margin-left: auto;">
       <span>Total Disbursed: <strong><?php echo format_inr($total_disbursed); ?></strong></span>
       <span style="color: #cbd5e1;">•</span>
       <span>Base Pay: <strong><?php echo format_inr($monthly_base); ?></strong></span>
@@ -666,7 +1057,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php endforeach; ?>
           </select>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div class="modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
           <div class="form-group">
             <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Month</label>
             <select name="month" class="hrms-input" style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; background: #fff;">
@@ -680,7 +1071,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <input type="number" name="year" class="hrms-input" value="<?php echo date('Y'); ?>" style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;">
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div class="modal-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
           <div class="form-group">
             <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Basic Salary (₹)</label>
             <input type="number" name="basic_salary" class="hrms-input" value="65000" required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;">
@@ -694,7 +1085,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Deductions / PF / Tax (₹)</label>
           <input type="number" name="deductions" class="hrms-input" value="200" style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;">
         </div>
-        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
+        <div class="modal-actions-row" style="display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
           <button type="button" class="roaster-btn secondary" onclick="closeModal('generatePayrollModal')" style="padding: 9px 16px; border-radius: 8px; font-size: 0.84rem; cursor: pointer;">Cancel</button>
           <button type="submit" class="btn-hrms btn-hrms-primary" style="padding: 9px 20px; border-radius: 8px; font-size: 0.84rem; font-weight: 700; cursor: pointer;">
             <i class="fa-solid fa-check"></i> Disburse Salary
