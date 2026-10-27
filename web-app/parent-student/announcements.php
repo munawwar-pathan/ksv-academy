@@ -189,6 +189,260 @@ require_once __DIR__ . '/../includes/layout-header.php';
   font-size: 1.2rem;
   color: #94a3b8;
 }
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE DESIGN (TABLET & MOBILE)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .periods-card {
+    border-radius: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .periods-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .periods-card-header > div:first-child {
+    width: 100% !important;
+  }
+  .periods-card-header .card-title {
+    font-size: 0.90rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .periods-card-header .card-title span {
+    font-size: 0.66rem !important;
+  }
+  .periods-card-header p {
+    font-size: 0.72rem !important;
+    line-height: 1.4 !important;
+  }
+  .periods-card-header .roaster-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 8px 14px !important;
+    font-size: 0.80rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .notice-list {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  .notice-item {
+    padding: 12px 14px !important;
+    border-radius: 8px !important;
+  }
+  .notice-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    margin-bottom: 6px !important;
+  }
+  .notice-title {
+    font-size: 0.88rem !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+  }
+  .notice-time {
+    font-size: 0.68rem !important;
+  }
+  .notice-desc {
+    font-size: 0.80rem !important;
+    line-height: 1.5 !important;
+    margin: 6px 0 10px !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  .notice-footer-meta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    font-size: 0.70rem !important;
+    padding-top: 8px !important;
+  }
+  .notice-badge-target {
+    font-size: 0.66rem !important;
+    padding: 2px 7px !important;
+    align-self: flex-start !important;
+  }
+
+  .periods-card-footer {
+    padding: 10px 14px !important;
+    font-size: 0.72rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+
+  .empty-notice-state {
+    padding: 30px 14px !important;
+  }
+
+  /* Modal Responsive */
+  #announcementModal .hrms-modal-card {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    margin: 16px auto !important;
+    border-radius: 10px !important;
+  }
+  #announcementModal .hrms-modal-header {
+    padding: 12px 14px !important;
+  }
+  #announcementModal .hrms-modal-body {
+    padding: 14px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .periods-card-header {
+    padding: 10px 12px !important;
+  }
+  .periods-card-header .card-title {
+    font-size: 0.84rem !important;
+  }
+  .notice-list {
+    padding: 10px 8px !important;
+  }
+  .notice-item {
+    padding: 10px !important;
+  }
+  .notice-title {
+    font-size: 0.84rem !important;
+  }
+  .notice-desc {
+    font-size: 0.76rem !important;
+  }
+  .periods-card-footer {
+    padding: 8px 10px !important;
+    font-size: 0.70rem !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   DARK MODE COMPATIBILITY
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .periods-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-header .card-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .periods-card-header .card-title span {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-header p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  border-left-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .notice-item:hover {
+  background: #162032 !important;
+  border-color: #475569 !important;
+  border-left-color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .notice-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .notice-time {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-desc {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .notice-footer-meta {
+  border-top-color: #1e293b !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-badge-target {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-footer {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .empty-notice-state {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .empty-notice-icon {
+  background: #0f172a !important;
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .empty-notice-state h4 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .empty-notice-state p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-header h3 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #announcementModal .modal-close-btn {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #announcementModal .modal-close-btn:hover {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-body label.form-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-body .hrms-input {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-body .hrms-input:focus {
+  border-color: #0284c7 !important;
+}
 </style>
 
 <!-- Main Sober Noticeboard Card -->
