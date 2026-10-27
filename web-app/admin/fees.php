@@ -1171,6 +1171,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR FEE MANAGEMENT
    ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Financial KPI Stat Metric Cards */
 [data-theme="dark"] .stat-card {
   background: #1e293b !important;
   border-color: #334155 !important;
@@ -1181,6 +1183,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .stat-number {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .stat-card.amber .stat-number[style*="color: #dc2626"],
+[data-theme="dark"] .stat-card.amber .stat-number[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
 [data-theme="dark"] .stat-card-footer {
   border-top-color: #334155 !important;
   color: #94a3b8 !important;
@@ -1188,10 +1197,44 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .stat-card-footer span strong {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .stat-card-progress {
-  background: #334155 !important;
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #dc2626"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #9333ea"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#9333ea"] {
+  color: #c084fc !important;
 }
 
+/* 2. Enhanced Filter Toolbar */
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
   border-color: #334155 !important;
@@ -1200,13 +1243,41 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #0f172a !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .roaster-search-box:focus-within {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-search-box i {
+  color: #94a3b8 !important;
+}
 [data-theme="dark"] .roaster-search-box input {
   color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  background: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box > i:first-child,
+[data-theme="dark"] .roaster-select-box .select-chevron {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .roaster-select-box select {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select:focus {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
 [data-theme="dark"] .roaster-select-box select option {
   background: #0f172a !important;
@@ -1217,15 +1288,34 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f1f5f9 !important;
   border-color: #475569 !important;
 }
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
 [data-theme="dark"] .roaster-btn.ghost {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid #334155 !important;
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
 }
 [data-theme="dark"] .scholars-count-badge {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .scholars-count-badge .count-dot {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
 
+/* 3. Fee Ledger Card & Header */
 [data-theme="dark"] .fee-ledger-card {
   background: #1e293b !important;
   border-color: #334155 !important;
@@ -1235,6 +1325,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .fee-title-block .card-title {
   color: #f8fafc !important;
+}
+[data-theme="dark"] .fee-title-block .card-title i[style*="color: #0284c7"],
+[data-theme="dark"] .fee-title-block .card-title i[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .fee-session-badge {
   background: #0f172a !important;
@@ -1252,6 +1346,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
+/* 4. Table Header, Rows & Cells */
 [data-theme="dark"] #feeLedgerTable thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
@@ -1264,18 +1359,49 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #feeLedgerTable tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
+
+/* Empty State Table Cell */
+[data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] div[style*="background: #f1f5f9"],
+[data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] div[style*="background:#f1f5f9"] {
+  background: #0f172a !important;
+  color: #64748b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] p strong {
+  color: #f8fafc !important;
+}
+
+/* Student Profile Cell & Initial Circle */
 [data-theme="dark"] #feeLedgerTable tbody td .user-cell > div > div:first-child {
   color: #f8fafc !important;
 }
 [data-theme="dark"] #feeLedgerTable tbody td .user-cell > div > div:last-child {
   color: #94a3b8 !important;
 }
-[data-theme="dark"] #feeLedgerTable tbody td .user-cell > div:first-child[style*="background: #f1f5f9"] {
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell img {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell > div[style*="background: #f1f5f9"],
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell > div[style*="background:#f1f5f9"],
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell div[style*="background: #f1f5f9"],
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell div[style*="background:#f1f5f9"] {
   background: #334155 !important;
   color: #f8fafc !important;
   border-color: #475569 !important;
 }
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border-color: rgba(225, 29, 72, 0.35) !important;
+  color: #fb7185 !important;
+}
 
+/* Badges & Indicators */
 [data-theme="dark"] .sid-receipt-pill {
   background: rgba(2, 132, 199, 0.15) !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
@@ -1286,15 +1412,37 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color: #64748b"],
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
 [data-theme="dark"] .sid-std-pill {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .sid-std-pill i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color: #94a3b8"],
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color:#94a3b8"] {
+  color: #64748b !important;
+}
 [data-theme="dark"] .sid-feehead-pill {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-feehead-pill i {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color: #059669"],
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color: #dc2626"],
+[data-theme="dark"] #feeLedgerTable tbody td div[style*="color:#dc2626"] {
+  color: #f87171 !important;
 }
 [data-theme="dark"] .sid-mode-pill {
   background: #0f172a !important;
@@ -1322,7 +1470,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: rgba(180, 83, 9, 0.35) !important;
   color: #fbbf24 !important;
 }
+[data-theme="dark"] .sid-mode-pill.creditcard {
+  background: rgba(217, 70, 239, 0.15) !important;
+  border-color: rgba(217, 70, 239, 0.35) !important;
+  color: #e879f9 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td span[style*="color: #64748b"],
+[data-theme="dark"] #feeLedgerTable tbody td span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
 
+/* Action Buttons in Ledger Row */
 [data-theme="dark"] .sid-btn-primary {
   background: rgba(2, 132, 199, 0.15) !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
@@ -1330,6 +1488,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sid-btn-primary:hover {
   background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+[data-theme="dark"] .sid-btn-primary:hover i {
   color: #ffffff !important;
 }
 [data-theme="dark"] .sid-btn-secondary {
@@ -1340,8 +1502,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .sid-btn-secondary:hover {
   background: #16a34a !important;
   color: #ffffff !important;
+  border-color: #16a34a !important;
+}
+[data-theme="dark"] .sid-btn-secondary i[style*="color: #059669"],
+[data-theme="dark"] .sid-btn-secondary i[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .sid-btn-secondary:hover i {
+  color: #ffffff !important;
 }
 
+/* 5. Pagination Controls */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
   border-top-color: #334155 !important;
@@ -1360,6 +1531,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #334155 !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .pagination-limit-select:focus {
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .pagination-limit-select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
 [data-theme="dark"] .pagination-btn {
   background: #0f172a !important;
   border-color: #334155 !important;
@@ -1368,11 +1547,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .pagination-btn:hover:not(.disabled) {
   background: #334155 !important;
   color: #f8fafc !important;
+  border-color: #475569 !important;
 }
 [data-theme="dark"] .pagination-btn.active {
   background: var(--hrms-primary, #0092df) !important;
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
 }
 [data-theme="dark"] .pagination-controls-wrap > div:last-child {
   color: #94a3b8 !important;
@@ -1380,15 +1570,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .pagination-controls-wrap > div:last-child strong {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong[style*="color: #059669"],
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong[style*="color: #334155"],
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong[style*="color:#334155"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-controls-wrap > div:last-child span[style*="color: #cbd5e1"],
+[data-theme="dark"] .pagination-controls-wrap > div:last-child span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
 
-/* Modals Dark Theme */
+/* 6. Collect Fee Modal (#collectFeeModal) */
 [data-theme="dark"] #collectFeeModal .hrms-modal-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] #collectFeeModal .hrms-modal-header {
   background: #1e293b !important;
   border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] #collectFeeModal .hrms-modal-header > div > div:first-child {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
 }
 [data-theme="dark"] #collectFeeModal .hrms-modal-header h3 {
   color: #f8fafc !important;
@@ -1401,51 +1608,87 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] #collectFeeModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
 [data-theme="dark"] #collectFeeModal label.form-label {
   color: #cbd5e1 !important;
 }
-[data-theme="dark"] #collectFeeModal input,
-[data-theme="dark"] #collectFeeModal select {
+[data-theme="dark"] #collectFeeModal input.hrms-input,
+[data-theme="dark"] #collectFeeModal select.hrms-input {
   background: #0f172a !important;
   color: #f8fafc !important;
   border-color: #334155 !important;
 }
-[data-theme="dark"] #collectFeeModal select option {
+[data-theme="dark"] #collectFeeModal input.hrms-input:focus,
+[data-theme="dark"] #collectFeeModal select.hrms-input:focus {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] #collectFeeModal select.hrms-input option {
   background: #0f172a !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] #collectFeeModal #collectAmountInput {
+  background: #0f172a !important;
+  color: #34d399 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #collectFeeModal span[style*="color: #059669"],
+[data-theme="dark"] #collectFeeModal span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #studentDueBanner {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.35) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] #bannerDueAmount {
+  color: #fca5a5 !important;
 }
 [data-theme="dark"] #collectFeeModal .collect-cancel-btn {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
-[data-theme="dark"] #studentDueBanner {
-  background: rgba(220, 38, 38, 0.15) !important;
-  border-color: rgba(220, 38, 38, 0.3) !important;
-  color: #f87171 !important;
-}
-[data-theme="dark"] #bannerDueAmount {
-  color: #fca5a5 !important;
+[data-theme="dark"] #collectFeeModal .collect-cancel-btn:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
 }
 
+/* 7. Official Receipt Modal (#receiptPrintModal) */
 [data-theme="dark"] #receiptPrintModal .receipt-modal-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] #receiptPrintModal .hrms-modal-header {
   background: #1e293b !important;
   border-bottom-color: #334155 !important;
 }
+[data-theme="dark"] #receiptPrintModal .hrms-modal-header > div > div:first-child {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
 [data-theme="dark"] #receiptPrintModal .hrms-modal-header h4 {
   color: #f8fafc !important;
 }
-[data-theme="dark"] #receiptPrintModal .hrms-modal-header span {
+[data-theme="dark"] #receiptPrintModal #modalReceiptSub {
   color: #94a3b8 !important;
 }
 [data-theme="dark"] #receiptPrintModal .modal-close-btn {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] #receiptPrintModal .modal-close-btn:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
 }
 [data-theme="dark"] #receiptModalBody {
   background: #0f172a !important;
@@ -1467,6 +1710,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] #receiptPrintModal .btn-hrms-outline:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
 }
 
 </style>
