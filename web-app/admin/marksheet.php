@@ -1420,6 +1420,891 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #94a3b8;
   color: #0f172a;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR ADMIN MARKSHEET
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Academic Stat KPI Grid */
+  .academic-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .academic-stat-card {
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    gap: 10px !important;
+  }
+  .stat-icon-wrap {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1.1rem !important;
+    border-radius: 10px !important;
+  }
+  .stat-metric-val {
+    font-size: 1.25rem !important;
+  }
+  .stat-metric-lbl {
+    font-size: 0.68rem !important;
+    margin-top: 2px !important;
+  }
+
+  /* Scholar Control Bar */
+  .scholar-control-card {
+    padding: 12px 14px !important;
+    margin-bottom: 18px !important;
+    border-radius: 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .current-scholar-pill {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+  }
+  .scholar-mini-avatar,
+  .scholar-mini-init {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 0.95rem !important;
+    flex-shrink: 0 !important;
+  }
+  .current-scholar-meta h4 {
+    font-size: 0.95rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .current-scholar-meta .meta-pills {
+    font-size: 0.72rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .marksheet-top-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .marksheet-exam-form {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+  .marksheet-exam-select {
+    width: 100% !important;
+    height: 40px !important;
+    box-sizing: border-box !important;
+    font-size: 0.82rem !important;
+    border-radius: 8px !important;
+  }
+  .marksheet-print-btn {
+    width: 100% !important;
+    height: 40px !important;
+    justify-content: center !important;
+    font-size: 0.84rem !important;
+    border-radius: 8px !important;
+    margin: 0 !important;
+  }
+
+  /* Report Card Canvas Viewport Scaling */
+  .report-card-container {
+    padding: 16px 14px !important;
+    margin-bottom: 22px !important;
+    border-radius: 12px !important;
+    border-width: 1.5px !important;
+  }
+  .report-card-container::before {
+    inset: 4px !important;
+    border-radius: 8px !important;
+  }
+  .report-header-banner {
+    padding-bottom: 12px !important;
+    margin-bottom: 14px !important;
+  }
+  .report-brand-row {
+    gap: 10px !important;
+    align-items: center !important;
+  }
+  .report-brand-row img.school-logo-img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .report-brand-row .verification-qr-wrap img {
+    width: 46px !important;
+    height: 46px !important;
+  }
+  .report-brand-logo-wrap,
+  .verification-qr-wrap {
+    width: 54px !important;
+  }
+  .report-school-title {
+    font-size: 1.15rem !important;
+    line-height: 1.2 !important;
+  }
+  .report-school-tagline {
+    font-size: 0.68rem !important;
+  }
+  .report-school-subinfo {
+    font-size: 0.64rem !important;
+    line-height: 1.3 !important;
+  }
+  .report-session-ribbon {
+    padding: 4px 14px !important;
+    font-size: 0.68rem !important;
+    margin-top: 8px !important;
+    letter-spacing: 0.5px !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+    text-align: center !important;
+  }
+  .report-card-container .report-details-grid {
+    padding: 10px 12px !important;
+    margin-bottom: 12px !important;
+    gap: 8px 14px !important;
+    font-size: 0.76rem !important;
+  }
+  .detail-item strong {
+    min-width: 85px !important;
+    font-size: 0.74rem !important;
+  }
+  .detail-item span {
+    font-size: 0.76rem !important;
+  }
+  .report-table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 10px 0 14px !important;
+  }
+  .report-card-container .report-table {
+    min-width: 480px !important;
+    margin: 0 !important;
+  }
+  .report-card-container .report-table th,
+  .report-card-container .report-table td {
+    padding: 7px 8px !important;
+    font-size: 0.76rem !important;
+  }
+  .report-card-container .report-summary-kpi-row {
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+  .report-card-container .summary-kpi-card {
+    padding: 8px 6px !important;
+    border-radius: 8px !important;
+  }
+  .kpi-title {
+    font-size: 0.64rem !important;
+  }
+  .kpi-val {
+    font-size: 1.15rem !important;
+  }
+  .report-card-container .report-remarks-card {
+    padding: 10px 12px !important;
+    font-size: 0.76rem !important;
+    margin-bottom: 16px !important;
+  }
+  .report-card-container .report-signatures-row {
+    padding-top: 14px !important;
+    font-size: 0.70rem !important;
+  }
+  .sig-block {
+    width: auto !important;
+    flex: 1 !important;
+    max-width: 120px !important;
+  }
+  .sig-block .sig-spacer {
+    height: 20px !important;
+  }
+  .sig-block .sig-crest-circle {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 7px !important;
+  }
+  .sig-crest-lbl {
+    font-size: 7px !important;
+  }
+  .sig-line {
+    font-size: 0.68rem !important;
+    padding-top: 2px !important;
+  }
+  .sig-principal-name {
+    font-size: 0.82rem !important;
+    height: 20px !important;
+  }
+
+  /* Empty state card */
+  .report-empty-state-card {
+    padding: 24px 14px !important;
+    margin-bottom: 18px !important;
+  }
+  .report-empty-state-card button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Roaster Filter Toolbar */
+  .roaster-toolbar-card {
+    padding: 12px 14px !important;
+    margin-top: 20px !important;
+    margin-bottom: 14px !important;
+    border-radius: 12px !important;
+  }
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .roaster-filter-form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .roaster-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+    padding: 8px 12px !important;
+    border-radius: 9px !important;
+  }
+  .marksheet-filter-row {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .marksheet-filter-row .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .marksheet-filter-row .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    font-size: 0.80rem !important;
+    border-radius: 9px !important;
+    padding: 8px 24px 8px 28px !important;
+  }
+  .marksheet-filter-row .roaster-btn.secondary {
+    height: 40px !important;
+    font-size: 0.80rem !important;
+    padding: 0 16px !important;
+    justify-content: center !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+  }
+  .marksheet-filter-row .roaster-btn.ghost {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    height: 34px !important;
+    font-size: 0.78rem !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+  }
+  .roaster-toolbar-actions {
+    width: 100% !important;
+    display: flex !important;
+    margin: 2px 0 0 0 !important;
+  }
+  .scholars-count-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+  }
+
+  /* Directory Card & Header */
+  .marksheet-directory-card {
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+  }
+  .marksheet-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .marksheet-title-block {
+    width: 100% !important;
+  }
+  .marksheet-title-block .card-title {
+    font-size: 0.95rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .marksheet-title-block p {
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+  .marksheet-actions-wrap {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+  }
+  .marksheet-records-count {
+    font-size: 0.75rem !important;
+  }
+  .ms-generate-btn {
+    height: 32px !important;
+    font-size: 0.74rem !important;
+    padding: 0 10px !important;
+    border-radius: 7px !important;
+  }
+
+  /* Directory Table & Scrolling */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .marksheet-table {
+    min-width: 880px !important;
+  }
+  .marksheet-table thead th {
+    padding: 9px 8px !important;
+    font-size: 0.68rem !important;
+  }
+  .marksheet-table tbody td {
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+  }
+  .marksheet-table tbody td .user-cell {
+    gap: 8px !important;
+  }
+  .marksheet-table tbody td .user-cell img,
+  .marksheet-table tbody td .user-cell .staff-avatar-init {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+  }
+  .ms-btn-action {
+    padding: 4px 8px !important;
+    font-size: 0.70rem !important;
+  }
+
+  /* Pagination Controls */
+  .pagination-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+  .pagination-meta-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .pagination-limit-box {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .pagination-limit-select {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+    height: 30px !important;
+  }
+  .pagination-nav {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .pagination-btn {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.75rem !important;
+    padding: 0 !important;
+  }
+  .pagination-summary-group,
+  .pagination-controls-wrap > div:last-child {
+    margin-left: 0 !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    font-size: 0.74rem !important;
+    border-top: 1px dashed #e2e8f0 !important;
+    padding-top: 8px !important;
+  }
+
+  /* Modal Responsiveness */
+  #createMarksheetModal {
+    padding: 12px !important;
+  }
+  #createMarksheetModal .hrms-modal-content {
+    padding: 16px 14px !important;
+    border-radius: 12px !important;
+    max-height: 94vh !important;
+  }
+  .modal-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .modal-calc-ribbon {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 8px 12px !important;
+  }
+  .modal-action-footer {
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .modal-action-footer button {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+  }
+}
+
+/* Mobile Screens (<= 576px) */
+@media (max-width: 576px) {
+  .report-card-container {
+    padding: 12px 10px !important;
+  }
+  .report-brand-row {
+    gap: 6px !important;
+  }
+  .report-brand-logo-wrap,
+  .verification-qr-wrap {
+    width: 44px !important;
+  }
+  .report-brand-row img.school-logo-img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .report-brand-row .verification-qr-wrap img {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .report-school-title {
+    font-size: 0.98rem !important;
+  }
+  .report-school-tagline {
+    font-size: 0.60rem !important;
+  }
+  .report-school-subinfo {
+    font-size: 0.58rem !important;
+    display: none !important;
+  }
+  .report-session-ribbon {
+    font-size: 0.60rem !important;
+    padding: 3px 8px !important;
+    margin-top: 6px !important;
+  }
+  .report-card-container .report-details-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+  .detail-item {
+    justify-content: space-between !important;
+  }
+  .report-card-container .report-table {
+    min-width: 440px !important;
+  }
+  .report-card-container .report-table th,
+  .report-card-container .report-table td {
+    padding: 6px 6px !important;
+    font-size: 0.72rem !important;
+  }
+  .report-card-container .summary-kpi-card {
+    padding: 6px 4px !important;
+  }
+  .kpi-title {
+    font-size: 0.58rem !important;
+  }
+  .kpi-val {
+    font-size: 1.05rem !important;
+  }
+  .report-signatures-row {
+    gap: 4px !important;
+  }
+  .sig-block .sig-crest-circle {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 6px !important;
+  }
+  .sig-crest-lbl {
+    font-size: 6px !important;
+  }
+  .sig-line {
+    font-size: 0.62rem !important;
+  }
+
+  #modalSubjectsTable th,
+  #modalSubjectsTable td {
+    padding: 6px 4px !important;
+    font-size: 11px !important;
+  }
+  #modalSubjectsTable input {
+    padding: 5px 6px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Micro Devices (<= 360px) */
+@media (max-width: 360px) {
+  .academic-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .marksheet-filter-row {
+    grid-template-columns: 1fr !important;
+  }
+  .report-card-container .report-summary-kpi-row {
+    grid-template-columns: 1fr !important;
+  }
+  .report-signatures-row {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  .sig-block {
+    width: 100% !important;
+    max-width: 160px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR MARKSHEET
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .academic-stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-metric-val {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-metric-lbl {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .scholar-control-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .current-scholar-meta h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .current-scholar-meta .meta-pills span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .marksheet-exam-form label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .marksheet-exam-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .report-card-container {
+  background: #1e293b !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .report-school-tagline {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .report-school-subinfo {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .report-card-container .report-details-grid {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .detail-item strong {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .detail-item span {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .report-table {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .report-table th,
+[data-theme="dark"] .report-table td {
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .report-table thead th {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .report-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .report-table tbody tr:hover {
+  background: rgba(2, 132, 199, 0.1) !important;
+}
+[data-theme="dark"] .report-table tbody tr:last-child {
+  background: #0f172a !important;
+}
+[data-theme="dark"] .report-table tbody tr:last-child td {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage {
+  background: rgba(22, 101, 52, 0.15) !important;
+  border-color: rgba(22, 101, 52, 0.35) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-val {
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade {
+  background: rgba(30, 64, 175, 0.15) !important;
+  border-color: rgba(30, 64, 175, 0.35) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-val {
+  color: #60a5fa !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass {
+  background: rgba(22, 101, 52, 0.15) !important;
+  border-color: rgba(22, 101, 52, 0.35) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-val {
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail {
+  background: rgba(185, 28, 28, 0.15) !important;
+  border-color: rgba(185, 28, 28, 0.35) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-val {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .report-remarks-card {
+  background: #0f172a !important;
+  border-color: #0284c7 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .report-remarks-card strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .report-remarks-card div div {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .report-signatures-row {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sig-line {
+  border-top-color: #475569 !important;
+}
+
+[data-theme="dark"] .report-empty-state-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .report-empty-state-card h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .report-empty-state-card p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .marksheet-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .marksheet-card-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .marksheet-title-block .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .marksheet-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .marksheet-title-block p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .marksheet-records-count {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .marksheet-records-count strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .marksheet-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .marksheet-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .marksheet-table tbody tr.active-student-row {
+  background-color: rgba(2, 132, 199, 0.15) !important;
+}
+[data-theme="dark"] .marksheet-table tbody td .user-cell > div > div:first-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .marksheet-table tbody td .user-cell > div > div:last-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td .user-cell .staff-avatar-init {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .ms-std-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ms-roll-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .ms-exam-chip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ms-btn-secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ms-btn-secondary:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-summary-group,
+[data-theme="dark"] .pagination-controls-wrap > div:last-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-summary-group strong,
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #createMarksheetModal h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #createMarksheetModal label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #createMarksheetModal .hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable td {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #createMarksheetModal .modal-calc-ribbon {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #createMarksheetModal .action-btn {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
 </style>
 
 
@@ -1536,12 +2421,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="report-brand-row">
         
         <!-- Left: Academy Crest -->
-        <div style="width: 80px; text-align: left;">
+        <div class="report-brand-logo-wrap" style="width: 80px; text-align: left;">
           <img class="school-logo-img" src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="KSV Logo" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid #0092df; padding: 2px; background: #ffffff;">
         </div>
 
         <!-- Center: Institutional Identity -->
-        <div style="flex: 1; text-align: center;">
+        <div class="report-brand-center" style="flex: 1; text-align: center;">
           <h1 class="report-school-title">
             <?php echo htmlspecialchars($school_settings['school_name']); ?>
           </h1>
@@ -1713,7 +2598,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
   </div>
 <?php else: ?>
-  <div id="report-card-view" class="hrms-card" style="text-align: center; padding: 46px 20px; margin-bottom: 28px; border-radius: 14px; border: 1.5px dashed #cbd5e1;">
+  <div id="report-card-view" class="hrms-card report-empty-state-card" style="text-align: center; padding: 46px 20px; margin-bottom: 28px; border-radius: 14px; border: 1.5px dashed #cbd5e1;">
     <div style="width: 58px; height: 58px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.6rem;">
       <i class="fa-solid fa-file-circle-question"></i>
     </div>
@@ -2096,7 +2981,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <!-- Session info & evaluation summary -->
-    <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
+    <div class="pagination-summary-group" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
       <span>Total Evaluations: <strong style="color: #0284c7;"><?php echo $total_marksheets_count; ?></strong></span>
       <span style="color: #cbd5e1;">|</span>
       <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
@@ -2122,7 +3007,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <form method="POST" action="<?php echo ADMIN_URL; ?>/marksheet" id="marksheetGenForm">
       <input type="hidden" name="action" value="create_marksheet">
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+      <div class="modal-form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
         <div class="form-group">
           <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Enrolled Scholar *</label>
           <select name="student_id" id="modalStudentSelect" class="hrms-input" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
@@ -2195,7 +3080,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </table>
 
         <!-- Dynamic Calculation Preview Ribbon -->
-        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 16px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+        <div class="modal-calc-ribbon" style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 16px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
           <div>
             <span style="color: #0369a1; font-weight: 700;">Total Score: </span>
             <strong id="calcTotalObtained" style="color: #0f172a; font-size: 15px;">0</strong> / <span id="calcTotalMax" style="color: #64748b;">0</span>
@@ -2216,7 +3101,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <textarea name="remarks" rows="2" class="hrms-input" placeholder="e.g. Excellent conceptual understanding and disciplined work ethic." style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;"></textarea>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+      <div class="modal-action-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
         <button type="button" onclick="closeCreateMarksheetModal();" class="action-btn" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #475569;">Cancel</button>
         <button type="submit" class="action-primary-btn" style="background: #0092df; color: #ffffff; border: none; padding: 9px 24px; border-radius: 8px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 146, 223, 0.25);">Save &amp; Generate Report Card</button>
       </div>
