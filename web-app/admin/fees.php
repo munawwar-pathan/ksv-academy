@@ -781,6 +781,694 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #ffffff;
   border-color: #16a34a;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR FEE MANAGEMENT
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Financial KPI Stat Metric Cards - Clean 2x2 Grid */
+  .stat-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+  .stat-card {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+  }
+  .stat-label {
+    font-size: 0.65rem !important;
+    line-height: 1.2 !important;
+  }
+  .stat-number {
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+  }
+  .stat-icon-wrapper {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    font-size: 0.8rem !important;
+  }
+  .stat-card-progress {
+    height: 3px !important;
+    margin-top: 5px !important;
+  }
+  .stat-card-footer {
+    margin-top: 6px !important;
+    padding-top: 5px !important;
+    font-size: 0.64rem !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+  }
+
+  /* Modern Filter Toolbar */
+  .roaster-toolbar-card {
+    padding: 12px 14px !important;
+    margin-bottom: 14px !important;
+    border-radius: 12px !important;
+  }
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .roaster-filter-form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .roaster-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+    padding: 8px 12px !important;
+    border-radius: 9px !important;
+  }
+  .fee-filter-selects {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .fee-filter-selects .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .fee-filter-selects .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    font-size: 0.80rem !important;
+    border-radius: 9px !important;
+    padding: 8px 24px 8px 28px !important;
+  }
+  .fee-filter-actions {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .fee-filter-actions .roaster-btn.secondary {
+    flex: 1 !important;
+    height: 38px !important;
+    font-size: 0.80rem !important;
+    justify-content: center !important;
+    border-radius: 9px !important;
+  }
+  .fee-filter-actions .roaster-btn.ghost {
+    flex: 1 !important;
+    height: 38px !important;
+    font-size: 0.80rem !important;
+    justify-content: center !important;
+    border-radius: 9px !important;
+  }
+  .roaster-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 2px 0 0 0 !important;
+  }
+  .scholars-count-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+  }
+  .roaster-add-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+  .roaster-add-btn .btn-icon-circle {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Fee Ledger Card Header */
+  .fee-ledger-card {
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+  }
+  .fee-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .fee-title-block {
+    width: 100% !important;
+  }
+  .fee-title-block .card-title {
+    font-size: 0.95rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .fee-title-block p {
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+  .fee-records-count {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Table & Scrolling */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  #feeLedgerTable {
+    min-width: 1050px !important;
+  }
+  #feeLedgerTable thead th {
+    padding: 9px 8px !important;
+    font-size: 0.68rem !important;
+  }
+  #feeLedgerTable tbody td {
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+  }
+  #feeLedgerTable tbody td .user-cell {
+    gap: 8px !important;
+  }
+  #feeLedgerTable tbody td .user-cell img {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  #feeLedgerTable tbody td .user-cell > div:first-child {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+  }
+  .sid-btn-action {
+    padding: 4px 8px !important;
+    font-size: 0.70rem !important;
+  }
+
+  /* Pagination Controls */
+  .pagination-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+  .pagination-meta-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .pagination-limit-box {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .pagination-limit-select {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+    height: 30px !important;
+  }
+  .pagination-nav {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 2px 0 !important;
+  }
+  .pagination-btn {
+    min-width: 32px !important;
+    height: 32px !important;
+    font-size: 0.74rem !important;
+    padding: 0 4px !important;
+  }
+  .pagination-controls-wrap > div:last-child {
+    margin-left: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    font-size: 0.74rem !important;
+    text-align: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Collect Fee Modal Responsive */
+  #collectFeeModal {
+    padding: 10px !important;
+  }
+  #collectFeeModal .hrms-modal-card {
+    width: 100% !important;
+    max-width: min(540px, 96vw) !important;
+    margin: auto !important;
+    max-height: calc(100vh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  #collectFeeModal .hrms-modal-header {
+    padding: 12px 16px !important;
+    flex-shrink: 0 !important;
+  }
+  #collectFeeModal .hrms-modal-header h3 {
+    font-size: 1.02rem !important;
+  }
+  #collectFeeModal .hrms-modal-body {
+    padding: 14px 16px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 !important;
+    max-height: calc(100dvh - 100px) !important;
+  }
+  #collectFeeModal .hrms-modal-body div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .collect-modal-actions {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .collect-cancel-btn {
+    flex: 1 !important;
+    height: 40px !important;
+    justify-content: center !important;
+    font-size: 0.82rem !important;
+  }
+  .collect-submit-btn {
+    flex: 2 !important;
+    height: 40px !important;
+    justify-content: center !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Receipt Print Modal Responsive */
+  #receiptPrintModal {
+    padding: 10px !important;
+  }
+  #receiptPrintModal .receipt-modal-card {
+    width: 100% !important;
+    max-width: min(520px, 96vw) !important;
+    margin: auto !important;
+    max-height: calc(100vh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    border-radius: 16px !important;
+  }
+  #receiptPrintModal .hrms-modal-header {
+    padding: 12px 16px !important;
+  }
+  #receiptModalBody {
+    max-height: calc(100dvh - 120px) !important;
+  }
+  #receiptPrintModal .receipt-modal-card > div.no-print:last-child {
+    padding: 10px 14px !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  #receiptPrintModal .receipt-modal-card > div.no-print:last-child button {
+    padding: 8px 6px !important;
+    font-size: 0.76rem !important;
+    height: 38px !important;
+  }
+}
+
+/* Mobile Phones (<= 480px) */
+@media (max-width: 480px) {
+  .stat-grid {
+    gap: 8px !important;
+  }
+  .stat-card {
+    padding: 8px 10px !important;
+  }
+  .stat-number {
+    font-size: 1.15rem !important;
+  }
+  .stat-icon-wrapper {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    font-size: 0.72rem !important;
+  }
+  .fee-title-block .card-title {
+    font-size: 0.90rem !important;
+  }
+  .pay-receipt {
+    max-width: 100% !important;
+    border-radius: 8px !important;
+  }
+  .pay-receipt .receipt-body {
+    padding: 10px 12px !important;
+  }
+  .pay-receipt .ri-brand-row {
+    gap: 10px !important;
+  }
+  .pay-receipt .ri-logo-box {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+  }
+  .pay-receipt .ri-title {
+    font-size: 14px !important;
+  }
+}
+
+/* Micro Devices (<= 360px) */
+@media (max-width: 360px) {
+  .fee-filter-selects {
+    grid-template-columns: 1fr !important;
+  }
+  .roaster-toolbar-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR FEE MANAGEMENT
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .fee-ledger-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .fee-card-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .fee-title-block .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .fee-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .fee-title-block p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .fee-records-count {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .fee-records-count strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #feeLedgerTable thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell > div > div:first-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell > div > div:last-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td .user-cell > div:first-child[style*="background: #f1f5f9"] {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .sid-receipt-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-roll-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-std-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-feehead-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-mode-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-mode-pill.cash {
+  background: rgba(22, 101, 52, 0.15) !important;
+  border-color: rgba(22, 101, 52, 0.35) !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .sid-mode-pill.upi {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-mode-pill.netbanking,
+[data-theme="dark"] .sid-mode-pill.bank {
+  background: rgba(124, 58, 237, 0.15) !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
+  color: #a78bfa !important;
+}
+[data-theme="dark"] .sid-mode-pill.cheque {
+  background: rgba(180, 83, 9, 0.15) !important;
+  border-color: rgba(180, 83, 9, 0.35) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .sid-btn-primary {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-btn-primary:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .sid-btn-secondary {
+  background: rgba(22, 101, 52, 0.15) !important;
+  border-color: rgba(22, 101, 52, 0.3) !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .sid-btn-secondary:hover {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-controls-wrap > div:last-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong {
+  color: #f8fafc !important;
+}
+
+/* Modals Dark Theme */
+[data-theme="dark"] #collectFeeModal .hrms-modal-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #collectFeeModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] #collectFeeModal .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #collectFeeModal .hrms-modal-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #collectFeeModal .modal-close-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #collectFeeModal label.form-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #collectFeeModal input,
+[data-theme="dark"] #collectFeeModal select {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #collectFeeModal select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #collectFeeModal .collect-cancel-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #studentDueBanner {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] #bannerDueAmount {
+  color: #fca5a5 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .receipt-modal-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #receiptPrintModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] #receiptPrintModal .hrms-modal-header h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #receiptPrintModal .hrms-modal-header span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #receiptPrintModal .modal-close-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #receiptModalBody {
+  background: #0f172a !important;
+  scrollbar-color: #0284c7 #1e293b !important;
+}
+[data-theme="dark"] #receiptModalBody::-webkit-scrollbar-track {
+  background: #0f172a !important;
+  border-left-color: #334155 !important;
+}
+[data-theme="dark"] #receiptModalBody::-webkit-scrollbar-thumb {
+  background: #0284c7 !important;
+  border-color: #0f172a !important;
+}
+[data-theme="dark"] #receiptPrintModal .receipt-modal-card > div.no-print:last-child {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] #receiptPrintModal .btn-hrms-outline {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
 </style>
 
 <!-- Financial KPI Stat Metric Cards -->
