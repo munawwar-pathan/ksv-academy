@@ -807,6 +807,485 @@ require_once __DIR__ . '/../includes/layout-header.php';
     display: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR STUDENT ID
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Top Toolbar */
+  .roaster-toolbar-card {
+    padding: 12px 14px !important;
+    margin-bottom: 14px !important;
+    border-radius: 12px !important;
+  }
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .roaster-toolbar-inner > div:first-child {
+    width: 100% !important;
+  }
+  .roaster-toolbar-inner h3 {
+    font-size: 0.98rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .id-card-actions-wrap {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .id-card-download-group {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .id-card-download-group .roaster-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+  }
+  .id-card-print-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.82rem !important;
+    padding: 0 14px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    margin: 0 !important;
+  }
+  .id-card-print-btn .btn-icon-circle {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* PVC Card Stage */
+  .id-card-stage {
+    gap: 24px !important;
+    padding: 6px 0 24px !important;
+  }
+
+  /* Filter Toolbar Above Directory */
+  .roaster-filter-form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .roaster-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+    padding: 8px 12px !important;
+    border-radius: 9px !important;
+  }
+  .student-id-filter-row {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .student-id-filter-row .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .student-id-filter-row .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    font-size: 0.80rem !important;
+    border-radius: 9px !important;
+    padding: 8px 24px 8px 28px !important;
+  }
+  .student-id-filter-row .roaster-btn.secondary {
+    height: 40px !important;
+    font-size: 0.80rem !important;
+    padding: 0 16px !important;
+    justify-content: center !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+  }
+  .student-id-filter-row .roaster-btn.ghost {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    height: 34px !important;
+    font-size: 0.78rem !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+  }
+  .roaster-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 2px 0 0 0 !important;
+  }
+  .scholars-count-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+  }
+  .roaster-link-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Directory Card Header */
+  .student-id-directory-card {
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+  }
+  .directory-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .directory-title-block {
+    width: 100% !important;
+  }
+  .directory-title-block .card-title {
+    font-size: 0.95rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .directory-title-block p {
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+  .directory-records-count {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Table & Scrolling */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .student-id-table {
+    min-width: 900px !important;
+  }
+  .student-id-table thead th {
+    padding: 9px 8px !important;
+    font-size: 0.68rem !important;
+  }
+  .student-id-table tbody td {
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+  }
+  .student-id-table tbody td .user-cell {
+    gap: 8px !important;
+  }
+  .student-id-table tbody td .user-cell img,
+  .student-id-table tbody td .user-cell .staff-avatar-init {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+  }
+  .sid-btn-action {
+    padding: 4px 8px !important;
+    font-size: 0.70rem !important;
+  }
+
+  /* Pagination Controls */
+  .pagination-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+  .pagination-meta-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .pagination-limit-box {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .pagination-limit-select {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+    height: 30px !important;
+  }
+  .pagination-nav {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 2px 0 !important;
+  }
+  .pagination-btn {
+    min-width: 32px !important;
+    height: 32px !important;
+    font-size: 0.74rem !important;
+    padding: 0 4px !important;
+  }
+  .pagination-controls-wrap > div:last-child {
+    margin-left: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    font-size: 0.74rem !important;
+    text-align: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+/* Mobile Phones (<= 576px) */
+@media (max-width: 576px) {
+  .id-card-stage {
+    gap: 20px !important;
+  }
+  .id-badge-holder {
+    width: 100% !important;
+    max-width: min(326px, 100%) !important;
+  }
+  .pvc-card {
+    width: min(326px, 100%) !important;
+    max-width: 100% !important;
+    border-radius: 16px !important;
+  }
+  .cf-val {
+    word-break: break-word;
+  }
+}
+
+/* Micro Phones (<= 360px) */
+@media (max-width: 360px) {
+  .id-card-download-group {
+    grid-template-columns: 1fr !important;
+  }
+  .student-id-filter-row {
+    grid-template-columns: 1fr !important;
+  }
+  .roaster-toolbar-actions {
+    grid-template-columns: 1fr !important;
+  }
+  .pvc-card {
+    border-radius: 14px !important;
+  }
+  .card-front-header {
+    padding: 8px 12px 34px !important;
+  }
+  .card-front-body {
+    padding: 6px 14px 12px !important;
+  }
+  .card-back-body {
+    padding: 10px 14px 10px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR STUDENT ID
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-toolbar-card h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .card-label-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .student-id-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .directory-card-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .directory-title-block .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .directory-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .directory-title-block p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .directory-records-count {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .directory-records-count strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .student-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .student-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .student-id-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .student-id-table tbody tr.active-student-row {
+  background-color: rgba(2, 132, 199, 0.15) !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:first-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:last-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell .staff-avatar-init {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .sid-std-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-roll-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-qr-chip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(22, 101, 52, 0.15) !important;
+  border-color: rgba(22, 101, 52, 0.3) !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .sid-status-active {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-btn-secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-btn-secondary:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-controls-wrap > div:last-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong {
+  color: #f8fafc !important;
+}
+
 </style>
 
 <!-- ══════════════════════════════════════════════════════
