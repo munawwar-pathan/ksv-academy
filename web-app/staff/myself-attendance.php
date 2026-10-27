@@ -244,10 +244,422 @@ $current_punch = $today_log->fetch();
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
+<style>
+/* ── Myself Attendance Register Styles ── */
+.attendance-register-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  margin-bottom: 30px;
+}
+.attendance-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: #ffffff;
+}
+.attendance-header-info {
+  flex: 1;
+  min-width: 240px;
+}
+.attendance-header-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.attendance-header-title i {
+  color: #0284c7;
+}
+.month-records-badge {
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.attendance-header-subtitle {
+  margin: 3px 0 0;
+  font-size: 0.77rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+.attendance-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.month-nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.month-picker-control {
+  display: inline-flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 3px;
+}
+.month-picker-control a {
+  background: transparent;
+  color: #475569;
+  border: none;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+.month-picker-control a:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.month-picker-control input[type="month"] {
+  border: none;
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #0f172a;
+  padding: 4px 8px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+.today-punch-form {
+  margin: 0;
+  display: inline-flex;
+}
+.today-punch-form button {
+  white-space: nowrap;
+}
 
+/* Table Responsive Details */
+.attendance-table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.attendance-table th {
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.attendance-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.attendance-table .col-num {
+  width: 48px;
+  text-align: center;
+  font-weight: 700;
+  color: #475569;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.attendance-table .col-date {
+  min-width: 120px;
+}
+.attendance-table .col-checkin,
+.attendance-table .col-checkout {
+  min-width: 110px;
+}
+.attendance-table .col-duration {
+  min-width: 100px;
+}
+.attendance-table .col-status {
+  min-width: 130px;
+}
+.attendance-table .col-remarks {
+  min-width: 150px;
+  max-width: 240px;
+  word-break: break-word;
+}
+.attendance-table .today-row {
+  background: #f0f9ff;
+}
+
+/* Table Footer Summary */
+.attendance-footer-summary {
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+.footer-summary-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  .attendance-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .attendance-card-header {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  .attendance-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Mobile Phones (<= 576px) */
+@media (max-width: 576px) {
+  .attendance-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+  .attendance-stat-grid .stat-card {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+  }
+  .attendance-stat-grid .stat-label {
+    font-size: 0.64rem !important;
+  }
+  .attendance-stat-grid .stat-number {
+    font-size: 1.20rem !important;
+  }
+  .attendance-stat-grid .stat-icon-wrapper {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 0.76rem !important;
+  }
+  .attendance-stat-grid .stat-card-footer {
+    font-size: 0.65rem !important;
+    margin-top: 6px !important;
+    padding-top: 5px !important;
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+  }
+
+  .attendance-register-card {
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .attendance-card-header {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .attendance-header-info {
+    min-width: 100%;
+  }
+  .attendance-header-title {
+    font-size: 0.88rem;
+    gap: 6px;
+  }
+  .month-records-badge {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+  }
+  .attendance-header-subtitle {
+    font-size: 0.72rem;
+  }
+  .attendance-header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .month-nav-group {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+  .month-picker-control {
+    flex: 1;
+    justify-content: space-between;
+  }
+  .month-picker-control input[type="month"] {
+    font-size: 0.78rem;
+    padding: 3px 4px;
+    text-align: center;
+  }
+  .current-month-btn {
+    white-space: nowrap;
+    padding: 5px 8px !important;
+    font-size: 0.72rem !important;
+  }
+  .today-punch-form {
+    width: 100%;
+  }
+  .today-punch-form button {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 12px !important;
+    font-size: 0.80rem !important;
+  }
+  .today-punch-form span {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Table Cell Compact Sizes on Mobile */
+  .attendance-table th {
+    padding: 7px 8px;
+    font-size: 0.66rem;
+  }
+  .attendance-table td {
+    padding: 7px 8px;
+    font-size: 0.72rem;
+  }
+  .attendance-table .col-num {
+    width: 32px;
+    font-size: 0.70rem;
+    padding: 7px 4px;
+  }
+  .attendance-table .col-date {
+    min-width: 90px;
+  }
+  .attendance-table .col-checkin,
+  .attendance-table .col-checkout {
+    min-width: 82px;
+  }
+  .attendance-table .col-duration {
+    min-width: 75px;
+  }
+  .attendance-table .col-status {
+    min-width: 96px;
+  }
+  .attendance-table .col-remarks {
+    min-width: 110px;
+    max-width: 150px;
+    font-size: 0.70rem;
+    line-height: 1.3;
+  }
+  .attendance-table .sid-dept-pill,
+  .attendance-table .sid-code-pill,
+  .attendance-table .sid-status-active {
+    font-size: 0.66rem !important;
+    padding: 2px 6px !important;
+    gap: 3px !important;
+  }
+
+  .attendance-footer-summary {
+    padding: 10px 12px;
+    font-size: 0.70rem;
+    gap: 8px;
+  }
+  .footer-summary-stats {
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px 8px;
+  }
+}
+
+/* Micro Phones (<= 340px) */
+@media (max-width: 340px) {
+  .attendance-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .month-picker-control input[type="month"] {
+    font-size: 0.72rem;
+    max-width: 110px;
+  }
+}
+
+/* ── Dark Mode Adaptations ── */
+[data-theme="dark"] .attendance-register-card,
+[data-theme="dark"] .attendance-card-header {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .attendance-header-title {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .month-records-badge {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+[data-theme="dark"] .month-picker-control {
+  background: #0f172a;
+  border-color: #334155;
+}
+[data-theme="dark"] .month-picker-control a {
+  color: #94a3b8;
+}
+[data-theme="dark"] .month-picker-control a:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+[data-theme="dark"] .month-picker-control input[type="month"] {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .attendance-table th {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+[data-theme="dark"] .attendance-table td {
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .attendance-table .col-num {
+  color: #94a3b8;
+}
+[data-theme="dark"] .attendance-date-title {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .attendance-table .today-row {
+  background: rgba(2, 132, 199, 0.15) !important;
+}
+[data-theme="dark"] .attendance-footer-summary {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+</style>
 
 <!-- 4 Sober Monthly KPI Summary Cards -->
-<div class="stat-grid" style="margin-bottom: 22px;">
+<div class="stat-grid attendance-stat-grid" style="margin-bottom: 22px;">
 
   <!-- Present Days -->
   <div class="stat-card green">
@@ -340,60 +752,55 @@ require_once __DIR__ . '/../includes/layout-header.php';
 </div>
 
 <!-- Tabular Form Register Card -->
-<div class="hrms-card" style="border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03); margin-bottom: 30px;">
+<div class="hrms-card attendance-register-card">
   
   <!-- Table Header Bar & Month Controls (Shifted here, replacing filter pills) -->
-  <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: #ffffff;">
-    <div>
-      <h3 style="margin: 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-table-list" style="color: #0284c7;"></i>
+  <div class="attendance-card-header">
+    <div class="attendance-header-info">
+      <h3 class="attendance-header-title">
+        <i class="fa-solid fa-table-list"></i>
         Attendance Register — <?php echo date('F Y', strtotime($start_date)); ?>
-        <span style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
+        <span class="month-records-badge">
           <?php echo count($attendance_calendar); ?> Records
         </span>
       </h3>
-      <p style="margin: 3px 0 0; font-size: 0.77rem; color: #64748b;">
+      <p class="attendance-header-subtitle">
         Detailed daily timeline indicating official check-in, check-out, duration and biometric status.
       </p>
     </div>
 
     <!-- Month Navigation and Quick Actions (Shifted here) -->
-    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-      <div style="display: inline-flex; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 3px;">
-        <a href="<?php echo STAFF_URL; ?>/myself-attendance?month=<?php echo $prev_month; ?>" 
-           class="btn-hrms btn-hrms-sm" 
-           style="background: transparent; color: #475569; border: none; padding: 5px 10px; font-size: 0.78rem;" 
-           title="Previous Month">
-          <i class="fa-solid fa-chevron-left"></i>
-        </a>
-        
-        <form method="GET" action="<?php echo STAFF_URL; ?>/myself-attendance" style="margin: 0; display: inline-flex; align-items: center;">
-          <input type="month" 
-                 name="month" 
-                 value="<?php echo htmlspecialchars($selected_month); ?>" 
-                 onchange="this.form.submit()" 
-                 style="border: none; background: transparent; font-weight: 700; font-size: 0.85rem; color: #0f172a; padding: 4px 8px; cursor: pointer; outline: none; font-family: inherit;">
-        </form>
+    <div class="attendance-header-actions">
+      <div class="month-nav-group">
+        <div class="month-picker-control">
+          <a href="<?php echo STAFF_URL; ?>/myself-attendance?month=<?php echo $prev_month; ?>" 
+             title="Previous Month">
+            <i class="fa-solid fa-chevron-left"></i>
+          </a>
+          
+          <form method="GET" action="<?php echo STAFF_URL; ?>/myself-attendance" style="margin: 0; display: inline-flex; align-items: center;">
+            <input type="month" 
+                   name="month" 
+                   value="<?php echo htmlspecialchars($selected_month); ?>" 
+                   onchange="this.form.submit()">
+          </form>
 
-        <a href="<?php echo STAFF_URL; ?>/myself-attendance?month=<?php echo $next_month; ?>" 
-           class="btn-hrms btn-hrms-sm" 
-           style="background: transparent; color: #475569; border: none; padding: 5px 10px; font-size: 0.78rem;" 
-           title="Next Month">
-          <i class="fa-solid fa-chevron-right"></i>
-        </a>
+          <a href="<?php echo STAFF_URL; ?>/myself-attendance?month=<?php echo $next_month; ?>" 
+             title="Next Month">
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </div>
+
+        <!-- Reset to Current Month Button -->
+        <?php if ($selected_month !== date('Y-m')): ?>
+          <a href="<?php echo STAFF_URL; ?>/myself-attendance" class="btn-hrms btn-hrms-outline btn-hrms-sm current-month-btn">
+            Current Month
+          </a>
+        <?php endif; ?>
       </div>
 
-      <!-- Reset to Current Month Button -->
-      <?php if ($selected_month !== date('Y-m')): ?>
-        <a href="<?php echo STAFF_URL; ?>/myself-attendance" class="btn-hrms btn-hrms-outline btn-hrms-sm" style="font-size: 0.78rem; padding: 6px 12px;">
-          Current Month
-        </a>
-      <?php endif; ?>
-
-
-
       <!-- Today's Punch In/Out button (Shifted here) -->
-      <form method="POST" style="margin: 0; display: inline-flex;">
+      <form method="POST" class="today-punch-form">
         <?php if (!$current_punch || empty($current_punch['check_in_time'])): ?>
           <input type="hidden" name="action" value="punch_in">
           <button type="submit" class="btn-hrms btn-hrms-primary btn-hrms-sm" style="padding: 6px 14px; font-size: 0.8rem; background: #0284c7; border-color: #0284c7; gap: 6px;">
@@ -414,17 +821,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Sober Tabular Form -->
-  <div class="table-responsive">
-    <table class="hrms-table staff-id-table">
+  <div class="table-responsive attendance-table-responsive">
+    <table class="hrms-table staff-id-table attendance-table">
       <thead>
         <tr>
-          <th style="width: 55px; text-align: center;">#</th>
-          <th style="min-width: 130px;">Date &amp; Day</th>
-          <th style="min-width: 120px;">Check-In</th>
-          <th style="min-width: 120px;">Check-Out</th>
-          <th style="min-width: 110px;">Duration</th>
-          <th style="min-width: 140px;">Status</th>
-          <th style="min-width: 180px;">Remarks / Source</th>
+          <th class="col-num">#</th>
+          <th class="col-date">Date &amp; Day</th>
+          <th class="col-checkin">Check-In</th>
+          <th class="col-checkout">Check-Out</th>
+          <th class="col-duration">Duration</th>
+          <th class="col-status">Status</th>
+          <th class="col-remarks">Remarks / Source</th>
         </tr>
       </thead>
       <tbody>
@@ -441,16 +848,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
               $is_active_today = $row['is_today'];
               $row_bg = $is_active_today ? 'background: #f0f9ff;' : '';
             ?>
-            <tr style="<?php echo $row_bg; ?>">
+            <tr class="<?php echo $is_active_today ? 'today-row' : ''; ?>" style="<?php echo $row_bg; ?>">
               
               <!-- Day Number -->
-              <td style="text-align: center; font-weight: 700; color: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+              <td class="col-num" style="text-align: center; font-weight: 700; color: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
                 <?php echo sprintf('%02d', $row['day']); ?>
               </td>
 
               <!-- Date & Day Name -->
-              <td>
-                <div style="font-weight: 700; color: #0f172a; font-size: 0.84rem;">
+              <td class="col-date">
+                <div class="attendance-date-title" style="font-weight: 700; color: #0f172a; font-size: 0.84rem;">
                   <?php echo date('d M Y', strtotime($row['date'])); ?>
                   <?php if ($is_active_today): ?>
                     <span style="background: #0284c7; color: #ffffff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; margin-left: 5px;">Today</span>
@@ -462,7 +869,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- Check-In Time -->
-              <td>
+              <td class="col-checkin">
                 <?php if ($row['check_in'] !== '—'): ?>
                   <span class="sid-dept-pill" style="color: #0f172a; gap: 5px;">
                     <i class="fa-solid fa-arrow-right-to-bracket" style="color: #059669; font-size: 0.7rem;"></i>
@@ -481,7 +888,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- Check-Out Time -->
-              <td>
+              <td class="col-checkout">
                 <?php if ($row['check_out'] !== '—'): ?>
                   <span class="sid-dept-pill" style="color: #0f172a; gap: 5px;">
                     <i class="fa-solid fa-arrow-right-from-bracket" style="color: #d97706; font-size: 0.7rem;"></i>
@@ -500,7 +907,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- Duration -->
-              <td>
+              <td class="col-duration">
                 <?php if ($row['duration'] !== '—'): ?>
                   <span class="sid-code-pill" style="background: #f8fafc; border-color: #e2e8f0; color: #334155;">
                     <i class="fa-regular fa-clock" style="font-size: 0.7rem; color: #64748b;"></i>
@@ -512,7 +919,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- Status Pill Badge -->
-              <td>
+              <td class="col-status">
                 <?php if ($row['status'] === 'Present'): ?>
                   <span class="sid-status-active" style="background: #f0fdf4; border-color: #bbf7d0; color: #166534;">
                     <span style="width: 6px; height: 6px; border-radius: 50%; background: #16a34a; display: inline-block;"></span>
@@ -551,7 +958,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- Remarks -->
-              <td>
+              <td class="col-remarks">
                 <span style="font-size: 0.78rem; color: #475569;">
                   <?php echo htmlspecialchars($row['remarks'] ?? '—'); ?>
                 </span>
@@ -565,17 +972,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Table Footer Summary -->
-  <div style="padding: 12px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 0.78rem; color: #64748b;">
-    <div>
+  <div class="attendance-footer-summary">
+    <div class="footer-summary-left">
       Showing month of <strong><?php echo date('F Y', strtotime($start_date)); ?></strong> (<?php echo $days_in_month; ?> calendar days).
     </div>
-    <div style="display: flex; align-items: center; gap: 14px;">
+    <div class="footer-summary-stats">
       <span><strong style="color: #166534;"><?php echo $total_present + $total_late; ?></strong> Present</span>
-      <span>•</span>
+      <span class="summary-dot">•</span>
       <span><strong style="color: #b91c1c;"><?php echo $total_absent; ?></strong> Absent</span>
-      <span>•</span>
+      <span class="summary-dot">•</span>
       <span><strong style="color: #d97706;"><?php echo $total_leave; ?></strong> Approved Leaves</span>
-      <span>•</span>
+      <span class="summary-dot">•</span>
       <span><strong style="color: #0284c7;"><?php echo $attendance_rate; ?>%</strong> Net Rate</span>
     </div>
   </div>

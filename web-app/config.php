@@ -167,7 +167,13 @@ function require_login($allowed_roles = []) {
             }
 
             $_SESSION['flash_error'] = 'Access denied. You do not have permission for that section.';
-            header('Location: ' . get_dashboard_url($user['role']));
+            $dest = get_dashboard_url($user['role']);
+            $current_uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+            if ($dest === $current_uri || rtrim($dest, '/') === rtrim($current_uri, '/')) {
+                header('Location: ' . HRMS_URL . '/login');
+                exit;
+            }
+            header('Location: ' . $dest);
             exit;
         }
     }
@@ -339,6 +345,11 @@ function require_menu_permission($menu_key, $user = null) {
         if (!has_menu_permission($menu_key, $user)) {
             $_SESSION['flash_error'] = 'Access denied. You do not have permission to access that section.';
             $target = get_dashboard_url('staff', $user['id']);
+            $current_uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+            if ($target === $current_uri || rtrim($target, '/') === rtrim($current_uri, '/')) {
+                header('Location: ' . HRMS_URL . '/login');
+                exit;
+            }
             header('Location: ' . $target);
             exit;
         }

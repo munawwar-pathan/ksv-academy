@@ -116,6 +116,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  max-width: 326px;
 }
 
 /* Simulated Lanyard Clip at top */
@@ -142,7 +144,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 /* Card Physical Dimension (Standard CR80 Ratio 85.6mm x 54mm) */
 .pvc-card {
-  width: 326px;
+  width: 100%;
+  max-width: 326px;
   min-height: 512px;
   background: #ffffff;
   border-radius: 18px;

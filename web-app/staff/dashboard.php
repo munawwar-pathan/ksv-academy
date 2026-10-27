@@ -224,6 +224,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
   flex-wrap: wrap;
   margin-top: 6px;
 }
+.sober-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 /* 4 Sober Stat Cards */
 .sober-stats-grid {
@@ -278,9 +284,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Card Containers & Grids */
 .dashboard-grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: 20px;
   margin-bottom: 20px;
+}
+.dashboard-grid-2 > * {
+  min-width: 0;
+  max-width: 100%;
 }
 .hrms-card {
   border: 1px solid #e2e8f0;
@@ -315,6 +325,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* Digital Punch Area (Simple & Sober) */
+.punch-card-body {
+  padding: 20px;
+  text-align: center;
+}
 .sober-clock-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -348,6 +362,60 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 .sober-punch-cell.check-out {
   border-left: 3px solid #0284c7;
+}
+
+/* Admin Punch Notice */
+.sober-admin-notice {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+
+/* Impersonation Banner */
+.impersonation-notice-bar {
+  background: #0284c7;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Notice & Modal Grids */
+.notice-card-body {
+  padding: 16px 20px;
+}
+.modal-date-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* Table Responsive Details */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+.table-reason-cell {
+  max-width: 160px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 /* Sober Buttons */
@@ -391,15 +459,364 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #94a3b8;
   color: #0f172a;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Smaller Laptops (<= 860px) */
+@media (max-width: 860px) {
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  .sober-hero-card {
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .sober-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .sober-hero-actions .btn-sober-primary,
+  .sober-hero-actions .btn-sober-secondary {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 9px 12px;
+    font-size: 0.80rem;
+    white-space: nowrap;
+  }
+
+  .sober-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .sober-stat-card {
+    padding: 14px 14px;
+    border-radius: 8px;
+  }
+
+  .sober-stat-title {
+    font-size: 0.70rem;
+  }
+
+  .sober-stat-value {
+    font-size: 1.22rem;
+    margin-top: 4px;
+  }
+
+  .sober-stat-footer {
+    font-size: 0.70rem;
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+}
+
+/* Mobile Phones (<= 576px) */
+@media (max-width: 576px) {
+  .sober-hero-card {
+    padding: 14px 14px;
+    border-radius: 10px;
+    gap: 12px;
+  }
+
+  .sober-profile-wrap {
+    gap: 12px;
+    align-items: center;
+  }
+
+  .sober-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  .sober-name {
+    font-size: 1.10rem;
+  }
+
+  .sober-badges-row {
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  .sober-badges-row .sid-code-pill,
+  .sober-badges-row .sid-dept-pill,
+  .sober-badges-row .sid-status-verified {
+    font-size: 0.68rem !important;
+    padding: 2px 7px !important;
+    line-height: 1.3 !important;
+  }
+
+  .sober-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .sober-hero-actions .btn-sober-primary,
+  .sober-hero-actions .btn-sober-secondary {
+    padding: 8px 6px;
+    font-size: 0.76rem;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .sober-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .sober-stat-card {
+    padding: 12px 12px;
+  }
+
+  .sober-stat-title {
+    font-size: 0.67rem;
+    letter-spacing: 0.02em;
+  }
+
+  .sober-stat-title i {
+    font-size: 0.78rem;
+  }
+
+  .sober-stat-value {
+    font-size: 1.15rem;
+  }
+
+  .sober-stat-footer {
+    font-size: 0.68rem;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .hrms-card-header {
+    padding: 11px 14px;
+    gap: 8px;
+  }
+
+  .card-title {
+    font-size: 0.88rem;
+    gap: 6px;
+  }
+
+  .punch-card-body {
+    padding: 14px 12px;
+  }
+
+  .sober-clock-box {
+    padding: 12px 8px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+  }
+
+  .sober-clock-digits {
+    font-size: 1.65rem;
+    letter-spacing: 0.5px;
+  }
+
+  .sober-clock-shift {
+    font-size: 0.72rem !important;
+  }
+
+  .sober-punch-status-grid {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .sober-punch-cell {
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+
+  .sober-punch-label {
+    font-size: 0.66rem !important;
+  }
+
+  .sober-punch-val {
+    font-size: 0.86rem !important;
+    word-break: break-word;
+  }
+
+  .sober-admin-notice {
+    padding: 8px 12px;
+    font-size: 0.72rem;
+    text-align: left;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.35;
+  }
+
+  .sober-admin-notice i {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .hrms-table th {
+    padding: 8px 8px;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .hrms-table td {
+    padding: 8px 8px;
+    font-size: 0.74rem;
+  }
+
+  .table-reason-cell {
+    max-width: 130px;
+    min-width: 80px;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .notice-card-body {
+    padding: 12px 14px;
+  }
+
+  .notice-item {
+    margin-bottom: 12px;
+    padding-left: 10px;
+  }
+
+  .notice-title {
+    font-size: 0.82rem !important;
+  }
+
+  .notice-time {
+    font-size: 0.68rem !important;
+  }
+
+  .notice-desc {
+    font-size: 0.76rem !important;
+  }
+
+  .impersonation-notice-bar {
+    padding: 10px 12px;
+    margin-bottom: 14px;
+    font-size: 0.76rem;
+    gap: 8px;
+  }
+
+  .hrms-modal-card {
+    width: calc(100% - 20px) !important;
+    margin: 12px auto !important;
+  }
+
+  .hrms-modal-header {
+    padding: 12px 16px;
+  }
+
+  .hrms-modal-body {
+    padding: 14px 14px;
+  }
+}
+
+/* Extra Small Phones (<= 380px) */
+@media (max-width: 380px) {
+  .sober-hero-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .sober-hero-actions .btn-sober-primary,
+  .sober-hero-actions .btn-sober-secondary {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .sober-clock-digits {
+    font-size: 1.45rem;
+  }
+
+  .sober-name {
+    font-size: 1.02rem;
+  }
+
+  .modal-date-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* Micro Phones (<= 330px) */
+@media (max-width: 330px) {
+  .sober-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Dark Mode Adaptations ── */
+[data-theme="dark"] .sober-hero-card,
+[data-theme="dark"] .sober-stat-card,
+[data-theme="dark"] .hrms-card,
+[data-theme="dark"] .hrms-card-header {
+  background: #1e293b;
+  border-color: #334155;
+}
+[data-theme="dark"] .sober-name,
+[data-theme="dark"] .sober-stat-value,
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .sober-clock-digits,
+[data-theme="dark"] .notice-title {
+  color: #f1f5f9;
+}
+[data-theme="dark"] .sober-avatar {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+[data-theme="dark"] .sober-clock-box,
+[data-theme="dark"] .sober-punch-cell {
+  background: #0f172a;
+  border-color: #334155;
+}
+[data-theme="dark"] .btn-sober-secondary {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .btn-sober-secondary:hover {
+  background: #334155;
+  color: #ffffff;
+}
+[data-theme="dark"] .sober-stat-footer {
+  border-top-color: #334155;
+}
+[data-theme="dark"] .sober-admin-notice {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
 </style>
 
 <?php if (!empty($_SESSION['impersonated_staff'])): ?>
-  <div style="background: #0284c7; color: #ffffff; padding: 10px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+  <div class="impersonation-notice-bar">
     <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem;">
       <i class="fa-solid fa-circle-user"></i>
       <span>Logged in via Admin Impersonation as Faculty: <strong><?php echo htmlspecialchars($current_user['full_name']); ?></strong> (<?php echo htmlspecialchars($staff_profile['employee_code']); ?>)</span>
     </div>
-    <a href="<?php echo ADMIN_URL; ?>/staff" style="background: #ffffff; color: #0284c7; font-weight: 700; font-size: 0.76rem; padding: 4px 10px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+    <a href="<?php echo ADMIN_URL; ?>/staff" style="background: #ffffff; color: #0284c7; font-weight: 700; font-size: 0.76rem; padding: 4px 10px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
       <i class="fa-solid fa-arrow-left"></i> Return to Admin
     </a>
   </div>
@@ -441,7 +858,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
   </div>
 
-  <div style="display: flex; align-items: center; gap: 8px;">
+  <div class="sober-hero-actions">
     <button type="button" class="btn-sober-primary" onclick="openModal('applyLeaveModal')">
       <i class="fa-solid fa-calendar-plus"></i> Apply for Leave
     </button>
@@ -528,14 +945,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </span>
     </div>
 
-    <div style="padding: 20px; text-align: center;">
+    <div class="punch-card-body">
       
       <!-- Live Clock Display -->
       <div class="sober-clock-box">
         <div id="staffLiveClock" class="sober-clock-digits">
           <?php echo date('h:i:s A'); ?>
         </div>
-        <div style="font-size: 0.80rem; color: #64748b; margin-top: 4px; font-weight: 600;">
+        <div class="sober-clock-shift" style="font-size: 0.80rem; color: #64748b; margin-top: 4px; font-weight: 600;">
           <?php echo date('l, d F Y'); ?> (Shift: 7:30 AM – 3:30 PM)
         </div>
       </div>
@@ -543,22 +960,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <!-- Current Status -->
       <div class="sober-punch-status-grid">
         <div class="sober-punch-cell check-in">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Check-In</div>
-          <div style="font-weight: 700; font-size: 1.05rem; color: <?php echo !empty($current_punch['check_in_time']) ? '#166534' : '#64748b'; ?>; margin-top: 2px;">
+          <div class="sober-punch-label" style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Check-In</div>
+          <div class="sober-punch-val" style="font-weight: 700; font-size: 1.05rem; color: <?php echo !empty($current_punch['check_in_time']) ? '#166534' : '#64748b'; ?>; margin-top: 2px;">
             <?php echo (!empty($current_punch['check_in_time'])) ? format_time($current_punch['check_in_time']) : '— Not Yet —'; ?>
           </div>
         </div>
 
         <div class="sober-punch-cell check-out">
-          <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Check-Out</div>
-          <div style="font-weight: 700; font-size: 1.05rem; color: #0f172a; margin-top: 2px;">
+          <div class="sober-punch-label" style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Check-Out</div>
+          <div class="sober-punch-val" style="font-weight: 700; font-size: 1.05rem; color: #0f172a; margin-top: 2px;">
             <?php echo (!empty($current_punch['check_out_time'])) ? format_time($current_punch['check_out_time']) : '— In Progress —'; ?>
           </div>
         </div>
       </div>
 
       <!-- Managed From Admin Side Notice -->
-      <div style="margin-top: 14px; font-size: 0.78rem; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 7px; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px 16px; border-radius: 8px;">
+      <div class="sober-admin-notice">
         <i class="fa-solid fa-shield-halved" style="color: #0284c7; font-size: 0.85rem;"></i>
         <span>Attendance punches are recorded &amp; managed directly by the Administrator</span>
       </div>
@@ -664,7 +1081,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </span>
                 </td>
                 <td><?php echo format_date($lr['start_date'], 'd M'); ?> – <?php echo format_date($lr['end_date'], 'd M Y'); ?></td>
-                <td><small style="color: #64748b;"><?php echo htmlspecialchars($lr['reason']); ?></small></td>
+                <td class="table-reason-cell"><small style="color: #64748b;"><?php echo htmlspecialchars($lr['reason']); ?></small></td>
                 <td style="text-align: right;">
                   <?php 
                     $stat = $lr['status'];
@@ -691,7 +1108,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-bullhorn"></i> Academy Circulars
       </h2>
     </div>
-    <div class="hrms-card-body" style="padding: 16px 20px;">
+    <div class="hrms-card-body notice-card-body">
       <div class="notice-list">
         <?php foreach ($notices as $not): ?>
           <div class="notice-item" style="border-left: 3px solid #0284c7; padding-left: 12px; margin-bottom: 14px;">
@@ -729,7 +1146,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <option value="Emergency Leave">Emergency Leave</option>
           </select>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+        <div class="modal-date-grid">
           <div class="form-group">
             <label class="form-label" style="font-weight: 600; font-size: 0.80rem; color: #334155; margin-bottom: 4px; display: block;">Start Date</label>
             <input type="date" name="start_date" class="hrms-input" value="<?php echo date('Y-m-d'); ?>" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1;" required>
