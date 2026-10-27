@@ -3730,6 +3730,18 @@ button {
   color: #f1f5f9 !important;
 }
 
+[data-theme="dark"] .btn-hrms-outline {
+  background: #18263e !important;
+  border-color: #263852 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .btn-hrms-outline:hover {
+  background: #24344d !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
 /* Tables in Dark Mode */
 [data-theme="dark"] .dashboard-table th,
 [data-theme="dark"] .hrms-table th,

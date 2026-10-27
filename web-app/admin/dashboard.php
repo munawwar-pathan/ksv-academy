@@ -346,6 +346,307 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #64748b;
   margin-top: 2px;
 }
+
+/* ══════════════════════════════════════════════════════
+   DARK MODE ADAPTATIONS FOR ADMIN DASHBOARD
+   ══════════════════════════════════════════════════════ */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .stat-card-footer {
+  color: #94a3b8 !important;
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .stat-card-footer strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .stat-card-link {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .hrms-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .hrms-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .card-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .card-title i {
+  color: #38bdf8 !important;
+}
+
+/* Header Action Outline Buttons */
+[data-theme="dark"] .btn-hrms-outline {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .btn-hrms-outline:hover {
+  background: #24344d !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+/* Table Search Box */
+[data-theme="dark"] .table-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .table-search-box input {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .table-search-box:focus-within {
+  background: #162032 !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2) !important;
+}
+
+/* Table Headings & Cells */
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: #24344d !important;
+}
+
+[data-theme="dark"] td[colspan] {
+  color: #94a3b8 !important;
+}
+
+/* Faculty Cell & Avatars */
+[data-theme="dark"] .cell-avatar {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .cell-name {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .cell-sub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .cell-sub span[style*="font-family"] {
+  color: #94a3b8 !important;
+}
+
+/* Department & Category Badges */
+[data-theme="dark"] .badge-dept {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .badge-dept.science,
+[data-theme="dark"] .badge-dept.math {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+}
+
+[data-theme="dark"] .badge-dept.admin {
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: #c084fc !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
+}
+
+/* Status Badges */
+[data-theme="dark"] .badge-status.badge-present,
+[data-theme="dark"] .badge-status.badge-approved {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-theme="dark"] .badge-status.badge-absent,
+[data-theme="dark"] .badge-status.badge-rejected {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+[data-theme="dark"] .badge-status.badge-leave {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme="dark"] .badge-live-pulse {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Table Text Overrides */
+[data-theme="dark"] td span[style*="color:#0f172a"],
+[data-theme="dark"] td span[style*="color: #0f172a"],
+[data-theme="dark"] td div[style*="color: #0f172a"],
+[data-theme="dark"] td div[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] td div[style*="color: #475569"],
+[data-theme="dark"] td div[style*="color:#475569"],
+[data-theme="dark"] td div[style*="color: #64748b"],
+[data-theme="dark"] td div[style*="color:#64748b"],
+[data-theme="dark"] td span[style*="color: #475569"],
+[data-theme="dark"] td span[style*="color:#475569"] {
+  color: #94a3b8 !important;
+}
+
+/* Leave Requests Section */
+[data-theme="dark"] .hrms-card-header span[style*="background:#fef3c7"],
+[data-theme="dark"] .hrms-card-header span[style*="background: #fef3c7"] {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme="dark"] .hrms-card-header span[style*="background:#ecfdf5"],
+[data-theme="dark"] .hrms-card-header span[style*="background: #ecfdf5"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-theme="dark"] .hrms-card-body > div[style*="background: #fffbeb"],
+[data-theme="dark"] .hrms-card-body > div[style*="background:#fffbeb"] {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-bottom-color: rgba(245, 158, 11, 0.25) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .hrms-card-body > div[style*="background: #f8fafc"],
+[data-theme="dark"] .hrms-card-body > div[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+  border-bottom-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* Recent Fee Collections Section */
+[data-theme="dark"] .receipt-tag {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .badge-payment {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+}
+
+[data-theme="dark"] td strong[style*="color: #059669"],
+[data-theme="dark"] td strong[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+
+/* Circulars & Notices Section */
+[data-theme="dark"] .notice-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  border-left-color: #0284c7 !important;
+}
+
+[data-theme="dark"] .notice-item:hover {
+  background: #162032 !important;
+  border-color: #475569 !important;
+  border-left-color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .notice-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .notice-time {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-desc {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .notice-item > div[style*="border-top"] {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-item > div[style*="border-top"] i.fa-user {
+  color: #38bdf8 !important;
+}
+
+/* Modals */
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .hrms-modal-header .modal-close-btn {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .hrms-modal-header .modal-close-btn:hover {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .form-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .hrms-input:focus {
+  border-color: #0284c7 !important;
+}
 </style>
 
 <!-- Executive Overview Bar (Simple & Sober) -->
