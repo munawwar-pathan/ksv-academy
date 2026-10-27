@@ -1120,16 +1120,50 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 [data-theme="dark"] .roaster-toolbar-card h3 {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .roaster-toolbar-card h3 span[style*="background: #f0f9ff"],
+[data-theme="dark"] .roaster-toolbar-card h3 span[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .roaster-toolbar-card h3 span[style*="background: #f8fafc"],
+[data-theme="dark"] .roaster-toolbar-card h3 span[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
 [data-theme="dark"] .roaster-search-box {
   background: #0f172a !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .roaster-search-box i {
+  color: #64748b !important;
+}
 [data-theme="dark"] .roaster-search-box input {
   color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .roaster-select-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-select-box i {
+  color: #64748b !important;
 }
 [data-theme="dark"] .roaster-select-box select {
   background: #0f172a !important;
@@ -1140,18 +1174,62 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #0f172a !important;
   color: #f8fafc !important;
 }
+
 [data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
   background: #334155 !important;
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
   border-color: #475569 !important;
+}
+[data-theme="dark"] .roaster-link-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .roaster-link-btn:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
 }
 [data-theme="dark"] .roaster-btn.ghost {
   color: #94a3b8 !important;
+  background: transparent !important;
 }
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  color: #f8fafc !important;
+  background: #334155 !important;
+}
+
 [data-theme="dark"] .scholars-count-badge {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .scholars-count-badge .count-dot {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7) !important;
+}
+
+/* Lanyard & PVC Card Stage */
+[data-theme="dark"] .lanyard-clip {
+  background: linear-gradient(180deg, #475569 0%, #334155 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="dark"] .lanyard-clip::after {
+  background: #0f172a !important;
+}
+[data-theme="dark"] .pvc-card {
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] .pvc-card:hover {
+  box-shadow: 0 28px 55px -12px rgba(2, 132, 199, 0.35), 0 0 0 1px rgba(2, 132, 199, 0.3) !important;
 }
 [data-theme="dark"] .card-label-badge {
   background: #1e293b !important;
@@ -1159,11 +1237,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border: 1px solid #334155 !important;
 }
 
+/* Directory Card */
 [data-theme="dark"] .student-id-directory-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 [data-theme="dark"] .directory-card-header {
+  background: #1e293b !important;
   border-bottom-color: #334155 !important;
 }
 [data-theme="dark"] .directory-title-block .card-title {
@@ -1177,14 +1258,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .directory-title-block p {
   color: #94a3b8 !important;
 }
+[data-theme="dark"] .directory-title-block p strong {
+  color: #f8fafc !important;
+}
 [data-theme="dark"] .directory-records-count {
   border-top-color: #334155 !important;
   color: #94a3b8 !important;
 }
-[data-theme="dark"] .directory-records-count strong {
+[data-theme="dark"] .directory-records-count strong,
+[data-theme="dark"] .directory-records-count strong[style*="color: #0f172a"],
+[data-theme="dark"] .directory-records-count strong[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
 
+/* Directory Table */
 [data-theme="dark"] .student-id-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
@@ -1198,13 +1285,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
 [data-theme="dark"] .student-id-table tbody tr.active-student-row {
-  background-color: rgba(2, 132, 199, 0.15) !important;
+  background-color: rgba(2, 132, 199, 0.12) !important;
 }
-[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:first-child {
+[data-theme="dark"] .student-id-table tbody tr.active-student-row td:first-child {
+  border-left: 3px solid #38bdf8 !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:first-child,
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:last-child {
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#64748b"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #94a3b8"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#94a3b8"] {
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #64748b"] i,
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#64748b"] i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #334155"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#334155"] {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .student-id-table tbody td .staff-avatar-img {
+  border-color: #334155 !important;
 }
 [data-theme="dark"] .student-id-table tbody td .user-cell .staff-avatar-init {
   background: #334155 !important;
@@ -1212,31 +1318,48 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #475569 !important;
 }
 
+/* Badges & Chips */
 [data-theme="dark"] .sid-std-pill {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-std-pill i {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .sid-roll-pill {
   background: rgba(2, 132, 199, 0.15) !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border: 1px solid rgba(225, 29, 72, 0.3) !important;
+  color: #fb7185 !important;
+}
 [data-theme="dark"] .sid-qr-chip {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .sid-qr-chip i {
+  color: #38bdf8 !important;
+}
 [data-theme="dark"] .sid-status-verified {
-  background: rgba(22, 101, 52, 0.15) !important;
-  border-color: rgba(22, 101, 52, 0.3) !important;
+  background: rgba(22, 101, 52, 0.2) !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
   color: #4ade80 !important;
 }
 [data-theme="dark"] .sid-status-active {
-  background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  background: rgba(2, 132, 199, 0.2) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
   color: #38bdf8 !important;
 }
+[data-theme="dark"] .sid-status-active .pulse-dot {
+  background: #38bdf8 !important;
+}
+
+/* Action Buttons */
 [data-theme="dark"] .sid-btn-secondary {
   background: #0f172a !important;
   border-color: #334155 !important;
@@ -1244,25 +1367,47 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sid-btn-secondary:hover {
   background: #334155 !important;
+  border-color: #475569 !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .sid-btn-action[style*="background: #f0f9ff"],
+[data-theme="dark"] .sid-btn-action[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.2) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-btn-action[style*="background: #f0f9ff"]:hover,
+[data-theme="dark"] .sid-btn-action[style*="background:#f0f9ff"]:hover {
+  background: rgba(2, 132, 199, 0.3) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+}
 
+/* Pagination Controls */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
   border-top-color: #334155 !important;
 }
-[data-theme="dark"] .pagination-meta-group span {
+[data-theme="dark"] .pagination-meta-group span,
+[data-theme="dark"] .pagination-meta-group span[style*="color: #475569"],
+[data-theme="dark"] .pagination-meta-group span[style*="color:#475569"] {
   color: #94a3b8 !important;
 }
-[data-theme="dark"] .pagination-meta-group span strong {
+[data-theme="dark"] .pagination-meta-group strong {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .pagination-limit-box label {
+[data-theme="dark"] .pagination-limit-box label,
+[data-theme="dark"] .pagination-limit-box label[style*="color: #64748b"],
+[data-theme="dark"] .pagination-limit-box label[style*="color:#64748b"] {
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .pagination-limit-select {
   background: #0f172a !important;
   border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-select option {
+  background: #0f172a !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .pagination-btn {
@@ -1279,11 +1424,49 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
 }
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+  opacity: 0.5 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
 [data-theme="dark"] .pagination-controls-wrap > div:last-child {
   color: #94a3b8 !important;
 }
-[data-theme="dark"] .pagination-controls-wrap > div:last-child strong {
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong,
+[data-theme="dark"] .pagination-controls-wrap > div:last-child span strong[style*="color: #334155"],
+[data-theme="dark"] .pagination-controls-wrap > div:last-child span strong[style*="color:#334155"] {
   color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-controls-wrap > div:last-child span[style*="color: #cbd5e1"],
+[data-theme="dark"] .pagination-controls-wrap > div:last-child span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
+
+/* Empty States */
+[data-theme="dark"] .student-id-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .student-id-table tbody td div[style*="background:#f1f5f9"] {
+  background: #0f172a !important;
+  color: #64748b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .student-id-table tbody td h4[style*="color: #0f172a"],
+[data-theme="dark"] .student-id-table tbody td h4[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .student-id-table tbody td p[style*="color: #64748b"] strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-card h3[style*="color: #0f172a"],
+[data-theme="dark"] .hrms-card h3[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-card div[style*="color: #cbd5e1"],
+[data-theme="dark"] .hrms-card div[style*="color:#cbd5e1"] {
+  color: #475569 !important;
 }
 
 </style>
