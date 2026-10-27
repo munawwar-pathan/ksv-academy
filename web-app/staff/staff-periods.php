@@ -251,6 +251,83 @@ require_once __DIR__ . '/../includes/layout-header.php';
   white-space: nowrap;
 }
 
+/* ── Time Schedule Column (Sober, Clean & Tabular) ── */
+.col-timing {
+  min-width: 155px;
+  width: 155px;
+}
+.period-time-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.sp-time-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.04);
+}
+.sp-clock-icon {
+  font-size: 0.68rem;
+  color: #0284c7;
+  flex-shrink: 0;
+}
+.sp-time-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap !important;
+}
+.sp-time-val {
+  font-weight: 700;
+}
+.sp-time-sep {
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 0 1px;
+}
+.sp-time-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.69rem;
+  color: #64748b;
+  white-space: nowrap !important;
+  line-height: 1.2;
+}
+.sp-duration-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.63rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.sp-duration-tag i {
+  font-size: 0.58rem;
+  color: #0284c7;
+}
+.sp-slot-name {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
 /* ══════════════════════════════════════════════════════
    MOBILE & RESPONSIVE REFINEMENTS
    ══════════════════════════════════════════════════════ */
@@ -388,7 +465,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     margin: 0 !important;
   }
   .staff-id-table {
-    min-width: 760px;
+    min-width: 860px;
   }
   .staff-id-table thead th {
     padding: 9px 8px !important;
@@ -397,6 +474,27 @@ require_once __DIR__ . '/../includes/layout-header.php';
   .staff-id-table tbody td {
     padding: 9px 8px !important;
     font-size: 0.78rem !important;
+  }
+  .col-timing {
+    min-width: 155px !important;
+    width: 155px !important;
+    white-space: nowrap !important;
+  }
+  .sp-time-badge {
+    font-size: 0.72rem !important;
+    padding: 2.5px 7px !important;
+    border-radius: 5px !important;
+  }
+  .sp-time-sub {
+    font-size: 0.66rem !important;
+    gap: 4px !important;
+  }
+  .sp-duration-tag {
+    font-size: 0.60rem !important;
+    padding: 1px 4px !important;
+  }
+  .sp-slot-name {
+    font-size: 0.65rem !important;
   }
 
   /* Empty state */
@@ -541,6 +639,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(16, 185, 129, 0.15) !important;
   border-color: rgba(16, 185, 129, 0.35) !important;
   color: #34d399 !important;
+}
+[data-theme="dark"] .sp-time-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+  box-shadow: none !important;
+}
+[data-theme="dark"] .sp-clock-icon {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sp-time-sep {
+  color: #64748b !important;
+}
+[data-theme="dark"] .sp-time-sub {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sp-duration-tag {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sp-duration-tag i {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sp-slot-name {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .pagination-controls-wrap {
   background: #0f172a !important;
@@ -742,7 +866,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <tr>
           <th style="width: 40px; text-align: center;">#</th>
           <th style="width: 95px;">Period</th>
-          <th style="width: 145px;">Timing</th>
+          <th class="col-timing" style="width: 155px; min-width: 155px;">Timing</th>
           <th style="min-width: 160px;">Subject Taught</th>
           <th style="width: 140px;">Class &amp; Batch</th>
           <th style="width: 130px;">Day</th>
@@ -786,12 +910,43 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </td>
 
               <!-- 3. Timing Schedule -->
-              <td>
-                <div style="font-weight: 700; color: #0f172a; font-size: 0.82rem; display: flex; align-items: center; gap: 5px; line-height: 1.35;">
-                  <i class="fa-regular fa-clock" style="color: #0284c7; font-size: 0.70rem;"></i>
-                  <span><?php echo htmlspecialchars($p['time_period']); ?></span>
+              <?php
+                $time_raw = $p['time_period'] ?? '';
+                $time_parts = explode('-', $time_raw);
+                $start_time = trim($time_parts[0] ?? '');
+                $end_time = trim($time_parts[1] ?? '');
+
+                $duration_str = '';
+                if ($start_time && $end_time) {
+                    $t1 = strtotime($start_time);
+                    $t2 = strtotime($end_time);
+                    if ($t1 && $t2 && $t2 > $t1) {
+                        $mins = round(($t2 - $t1) / 60);
+                        $duration_str = $mins . ' Mins';
+                    }
+                }
+              ?>
+              <td class="col-timing">
+                <div class="period-time-cell">
+                  <div class="sp-time-badge">
+                    <i class="fa-regular fa-clock sp-clock-icon"></i>
+                    <span class="sp-time-range">
+                      <?php if (!empty($start_time) && !empty($end_time)): ?>
+                        <span class="sp-time-val"><?php echo htmlspecialchars($start_time); ?></span>
+                        <span class="sp-time-sep">&ndash;</span>
+                        <span class="sp-time-val"><?php echo htmlspecialchars($end_time); ?></span>
+                      <?php else: ?>
+                        <span class="sp-time-val"><?php echo htmlspecialchars($time_raw); ?></span>
+                      <?php endif; ?>
+                    </span>
+                  </div>
+                  <div class="sp-time-sub">
+                    <?php if (!empty($duration_str)): ?>
+                      <span class="sp-duration-tag"><i class="fa-solid fa-stopwatch"></i> <?php echo $duration_str; ?></span>
+                    <?php endif; ?>
+                    <span class="sp-slot-name">Daily Academic Slot</span>
+                  </div>
                 </div>
-                <div style="font-size: 0.71rem; color: #64748b; margin-top: 2px;">Daily Academic Slot</div>
               </td>
 
               <!-- 4. Subject Taught -->
