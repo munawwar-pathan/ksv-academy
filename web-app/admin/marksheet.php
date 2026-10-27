@@ -1983,6 +1983,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
   }
 }
 
+/* ── Grade Pill Badges Base Styles ── */
+.grade-pill-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 11px;
+}
+.grade-pill-badge.pass {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.grade-pill-badge.fail {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR MARKSHEET
    ══════════════════════════════════════════════════════════════════════ */
@@ -1997,17 +2014,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 
+/* Top Scholar Control Card */
 [data-theme="dark"] .scholar-control-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 [data-theme="dark"] .current-scholar-meta h4 {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .current-scholar-meta .meta-pills span {
+[data-theme="dark"] .current-scholar-meta .meta-pills span,
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color: #64748b"],
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color:#64748b"] {
   color: #94a3b8 !important;
 }
-[data-theme="dark"] .marksheet-exam-form label {
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color: #cbd5e1"],
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
+[data-theme="dark"] .roll-badge-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .marksheet-exam-form label,
+[data-theme="dark"] .marksheet-exam-form label[style*="color: #475569"],
+[data-theme="dark"] .marksheet-exam-form label[style*="color:#475569"] {
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .marksheet-exam-select {
@@ -2015,17 +2047,38 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #334155 !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .marksheet-exam-select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .marksheet-print-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+}
+[data-theme="dark"] .marksheet-print-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45) !important;
+}
 
+/* Official Report Card Container */
 [data-theme="dark"] .report-card-container {
   background: #1e293b !important;
   border-color: #0284c7 !important;
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(2, 132, 199, 0.3) !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(2, 132, 199, 0.35) !important;
+}
+[data-theme="dark"] .report-school-title {
+  color: #f8fafc !important;
 }
 [data-theme="dark"] .report-school-tagline {
   color: #cbd5e1 !important;
 }
-[data-theme="dark"] .report-school-subinfo {
+[data-theme="dark"] .report-school-subinfo,
+[data-theme="dark"] .report-school-subinfo[style*="color: #64748b"],
+[data-theme="dark"] .report-school-subinfo[style*="color:#64748b"] {
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .verification-qr-wrap > div {
+  border-color: #334155 !important;
 }
 [data-theme="dark"] .report-card-container .report-details-grid {
   background: #0f172a !important;
@@ -2037,6 +2090,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .detail-item span {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .detail-item span[style*="color: #0f172a"],
+[data-theme="dark"] .detail-item span[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .detail-item span[style*="color: #007cbd"],
+[data-theme="dark"] .detail-item span[style*="color:#007cbd"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .detail-item span[style*="color: #475569"],
+[data-theme="dark"] .detail-item span[style*="color:#475569"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .detail-item span span[style*="color: #64748b"],
+[data-theme="dark"] .detail-item span span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .detail-item span[style*="background: #e0f2fe"],
+[data-theme="dark"] .detail-item span[style*="background:#e0f2fe"] {
+  background: rgba(2, 132, 199, 0.2) !important;
+  border: 1px solid rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+
+/* Statement of Marks Table */
 [data-theme="dark"] .report-table {
   border-color: #334155 !important;
 }
@@ -2049,6 +2126,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #0f172a !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .report-table tbody td[style*="color: #1e293b"],
+[data-theme="dark"] .report-table tbody td[style*="color:#1e293b"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .report-table tbody td[style*="color: #64748b"],
+[data-theme="dark"] .report-table tbody td[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .report-table tbody td[style*="color: #059669"],
+[data-theme="dark"] .report-table tbody td[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .report-table tbody td[style*="color: #dc2626"],
+[data-theme="dark"] .report-table tbody td[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
 [data-theme="dark"] .report-table tbody tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.02) !important;
 }
@@ -2057,47 +2150,95 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .report-table tbody tr:last-child {
   background: #0f172a !important;
+  border-top-color: #0284c7 !important;
 }
 [data-theme="dark"] .report-table tbody tr:last-child td {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .report-card-container .summary-kpi-card.percentage {
-  background: rgba(22, 101, 52, 0.15) !important;
-  border-color: rgba(22, 101, 52, 0.35) !important;
+[data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #334155"],
+[data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#334155"] {
+  color: #cbd5e1 !important;
 }
-[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-val {
-  color: #4ade80 !important;
+[data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #007cbd"],
+[data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#007cbd"] {
+  color: #38bdf8 !important;
 }
-[data-theme="dark"] .report-card-container .summary-kpi-card.grade {
-  background: rgba(30, 64, 175, 0.15) !important;
-  border-color: rgba(30, 64, 175, 0.35) !important;
+[data-theme="dark"] .grade-pill-badge.pass {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
 }
-[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-val {
-  color: #60a5fa !important;
-}
-[data-theme="dark"] .report-card-container .summary-kpi-card.pass {
-  background: rgba(22, 101, 52, 0.15) !important;
-  border-color: rgba(22, 101, 52, 0.35) !important;
-}
-[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-val {
-  color: #4ade80 !important;
-}
-[data-theme="dark"] .report-card-container .summary-kpi-card.fail {
-  background: rgba(185, 28, 28, 0.15) !important;
-  border-color: rgba(185, 28, 28, 0.35) !important;
-}
-[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-val {
+[data-theme="dark"] .grade-pill-badge.fail {
+  background: rgba(220, 38, 38, 0.2) !important;
   color: #f87171 !important;
 }
+
+/* Performance KPI Badges */
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage {
+  background: rgba(22, 101, 52, 0.18) !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-title,
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-title[style*="color: #15803d"] {
+  color: #86efac !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-val,
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-val[style*="color: #166534"] {
+  color: #4ade80 !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade {
+  background: rgba(30, 64, 175, 0.18) !important;
+  border-color: rgba(30, 64, 175, 0.4) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-title,
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-title[style*="color: #1d4ed8"] {
+  color: #93c5fd !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-val,
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-val[style*="color: #1e40af"] {
+  color: #60a5fa !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass {
+  background: rgba(22, 101, 52, 0.18) !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-title,
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-title[style*="color: #15803d"] {
+  color: #86efac !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-val,
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-val[style*="color: #166534"] {
+  color: #4ade80 !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail {
+  background: rgba(185, 28, 28, 0.18) !important;
+  border-color: rgba(185, 28, 28, 0.4) !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-title,
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-title[style*="color: #991b1b"] {
+  color: #fca5a5 !important;
+}
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-val,
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-val[style*="color: #b91c1c"] {
+  color: #f87171 !important;
+}
+
+/* Remarks & Signatures */
 [data-theme="dark"] .report-remarks-card {
   background: #0f172a !important;
   border-color: #0284c7 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .report-remarks-card i {
+  color: #0284c7 !important;
+}
 [data-theme="dark"] .report-remarks-card strong {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .report-remarks-card div div {
+[data-theme="dark"] .report-remarks-card div div,
+[data-theme="dark"] .report-remarks-card div div[style*="color: #475569"] {
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .report-signatures-row {
@@ -2106,11 +2247,29 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sig-line {
   border-top-color: #475569 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sig-crest-circle {
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+[data-theme="dark"] .sig-crest-circle span[style*="color: #64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sig-principal-name {
+  color: #38bdf8 !important;
 }
 
+/* Empty State Card */
 [data-theme="dark"] .report-empty-state-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+}
+[data-theme="dark"] .report-empty-state-card div[style*="background: #e0f2fe"],
+[data-theme="dark"] .report-empty-state-card div[style*="background:#e0f2fe"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .report-empty-state-card h3 {
   color: #f8fafc !important;
@@ -2118,17 +2277,41 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .report-empty-state-card p {
   color: #94a3b8 !important;
 }
+[data-theme="dark"] .report-empty-state-card p strong {
+  color: #f8fafc !important;
+}
 
+/* Filter Toolbar */
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 [data-theme="dark"] .roaster-search-box {
   background: #0f172a !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .roaster-search-box i {
+  color: #64748b !important;
+}
 [data-theme="dark"] .roaster-search-box input {
   color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-select-box i {
+  color: #64748b !important;
 }
 [data-theme="dark"] .roaster-select-box select {
   background: #0f172a !important;
@@ -2140,24 +2323,44 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 [data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
   background: #334155 !important;
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
   border-color: #475569 !important;
 }
 [data-theme="dark"] .roaster-btn.ghost {
   color: #94a3b8 !important;
+  background: transparent !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  color: #f8fafc !important;
+  background: #334155 !important;
 }
 [data-theme="dark"] .scholars-count-badge {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .scholars-count-badge .count-dot {
+  background: #10b981 !important;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7) !important;
+}
 
+/* Scholar Academic Directory Card */
 [data-theme="dark"] .marksheet-directory-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 [data-theme="dark"] .marksheet-card-header {
+  background: #1e293b !important;
   border-bottom-color: #334155 !important;
 }
 [data-theme="dark"] .marksheet-title-block .card-title {
@@ -2171,14 +2374,33 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .marksheet-title-block p {
   color: #94a3b8 !important;
 }
+[data-theme="dark"] .marksheet-title-block p strong {
+  color: #f8fafc !important;
+}
 [data-theme="dark"] .marksheet-records-count {
   border-top-color: #334155 !important;
   color: #94a3b8 !important;
 }
-[data-theme="dark"] .marksheet-records-count strong {
+[data-theme="dark"] .marksheet-records-count strong,
+[data-theme="dark"] .marksheet-records-count strong[style*="color: #0f172a"],
+[data-theme="dark"] .marksheet-records-count strong[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .ms-generate-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ms-generate-btn:hover {
+  background: #334155 !important;
+  border-color: #059669 !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .ms-generate-btn i {
+  color: #34d399 !important;
+}
 
+/* Directory Table */
 [data-theme="dark"] .marksheet-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
@@ -2192,13 +2414,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
 [data-theme="dark"] .marksheet-table tbody tr.active-student-row {
-  background-color: rgba(2, 132, 199, 0.15) !important;
+  background-color: rgba(2, 132, 199, 0.12) !important;
 }
-[data-theme="dark"] .marksheet-table tbody td .user-cell > div > div:first-child {
+[data-theme="dark"] .marksheet-table tbody tr.active-student-row td:first-child {
+  border-left: 3px solid #38bdf8 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td .user-cell > div > div:first-child,
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .marksheet-table tbody td .user-cell > div > div:last-child {
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#64748b"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #94a3b8"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#94a3b8"] {
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #64748b"] i,
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#64748b"] i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #334155"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#334155"] {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td .staff-avatar-img {
+  border-color: #334155 !important;
 }
 [data-theme="dark"] .marksheet-table tbody td .user-cell .staff-avatar-init {
   background: #334155 !important;
@@ -2206,21 +2447,80 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #475569 !important;
 }
 
+/* Badges & Chips */
 [data-theme="dark"] .ms-std-pill {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ms-std-pill i {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .ms-roll-pill {
   background: rgba(2, 132, 199, 0.15) !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
+[data-theme="dark"] .ms-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border: 1px solid rgba(225, 29, 72, 0.3) !important;
+  color: #fb7185 !important;
+}
 [data-theme="dark"] .ms-exam-chip {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .ms-exam-chip i {
+  color: #38bdf8 !important;
+}
+
+/* Performance Badges */
+[data-theme="dark"] .ms-perf-badge.pass {
+  background: rgba(22, 101, 52, 0.2) !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .ms-perf-badge.fail {
+  background: rgba(220, 38, 38, 0.2) !important;
+  border-color: rgba(220, 38, 38, 0.4) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .ms-perf-badge.none {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #166534"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#166534"] {
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #991b1b"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#991b1b"] {
+  color: #f87171 !important;
+}
+
+/* Status Badges */
+[data-theme="dark"] .ms-status-active {
+  background: rgba(2, 132, 199, 0.2) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .ms-status-active .pulse-dot {
+  background: #38bdf8 !important;
+}
+[data-theme="dark"] .ms-status-verified {
+  background: rgba(22, 101, 52, 0.2) !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .ms-status-pending {
+  background: rgba(202, 138, 4, 0.18) !important;
+  border-color: rgba(202, 138, 4, 0.4) !important;
+  color: #facc15 !important;
+}
+
+/* Action Buttons */
 [data-theme="dark"] .ms-btn-secondary {
   background: #0f172a !important;
   border-color: #334155 !important;
@@ -2228,25 +2528,53 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .ms-btn-secondary:hover {
   background: #334155 !important;
+  border-color: #475569 !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .ms-btn-secondary i[style*="color: #0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .ms-btn-secondary i[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .ms-btn-action[style*="background: #f0f9ff"],
+[data-theme="dark"] .ms-btn-action[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.2) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .ms-btn-action[style*="background: #f0f9ff"]:hover,
+[data-theme="dark"] .ms-btn-action[style*="background:#f0f9ff"]:hover {
+  background: rgba(2, 132, 199, 0.3) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+}
 
+/* Pagination Controls */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
   border-top-color: #334155 !important;
 }
-[data-theme="dark"] .pagination-meta-group span {
+[data-theme="dark"] .pagination-meta-group span,
+[data-theme="dark"] .pagination-meta-group span[style*="color: #475569"],
+[data-theme="dark"] .pagination-meta-group span[style*="color:#475569"] {
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .pagination-meta-group span strong {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .pagination-limit-box label {
+[data-theme="dark"] .pagination-limit-box label,
+[data-theme="dark"] .pagination-limit-box label[style*="color: #64748b"],
+[data-theme="dark"] .pagination-limit-box label[style*="color:#64748b"] {
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .pagination-limit-select {
   background: #0f172a !important;
   border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-select option {
+  background: #0f172a !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .pagination-btn {
@@ -2263,47 +2591,182 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
 }
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+  opacity: 0.5 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
 [data-theme="dark"] .pagination-summary-group,
 [data-theme="dark"] .pagination-controls-wrap > div:last-child {
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .pagination-summary-group strong,
-[data-theme="dark"] .pagination-controls-wrap > div:last-child strong {
+[data-theme="dark"] .pagination-controls-wrap > div:last-child strong,
+[data-theme="dark"] .pagination-summary-group span strong[style*="color: #334155"],
+[data-theme="dark"] .pagination-summary-group span strong[style*="color:#334155"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-summary-group span strong[style*="color: #0284c7"],
+[data-theme="dark"] .pagination-summary-group span strong[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pagination-summary-group span[style*="color: #cbd5e1"],
+[data-theme="dark"] .pagination-summary-group span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
+
+/* Empty States in Table */
+[data-theme="dark"] .marksheet-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="background:#f1f5f9"] {
+  background: #0f172a !important;
+  color: #64748b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .marksheet-table tbody td h4[style*="color: #0f172a"],
+[data-theme="dark"] .marksheet-table tbody td h4[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .marksheet-table tbody td p[style*="color: #64748b"] strong {
   color: #f8fafc !important;
 }
 
+/* Modal: Create Marksheet Form */
 [data-theme="dark"] #createMarksheetModal .hrms-modal-content {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content > div:first-child {
+  border-bottom-color: #334155 !important;
 }
 [data-theme="dark"] #createMarksheetModal h3 {
   color: #f8fafc !important;
 }
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content button[onclick*="closeCreateMarksheetModal"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+  transition: all 0.2s ease !important;
+}
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content button[onclick*="closeCreateMarksheetModal"]:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
 [data-theme="dark"] #createMarksheetModal label {
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] #createMarksheetModal label[style*="color: #0f172a"],
+[data-theme="dark"] #createMarksheetModal label[style*="color:#0f172a"] {
+  color: #f8fafc !important;
 }
 [data-theme="dark"] #createMarksheetModal .hrms-input {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] #createMarksheetModal .hrms-input:focus {
+  background: #18263e !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] #createMarksheetModal select.hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  cursor: pointer;
+  opacity: 0.85;
+}
+[data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+[data-theme="dark"] #createMarksheetModal button[onclick*="addSubjectRow"] {
+  background: rgba(22, 101, 52, 0.2) !important;
+  border: 1px solid rgba(22, 101, 52, 0.45) !important;
+  color: #4ade80 !important;
+  transition: all 0.2s ease !important;
+}
+[data-theme="dark"] #createMarksheetModal button[onclick*="addSubjectRow"]:hover {
+  background: rgba(22, 101, 52, 0.35) !important;
+  border-color: #4ade80 !important;
+  color: #86efac !important;
+}
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable thead tr {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable th {
   background: #0f172a !important;
   color: #94a3b8 !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable tbody tr {
+  border-bottom-color: #334155 !important;
+}
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable td {
   border-color: #334155 !important;
 }
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable .sub-obt-input {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable button[onclick*="removeSubjectRow"] {
+  color: #f87171 !important;
+  transition: color 0.15s ease;
+}
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable button[onclick*="removeSubjectRow"]:hover {
+  color: #ef4444 !important;
+}
+
+/* Modal Calculation Ribbon */
 [data-theme="dark"] #createMarksheetModal .modal-calc-ribbon {
   background: #0f172a !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] #createMarksheetModal .modal-calc-ribbon span[style*="color: #0369a1"],
+[data-theme="dark"] #createMarksheetModal .modal-calc-ribbon span[style*="color:#0369a1"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #createMarksheetModal .modal-calc-ribbon #calcTotalObtained {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #createMarksheetModal .modal-calc-ribbon #calcTotalMax {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #createMarksheetModal .modal-calc-ribbon #calcPercentage {
+  color: #38bdf8 !important;
+}
+
+/* Modal Action Footer */
 [data-theme="dark"] #createMarksheetModal .action-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+  transition: all 0.2s ease !important;
+}
+[data-theme="dark"] #createMarksheetModal .action-btn:hover {
   background: #334155 !important;
   border-color: #475569 !important;
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #createMarksheetModal .action-primary-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
+}
+[data-theme="dark"] #createMarksheetModal .action-primary-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5) !important;
 }
 </style>
 
