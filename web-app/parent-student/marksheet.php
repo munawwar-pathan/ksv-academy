@@ -644,6 +644,420 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-radius: 14px;
   white-space: nowrap;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR STUDENT MARKSHEET
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Multi-Child Selector */
+  .child-selector-banner {
+    padding: 10px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+  .child-selector-banner > div {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .child-selector-banner .roaster-btn {
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Scholar Control Bar */
+  .scholar-control-card {
+    padding: 12px 14px !important;
+    margin-bottom: 18px !important;
+    border-radius: 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .current-scholar-pill {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .scholar-mini-avatar,
+  .scholar-mini-init {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 0.95rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .current-scholar-meta h4 {
+    font-size: 0.95rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .current-scholar-meta .meta-pills {
+    font-size: 0.72rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .marksheet-top-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .marksheet-exam-form {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+
+  .marksheet-exam-select {
+    width: 100% !important;
+    height: 38px !important;
+    box-sizing: border-box !important;
+    font-size: 0.82rem !important;
+    border-radius: 8px !important;
+  }
+
+  .marksheet-action-buttons-wrap {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .marksheet-download-btn,
+  .marksheet-print-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Report Card Canvas Viewport Scaling */
+  .report-card-container {
+    padding: 16px 14px !important;
+    margin-bottom: 22px !important;
+    border-radius: 12px !important;
+    border-width: 1.5px !important;
+    box-sizing: border-box !important;
+  }
+
+  .report-header-banner {
+    padding-bottom: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .report-brand-row {
+    gap: 10px !important;
+    align-items: center !important;
+  }
+
+  .school-logo-img {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .verification-qr-wrap img {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .report-school-title {
+    font-size: 1.15rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .report-school-tagline {
+    font-size: 0.68rem !important;
+  }
+
+  .report-school-subinfo {
+    font-size: 0.64rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .report-session-ribbon {
+    padding: 4px 14px !important;
+    font-size: 0.68rem !important;
+    margin-top: 8px !important;
+    letter-spacing: 0.5px !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+    text-align: center !important;
+  }
+
+  .report-card-container .report-details-grid {
+    padding: 10px 12px !important;
+    margin-bottom: 12px !important;
+    gap: 8px 14px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .detail-item strong {
+    min-width: 85px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .detail-item span {
+    font-size: 0.76rem !important;
+  }
+
+  /* Responsive Statement of Marks Table */
+  .report-table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 10px 0 14px !important;
+  }
+
+  .report-card-container .report-table {
+    min-width: 480px !important;
+    margin: 0 !important;
+  }
+
+  .report-card-container .report-table th,
+  .report-card-container .report-table td {
+    padding: 7px 8px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .report-card-container .report-summary-kpi-row {
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .report-card-container .summary-kpi-card {
+    padding: 8px 6px !important;
+    border-radius: 8px !important;
+  }
+
+  .kpi-title {
+    font-size: 0.64rem !important;
+  }
+
+  .kpi-val {
+    font-size: 1.15rem !important;
+  }
+
+  .report-card-container .report-remarks-card {
+    padding: 10px 12px !important;
+    font-size: 0.76rem !important;
+    margin-bottom: 16px !important;
+  }
+
+  .report-card-container .report-signatures-row {
+    padding-top: 14px !important;
+    font-size: 0.70rem !important;
+  }
+
+  .sig-block {
+    width: auto !important;
+    flex: 1 !important;
+    max-width: 120px !important;
+  }
+
+  .sig-block .sig-spacer {
+    height: 20px !important;
+  }
+
+  .sig-block .sig-crest-circle {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 7px !important;
+  }
+
+  .sig-line {
+    font-size: 0.68rem !important;
+    padding-top: 2px !important;
+  }
+
+  .sig-principal-name {
+    font-size: 0.80rem !important;
+    height: 20px !important;
+  }
+
+  /* Evaluation History Ledger Card */
+  .periods-card {
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .periods-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .periods-card-header > span {
+    align-self: flex-start !important;
+  }
+
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: 0 !important;
+  }
+
+  .staff-id-table {
+    min-width: 620px !important;
+  }
+
+  .staff-id-table thead th {
+    padding: 8px 8px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .staff-id-table tbody td {
+    padding: 8px 8px !important;
+    font-size: 0.76rem !important;
+  }
+}
+
+/* Micro Devices (<= 576px) */
+@media (max-width: 576px) {
+  .report-card-container .report-details-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .report-card-container .report-summary-kpi-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .marksheet-action-buttons-wrap {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Micro Devices (<= 360px) */
+@media (max-width: 360px) {
+  .report-brand-row {
+    flex-direction: column !important;
+    text-align: center !important;
+  }
+
+  .report-brand-row > div {
+    width: 100% !important;
+    text-align: center !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR STUDENT MARKSHEET
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .child-selector-banner {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .child-selector-banner > span {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .scholar-control-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .current-scholar-meta h4 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .marksheet-exam-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-header h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-card-header p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-header > span {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-card-header > span strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr:hover td {
+  background: #192339 !important;
+}
+
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td {
+  background: rgba(2, 132, 199, 0.12) !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td strong[style*="color: #0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -705,15 +1119,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
   <!-- Right: Exam Selector & Action Buttons -->
-  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+  <div class="marksheet-top-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
     
     <?php if (!empty($student_marksheets)): ?>
-      <form method="GET" action="<?php echo PARENT_URL; ?>/marksheet" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+      <form method="GET" action="<?php echo PARENT_URL; ?>/marksheet" class="marksheet-exam-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
         <input type="hidden" name="student_id" value="<?php echo $selected_student_id; ?>">
         <label style="font-size: 13px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;">
           <i class="fa-solid fa-book-bookmark" style="color: #0092df;"></i> <span>Exam:</span>
         </label>
-        <select name="marksheet_id" onchange="this.form.submit()" class="hrms-input" style="padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; border: 1.5px solid #cbd5e1; background: #f8fafc;">
+        <select name="marksheet_id" onchange="this.form.submit()" class="hrms-input marksheet-exam-select" style="padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; border: 1.5px solid #cbd5e1; background: #f8fafc;">
           <?php foreach ($student_marksheets as $m_item): ?>
             <option value="<?php echo $m_item['id']; ?>" <?php echo ($active_marksheet && $m_item['id'] == $active_marksheet['id']) ? 'selected' : ''; ?>>
               <?php echo htmlspecialchars($m_item['exam_name']); ?> (<?php echo $m_item['percentage']; ?>% • <?php echo $m_item['overall_grade']; ?>)
@@ -724,17 +1138,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <?php if ($active_marksheet): ?>
-      <!-- Download PNG -->
-      <button type="button" onclick="downloadMarksheetPNG();" class="roaster-btn secondary" style="gap: 6px;" title="Download Marksheet as High-Resolution PNG">
-        <i class="fa-solid fa-download"></i>
-        <span>Download (PNG)</span>
-      </button>
+      <div class="marksheet-action-buttons-wrap" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <!-- Download PNG -->
+        <button type="button" onclick="downloadMarksheetPNG();" class="roaster-btn secondary marksheet-download-btn" style="gap: 6px;" title="Download Marksheet as High-Resolution PNG">
+          <i class="fa-solid fa-download"></i>
+          <span>Download (PNG)</span>
+        </button>
 
-      <!-- Print Report Card -->
-      <button type="button" onclick="window.print();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official A4 Statement of Marks">
-        <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
-        <span>Print Report Card</span>
-      </button>
+        <!-- Print Report Card -->
+        <button type="button" onclick="window.print();" class="roaster-add-btn marksheet-print-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official A4 Statement of Marks">
+          <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
+          <span>Print Report Card</span>
+        </button>
+      </div>
     <?php endif; ?>
 
   </div>
@@ -851,7 +1267,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Statement of Marks Table -->
-    <div style="position: relative; z-index: 1;">
+    <div class="report-table-responsive" style="position: relative; z-index: 1;">
       <table class="report-table">
         <thead>
           <tr>
@@ -986,7 +1402,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </span>
   </div>
 
-  <div style="overflow-x: auto;">
+  <div class="table-responsive" style="overflow-x: auto;">
     <table class="staff-id-table">
       <thead>
         <tr>
