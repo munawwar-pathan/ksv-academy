@@ -1105,261 +1105,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   DARK THEME COMPREHENSIVE ADAPTATIONS FOR ADMIN STUDENT ROASTER
-   ══════════════════════════════════════════════════════════════════════ */
-[data-theme="dark"] .stat-card {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .stat-label {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .stat-number {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .stat-card-footer {
-  border-top-color: #334155 !important;
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .stat-card-footer span strong {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .stat-card-progress {
-  background: #334155 !important;
-}
 
-[data-theme="dark"] .roaster-toolbar-card {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .roaster-search-box {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .roaster-search-box input {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .roaster-select-box select {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .roaster-select-box select option {
-  background: #0f172a !important;
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .roaster-btn.secondary {
-  background: #334155 !important;
-  color: #f1f5f9 !important;
-  border-color: #475569 !important;
-}
-[data-theme="dark"] .roaster-btn.ghost {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .scholars-count-badge {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
-}
-
-[data-theme="dark"] .hrms-card {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-card-header {
-  border-bottom-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-card-header h3.card-title {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .hrms-card-header h3.card-title span {
-  background: #0f172a !important;
-  color: #cbd5e1 !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-card-header p {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .hrms-card-header > div:last-child {
-  border-top-color: #334155 !important;
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .hrms-card-header > div:last-child strong {
-  color: #f8fafc !important;
-}
-
-[data-theme="dark"] .student-id-table thead th {
-  background: #0f172a !important;
-  color: #94a3b8 !important;
-  border-bottom-color: #334155 !important;
-}
-[data-theme="dark"] .student-id-table tbody td {
-  border-bottom-color: #334155 !important;
-  color: #cbd5e1 !important;
-}
-[data-theme="dark"] .student-id-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
-}
-[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:first-child {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:last-child {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .student-id-table tbody td .user-cell > div:first-child[style*="background: #f1f5f9"] {
-  background: #334155 !important;
-  color: #f8fafc !important;
-  border-color: #475569 !important;
-}
-[data-theme="dark"] .student-id-table tbody td div[style*="color: #334155"] {
-  color: #e2e8f0 !important;
-}
-[data-theme="dark"] .student-id-table tbody td div[style*="color: #0f172a"] {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .student-id-table tbody td div[style*="color: #64748b"] {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .student-id-table tbody td div[style*="background: #e2e8f0"] {
-  background: #334155 !important;
-}
-
-[data-theme="dark"] .sid-std-pill {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
-}
-[data-theme="dark"] .sid-roll-pill {
-  background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
-  color: #38bdf8 !important;
-}
-[data-theme="dark"] .sid-docs-chip {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
-}
-[data-theme="dark"] .sid-docs-chip:hover {
-  background: #334155 !important;
-  border-color: #0284c7 !important;
-  color: #38bdf8 !important;
-}
-[data-theme="dark"] .sid-action-btn {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
-}
-[data-theme="dark"] .btn-student-login {
-  background: rgba(21, 128, 61, 0.15) !important;
-  border-color: rgba(21, 128, 61, 0.35) !important;
-  color: #4ade80 !important;
-}
-[data-theme="dark"] .btn-student-pwd {
-  background: rgba(202, 138, 4, 0.15) !important;
-  border-color: rgba(202, 138, 4, 0.35) !important;
-  color: #facc15 !important;
-}
-
-[data-theme="dark"] .pagination-controls-wrap {
-  background: #1e293b !important;
-  border-top-color: #334155 !important;
-}
-[data-theme="dark"] .pagination-meta-group span {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .pagination-meta-group span strong {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .pagination-limit-box label {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .pagination-limit-select {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .pagination-btn {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
-}
-[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
-  background: #334155 !important;
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .pagination-btn.active {
-  background: var(--hrms-primary, #0092df) !important;
-  border-color: var(--hrms-primary, #0092df) !important;
-  color: #ffffff !important;
-}
-[data-theme="dark"] .roaster-table-legend {
-  border-top-color: #334155 !important;
-}
-[data-theme="dark"] .roaster-table-legend span {
-  color: #94a3b8 !important;
-}
-
-/* Modals Dark Mode */
-[data-theme="dark"] .hrms-modal-card {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-modal-header {
-  border-bottom-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-modal-header h3 {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .hrms-modal-header p {
-  color: #94a3b8 !important;
-}
-[data-theme="dark"] .hrms-modal-card form > div:last-child,
-[data-theme="dark"] .hrms-modal-card > div:last-child {
-  background: #0f172a !important;
-  border-top-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-modal-body label.form-label {
-  color: #e2e8f0 !important;
-}
-[data-theme="dark"] .upload-field-card {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-modal-body div[style*="background: #f8fafc"],
-[data-theme="dark"] .hrms-modal-body div[style*="background:#f8fafc"] {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .hrms-modal-body div[style*="background: #f8fafc"] strong,
-[data-theme="dark"] .hrms-modal-body div[style*="background:#f8fafc"] strong {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] .docs-list-item {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-}
-[data-theme="dark"] .docs-list-item:hover {
-  background: #1e293b !important;
-}
-[data-theme="dark"] .docs-list-item div[style*="color:#0f172a"] {
-  color: #f8fafc !important;
-}
-[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] {
-  background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%) !important;
-  border-color: #0369a1 !important;
-}
-[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] h4 {
-  color: #ffffff !important;
-}
-[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] span[style*="background:#ffffff"] {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
-}
-[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] strong {
-  color: #f8fafc !important;
-}
 
 /* ── Student Menu Permissions UI (Matching Staff Edit Popup) ── */
 .perm-box-container {
@@ -1454,6 +1200,621 @@ require_once __DIR__ . '/../includes/layout-header.php';
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR ADMIN STUDENT ROASTER
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Stat Metric Cards Strip */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"] {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#2563eb"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #2563eb"] {
+  color: #60a5fa !important;
+}
+
+/* 2. Roaster Search & Filter Toolbar */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box:focus-within {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-search-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  background: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box > i:first-child,
+[data-theme="dark"] .roaster-select-box .select-chevron {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select:focus {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+
+/* 3. Main Roster Card & Table Header */
+[data-theme="dark"] .hrms-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-card-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-card-header h3.card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-card-header h3.card-title span {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-card-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .hrms-card-header > div:last-child {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .hrms-card-header > div:last-child strong {
+  color: #f8fafc !important;
+}
+
+/* 4. Table Structure, Rows & Cells */
+[data-theme="dark"] .student-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .student-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .student-id-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Table Empty State */
+[data-theme="dark"] .student-id-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .student-id-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .student-id-table tbody td h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .student-id-table tbody td p strong {
+  color: #f8fafc !important;
+}
+
+/* Profile Cell */
+[data-theme="dark"] .student-id-table tbody td .user-cell img {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:first-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell > div > div:last-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell > div:first-child[style*="background: #f1f5f9"],
+[data-theme="dark"] .student-id-table tbody td .user-cell > div:first-child[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border-color: rgba(225, 29, 72, 0.3) !important;
+  color: #fb7185 !important;
+}
+
+/* Roll & Standard Pills */
+[data-theme="dark"] .sid-roll-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-std-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-std-pill i {
+  color: #94a3b8 !important;
+}
+
+/* Guardian & Text overrides */
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #334155"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#334155"] {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .student-id-table tbody td span[style*="color: #64748b"],
+[data-theme="dark"] .student-id-table tbody td span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .student-id-table tbody td i.fa-phone {
+  color: #94a3b8 !important;
+}
+
+/* Fees Progress & Badges */
+[data-theme="dark"] .student-id-table tbody td div[style*="background: #e2e8f0"],
+[data-theme="dark"] .student-id-table tbody td div[style*="background:#e2e8f0"] {
+  background: #334155 !important;
+}
+[data-theme="dark"] .sid-fee-due {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .sid-fee-paid {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+
+/* Attendance Chips */
+[data-theme="dark"] .sid-att-chip.high {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .sid-att-chip.medium {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .sid-att-chip.low {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+
+/* Docs Chip */
+[data-theme="dark"] .sid-docs-chip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-docs-chip:hover {
+  background: #334155 !important;
+  border-color: #0284c7 !important;
+  color: #38bdf8 !important;
+}
+
+/* Login Actions */
+[data-theme="dark"] .btn-student-login {
+  background: rgba(21, 128, 61, 0.15) !important;
+  border-color: rgba(21, 128, 61, 0.35) !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .btn-student-login:hover {
+  background: rgba(21, 128, 61, 0.28) !important;
+  border-color: rgba(21, 128, 61, 0.5) !important;
+  color: #86efac !important;
+}
+[data-theme="dark"] .btn-student-pwd {
+  background: rgba(202, 138, 4, 0.15) !important;
+  border-color: rgba(202, 138, 4, 0.35) !important;
+  color: #facc15 !important;
+}
+[data-theme="dark"] .btn-student-pwd:hover {
+  background: rgba(202, 138, 4, 0.28) !important;
+  border-color: rgba(202, 138, 4, 0.5) !important;
+  color: #fde047 !important;
+}
+
+/* Action Buttons (View / Edit / Delete) */
+[data-theme="dark"] .sid-action-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-action-btn.view {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-action-btn.view:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+[data-theme="dark"] .sid-action-btn.edit {
+  background: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #818cf8 !important;
+}
+[data-theme="dark"] .sid-action-btn.edit:hover {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+  border-color: #4f46e5 !important;
+}
+[data-theme="dark"] .sid-action-btn.delete {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .sid-action-btn.delete:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+
+/* 5. Pagination & Legend */
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+  opacity: 0.5 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-table-legend {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-table-legend span,
+[data-theme="dark"] .roaster-table-legend span[style*="color: #475569"],
+[data-theme="dark"] .roaster-table-legend span[style*="color:#475569"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .roaster-table-legend .legend-item {
+  color: #94a3b8 !important;
+}
+
+/* 6. Universal Modals Adaptations */
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme="dark"] .hrms-modal-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .hrms-modal-header p strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .modal-close-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .modal-close-btn:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] .hrms-modal-body {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal-body::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+[data-theme="dark"] .hrms-modal-body::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+[data-theme="dark"] .hrms-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+[data-theme="dark"] .hrms-modal-card form > div:last-child,
+[data-theme="dark"] .hrms-modal-card > div:last-child {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+}
+
+/* Modal Form Inputs & Selects */
+[data-theme="dark"] .hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-input:focus {
+  background: #18263e !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .hrms-input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] select.hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-body label,
+[data-theme="dark"] .hrms-modal-body .form-label {
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .hrms-input:-webkit-autofill,
+[data-theme="dark"] .hrms-input:-webkit-autofill:hover, 
+[data-theme="dark"] .hrms-input:-webkit-autofill:focus,
+[data-theme="dark"] .hrms-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Upload Cards in Add & Edit Modals */
+[data-theme="dark"] .upload-field-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .upload-field-card small,
+[data-theme="dark"] .upload-field-card span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #edit_photo_preview {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #edit_docs_count {
+  color: #38bdf8 !important;
+}
+
+/* Fee Breakdown & Sibling Cards in Modals */
+[data-theme="dark"] .hrms-modal-body div[style*="background: #f8fafc"],
+[data-theme="dark"] .hrms-modal-body div[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-modal-body div[style*="background: #f8fafc"] strong,
+[data-theme="dark"] .hrms-modal-body div[style*="background:#f8fafc"] strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-body div[style*="background: #f8fafc"] span,
+[data-theme="dark"] .hrms-modal-body div[style*="background:#f8fafc"] span {
+  color: #94a3b8 !important;
+}
+
+/* Modal Outline Cancel Buttons */
+[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+/* 7. Modal 2: #viewStudentModal (Profile Viewer) */
+[data-theme="dark"] #viewStudentModal .hrms-modal-header > div > div:first-child {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] {
+  background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%) !important;
+  border-color: #0369a1 !important;
+}
+[data-theme="dark"] #viewStudentModal #view_stu_photo {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+[data-theme="dark"] #viewStudentModal #view_stu_name {
+  color: #ffffff !important;
+}
+[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] span[style*="background:#ffffff"],
+[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] span[style*="background: #ffffff"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] span[style*="color:#0369a1"],
+[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] span[style*="color: #0369a1"] {
+  border-color: #0369a1 !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #viewStudentModal #view_stu_paid_fees {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #viewStudentModal a[style*="color:var(--hrms-primary)"],
+[data-theme="dark"] #viewStudentModal a[style*="color: var(--hrms-primary)"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #viewStudentModal #view_stu_due_fees span[style*="background:#fef2f2"],
+[data-theme="dark"] #viewStudentModal #view_stu_due_fees span[style*="background: #fef2f2"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] #viewStudentModal #view_stu_due_fees span[style*="background:#ecfdf5"],
+[data-theme="dark"] #viewStudentModal #view_stu_due_fees span[style*="background: #ecfdf5"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+
+/* Documents List in View & Docs Modal */
+[data-theme="dark"] .docs-list-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .docs-list-item:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .docs-list-item > div > div > div:first-child,
+[data-theme="dark"] .docs-list-item div[style*="color:#0f172a"],
+[data-theme="dark"] .docs-list-item div[style*="color: #0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .docs-list-item small {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .docs-list-item .btn-hrms-outline {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .docs-list-item .btn-hrms-outline:hover {
+  background: #334155 !important;
+  border-color: #0284c7 !important;
+  color: #38bdf8 !important;
+}
+
+/* 8. Modal 3: #editStudentModal (Permissions UI) */
+[data-theme="dark"] #editStudentModal label[style*="color: #0f172a"],
+[data-theme="dark"] #editStudentModal label[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #editStudentModal div[style*="color: #64748b"],
+[data-theme="dark"] #editStudentModal div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
 [data-theme="dark"] .perm-box-container {
   background: #0f172a !important;
   border-color: #334155 !important;
@@ -1472,6 +1833,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .perm-card-text {
   color: #f1f5f9 !important;
 }
+[data-theme="dark"] .perm-card-text i {
+  color: #38bdf8 !important;
+}
 [data-theme="dark"] .btn-perm-toggle {
   background: #1e293b !important;
   border-color: #334155 !important;
@@ -1480,6 +1844,38 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .btn-perm-toggle:hover {
   background: #334155 !important;
   color: #f8fafc !important;
+}
+
+/* 9. Modal 4: #studentDocsModal */
+[data-theme="dark"] #docModalStudentName {
+  color: #38bdf8 !important;
+}
+
+/* 10. Modal 5: #changeStudentPasswordModal */
+[data-theme="dark"] #changeStudentPasswordModal .hrms-modal-header > div > div:first-child {
+  background: rgba(202, 138, 4, 0.15) !important;
+  border-color: rgba(202, 138, 4, 0.35) !important;
+  color: #facc15 !important;
+}
+[data-theme="dark"] #pwd_modal_student_name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #pwd_modal_roll_no {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #pwd_modal_standard {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #pwd_modal_username {
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal button[title="Show/Hide password"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal button[title="Show/Hide password"]:hover {
+  color: #38bdf8 !important;
 }
 </style>
 
