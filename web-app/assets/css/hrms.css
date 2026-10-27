@@ -3953,19 +3953,23 @@ button {
 /* Modals */
 [data-theme="dark"] .modal-container,
 [data-theme="dark"] .modal-content,
-[data-theme="dark"] .modal-dialog {
-  background: #111c2e !important;
-  border-color: #1e2e46 !important;
+[data-theme="dark"] .modal-dialog,
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
   color: #f1f5f9 !important;
 }
 
-[data-theme="dark"] .modal-header {
-  border-bottom-color: #1e2e46 !important;
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .modal-footer {
-  border-top-color: #1e2e46 !important;
+  border-top-color: #334155 !important;
 }
+
 
 
 

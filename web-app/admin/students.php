@@ -1606,14 +1606,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 6. Universal Modals Adaptations */
 [data-theme="dark"] .hrms-modal-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7) !important;
 }
 [data-theme="dark"] .hrms-modal-header {
-  border-bottom-color: #334155 !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .hrms-modal-header h3 {
   color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-header h3 i {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .hrms-modal-header p {
   color: #94a3b8 !important;
@@ -1622,11 +1626,24 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 [data-theme="dark"] .modal-close-btn {
-  color: #94a3b8 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.25rem !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
 }
 [data-theme="dark"] .modal-close-btn:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
   color: #f8fafc !important;
-  background: rgba(255, 255, 255, 0.08) !important;
 }
 [data-theme="dark"] .hrms-modal-body {
   color: #cbd5e1 !important;
@@ -1644,7 +1661,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .hrms-modal-card form > div:last-child,
 [data-theme="dark"] .hrms-modal-card > div:last-child {
   background: #0f172a !important;
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
 }
 
 /* Modal Form Inputs & Selects */
@@ -1662,13 +1679,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .hrms-input::placeholder {
   color: #64748b !important;
 }
-[data-theme="dark"] select.hrms-input option {
+[data-theme="dark"] select.hrms-input option,
+[data-theme="dark"] .hrms-input option {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .hrms-modal-body label,
 [data-theme="dark"] .hrms-modal-body .form-label {
   color: #e2e8f0 !important;
+}
+[data-theme="dark"] textarea.hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
 }
 [data-theme="dark"] .hrms-input:-webkit-autofill,
 [data-theme="dark"] .hrms-input:-webkit-autofill:hover, 
@@ -1687,6 +1710,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .upload-field-card small,
 [data-theme="dark"] .upload-field-card span {
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .upload-field-card label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .upload-field-card input[type="file"] {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .upload-field-card input[type="file"]::file-selector-button {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  margin-right: 8px !important;
+}
+[data-theme="dark"] .upload-field-card input[type="file"]::file-selector-button:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
 }
 [data-theme="dark"] #edit_photo_preview {
   border-color: #334155 !important;
@@ -1711,12 +1758,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* Modal Outline Cancel Buttons */
-[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline {
+[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline,
+[data-theme="dark"] .hrms-modal-card .btn-hrms-outline {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
-[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline:hover {
+[data-theme="dark"] .hrms-modal-card .btn-hrms.btn-hrms-outline:hover,
+[data-theme="dark"] .hrms-modal-card .btn-hrms-outline:hover {
   background: #334155 !important;
   border-color: #475569 !important;
   color: #f8fafc !important;
@@ -1724,7 +1773,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 /* 7. Modal 2: #viewStudentModal (Profile Viewer) */
 [data-theme="dark"] #viewStudentModal .hrms-modal-header > div > div:first-child {
-  background: rgba(2, 132, 199, 0.2) !important;
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] {
@@ -1754,6 +1804,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #viewStudentModal .hrms-modal-body h5 {
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color:var(--hrms-primary)"],
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color: var(--hrms-primary)"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color:#10b981"],
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color: #10b981"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color:#7c3aed"],
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color: #7c3aed"] {
+  color: #a78bfa !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color:#f59e0b"],
+[data-theme="dark"] #viewStudentModal .hrms-modal-body h5 i[style*="color: #f59e0b"] {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body span[style*="color:#64748b"],
+[data-theme="dark"] #viewStudentModal .hrms-modal-body span[style*="color: #64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #viewStudentModal .hrms-modal-body strong[style*="color:#0f172a"],
+[data-theme="dark"] #viewStudentModal .hrms-modal-body strong[style*="color: #0f172a"] {
+  color: #f8fafc !important;
 }
 [data-theme="dark"] #viewStudentModal .hrms-modal-body strong {
   color: #f8fafc !important;
@@ -1854,8 +1928,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 10. Modal 5: #changeStudentPasswordModal */
 [data-theme="dark"] #changeStudentPasswordModal .hrms-modal-header > div > div:first-child {
   background: rgba(202, 138, 4, 0.15) !important;
-  border-color: rgba(202, 138, 4, 0.35) !important;
+  border: 1px solid rgba(202, 138, 4, 0.35) !important;
   color: #facc15 !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal div[style*="background: #f8fafc"],
+[data-theme="dark"] #changeStudentPasswordModal div[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal div[style*="color: #64748b"],
+[data-theme="dark"] #changeStudentPasswordModal div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal i[style*="color: #0284c7"],
+[data-theme="dark"] #changeStudentPasswordModal i[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] #pwd_modal_student_name {
   color: #f8fafc !important;
