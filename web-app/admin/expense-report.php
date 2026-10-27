@@ -235,12 +235,351 @@ require_once __DIR__ . '/../includes/layout-header.php';
 .print-header-banner, .print-signatures {
   display: none;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR EXPENSE REPORT
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Top Stat KPI Grid */
+  .stat-grid.exp-rep-stat-grid,
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .stat-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+  .stat-card-top {
+    gap: 8px !important;
+  }
+  .stat-label {
+    font-size: 0.70rem !important;
+  }
+  .stat-number {
+    font-size: 1.25rem !important;
+  }
+  .stat-icon-wrapper {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1.05rem !important;
+    border-radius: 10px !important;
+  }
+  .stat-card-footer {
+    font-size: 0.68rem !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    margin-top: 10px !important;
+    padding-top: 8px !important;
+  }
+
+  /* Roaster Toolbar Card */
+  .exp-rep-toolbar-card {
+    padding: 12px 14px !important;
+    margin-bottom: 14px !important;
+    border-radius: 12px !important;
+  }
+  .exp-rep-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .exp-rep-nav-links {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .exp-rep-nav-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.76rem !important;
+    padding: 0 8px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+  }
+  .exp-rep-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 2px 0 0 0 !important;
+  }
+  .exp-rep-session-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+  }
+  .exp-rep-print-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+
+  /* Primary 2-Column Analytics Section */
+  .exp-rep-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    margin-bottom: 16px !important;
+  }
+  .exp-rep-card {
+    border-radius: 12px !important;
+  }
+  .exp-rep-card-header {
+    padding: 12px 14px !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .exp-rep-card-title {
+    font-size: 0.92rem !important;
+  }
+  .exp-rep-card-body {
+    padding: 14px !important;
+  }
+  .exp-rep-cat-item {
+    padding: 9px 11px !important;
+    border-radius: 8px !important;
+  }
+  .exp-rep-cat-name {
+    font-size: 0.82rem !important;
+  }
+  .exp-rep-cat-sub {
+    font-size: 0.68rem !important;
+  }
+  .exp-rep-cat-amount {
+    font-size: 0.84rem !important;
+  }
+  .exp-rep-cat-pct {
+    font-size: 0.68rem !important;
+  }
+
+  /* Monthly Trend Table Wrap */
+  .exp-rep-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .exp-rep-table {
+    min-width: 540px !important;
+  }
+  .exp-rep-table thead th {
+    padding: 9px 8px !important;
+    font-size: 0.68rem !important;
+  }
+  .exp-rep-table tbody td {
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* Bottom Row: Methods & Ledger */
+  .exp-rep-bottom-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+  }
+  .exp-rep-methods-grid {
+    padding: 14px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .exp-rep-method-card {
+    padding: 10px 12px !important;
+  }
+  .exp-rep-method-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.85rem !important;
+  }
+  .exp-rep-method-name {
+    font-size: 0.80rem !important;
+  }
+  .exp-rep-method-amount {
+    font-size: 0.85rem !important;
+  }
+  .exp-rep-ledger-wrap {
+    padding: 12px 14px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .exp-rep-ledger-table td {
+    padding: 8px 6px !important;
+  }
+  .exp-rep-ledger-cell-title {
+    font-size: 0.78rem !important;
+  }
+  .exp-rep-ledger-cell-val {
+    font-size: 0.82rem !important;
+  }
+}
+
+/* Mobile Screens (<= 480px) */
+@media (max-width: 480px) {
+  .exp-rep-nav-links {
+    grid-template-columns: 1fr !important;
+  }
+  .exp-rep-methods-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Micro Devices (<= 360px) */
+@media (max-width: 360px) {
+  .stat-grid.exp-rep-stat-grid,
+  .stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .exp-rep-toolbar-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR EXPENSE REPORT
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-rep-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-rep-nav-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .exp-rep-nav-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-rep-session-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .exp-rep-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-rep-card-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .exp-rep-card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-rep-header-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-rep-cat-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-rep-cat-item:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .exp-rep-cat-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-rep-cat-sub {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-rep-progress-track {
+  background: #1e293b !important;
+}
+
+[data-theme="dark"] .exp-rep-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .exp-rep-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .exp-rep-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .exp-rep-month-cell {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-rep-vouchers-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .exp-rep-avg-amount {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .exp-rep-method-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-rep-method-card:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .exp-rep-method-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-rep-method-sub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .exp-rep-ledger-table td {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .exp-rep-ledger-cell-title {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .exp-rep-row-outflow {
+  background: #0f172a !important;
+}
+[data-theme="dark"] .exp-rep-row-outflow .exp-rep-ledger-cell-title,
+[data-theme="dark"] .exp-rep-row-outflow .exp-rep-ledger-cell-val {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-rep-row-balance.is-surplus {
+  background: rgba(22, 101, 52, 0.15) !important;
+}
+[data-theme="dark"] .exp-rep-row-balance.is-deficit {
+  background: rgba(220, 38, 38, 0.15) !important;
+}
+[data-theme="dark"] .exp-rep-row-balance .exp-rep-ledger-cell-title {
+  color: #f8fafc !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
      TOP KPI STAT METRICS GRID
      ══════════════════════════════════════════════════════ -->
-<div class="stat-grid no-print" style="margin-bottom: 24px;">
+<div class="stat-grid exp-rep-stat-grid no-print" style="margin-bottom: 24px;">
   
   <!-- Total Revenue (Fee Collections) -->
   <div class="stat-card green">
