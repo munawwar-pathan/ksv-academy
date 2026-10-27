@@ -777,6 +777,676 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #ffffff;
   border-color: #0284c7;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR FACULTY PAYROLL
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Stat Metric Cards */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: #a78bfa !important;
+  border-color: rgba(124, 58, 237, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #7c3aed"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#7c3aed"] {
+  color: #a78bfa !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"] {
+  color: #fbbf24 !important;
+}
+
+/* 2. Payroll Search & Filter Toolbar */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box:focus-within {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-search-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  background: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box > i:first-child,
+[data-theme="dark"] .roaster-select-box .select-chevron {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select:focus {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+
+/* 3. Payroll Directory Card & Table */
+[data-theme="dark"] .payroll-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .payroll-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .payroll-title-block .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .payroll-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .payroll-records-count {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .payroll-records-count strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* User cell & Avatar */
+[data-theme="dark"] .staff-id-table tbody td .user-cell img {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div:first-child[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div:first-child[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div > div:first-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div > div:last-child {
+  color: #94a3b8 !important;
+}
+
+/* ID, Department & Period Pills */
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-dept-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-dept-pill i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .period-badge-chip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .period-badge-chip i {
+  color: #38bdf8 !important;
+}
+
+/* Table Text & Salary Values */
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #334155"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color:#334155"] {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #059669"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #dc2626"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color:#0f172a"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+/* Status Badges */
+[data-theme="dark"] .sid-status-paid {
+  background: rgba(22, 101, 52, 0.2) !important;
+  color: #4ade80 !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+}
+[data-theme="dark"] .sid-status-pending {
+  background: rgba(202, 138, 4, 0.2) !important;
+  color: #facc15 !important;
+  border-color: rgba(202, 138, 4, 0.4) !important;
+}
+
+/* Action Buttons */
+[data-theme="dark"] .sid-action-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sid-action-btn.pay {
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+[data-theme="dark"] .sid-action-btn.pay:hover {
+  background: #059669 !important;
+  color: #ffffff !important;
+  border-color: #059669 !important;
+}
+[data-theme="dark"] .sid-action-btn.slip {
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  background: rgba(2, 132, 199, 0.1) !important;
+}
+[data-theme="dark"] .sid-action-btn.slip:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+
+/* Empty State */
+[data-theme="dark"] .staff-id-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td h4 {
+  color: #f8fafc !important;
+}
+
+/* 4. Pagination & Controls */
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+  opacity: 0.5 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
+[data-theme="dark"] .pagination-controls-wrap div[style*="color: #64748b"],
+[data-theme="dark"] .pagination-controls-wrap div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+/* 5. Modal 1: #paySalaryModal */
+[data-theme="dark"] #paySalaryModal .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6) !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-header > div > div:first-child {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-header h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-header span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #paySalaryModal .modal-close-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #paySalaryModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-body {
+  background: #1e293b !important;
+}
+[data-theme="dark"] #paySalaryModal label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #paySalaryModal input.hrms-input,
+[data-theme="dark"] #paySalaryModal select.hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #paySalaryModal input.hrms-input:focus,
+[data-theme="dark"] #paySalaryModal select.hrms-input:focus {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
+}
+[data-theme="dark"] #paySalaryModal select.hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #paySalaryModal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9);
+}
+[data-theme="dark"] #payrollAllowances {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #payrollDeductions {
+  color: #f87171 !important;
+}
+/* Net Salary Preview Ribbon */
+[data-theme="dark"] #paySalaryModal div[style*="background: #f0fdf4"],
+[data-theme="dark"] #paySalaryModal div[style*="background:#f0fdf4"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+[data-theme="dark"] #paySalaryModal div[style*="background: #f0fdf4"] span:first-child,
+[data-theme="dark"] #paySalaryModal div[style*="background:#f0fdf4"] span:first-child {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #calcNetPreview {
+  color: #4ade80 !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-footer {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-footer .roaster-btn.secondary {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #paySalaryModal .hrms-modal-footer .roaster-btn.secondary:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* 6. Modal 2: #payslipViewModal & Payslip Screen View */
+[data-theme="dark"] #payslipViewModal .receipt-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] #payslipViewModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] #payslipViewModal .hrms-modal-header > div > div:first-child {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] #payslipViewModal .hrms-modal-header h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #payslipViewModal #modalPayslipSub {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #payslipViewModal .modal-close-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #payslipViewModal .modal-close-btn:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #payslipModalBody {
+  background: #0f172a !important;
+  scrollbar-color: #0284c7 #1e293b !important;
+}
+[data-theme="dark"] #payslipModalBody::-webkit-scrollbar-track {
+  background: #0f172a !important;
+  border-left-color: #334155 !important;
+}
+[data-theme="dark"] #payslipModalBody::-webkit-scrollbar-thumb {
+  background: #0284c7 !important;
+  border-color: #0f172a !important;
+}
+[data-theme="dark"] .payslip-modal-footer {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .payslip-modal-footer .btn-hrms-outline {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .payslip-modal-footer .btn-hrms-outline:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+/* ── Dark Theme for Pay Receipt Card (Screen View inside Payslip Modal) ── */
+[data-theme="dark"] .pay-receipt {
+  background: #0f172a !important;
+  border: 1.5px solid #334155 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="dark"] .pay-receipt .ri-brand-row {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .ri-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .ri-sub {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .ri-address {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .ri-logo-box {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Document Type & Session Banner */
+[data-theme="dark"] .pay-receipt .receipt-doc-band {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-doc-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-doc-title i {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-doc-session {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+
+/* Faculty & Payslip Meta Grid */
+[data-theme="dark"] .pay-receipt .receipt-meta-grid {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val.bold {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val.mono-badge {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+/* Particulars Table */
+[data-theme="dark"] .pay-receipt .receipt-table-wrapper {
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td {
+  border-bottom: 1px solid #1e293b !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td div[style*="color: #64748b"],
+[data-theme="dark"] .pay-receipt .receipt-table td div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #059669"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #dc2626"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+
+/* Table Total Row (fixes washed-out white bar) */
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td {
+  background: #1e293b !important;
+  border-top: 1.5px solid #334155 !important;
+  border-bottom: none !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td:last-child {
+  color: #34d399 !important;
+}
+
+/* Gross & Net Salary Strip */
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] span[style*="color: #64748b"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] span[style*="color:#64748b"],
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] span,
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong,
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] strong[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong[style*="color: #059669"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] strong[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+
+/* Words Box */
+[data-theme="dark"] .pay-receipt .receipt-words-box {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px dashed rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-words-box .words-label {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-words-box .words-val,
+[data-theme="dark"] .pay-receipt .words-val {
+  color: #a7f3d0 !important;
+}
+
+/* Signatures & Seal Section */
+[data-theme="dark"] .pay-receipt .auth-sign-line {
+  border-bottom: 1.5px dashed #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pay-receipt .auth-sign-line[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .auth-sign-line[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .auth-sign-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .auth-seal-badge {
+  border-color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+[data-theme="dark"] .pay-receipt .seal-text-top {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pay-receipt .seal-text-mid {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .pay-receipt .seal-text-bot {
+  color: #38bdf8 !important;
+}
+
+/* Security QR & Terms Bottom Bar */
+[data-theme="dark"] .pay-receipt .receipt-bottom-bar {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .rb-qr-wrap {
+  background: #ffffff !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .pay-receipt .rb-notes {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pay-receipt .rb-notes strong {
+  color: #cbd5e1 !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
