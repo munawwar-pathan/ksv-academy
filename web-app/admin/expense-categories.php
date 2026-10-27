@@ -357,12 +357,438 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #f8fafc;
   cursor: not-allowed;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR EXPENSE CATEGORIES
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Top Stat KPI Grid */
+  .stat-grid.exp-cat-stat-grid,
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .stat-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+  .stat-card-top {
+    gap: 8px !important;
+  }
+  .stat-label {
+    font-size: 0.70rem !important;
+  }
+  .stat-number {
+    font-size: 1.25rem !important;
+  }
+  .stat-icon-wrapper {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1.05rem !important;
+    border-radius: 10px !important;
+  }
+  .stat-card-footer {
+    font-size: 0.68rem !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    margin-top: 10px !important;
+    padding-top: 8px !important;
+  }
+
+  /* Toolbar & Search Card */
+  .roaster-toolbar-card {
+    padding: 12px 14px !important;
+    margin-bottom: 14px !important;
+    border-radius: 12px !important;
+  }
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .exp-cat-filter-form {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .exp-cat-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    height: 40px !important;
+    padding: 8px 12px !important;
+    border-radius: 9px !important;
+  }
+  .exp-cat-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 2px 0 0 0 !important;
+  }
+  .exp-cat-records-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+  }
+  .exp-cat-add-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    padding: 0 12px !important;
+    box-sizing: border-box !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+  }
+
+  /* Directory Card & Header */
+  .exp-cat-directory-card {
+    border-radius: 12px !important;
+    margin-bottom: 20px !important;
+  }
+  .exp-cat-card-header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .exp-cat-title-block {
+    width: 100% !important;
+  }
+  .exp-cat-card-title {
+    font-size: 0.95rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .exp-cat-subtitle {
+    font-size: 0.74rem !important;
+    line-height: 1.4 !important;
+  }
+  .exp-cat-header-meta {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed #e2e8f0 !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Table & Scrolling */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .exp-cat-table {
+    min-width: 780px !important;
+  }
+  .exp-cat-table thead th {
+    padding: 9px 8px !important;
+    font-size: 0.68rem !important;
+  }
+  .exp-cat-table tbody td {
+    padding: 9px 8px !important;
+    font-size: 0.78rem !important;
+  }
+  .sid-action-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Pagination Controls */
+  .pagination-controls-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+  }
+  .pagination-meta-group {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .pagination-limit-box {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .pagination-limit-select {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+    height: 30px !important;
+  }
+  .pagination-nav {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .pagination-btn {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.75rem !important;
+    padding: 0 !important;
+  }
+
+  /* Modals Responsiveness */
+  #addCategoryModal,
+  #editCategoryModal {
+    padding: 12px !important;
+  }
+  .exp-cat-modal-box {
+    padding: 16px 14px !important;
+    border-radius: 12px !important;
+    max-height: 94vh !important;
+    width: 100% !important;
+  }
+  .exp-cat-modal-header h3 {
+    font-size: 1.02rem !important;
+  }
+  .exp-cat-modal-footer {
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .exp-cat-modal-footer button {
+    width: 100% !important;
+    height: 40px !important;
+    justify-content: center !important;
+  }
+}
+
+/* Micro Devices (<= 360px) */
+@media (max-width: 360px) {
+  .stat-grid.exp-cat-stat-grid,
+  .stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .exp-cat-toolbar-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR EXPENSE CATEGORIES
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-cat-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-cat-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-cat-records-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .exp-cat-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-cat-card-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .exp-cat-card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-cat-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .exp-cat-subtitle {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-cat-header-meta {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-cat-spent-total {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .exp-cat-heads-total {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-cat-meta-divider {
+  color: #334155 !important;
+}
+
+[data-theme="dark"] .exp-cat-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .exp-cat-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .exp-cat-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .cat-head-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .cat-lifetime-count {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .cat-scope-desc {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .cat-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .cat-vouchers-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .cat-vouchers-zero {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .cat-progress-track {
+  background: #0f172a !important;
+}
+
+[data-theme="dark"] .sid-action-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-action-btn.view {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-action-btn.view:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .sid-action-btn.edit {
+  background: rgba(79, 70, 229, 0.15) !important;
+  border-color: rgba(79, 70, 229, 0.3) !important;
+  color: #a5b4fc !important;
+}
+[data-theme="dark"] .sid-action-btn.edit:hover {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .sid-action-btn.delete {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .sid-action-btn.delete:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .sid-action-btn.locked {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .exp-cat-modal-box {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .exp-cat-modal-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .exp-cat-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-cat-modal-sub {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-cat-modal-close {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-cat-field-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .exp-cat-modal-box .hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-cat-modal-footer {
+  border-top-color: #334155 !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
      TOP KPI STAT METRICS GRID
      ══════════════════════════════════════════════════════ -->
-<div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
+<div class="stat-grid exp-cat-stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 24px;">
   
   <!-- Total Categories -->
   <div class="stat-card blue">
