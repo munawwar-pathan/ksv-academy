@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'parent', 'student']);
+if (in_array($current_user['role'], ['student', 'parent'])) {
+    require_menu_permission('fees');
+}
 $page_title = 'Fee Receipts & Dues';
 $page_heading = 'Tuition Fee Receipts & Accounts Ledger';
 $page_subheading = 'Payment History, Installment Slips & Outstanding Due Breakdown';

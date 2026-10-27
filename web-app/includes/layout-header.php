@@ -416,47 +416,63 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
         </ul>
 
       <?php else: ?>
+        <?php
+          $stu_perms = get_student_permissions($current_user['id']);
+        ?>
         <!-- PARENT & STUDENT MENU -->
         <div class="nav-section-title">Parent &amp; Student Portal</div>
         <ul class="sidebar-menu">
+          <?php if (in_array('dashboard', $stu_perms)): ?>
           <li class="sidebar-menu-item <?php echo $active_menu === 'dashboard' ? 'active' : ''; ?>">
             <a href="<?php echo PARENT_URL; ?>/dashboard">
               <i class="fa-solid fa-house-chimney-user"></i>
               <span>Student Overview</span>
             </a>
           </li>
+          <?php endif; ?>
+          <?php if (in_array('attendance', $stu_perms)): ?>
           <li class="sidebar-menu-item <?php echo $active_menu === 'attendance' ? 'active' : ''; ?>">
             <a href="<?php echo PARENT_URL; ?>/attendance">
               <i class="fa-solid fa-calendar-days"></i>
               <span>Attendance History</span>
             </a>
           </li>
+          <?php endif; ?>
+          <?php if (in_array('fees', $stu_perms)): ?>
           <li class="sidebar-menu-item <?php echo $active_menu === 'fees' ? 'active' : ''; ?>">
             <a href="<?php echo PARENT_URL; ?>/fees">
               <i class="fa-solid fa-credit-card"></i>
               <span>Fee Receipts &amp; Dues</span>
             </a>
           </li>
+          <?php endif; ?>
+          <?php if (in_array('student-id', $stu_perms)): ?>
           <li class="sidebar-menu-item <?php echo $active_menu === 'student-id' ? 'active' : ''; ?>">
             <a href="<?php echo PARENT_URL; ?>/student-id">
               <i class="fa-solid fa-id-badge"></i>
               <span>Student ID Card</span>
             </a>
           </li>
+          <?php endif; ?>
+          <?php if (in_array('marksheet', $stu_perms)): ?>
           <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
             <a href="<?php echo PARENT_URL; ?>/marksheet">
               <i class="fa-solid fa-file-lines"></i>
               <span>Exam Marksheet</span>
             </a>
           </li>
+          <?php endif; ?>
+          <?php if (in_array('announcements', $stu_perms)): ?>
           <li class="sidebar-menu-item <?php echo $active_menu === 'announcements' ? 'active' : ''; ?>">
             <a href="<?php echo PARENT_URL; ?>/announcements">
               <i class="fa-solid fa-bullhorn"></i>
               <span>Academy Notices</span>
             </a>
           </li>
+          <?php endif; ?>
         </ul>
 
+        <?php if (in_array('settings', $stu_perms)): ?>
         <div class="nav-section-title">Settings &amp; System</div>
         <ul class="sidebar-menu">
           <li class="sidebar-menu-item <?php echo $active_menu === 'settings' ? 'active' : ''; ?>">
@@ -466,6 +482,7 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             </a>
           </li>
         </ul>
+        <?php endif; ?>
       <?php endif; ?>
 
       <div class="nav-section-title">Links</div>

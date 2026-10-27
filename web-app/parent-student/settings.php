@@ -6,6 +6,9 @@ require_once __DIR__ . '/../config.php';
 
 // Requires logged in parent, student, or super admin
 $current_user = require_login(['parent', 'student', 'super_admin']);
+if (in_array($current_user['role'], ['student', 'parent'])) {
+    require_menu_permission('settings');
+}
 
 $page_title = 'Settings | Student & Parent Portal';
 $page_heading = 'Student & Parent Settings';

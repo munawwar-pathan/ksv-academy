@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
+if (in_array($current_user['role'], ['student', 'parent'])) {
+    require_menu_permission('student-id');
+}
 $page_title = 'Student ID Card | KSV Academy HRMS';
 $page_heading = 'Student Identity Card & Biometric QR Pass';
 $page_subheading = 'Official Academic Identification Badge & Biometric QR Pass';

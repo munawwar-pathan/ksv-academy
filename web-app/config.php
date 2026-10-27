@@ -255,6 +255,19 @@ define('DEFAULT_STAFF_PERMISSIONS', [
 ]);
 
 /**
+ * Default Student / Parent Permissions
+ */
+define('DEFAULT_STUDENT_PERMISSIONS', [
+    'dashboard',
+    'attendance',
+    'fees',
+    'student-id',
+    'marksheet',
+    'announcements',
+    'settings'
+]);
+
+/**
  * Get permitted menu keys for a staff member
  */
 function get_staff_permissions($user_or_staff_id, $db = null) {
@@ -275,6 +288,29 @@ function get_staff_permissions($user_or_staff_id, $db = null) {
         // fallback
     }
     return DEFAULT_STAFF_PERMISSIONS;
+}
+
+/**
+ * Get permitted menu keys for a student or parent member
+ */
+function get_student_permissions($user_or_student_id, $db = null) {
+    if (!$db) {
+        $db = get_db_connection();
+    }
+    try {
+        $stmt = $db->prepare("SELECT menu_permissions FROM students WHERE user_id = ? OR parent_user_id = ? OR id = ? LIMIT 1");
+        $stmt->execute([$user_or_student_id, $user_or_student_id, $user_or_student_id]);
+        $row = $stmt->fetch();
+        if ($row && !empty($row['menu_permissions'])) {
+            $decoded = json_decode($row['menu_permissions'], true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+    } catch (Exception $e) {
+        // fallback
+    }
+    return DEFAULT_STUDENT_PERMISSIONS;
 }
 
 /**
@@ -324,6 +360,29 @@ function has_menu_permission($menu_key, $user = null) {
         }
         return false;
     }
+    if ($user['role'] === 'student' || $user['role'] === 'parent') {
+        $perms = get_student_permissions($user['id']);
+        if (in_array($menu_key, $perms)) {
+            return true;
+        }
+        $aliases = [
+            'dashboard' => ['dashboard'],
+            'attendance' => ['attendance'],
+            'fees' => ['fees'],
+            'student-id' => ['student-id'],
+            'marksheet' => ['marksheet'],
+            'announcements' => ['announcements'],
+            'settings' => ['settings'],
+        ];
+        if (isset($aliases[$menu_key])) {
+            foreach ($aliases[$menu_key] as $alias) {
+                if (in_array($alias, $perms)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     return false;
 }
 
@@ -345,6 +404,19 @@ function require_menu_permission($menu_key, $user = null) {
         if (!has_menu_permission($menu_key, $user)) {
             $_SESSION['flash_error'] = 'Access denied. You do not have permission to access that section.';
             $target = get_dashboard_url('staff', $user['id']);
+            $current_uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+            if ($target === $current_uri || rtrim($target, '/') === rtrim($current_uri, '/')) {
+                header('Location: ' . HRMS_URL . '/login');
+                exit;
+            }
+            header('Location: ' . $target);
+            exit;
+        }
+    }
+    if ($user['role'] === 'student' || $user['role'] === 'parent') {
+        if (!has_menu_permission($menu_key, $user)) {
+            $_SESSION['flash_error'] = 'Access denied. You do not have permission to access that section.';
+            $target = PARENT_URL . '/dashboard';
             $current_uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
             if ($target === $current_uri || rtrim($target, '/') === rtrim($current_uri, '/')) {
                 header('Location: ' . HRMS_URL . '/login');

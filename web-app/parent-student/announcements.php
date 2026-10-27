@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
+if (in_array($current_user['role'], ['student', 'parent'])) {
+    require_menu_permission('announcements');
+}
 $page_title = 'Academy Noticeboard & Circulars | KSV Academy HRMS';
 $page_heading = 'Academy Noticeboard & Circulars';
 $page_subheading = 'Official Academic Notifications, Examination Schedules & Important Academy Alerts';

@@ -217,6 +217,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $address = trim($_POST['address'] ?? '');
         $total_fees = floatval($_POST['total_fees'] ?? 0);
         $paid_fees = floatval($_POST['paid_fees'] ?? 0);
+        $permissions = isset($_POST['permissions']) && is_array($_POST['permissions']) 
+            ? json_encode(array_values(array_map('trim', $_POST['permissions']))) 
+            : json_encode([]);
 
         if ($student_id > 0 && !empty($student_name)) {
             try {
@@ -292,18 +295,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         student_name = ?, roll_no = ?, admission_no = ?, standard = ?, section = ?,
                         batch_timing = ?, parent_name = ?, mother_name = ?, parent_phone = ?, student_phone = ?, student_email = ?, gender = ?,
                         dob = ?, blood_group = ?, address = ?, total_fees = ?, paid_fees = ?,
-                        photo = ?, academic_files = ?
+                        photo = ?, academic_files = ?, menu_permissions = ?
                     WHERE id = ?
                 ");
                 $stmt->execute([
                     $student_name, $roll_no, $admission_no, $standard, $section,
                     $batch_timing, $parent_name, $mother_name, $parent_phone, $student_phone, $student_email, $gender,
                     $dob, $blood_group, $address, $total_fees, $paid_fees,
-                    $photo, $academic_files_json,
+                    $photo, $academic_files_json, $permissions,
                     $student_id
                 ]);
 
-                set_flash('success', "Student profile for {$student_name} updated successfully!");
+                set_flash('success', "Student profile and menu permissions for {$student_name} updated successfully!");
                 header('Location: ' . ADMIN_URL . '/students');
                 exit;
             } catch (Exception $e) {
@@ -1357,6 +1360,127 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #viewStudentModal div[style*="linear-gradient"] strong {
   color: #f8fafc !important;
 }
+
+/* ── Student Menu Permissions UI (Matching Staff Edit Popup) ── */
+.perm-box-container {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+.perm-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.perm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 10px;
+}
+.perm-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.perm-card:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.08);
+}
+.perm-card input[type="checkbox"] {
+  accent-color: #0284c7;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+.perm-card-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+.perm-card-text i {
+  color: #0284c7;
+  font-size: 0.84rem;
+  width: 15px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.btn-perm-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-perm-toggle:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+@media (max-width: 576px) {
+  .perm-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+[data-theme="dark"] .perm-box-container {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .perm-section-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .perm-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .perm-card:hover {
+  background: #24344d !important;
+  border-color: #0284c7 !important;
+}
+[data-theme="dark"] .perm-card-text {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .btn-perm-toggle {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .btn-perm-toggle:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
 </style>
 
 <!-- KPI Summary Strip for Student Roaster -->
@@ -2248,6 +2372,88 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
         </div>
 
+        <!-- Row 9: Menu Access Permissions (Role Access Control) -->
+        <div class="form-group" style="margin-top: 18px; margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div>
+              <label style="display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 2px; font-family: 'Outfit', sans-serif;">
+                <i class="fa-solid fa-user-shield" style="color: #0284c7;"></i>
+                Menu Access Permissions
+              </label>
+              <div style="font-size: 11.5px; color: #64748b;">
+                When this student or parent logs in, they will only have access to the menus checked below.
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 2px;">
+              <button type="button" class="btn-perm-toggle" onclick="toggleAllStudentPerms(true)">Select All</button>
+              <button type="button" class="btn-perm-toggle" onclick="toggleAllStudentPerms(false)">Deselect All</button>
+            </div>
+          </div>
+
+          <div class="perm-box-container">
+            <div class="perm-section-label">Student &amp; Parent Portal Menus</div>
+            <div class="perm-grid">
+              
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="dashboard" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-house-chimney-user"></i>
+                  <span>Student Overview</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="attendance" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-calendar-days"></i>
+                  <span>Attendance History</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="fees" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-credit-card"></i>
+                  <span>Fee Receipts &amp; Dues</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="student-id" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-id-badge"></i>
+                  <span>Student ID Card</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="marksheet" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-file-lines"></i>
+                  <span>Exam Marksheet</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="announcements" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-bullhorn"></i>
+                  <span>Academy Notices</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="settings" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-sliders"></i>
+                  <span>Portal Settings</span>
+                </span>
+              </label>
+
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Modal Footer Actions (Fixed like view popup) -->
@@ -2558,7 +2764,32 @@ function openEditStudentModal(stu) {
     countEl.textContent = docs.length > 0 ? docs.length + ' existing file(s) attached' : 'No existing files';
   }
 
+  // Populate Menu Permissions
+  let perms = [];
+  if (stu.menu_permissions) {
+    try {
+      perms = typeof stu.menu_permissions === 'string' ? JSON.parse(stu.menu_permissions) : stu.menu_permissions;
+    } catch (e) {
+      perms = [];
+    }
+  } else {
+    // Default student/parent portal permissions if not customized yet
+    perms = ['dashboard', 'attendance', 'fees', 'student-id', 'marksheet', 'announcements', 'settings'];
+  }
+  if (!Array.isArray(perms)) {
+    perms = ['dashboard', 'attendance', 'fees', 'student-id', 'marksheet', 'announcements', 'settings'];
+  }
+  document.querySelectorAll('#editStudentModal .edit-student-perm-cb').forEach(cb => {
+    cb.checked = perms.includes(cb.value);
+  });
+
   openModal('editStudentModal');
+}
+
+function toggleAllStudentPerms(checkAll) {
+  document.querySelectorAll('#editStudentModal .edit-student-perm-cb').forEach(cb => {
+    cb.checked = Boolean(checkAll);
+  });
 }
 
 function showStudentDocs(studentName, docs) {
