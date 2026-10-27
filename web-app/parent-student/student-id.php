@@ -612,6 +612,203 @@ require_once __DIR__ . '/../includes/layout-header.php';
     display: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR STUDENT ID
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+  /* Multi-Child Selector */
+  .child-selector-banner {
+    padding: 10px 14px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+  .child-selector-banner > div {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .child-selector-banner .roaster-btn {
+    flex: 1 1 auto !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 6px 10px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Top Toolbar */
+  .roaster-toolbar-card {
+    padding: 12px 14px !important;
+    margin-bottom: 16px !important;
+    border-radius: 12px !important;
+  }
+  .roaster-toolbar-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .student-id-toolbar-left {
+    width: 100% !important;
+  }
+  .student-id-select-form {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+  .student-id-select-dropdown {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .student-id-faculty-title {
+    font-size: 0.98rem !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .student-id-toolbar-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .student-id-toolbar-actions .roaster-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.78rem !important;
+    padding: 0 8px !important;
+    box-sizing: border-box !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+  }
+  .student-id-btn-print {
+    grid-column: span 2 !important;
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ID Card Stage */
+  .id-card-stage {
+    gap: 24px !important;
+    padding: 6px 0 20px !important;
+  }
+  .id-badge-holder {
+    width: 100% !important;
+    max-width: min(326px, 100%) !important;
+  }
+  .pvc-card {
+    width: min(326px, 100%) !important;
+    max-width: 100% !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* Micro Devices (<= 360px) */
+@media (max-width: 360px) {
+  .student-id-toolbar-actions {
+    grid-template-columns: 1fr !important;
+  }
+  .student-id-btn-print {
+    grid-column: span 1 !important;
+  }
+  .pvc-card {
+    border-radius: 14px !important;
+  }
+  .card-front-header {
+    padding: 8px 12px 34px !important;
+  }
+  .card-front-body {
+    padding: 6px 14px 12px !important;
+  }
+  .cf-student-name {
+    font-size: 15px !important;
+  }
+  .cf-photo-frame {
+    width: 86px !important;
+    height: 86px !important;
+  }
+  .cf-smart-chip {
+    width: 28px !important;
+    height: 20px !important;
+    font-size: 11px !important;
+    left: 14px !important;
+  }
+  .cf-info-row {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+  .cb-qr-frame img {
+    width: 105px !important;
+    height: 105px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR STUDENT ID CARD
+   ══════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .child-selector-banner {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .child-selector-banner > span {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .student-id-faculty-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .student-id-faculty-title span[style*="background: #f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .student-id-faculty-title span[style*="background: #f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .student-id-select-dropdown {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .card-label-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -641,13 +838,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Selected Student Label or Switcher -->
-    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <div class="student-id-toolbar-left" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
       <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
-        <form method="GET" action="<?php echo PARENT_URL; ?>/student-id" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+        <form method="GET" action="<?php echo PARENT_URL; ?>/student-id" class="student-id-select-form" style="display: flex; align-items: center; gap: 10px; margin: 0;">
           <label style="font-size: 13px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-id-badge" style="color: #0284c7;"></i> Select Student:
           </label>
-          <select name="id" onchange="this.form.submit()" class="hrms-input" style="min-width: 260px; padding: 6px 12px; font-size: 0.84rem; border-radius: 6px;">
+          <select name="id" onchange="this.form.submit()" class="hrms-input student-id-select-dropdown" style="min-width: 260px; padding: 6px 12px; font-size: 0.84rem; border-radius: 6px;">
             <?php foreach ($students_list as $st_item): ?>
               <option value="<?php echo $st_item['id']; ?>" <?php echo $st_item['id'] == $selected_id ? 'selected' : ''; ?>>
                 <?php echo htmlspecialchars($st_item['student_name']); ?> (<?php echo htmlspecialchars($st_item['roll_no']); ?> &bull; <?php echo htmlspecialchars($st_item['standard']); ?>)
@@ -656,7 +853,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </select>
         </form>
       <?php else: ?>
-        <h3 style="margin: 0; font-size: 1.08rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
+        <h3 class="student-id-faculty-title" style="margin: 0; font-size: 1.08rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-id-card" style="color: var(--hrms-primary);"></i>
           <span><?php echo htmlspecialchars($student['student_name'] ?? 'Student'); ?></span>
           <span style="font-size: 0.78rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
@@ -670,7 +867,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <!-- Right: Print and Download Actions -->
-    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <div class="student-id-toolbar-actions" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       
       <!-- Download Front PNG -->
       <button type="button" onclick="downloadCardImage('card_front_element', 'Front');" class="roaster-btn secondary" style="gap: 6px;" title="Save Front Card as High-Resolution Image">
@@ -685,7 +882,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <!-- Print Both Sides -->
-      <button type="button" onclick="window.print();" class="roaster-add-btn" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official ID card (Front &amp; Back)">
+      <button type="button" onclick="window.print();" class="roaster-add-btn student-id-btn-print" style="padding: 7px 16px; font-size: 0.82rem;" title="Print official ID card (Front &amp; Back)">
         <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
         <span>Print ID Card</span>
       </button>
