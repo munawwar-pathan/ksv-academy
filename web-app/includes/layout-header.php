@@ -76,7 +76,7 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
         <img src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="KSV Academy Logo" class="sidebar-brand-logo">
         <div class="sidebar-brand-text">
           <span class="brand-name"><?php echo htmlspecialchars($school_settings['school_name']); ?></span>
-          <span class="brand-badge">HRMS &amp; Portal</span>
+          <span class="brand-badge">ERP &amp; Portal</span>
         </div>
       </div>
       <button type="button" class="sidebar-toggle-btn" id="sidebarFoldToggle" aria-label="Toggle Navigation" title="Fold / Unfold Sidebar">
