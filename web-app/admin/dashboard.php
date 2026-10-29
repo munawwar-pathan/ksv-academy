@@ -350,10 +350,54 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════
    DARK MODE ADAPTATIONS FOR ADMIN DASHBOARD
    ══════════════════════════════════════════════════════ */
+
+/* 1. Executive Welcome Ribbon */
+[data-theme="dark"] .admin-welcome-ribbon {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .welcome-meta-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .welcome-title,
+[data-theme="dark"] .admin-welcome-ribbon h2 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .welcome-subtitle,
+[data-theme="dark"] .admin-welcome-ribbon p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .ribbon-btn.outline {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .ribbon-btn.outline:hover {
+  background: #1e293b !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .ribbon-btn.primary {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+/* 2. Top KPI Metric Stat Cards */
 [data-theme="dark"] .stat-card {
   background: #1e293b !important;
   border-color: #334155 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
 }
 
 [data-theme="dark"] .stat-label {
@@ -364,23 +408,60 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(124, 58, 237, 0.2) !important;
+  color: #c084fc !important;
+}
+
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(217, 119, 6, 0.2) !important;
+  color: #fbbf24 !important;
+}
+
 [data-theme="dark"] .stat-card-footer {
   color: #94a3b8 !important;
   border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .stat-card-footer span {
+  color: #94a3b8 !important;
 }
 
 [data-theme="dark"] .stat-card-footer strong {
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .stat-card-footer strong[style*="color:#d97706"] {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+
 [data-theme="dark"] .stat-card-link {
   color: #38bdf8 !important;
 }
 
+/* 3. Dashboard HRMS Cards & Headers */
 [data-theme="dark"] .hrms-card {
   background: #1e293b !important;
   border-color: #334155 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
 }
 
 [data-theme="dark"] .hrms-card-header {
@@ -404,7 +485,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] .btn-hrms-outline:hover {
-  background: #24344d !important;
+  background: #1e293b !important;
   border-color: #0284c7 !important;
   color: #ffffff !important;
 }
@@ -419,8 +500,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .table-search-box input::placeholder {
+  color: #64748b !important;
+}
+
 [data-theme="dark"] .table-search-box:focus-within {
-  background: #162032 !important;
+  background: #0f172a !important;
   border-color: #0284c7 !important;
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2) !important;
 }
@@ -438,7 +523,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] .staff-id-table tbody tr:hover {
-  background-color: #24344d !important;
+  background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
 [data-theme="dark"] td[colspan] {
@@ -511,7 +596,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: rgba(16, 185, 129, 0.35) !important;
 }
 
-/* Table Text Overrides */
+/* Table Text & Icon Overrides */
 [data-theme="dark"] td span[style*="color:#0f172a"],
 [data-theme="dark"] td span[style*="color: #0f172a"],
 [data-theme="dark"] td div[style*="color: #0f172a"],
@@ -528,7 +613,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 
-/* Leave Requests Section */
+[data-theme="dark"] .staff-id-table i.fa-clock[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+
+/* 4. Leave Requests Section */
 [data-theme="dark"] .hrms-card-header span[style*="background:#fef3c7"],
 [data-theme="dark"] .hrms-card-header span[style*="background: #fef3c7"] {
   background: rgba(245, 158, 11, 0.15) !important;
@@ -558,7 +647,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 
-/* Recent Fee Collections Section */
+/* Empty State: No Active Leaves */
+[data-theme="dark"] .hrms-card-body div[style*="text-align: center"] div[style*="border-radius: 50%"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .hrms-card-body div[style*="text-align: center"] h4 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .hrms-card-body div[style*="text-align: center"] p {
+  color: #94a3b8 !important;
+}
+
+/* 5. Recent Fee Collections Section */
 [data-theme="dark"] .receipt-tag {
   background: #0f172a !important;
   color: #38bdf8 !important;
@@ -576,7 +680,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #34d399 !important;
 }
 
-/* Circulars & Notices Section */
+/* 6. Circulars & Notices Section */
 [data-theme="dark"] .notice-item {
   background: #0f172a !important;
   border-color: #334155 !important;
@@ -584,7 +688,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] .notice-item:hover {
-  background: #162032 !important;
+  background: #1e293b !important;
   border-color: #475569 !important;
   border-left-color: #38bdf8 !important;
 }
@@ -610,11 +714,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #38bdf8 !important;
 }
 
-/* Modals */
+[data-theme="dark"] .notice-item .badge-dept {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .notice-list > p {
+  color: #94a3b8 !important;
+}
+
+/* 7. Modals */
+[data-theme="dark"] .hrms-modal {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
 [data-theme="dark"] .hrms-modal-card {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
 }
 
 [data-theme="dark"] .hrms-modal-header {
@@ -628,6 +746,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 [data-theme="dark"] .hrms-modal-header .modal-close-btn {
   color: #94a3b8 !important;
+  background: transparent !important;
 }
 
 [data-theme="dark"] .hrms-modal-header .modal-close-btn:hover {
@@ -646,6 +765,26 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 [data-theme="dark"] .hrms-input:focus {
   border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2) !important;
+}
+
+[data-theme="dark"] .hrms-input::placeholder {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .login-submit-btn {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+}
+
+[data-theme="dark"] .login-submit-btn:hover {
+  background: #0369a1 !important;
 }
 </style>
 
