@@ -463,19 +463,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 .staff-periods-table .cell-sub {
   display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
 }
 
 .staff-periods-table .sp-dept-name {
-  white-space: nowrap;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.25;
 }
 
 .staff-periods-table .sp-sub-bullet {
-  display: inline-block;
-  color: #94a3b8;
-  flex-shrink: 0;
+  display: none !important;
 }
 
 /* Badges & Tags */
@@ -1160,15 +1160,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ── Faculty Cell Subtitle (Table & Card) ── */
 .staff-periods-table .cell-sub {
   display: flex;
-  align-items: center;
-  gap: 5px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
 }
-.staff-periods-table .sp-sub-bullet,
+.staff-periods-table .sp-sub-bullet {
+  display: none !important;
+}
 .faculty-card-sub .sp-sub-bullet {
   display: inline-block;
   color: #94a3b8;
 }
-[data-theme="dark"] .staff-periods-table .sp-sub-bullet,
 [data-theme="dark"] .faculty-card-sub .sp-sub-bullet {
   color: #475569 !important;
 }
@@ -1567,14 +1569,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       <div class="cell-name" style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                         <?php echo htmlspecialchars($p['staff_name']); ?>
                       </div>
-                      <div class="cell-sub" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px; white-space: nowrap;">
+                      <div class="cell-sub" style="font-size: 0.73rem; color: #64748b; margin-top: 3px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
                         <span class="sp-code-pill">
                           <i class="fa-solid fa-hashtag" style="font-size: 0.60rem;"></i>
                           <span><?php echo htmlspecialchars($p['employee_code'] ?? 'KSV-FAC'); ?></span>
                         </span>
                         <?php if (!empty($p['department'])): ?>
-                          <span class="sp-sub-bullet" style="color: #94a3b8;">&bull;</span>
-                          <span class="sp-dept-name" style="color: #64748b; white-space: nowrap;"><?php echo htmlspecialchars($p['department']); ?></span>
+                          <span class="sp-sub-bullet" style="display: none;">&bull;</span>
+                          <span class="sp-dept-name" style="color: #64748b; font-size: 0.72rem; line-height: 1.25;"><?php echo htmlspecialchars($p['department']); ?></span>
                         <?php endif; ?>
                       </div>
                     </div>
