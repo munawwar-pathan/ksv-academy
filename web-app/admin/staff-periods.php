@@ -424,6 +424,60 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background-color: #f8fafc;
 }
 
+/* Table Column Proportions & Desktop Sizing */
+.staff-periods-table th:first-child,
+.staff-periods-table td:first-child {
+  width: 30%;
+  min-width: 310px;
+}
+.staff-periods-table th:nth-child(2),
+.staff-periods-table td:nth-child(2) {
+  width: 20%;
+  min-width: 190px;
+}
+.staff-periods-table th:nth-child(3),
+.staff-periods-table td:nth-child(3) {
+  width: 16%;
+  min-width: 155px;
+}
+.staff-periods-table th:nth-child(4),
+.staff-periods-table td:nth-child(4) {
+  width: 12%;
+  min-width: 120px;
+}
+.staff-periods-table th:nth-child(5),
+.staff-periods-table td:nth-child(5) {
+  width: 11%;
+  min-width: 110px;
+}
+.staff-periods-table th:nth-child(6),
+.staff-periods-table td:nth-child(6) {
+  width: 11%;
+  min-width: 85px;
+  text-align: right;
+}
+
+.staff-periods-table .cell-name {
+  white-space: nowrap;
+}
+
+.staff-periods-table .cell-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.staff-periods-table .sp-dept-name {
+  white-space: nowrap;
+}
+
+.staff-periods-table .sp-sub-bullet {
+  display: inline-block;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
 /* Badges & Tags */
 .sp-code-pill {
   display: inline-flex;
@@ -1204,10 +1258,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
   }
 
   /* Faculty member table cell layout: prevent orphaned bullet */
+  .staff-periods-table th:first-child,
+  .staff-periods-table td:first-child {
+    width: auto !important;
+    min-width: 160px !important;
+  }
+
+  .staff-periods-table .cell-name {
+    white-space: normal !important;
+  }
+
   .staff-periods-table .cell-sub {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 3px !important;
+    white-space: normal !important;
   }
 
   .staff-periods-table .sp-sub-bullet {
@@ -1217,6 +1282,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   .staff-periods-table .sp-dept-name {
     font-size: 0.70rem !important;
     line-height: 1.3 !important;
+    white-space: normal !important;
   }
 
   .faculty-card-sub {
@@ -1501,14 +1567,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       <div class="cell-name" style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                         <?php echo htmlspecialchars($p['staff_name']); ?>
                       </div>
-                      <div class="cell-sub" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px;">
+                      <div class="cell-sub" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px; white-space: nowrap;">
                         <span class="sp-code-pill">
                           <i class="fa-solid fa-hashtag" style="font-size: 0.60rem;"></i>
                           <span><?php echo htmlspecialchars($p['employee_code'] ?? 'KSV-FAC'); ?></span>
                         </span>
                         <?php if (!empty($p['department'])): ?>
                           <span class="sp-sub-bullet" style="color: #94a3b8;">&bull;</span>
-                          <span class="sp-dept-name" style="color: #64748b;"><?php echo htmlspecialchars($p['department']); ?></span>
+                          <span class="sp-dept-name" style="color: #64748b; white-space: nowrap;"><?php echo htmlspecialchars($p['department']); ?></span>
                         <?php endif; ?>
                       </div>
                     </div>

@@ -1207,10 +1207,21 @@
   }
 
   /* Faculty member table cell layout: prevent orphaned bullet */
+  .staff-periods-table th:first-child,
+  .staff-periods-table td:first-child {
+    width: auto !important;
+    min-width: 160px !important;
+  }
+
+  .staff-periods-table .cell-name {
+    white-space: normal !important;
+  }
+
   .staff-periods-table .cell-sub {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 3px !important;
+    white-space: normal !important;
   }
 
   .staff-periods-table .sp-sub-bullet {
@@ -1220,6 +1231,7 @@
   .staff-periods-table .sp-dept-name {
     font-size: 0.70rem !important;
     line-height: 1.3 !important;
+    white-space: normal !important;
   }
 
   .faculty-card-sub {
