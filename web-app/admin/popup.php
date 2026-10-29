@@ -899,6 +899,176 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #475569 !important;
   color: #f8fafc !important;
 }
+
+/* ── Popup Toolbar Layout & Single-Line Mobile Responsive ── */
+.popup-toolbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.popup-status-tabs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.popup-controls-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.popup-search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.popup-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .popup-toolbar-card {
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .popup-toolbar-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* Row 1: Status Tabs */
+  .popup-status-tabs {
+    display: flex !important;
+    width: 100% !important;
+    gap: 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .popup-status-tabs a {
+    flex: 1 1 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 6px !important;
+    font-size: 0.78rem !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    gap: 4px !important;
+  }
+
+  .popup-status-tabs a span:last-child {
+    font-size: 0.70rem !important;
+    padding: 1px 5px !important;
+  }
+
+  /* Row 2: Search + View Toggle + Add Button on a Single Line */
+  .popup-controls-wrap {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .popup-search-form {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .popup-search-form input[name="search"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    box-sizing: border-box !important;
+    font-size: 0.78rem !important;
+    padding: 6px 26px 6px 32px !important;
+    border-radius: 9px !important;
+  }
+
+  .popup-search-form i.fa-magnifying-glass {
+    left: 11px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .popup-actions-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .popup-view-toggle {
+    padding: 2px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+  }
+
+  .popup-view-toggle a {
+    padding: 6px 8px !important;
+    font-size: 0.80rem !important;
+    border-radius: 6px !important;
+  }
+
+  .popup-add-btn {
+    height: 38px !important;
+    padding: 0 12px !important;
+    font-size: 0.78rem !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+}
+
+/* Micro screens (<= 380px) */
+@media (max-width: 380px) {
+  .popup-controls-wrap {
+    gap: 5px !important;
+  }
+  .popup-actions-group {
+    gap: 4px !important;
+  }
+  .popup-view-toggle a {
+    padding: 5px 6px !important;
+  }
+  .popup-add-btn {
+    padding: 0 8px !important;
+    font-size: 0.74rem !important;
+  }
+  .popup-add-btn span {
+    font-size: 0.74rem !important;
+  }
+  .popup-search-form input[name="search"] {
+    font-size: 0.74rem !important;
+    padding-left: 28px !important;
+  }
+  .popup-search-form i.fa-magnifying-glass {
+    left: 8px !important;
+    font-size: 0.72rem !important;
+  }
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -934,11 +1104,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      TOOLBAR: FILTERS, SEARCH & ADD BUTTON
      ══════════════════════════════════════════════════════ -->
-<div class="roaster-toolbar-card no-print" style="margin-bottom: 24px; padding: 16px 20px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+<div class="roaster-toolbar-card popup-toolbar-card no-print" style="margin-bottom: 24px; padding: 16px 20px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+  <div class="popup-toolbar-inner">
     
     <!-- Left: Status Tabs -->
-    <div style="display: flex; gap: 6px; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 12px;">
+    <div class="popup-status-tabs" style="display: flex; gap: 6px; align-items: center; background: #f1f5f9; padding: 4px; border-radius: 12px;">
       <a href="?status=all&view=<?php echo urlencode($view_mode); ?>" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: <?php echo $filter_status === 'all' ? '#fff' : '#64748b'; ?>; background: <?php echo $filter_status === 'all' ? '#0092df' : 'transparent'; ?>;">
         <span>All Slides</span>
         <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 10px; background: <?php echo $filter_status === 'all' ? 'rgba(255,255,255,0.3)' : '#e2e8f0'; ?>;"><?php echo $total_count; ?></span>
@@ -955,36 +1125,39 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </a>
     </div>
 
-    <!-- Center: Search -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/popup" style="display: flex; align-items: center; position: relative;">
-      <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
-      <input type="hidden" name="view" value="<?php echo htmlspecialchars($view_mode); ?>">
-      <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; color: #94a3b8; font-size: 0.84rem;"></i>
-      <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search slides by title..." style="padding: 8px 14px 8px 36px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.82rem; width: 220px; outline: none;">
-      <?php if (!empty($search)): ?>
-        <a href="?status=<?php echo urlencode($filter_status); ?>&view=<?php echo urlencode($view_mode); ?>" style="position: absolute; right: 10px; color: #94a3b8; text-decoration: none;">
-          <i class="fa-solid fa-circle-xmark"></i>
-        </a>
-      <?php endif; ?>
-    </form>
+    <!-- Controls Row: Search + View Toggle & Add Button in a Single Line -->
+    <div class="popup-controls-wrap">
+      <!-- Search -->
+      <form method="GET" action="<?php echo ADMIN_URL; ?>/popup" class="popup-search-form" style="display: flex; align-items: center; position: relative;">
+        <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
+        <input type="hidden" name="view" value="<?php echo htmlspecialchars($view_mode); ?>">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; color: #94a3b8; font-size: 0.84rem;"></i>
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search slides by title..." style="padding: 8px 14px 8px 36px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.82rem; width: 220px; outline: none;">
+        <?php if (!empty($search)): ?>
+          <a href="?status=<?php echo urlencode($filter_status); ?>&view=<?php echo urlencode($view_mode); ?>" style="position: absolute; right: 10px; color: #94a3b8; text-decoration: none;">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </a>
+        <?php endif; ?>
+      </form>
 
-    <!-- Right: View Toggle & Add Button -->
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <!-- View mode switch -->
-      <div style="display: flex; background: #f1f5f9; padding: 3px; border-radius: 8px;">
-        <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=grid" title="Grid View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'grid' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'grid' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'grid' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
-          <i class="fa-solid fa-table-cells-large"></i>
-        </a>
-        <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=table" title="Table View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'table' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'table' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'table' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
-          <i class="fa-solid fa-list"></i>
-        </a>
+      <!-- Right: View Toggle & Add Button -->
+      <div class="popup-actions-group" style="display: flex; gap: 8px; align-items: center;">
+        <!-- View mode switch -->
+        <div class="popup-view-toggle" style="display: flex; background: #f1f5f9; padding: 3px; border-radius: 8px;">
+          <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=grid" title="Grid View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'grid' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'grid' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'grid' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
+            <i class="fa-solid fa-table-cells-large"></i>
+          </a>
+          <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=table" title="Table View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'table' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'table' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'table' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
+            <i class="fa-solid fa-list"></i>
+          </a>
+        </div>
+
+        <!-- Add Slide Button -->
+        <button type="button" onclick="openAddModal();" class="roaster-add-btn popup-add-btn" style="background: linear-gradient(135deg, #0092df 0%, #0066aa 100%); color: #ffffff; padding: 8px 18px; font-size: 0.82rem; display: flex; align-items: center; gap: 7px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 146, 223, 0.35);">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add Slide</span>
+        </button>
       </div>
-
-      <!-- Add Slide Button -->
-      <button type="button" onclick="openAddModal();" class="roaster-add-btn" style="background: linear-gradient(135deg, #0092df 0%, #0066aa 100%); color: #ffffff; padding: 8px 18px; font-size: 0.82rem; display: flex; align-items: center; gap: 7px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 146, 223, 0.35);">
-        <i class="fa-solid fa-plus"></i>
-        <span>Add Slide</span>
-      </button>
     </div>
 
   </div>
