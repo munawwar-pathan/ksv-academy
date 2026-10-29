@@ -523,6 +523,382 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #0092df;
   background: #f0f9ff;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR POPUP SLIDER MANAGEMENT
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Dimension Guidance Box */
+[data-theme="dark"] .dimension-guide-box {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .dimension-guide-box h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .dimension-guide-box p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .dimension-guide-box code {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+  border: 1px solid #334155 !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+[data-theme="dark"] .guide-badge-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+  box-shadow: none !important;
+}
+[data-theme="dark"] .guide-badge-pill strong {
+  color: inherit !important;
+}
+[data-theme="dark"] .guide-badge-pill[style*="#bbf7d0"],
+[data-theme="dark"] .guide-badge-pill[style*="#166534"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+
+/* 2. Main Toolbar Card & Filters */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .roaster-toolbar-card div[style*="background: #f1f5f9"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .roaster-toolbar-card a[style*="#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-toolbar-card a[style*="#64748b"]:hover {
+  color: #f8fafc !important;
+  background: #1e293b !important;
+}
+[data-theme="dark"] .roaster-toolbar-card a span[style*="#e2e8f0"] {
+  background: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .roaster-toolbar-card input[name="search"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-toolbar-card input[name="search"]:focus {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-toolbar-card input[name="search"]::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-toolbar-card a[href*="view=grid"][style*="#fff"],
+[data-theme="dark"] .roaster-toolbar-card a[href*="view=table"][style*="#fff"] {
+  background: #1e293b !important;
+  color: #0092df !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+}
+[data-theme="dark"] .roaster-toolbar-card a[href*="view=grid"][style*="transparent"],
+[data-theme="dark"] .roaster-toolbar-card a[href*="view=table"][style*="transparent"] {
+  color: #94a3b8 !important;
+  background: transparent !important;
+}
+[data-theme="dark"] .roaster-toolbar-card a[href*="view=grid"]:hover,
+[data-theme="dark"] .roaster-toolbar-card a[href*="view=table"]:hover {
+  color: #f8fafc !important;
+}
+
+/* 3. Empty State Card */
+[data-theme="dark"] div[style*="border: 1.5px dashed #cbd5e1"] {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] div[style*="border: 1.5px dashed #cbd5e1"] div[style*="background: #f0f9ff"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] div[style*="border: 1.5px dashed #cbd5e1"] h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] div[style*="border: 1.5px dashed #cbd5e1"] p {
+  color: #94a3b8 !important;
+}
+
+/* 4. Grid View: Popup Cards */
+[data-theme="dark"] .popup-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .popup-card:hover {
+  border-color: #0092df !important;
+  box-shadow: 0 12px 30px rgba(0, 146, 223, 0.22) !important;
+}
+[data-theme="dark"] .popup-card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .popup-card-caption {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .popup-card-content div[style*="#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .popup-card-content code {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+  border: 1px solid #334155 !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+[data-theme="dark"] .popup-card-footer {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .popup-card-footer .action-btn-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .popup-card-footer .action-btn-pill:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .action-btn-pill[style*="#d97706"] {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .action-btn-pill[style*="#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .popup-card-footer button[onclick^="openEditModal"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .popup-card-footer button[onclick^="openEditModal"]:hover {
+  background: #0092df !important;
+  border-color: #0092df !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .popup-card-footer button[title="Delete Slide"] {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .popup-card-footer button[title="Delete Slide"]:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* 5. Directory Table View */
+[data-theme="dark"] div:has(> div > table),
+[data-theme="dark"] div[style*="box-shadow: 0 2px 10px rgba(0,0,0,0.03);"]:not(.roaster-toolbar-card) {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] table thead tr {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] table thead th {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] table tbody tr {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] table tbody td {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] table tbody td:first-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] table tbody td div[style*="color: #0f172a;"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] table tbody td div[style*="color: #64748b;"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] table tbody td div[style*="color: #94a3b8;"] {
+  color: #64748b !important;
+}
+[data-theme="dark"] table tbody td[style*="color: #0092df;"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] table tbody td div[style*="border: 1px solid #cbd5e1;"] {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .dim-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .dim-badge.recommended {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] table tbody button[onclick^="openEditModal"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] table tbody button[onclick^="openEditModal"]:hover {
+  background: #0092df !important;
+  border-color: #0092df !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] table tbody form button {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] table tbody form button:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
+
+/* 6. Modals (Add & Edit Slide Modals) */
+[data-theme="dark"] .hrms-modal {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+[data-theme="dark"] .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="dark"] .hrms-modal-card > div:first-child {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-modal-card h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-card span[style*="#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .hrms-modal-card button[onclick^="close"]:not([style*="padding"]) {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .hrms-modal-card button[onclick^="close"]:not([style*="padding"]):hover {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-card label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal-card label code {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+  border: 1px solid #334155 !important;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+[data-theme="dark"] .hrms-modal-card input[type="text"],
+[data-theme="dark"] .hrms-modal-card input[type="number"],
+[data-theme="dark"] .hrms-modal-card select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-card input[type="text"]:focus,
+[data-theme="dark"] .hrms-modal-card input[type="number"]:focus,
+[data-theme="dark"] .hrms-modal-card select:focus {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .hrms-modal-card select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-modal-card div[style*="background: #f0fdf4"] {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+[data-theme="dark"] .hrms-modal-card div[style*="background: #f0fdf4"] div[style*="color: #166534;"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .hrms-modal-card div[style*="background: #f0fdf4"] div[style*="color: #15803d;"] {
+  color: #a7f3d0 !important;
+}
+[data-theme="dark"] .popup-dropzone {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .popup-dropzone:hover {
+  background: #1e293b !important;
+  border-color: #0092df !important;
+}
+[data-theme="dark"] .popup-dropzone div[style*="color: #0f172a;"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .popup-dropzone div[style*="color: #64748b;"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .popup-dropzone code {
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+  border: 1px solid #334155 !important;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+[data-theme="dark"] #addDimStatus,
+[data-theme="dark"] #editDimStatus {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #addPreviewWrap,
+[data-theme="dark"] div[style*="padding: 12px; background: #f8fafc; border: 1px solid #cbd5e1;"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #addPreviewDimText,
+[data-theme="dark"] #editCurrentDimText {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #addPreviewDimNote,
+[data-theme="dark"] div[style*="color: #64748b; margin-top: 2px;"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #editNewPreviewWrap {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+[data-theme="dark"] #editNewDimText {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #editNewDimText + div {
+  color: #a7f3d0 !important;
+}
+[data-theme="dark"] .existing-files-strip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .existing-file-thumb {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .existing-file-thumb:hover {
+  border-color: #0092df !important;
+}
+[data-theme="dark"] .existing-file-thumb.selected {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35) !important;
+}
+[data-theme="dark"] .hrms-modal-card button[onclick^="close"][style*="padding"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .hrms-modal-card button[onclick^="close"][style*="padding"]:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
