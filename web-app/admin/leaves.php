@@ -331,7 +331,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
   white-space: nowrap;
 }
 .leaves-table .leaves-staff-dept {
-  white-space: nowrap;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.25;
+}
+.leaves-staff-sub {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
 }
 .leaves-table thead th:first-child,
 .leaves-table tbody td:first-child {
@@ -1294,9 +1302,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <div class="cell-name leaves-staff-name" style="font-weight: 700; color: #0f172a; font-size: 0.83rem; line-height: 1.25;">
                       <?php echo htmlspecialchars($lr['full_name']); ?>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 5px; margin-top: 2px;">
+                    <div class="leaves-staff-sub" style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin-top: 3px;">
                       <span class="emp-code-pill leaves-emp-code"><?php echo htmlspecialchars($lr['employee_code']); ?></span>
-                      <span class="cell-sub leaves-staff-dept" style="font-size: 0.70rem; color: #64748b;"><?php echo htmlspecialchars($lr['department']); ?></span>
+                      <span class="cell-sub leaves-staff-dept" style="font-size: 0.72rem; color: #64748b; line-height: 1.25;"><?php echo htmlspecialchars($lr['department']); ?></span>
                     </div>
                   </div>
                 </div>
