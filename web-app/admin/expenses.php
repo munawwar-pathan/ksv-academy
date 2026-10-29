@@ -351,6 +351,42 @@ require_once __DIR__ . '/../includes/layout-header.php';
   flex-shrink: 0;
 }
 
+/* Ensure Single Line on Desktop Screens (>= 992px) */
+@media (min-width: 992px) {
+  .roaster-toolbar-inner {
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+  }
+  .expenses-filter-form {
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  .roaster-toolbar-card .expenses-search-box {
+    min-width: 170px !important;
+    max-width: 250px !important;
+    flex: 1 1 auto !important;
+    height: 40px !important;
+  }
+  .expenses-filter-row {
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+  .expenses-filter-row .roaster-select-box select {
+    min-width: 135px !important;
+    max-width: 165px !important;
+    height: 40px !important;
+  }
+  .expenses-filter-btn-group {
+    flex-shrink: 0 !important;
+  }
+  .expenses-toolbar-actions {
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR EXPENSES & VOUCHERS
    ══════════════════════════════════════════════════════════════════════ */
@@ -409,12 +445,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
     width: 100% !important;
     gap: 8px !important;
   }
-  .expenses-search-box {
+  .expenses-search-box,
+  .roaster-toolbar-card .expenses-search-box {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    box-sizing: border-box !important;
+    flex: none !important;
     height: 40px !important;
+    max-height: 40px !important;
+    box-sizing: border-box !important;
     padding: 8px 12px !important;
     border-radius: 9px !important;
   }

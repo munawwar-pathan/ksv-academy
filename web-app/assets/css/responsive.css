@@ -1525,6 +1525,19 @@
     gap: 8px !important;
   }
 
+  .expenses-search-box,
+  .roaster-toolbar-card .expenses-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+    height: 40px !important;
+    max-height: 40px !important;
+    box-sizing: border-box !important;
+    padding: 8px 12px !important;
+    border-radius: 9px !important;
+  }
+
   .expenses-filter-row {
     grid-column: 1 / -1 !important;
     display: grid !important;
