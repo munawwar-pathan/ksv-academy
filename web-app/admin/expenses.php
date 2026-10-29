@@ -296,22 +296,59 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #dc2626;
 }
 
-/* ── Filter Row & Button Group Base Layout ── */
+/* ── Toolbar Single-Line Desktop Alignment & Spacing ── */
+.roaster-toolbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .expenses-filter-form {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  flex: 1;
 }
+
+.roaster-toolbar-card .expenses-search-box {
+  min-width: 200px;
+  max-width: 240px;
+  flex: 1 1 200px;
+}
+
 .expenses-filter-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
 }
+
+.expenses-filter-row .roaster-select-box {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.expenses-filter-row .roaster-select-box select {
+  min-width: 145px;
+  max-width: 175px;
+}
+
 .expenses-filter-btn-group {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.expenses-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1159,7 +1196,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
      FILTER & SEARCH ROASTER TOOLBAR
      ══════════════════════════════════════════════════════ -->
 <div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
-  <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+  <div class="roaster-toolbar-inner">
     
     <!-- Left: Filter Form -->
     <form method="GET" action="<?php echo ADMIN_URL; ?>/expenses" class="roaster-filter-form expenses-filter-form">
