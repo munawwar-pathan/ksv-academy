@@ -538,10 +538,34 @@ require_once __DIR__ . '/../includes/layout-header.php';
   .expenses-title-block {
     width: 100% !important;
   }
-  .expenses-card-title {
+  .expenses-card-title,
+  .expenses-title-block .card-title {
     font-size: 0.95rem !important;
+    display: flex !important;
+    align-items: center !important;
     flex-wrap: wrap !important;
-    gap: 6px !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+  }
+  .expenses-title-group {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  .hrms-card-header h3.card-title .expenses-title-text,
+  .expenses-title-text {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+  }
+  .expenses-session-badge {
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    padding: 2px 8px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
   .expenses-subtitle {
     font-size: 0.74rem !important;
@@ -832,7 +856,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #1e293b !important;
   border-bottom-color: #334155 !important;
 }
-[data-theme="dark"] .expenses-card-title {
+[data-theme="dark"] .expenses-card-title,
+[data-theme="dark"] .expenses-title-text {
   color: #f8fafc !important;
 }
 [data-theme="dark"] .expenses-session-badge {
@@ -1319,8 +1344,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="hrms-card-header expenses-card-header" style="border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px;">
     <div class="expenses-title-block">
       <h3 class="card-title expenses-card-title" style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
-        <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
-        <span>Campus Operational Expenses &amp; Voucher Ledger</span>
+        <span class="expenses-title-group" style="display: inline-flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
+          <span class="expenses-title-text">Campus Operational Expenses &amp; Voucher Ledger</span>
+        </span>
         <span class="expenses-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
           Session <?php echo htmlspecialchars($active_session['session_name']); ?>
         </span>
