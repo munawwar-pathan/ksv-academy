@@ -928,6 +928,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
   align-items: center;
 }
 
+.popup-search-form input[name="search"] {
+  width: 220px;
+  height: 38px;
+  box-sizing: border-box;
+}
+
 .popup-actions-group {
   display: flex;
   align-items: center;
@@ -935,11 +941,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
   flex-shrink: 0;
 }
 
+.popup-add-btn {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 0.82rem;
+}
+
 @media (max-width: 768px) {
   .popup-toolbar-card {
     padding: 12px 14px !important;
     border-radius: 14px !important;
     margin-bottom: 16px !important;
+    overflow: hidden !important;
   }
 
   .popup-toolbar-inner {
@@ -948,6 +961,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
     align-items: stretch !important;
     gap: 10px !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Row 1: Status Tabs */
@@ -980,13 +995,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 6px !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     flex-wrap: nowrap !important;
+    min-width: 0 !important;
   }
 
   .popup-search-form {
-    flex: 1 1 auto !important;
+    flex: 1 1 0 !important;
+    width: 0 !important;
     min-width: 0 !important;
     position: relative !important;
     display: flex !important;
@@ -996,16 +1015,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
   .popup-search-form input[name="search"] {
     width: 100% !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     height: 38px !important;
     box-sizing: border-box !important;
     font-size: 0.78rem !important;
-    padding: 6px 26px 6px 32px !important;
+    padding: 6px 24px 6px 30px !important;
     border-radius: 9px !important;
   }
 
   .popup-search-form i.fa-magnifying-glass {
-    left: 11px !important;
-    font-size: 0.78rem !important;
+    left: 10px !important;
+    font-size: 0.76rem !important;
   }
 
   .popup-actions-group {
@@ -1021,52 +1041,56 @@ require_once __DIR__ . '/../includes/layout-header.php';
     border-radius: 8px !important;
     flex-shrink: 0 !important;
     display: flex !important;
+    gap: 2px !important;
   }
 
   .popup-view-toggle a {
-    padding: 6px 8px !important;
-    font-size: 0.80rem !important;
+    padding: 6px 7px !important;
+    font-size: 0.78rem !important;
     border-radius: 6px !important;
   }
 
   .popup-add-btn {
     height: 38px !important;
-    padding: 0 12px !important;
-    font-size: 0.78rem !important;
+    padding: 0 10px !important;
+    font-size: 0.76rem !important;
     border-radius: 9px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
+    box-sizing: border-box !important;
   }
 }
 
 /* Micro screens (<= 380px) */
 @media (max-width: 380px) {
   .popup-controls-wrap {
-    gap: 5px !important;
+    gap: 4px !important;
   }
   .popup-actions-group {
     gap: 4px !important;
   }
   .popup-view-toggle a {
-    padding: 5px 6px !important;
+    padding: 5px 5px !important;
+    font-size: 0.74rem !important;
   }
   .popup-add-btn {
-    padding: 0 8px !important;
-    font-size: 0.74rem !important;
+    padding: 0 7px !important;
+    font-size: 0.72rem !important;
   }
   .popup-add-btn span {
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
   }
   .popup-search-form input[name="search"] {
-    font-size: 0.74rem !important;
-    padding-left: 28px !important;
+    font-size: 0.72rem !important;
+    padding-left: 26px !important;
+    padding-right: 20px !important;
   }
   .popup-search-form i.fa-magnifying-glass {
-    left: 8px !important;
-    font-size: 0.72rem !important;
+    left: 7px !important;
+    font-size: 0.70rem !important;
   }
 }
 </style>
@@ -1132,7 +1156,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
         <input type="hidden" name="view" value="<?php echo htmlspecialchars($view_mode); ?>">
         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; color: #94a3b8; font-size: 0.84rem;"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search slides by title..." style="padding: 8px 14px 8px 36px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.82rem; width: 220px; outline: none;">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search slides by title..." style="padding: 8px 14px 8px 36px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.82rem; outline: none;">
         <?php if (!empty($search)): ?>
           <a href="?status=<?php echo urlencode($filter_status); ?>&view=<?php echo urlencode($view_mode); ?>" style="position: absolute; right: 10px; color: #94a3b8; text-decoration: none;">
             <i class="fa-solid fa-circle-xmark"></i>
@@ -1153,7 +1177,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Add Slide Button -->
-        <button type="button" onclick="openAddModal();" class="roaster-add-btn popup-add-btn" style="background: linear-gradient(135deg, #0092df 0%, #0066aa 100%); color: #ffffff; padding: 8px 18px; font-size: 0.82rem; display: flex; align-items: center; gap: 7px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 146, 223, 0.35);">
+        <button type="button" onclick="openAddModal();" class="roaster-add-btn popup-add-btn" style="background: linear-gradient(135deg, #0092df 0%, #0066aa 100%); color: #ffffff; display: flex; align-items: center; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 146, 223, 0.35);">
           <i class="fa-solid fa-plus"></i>
           <span>Add Slide</span>
         </button>
