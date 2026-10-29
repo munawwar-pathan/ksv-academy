@@ -463,6 +463,411 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #fca5a5;
   color: #dc2626;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR LEAVE MANAGEMENT
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Top KPI Stat Metrics Strip */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"] {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#7c3aed"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #7c3aed"] {
+  color: #a78bfa !important;
+}
+
+/* 2. Filter & Search Toolbar */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box:focus-within {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-search-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .search-clear-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .search-clear-btn:hover {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select:focus {
+  background: #0f172a !important;
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+[data-theme="dark"] .scholars-count-badge.leaves-records-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .scholars-count-badge.leaves-records-badge strong {
+  color: #f8fafc !important;
+}
+
+/* 3. Leave Applications Directory Card & Header */
+[data-theme="dark"] .leaves-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .leaves-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .leaves-card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .leaves-subtitle {
+  color: #94a3b8 !important;
+}
+
+/* 4. Leaves Master Table */
+[data-theme="dark"] .leaves-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .leaves-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .leaves-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .staff-avatar-img {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .leaves-staff-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-staff-dept,
+[data-theme="dark"] .leaves-designation {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .leaves-period-dates {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-applied-date {
+  color: #94a3b8 !important;
+}
+
+/* Badges, Chips & Reason Quotes */
+[data-theme="dark"] .emp-code-pill.leaves-emp-code {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .duration-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .reason-quote-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  border-left-color: #0284c7 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Leave Category Chips */
+[data-theme="dark"] .leave-type-chip.casual {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .leave-type-chip.medical {
+  background: rgba(220, 38, 38, 0.15) !important;
+  border-color: rgba(220, 38, 38, 0.35) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .leave-type-chip.academic {
+  background: rgba(124, 58, 237, 0.15) !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
+  color: #c084fc !important;
+}
+[data-theme="dark"] .leave-type-chip.emergency {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .leave-type-chip.other {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+/* Status Badges */
+[data-theme="dark"] .status-badge-leave.approved {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .status-badge-leave.pending {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .status-badge-leave.rejected {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+
+/* Decision Action Buttons */
+[data-theme="dark"] .leave-action-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .leave-action-btn:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leave-action-btn.btn-approve {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .leave-action-btn.btn-approve:hover {
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #6ee7b7 !important;
+}
+[data-theme="dark"] .leave-action-btn.btn-reject {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .leave-action-btn.btn-reject:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #fca5a5 !important;
+}
+[data-theme="dark"] .leave-action-btn.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+/* Empty State */
+[data-theme="dark"] .leaves-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .leaves-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .leaves-table tbody td h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-table tbody td p {
+  color: #94a3b8 !important;
+}
+
+/* 5. Pagination Controls */
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: #0092df !important;
+  border-color: #0092df !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
+[data-theme="dark"] .pagination-legend-group {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-legend-text {
+  color: #94a3b8 !important;
+}
+
+/* 6. Modal: Apply for Faculty Leave */
+[data-theme="dark"] .hrms-modal-overlay {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
+[data-theme="dark"] .leaves-modal-box {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-modal-header {
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] .leaves-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-modal-close {
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #475569 !important;
+}
+[data-theme="dark"] .leaves-modal-close:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .leaves-field-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .leaves-modal-box .hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-modal-box .hrms-input:focus {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
+}
+[data-theme="dark"] .leaves-modal-box .hrms-input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .leaves-modal-box .hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .leaves-modal-box input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+[data-theme="dark"] .leaves-duration-banner {
+  background: #0f172a !important;
+  border-color: #0092df !important;
+}
+[data-theme="dark"] .leaves-duration-label {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #leaveDaysDisplay {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .leaves-modal-footer {
+  border-top: 1px solid #334155 !important;
+  padding-top: 16px !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
