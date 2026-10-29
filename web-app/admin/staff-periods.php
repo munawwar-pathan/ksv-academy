@@ -271,13 +271,13 @@ function get_staff_periods_pagination_url($target_page, $search, $filter_staff, 
 // Helper for subject badge color theme (Simple & Sober)
 function get_subject_theme($subj) {
     $s = strtolower($subj);
-    if (strpos($s, 'phys') !== false) return ['bg' => '#f0f9ff', 'color' => '#0284c7', 'border' => '#bae6fd', 'icon' => 'fa-atom'];
-    if (strpos($s, 'chem') !== false) return ['bg' => '#fff7ed', 'color' => '#c2410c', 'border' => '#fed7aa', 'icon' => 'fa-flask-vial'];
-    if (strpos($s, 'math') !== false || strpos($s, 'calc') !== false || strpos($s, 'geom') !== false) return ['bg' => '#faf5ff', 'color' => '#7e22ce', 'border' => '#e9d5ff', 'icon' => 'fa-square-root-variable'];
-    if (strpos($s, 'bio') !== false || strpos($s, 'anat') !== false) return ['bg' => '#f0fdf4', 'color' => '#166534', 'border' => '#bbf7d0', 'icon' => 'fa-dna'];
-    if (strpos($s, 'eng') !== false || strpos($s, 'lit') !== false) return ['bg' => '#fefce8', 'color' => '#854d0e', 'border' => '#fef08a', 'icon' => 'fa-book'];
-    if (strpos($s, 'comp') !== false || strpos($s, 'code') !== false) return ['bg' => '#eef2ff', 'color' => '#4338ca', 'border' => '#c7d2fe', 'icon' => 'fa-laptop-code'];
-    return ['bg' => '#f8fafc', 'color' => '#334155', 'border' => '#e2e8f0', 'icon' => 'fa-bookmark'];
+    if (strpos($s, 'phys') !== false) return ['bg' => '#f0f9ff', 'color' => '#0284c7', 'border' => '#bae6fd', 'icon' => 'fa-atom', 'class' => 'subj-phys'];
+    if (strpos($s, 'chem') !== false) return ['bg' => '#fff7ed', 'color' => '#c2410c', 'border' => '#fed7aa', 'icon' => 'fa-flask-vial', 'class' => 'subj-chem'];
+    if (strpos($s, 'math') !== false || strpos($s, 'calc') !== false || strpos($s, 'geom') !== false) return ['bg' => '#faf5ff', 'color' => '#7e22ce', 'border' => '#e9d5ff', 'icon' => 'fa-square-root-variable', 'class' => 'subj-math'];
+    if (strpos($s, 'bio') !== false || strpos($s, 'anat') !== false) return ['bg' => '#f0fdf4', 'color' => '#166534', 'border' => '#bbf7d0', 'icon' => 'fa-dna', 'class' => 'subj-bio'];
+    if (strpos($s, 'eng') !== false || strpos($s, 'lit') !== false) return ['bg' => '#fefce8', 'color' => '#854d0e', 'border' => '#fef08a', 'icon' => 'fa-book', 'class' => 'subj-eng'];
+    if (strpos($s, 'comp') !== false || strpos($s, 'code') !== false) return ['bg' => '#eef2ff', 'color' => '#4338ca', 'border' => '#c7d2fe', 'icon' => 'fa-laptop-code', 'class' => 'subj-comp'];
+    return ['bg' => '#f8fafc', 'color' => '#334155', 'border' => '#e2e8f0', 'icon' => 'fa-bookmark', 'class' => 'subj-default'];
 }
 
 // Group periods by faculty for schedule card view
@@ -578,6 +578,480 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #0284c7;
   border-color: #bae6fd;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK MODE ENHANCEMENTS — STAFF PERIODS & TIMETABLE SCHEDULE
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Stat KPI Metric Cards Strip */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#7c3aed"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #7c3aed"] {
+  color: #a78bfa !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"] {
+  color: #fbbf24 !important;
+}
+
+/* 2. Toolbar & Search / Filters */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box:focus-within {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-search-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-select-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+
+/* 3. View Switcher Tabs */
+[data-theme="dark"] .sp-view-toggle {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .sp-view-tab {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sp-view-tab:hover {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .sp-view-tab.active {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 4. Master Directory Cards & Headers */
+[data-theme="dark"] .periods-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .periods-title-block .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .periods-session-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .periods-subtitle {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .periods-records-count {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .periods-records-count strong {
+  color: #f8fafc !important;
+}
+
+/* 5. Master Periods Table */
+[data-theme="dark"] .staff-periods-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .staff-periods-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-periods-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .staff-periods-table tbody td .staff-avatar-img {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .staff-periods-table tbody td .staff-avatar-init {
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .staff-periods-table tbody td .cell-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-periods-table tbody td .cell-sub {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sp-dept-name {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sp-class-name {
+  color: #cbd5e1 !important;
+}
+
+/* Badges & Action Buttons */
+[data-theme="dark"] .sp-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sp-slot-pill {
+  background: rgba(202, 138, 4, 0.18) !important;
+  border-color: rgba(202, 138, 4, 0.35) !important;
+  color: #facc15 !important;
+}
+[data-theme="dark"] .sp-time-chip {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sp-day-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sp-venue-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sp-btn-action {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sp-btn-action:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .sp-btn-action.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #f87171 !important;
+}
+
+/* Subject Badges Dark Mode Tinting */
+[data-theme="dark"] .sp-subject-pill.subj-phys {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .sp-subject-pill.subj-chem {
+  background: rgba(234, 88, 12, 0.15) !important;
+  color: #fb923c !important;
+  border-color: rgba(234, 88, 12, 0.3) !important;
+}
+[data-theme="dark"] .sp-subject-pill.subj-math {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #c084fc !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+[data-theme="dark"] .sp-subject-pill.subj-bio {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .sp-subject-pill.subj-eng {
+  background: rgba(234, 179, 8, 0.15) !important;
+  color: #facc15 !important;
+  border-color: rgba(234, 179, 8, 0.3) !important;
+}
+[data-theme="dark"] .sp-subject-pill.subj-comp {
+  background: rgba(99, 102, 241, 0.15) !important;
+  color: #818cf8 !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}
+[data-theme="dark"] .sp-subject-pill.subj-default {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+/* 6. Empty State Displays */
+[data-theme="dark"] .staff-periods-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-periods-table tbody td div[style*="background:#f1f5f9"],
+[data-theme="dark"] .periods-directory-card div[style*="background: #f1f5f9"],
+[data-theme="dark"] .periods-directory-card div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .staff-periods-table tbody td h4,
+[data-theme="dark"] .periods-directory-card h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-periods-table tbody td p,
+[data-theme="dark"] .periods-directory-card p {
+  color: #94a3b8 !important;
+}
+
+/* 7. View 2: Faculty Timetable Cards */
+[data-theme="dark"] .faculty-schedule-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .faculty-schedule-header {
+  background: #0f172a !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .faculty-card-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .faculty-card-sub {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .faculty-card-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .period-timeline-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .period-timeline-item:hover {
+  border-color: #0284c7 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+[data-theme="dark"] .period-timeline-item.subj-phys { border-left-color: #38bdf8 !important; }
+[data-theme="dark"] .period-timeline-item.subj-chem { border-left-color: #fb923c !important; }
+[data-theme="dark"] .period-timeline-item.subj-math { border-left-color: #c084fc !important; }
+[data-theme="dark"] .period-timeline-item.subj-bio { border-left-color: #34d399 !important; }
+[data-theme="dark"] .period-timeline-item.subj-eng { border-left-color: #facc15 !important; }
+[data-theme="dark"] .period-timeline-item.subj-comp { border-left-color: #818cf8 !important; }
+[data-theme="dark"] .period-item-class {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .period-timeline-item div[style*="border-top: 1px dashed"],
+[data-theme="dark"] .period-timeline-item div[style*="border-top:1px dashed"] {
+  border-top-color: #334155 !important;
+}
+
+/* 8. Pagination Controls */
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: #0092df !important;
+  border-color: #0092df !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
+[data-theme="dark"] .pagination-legend-text {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-legend-text strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-legend-text span[style*="color: #cbd5e1"],
+[data-theme="dark"] .pagination-legend-text span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
+
+/* 9. Modals (Assign Period & Edit Period) */
+[data-theme="dark"] #assignPeriodModal,
+[data-theme="dark"] #editPeriodModal {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+[data-theme="dark"] #assignPeriodModal .hrms-modal-card,
+[data-theme="dark"] #editPeriodModal .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+}
+[data-theme="dark"] #assignPeriodModal .hrms-modal-header,
+[data-theme="dark"] #editPeriodModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] #assignPeriodModal .hrms-modal-header h3,
+[data-theme="dark"] #editPeriodModal .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #assignPeriodModal .hrms-modal-header span,
+[data-theme="dark"] #editPeriodModal .hrms-modal-header span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #assignPeriodModal .modal-close-btn,
+[data-theme="dark"] #editPeriodModal .modal-close-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #assignPeriodModal .modal-close-btn:hover,
+[data-theme="dark"] #editPeriodModal .modal-close-btn:hover {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #assignPeriodModal .hrms-modal-body,
+[data-theme="dark"] #editPeriodModal .hrms-modal-body {
+  background: #1e293b !important;
+}
+[data-theme="dark"] #assignPeriodModal .input-field-label,
+[data-theme="dark"] #editPeriodModal .input-field-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #assignPeriodModal .settings-input,
+[data-theme="dark"] #editPeriodModal .settings-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #assignPeriodModal .settings-input:focus,
+[data-theme="dark"] #editPeriodModal .settings-input:focus {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
+}
+[data-theme="dark"] #assignPeriodModal .settings-input option,
+[data-theme="dark"] #editPeriodModal .settings-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .periods-presets-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .periods-presets-box span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .preset-slot-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .preset-slot-btn:hover {
+  background: #334155 !important;
+  color: #38bdf8 !important;
+  border-color: #0284c7 !important;
+}
+[data-theme="dark"] .periods-modal-footer {
+  border-top-color: #334155 !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -866,7 +1340,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                 <!-- 2. Subject & Class -->
                 <td>
-                  <span class="sp-subject-pill" style="background: <?php echo $th['bg']; ?>; color: <?php echo $th['color']; ?>; border: 1px solid <?php echo $th['border']; ?>;">
+                  <span class="sp-subject-pill <?php echo $th['class']; ?>" style="background: <?php echo $th['bg']; ?>; color: <?php echo $th['color']; ?>; border: 1px solid <?php echo $th['border']; ?>;">
                     <i class="fa-solid <?php echo $th['icon']; ?>" style="font-size: 0.72rem;"></i>
                     <span><?php echo htmlspecialchars($p['subject']); ?></span>
                   </span>
@@ -1116,7 +1590,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="period-timeline-strip">
           <?php foreach ($st_data['periods'] as $p_item): ?>
             <?php $th_card = get_subject_theme($p_item['subject']); ?>
-            <div class="period-timeline-item" style="border-left-color: <?php echo $th_card['color']; ?>;">
+            <div class="period-timeline-item <?php echo $th_card['class']; ?>" style="border-left-color: <?php echo $th_card['color']; ?>;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span class="sp-slot-pill">
                   <i class="fa-solid fa-hourglass-half" style="font-size: 0.60rem;"></i>
@@ -1129,7 +1603,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </div>
 
               <div style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; margin-bottom: 3px;">
-                <span class="sp-subject-pill" style="background: <?php echo $th_card['bg']; ?>; color: <?php echo $th_card['color']; ?>; border: 1px solid <?php echo $th_card['border']; ?>; padding: 2px 7px; font-size: 0.74rem;">
+                <span class="sp-subject-pill <?php echo $th_card['class']; ?>" style="background: <?php echo $th_card['bg']; ?>; color: <?php echo $th_card['color']; ?>; border: 1px solid <?php echo $th_card['border']; ?>; padding: 2px 7px; font-size: 0.74rem;">
                   <i class="fa-solid <?php echo $th_card['icon']; ?>"></i>
                   <span><?php echo htmlspecialchars($p_item['subject']); ?></span>
                 </span>
