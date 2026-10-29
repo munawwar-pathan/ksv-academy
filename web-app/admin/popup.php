@@ -900,7 +900,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
-/* ── Popup Toolbar Layout & Single-Line Mobile Responsive ── */
+/* ── Popup Toolbar Layout & Mobile Responsive ── */
 .popup-toolbar-inner {
   display: flex;
   justify-content: space-between;
@@ -918,7 +918,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 .popup-controls-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: nowrap;
 }
 
@@ -934,10 +934,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   box-sizing: border-box;
 }
 
-.popup-actions-group {
+.popup-view-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -945,6 +945,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   height: 38px;
   padding: 0 16px;
   font-size: 0.82rem;
+  flex-shrink: 0;
+  gap: 7px;
 }
 
 @media (max-width: 768px) {
@@ -952,7 +954,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
     padding: 12px 14px !important;
     border-radius: 14px !important;
     margin-bottom: 16px !important;
-    overflow: hidden !important;
   }
 
   .popup-toolbar-inner {
@@ -990,19 +991,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
     padding: 1px 5px !important;
   }
 
-  /* Row 2: Search + View Toggle + Add Button on a Single Line */
+  /* Controls Row: Search + View Toggle on Line 2, Add Button on Line 3 */
   .popup-controls-wrap {
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: wrap !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 8px !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    flex-wrap: nowrap !important;
     min-width: 0 !important;
   }
 
+  /* Line 2 left: Search */
   .popup-search-form {
     flex: 1 1 0 !important;
     width: 0 !important;
@@ -1018,79 +1020,72 @@ require_once __DIR__ . '/../includes/layout-header.php';
     max-width: 100% !important;
     height: 38px !important;
     box-sizing: border-box !important;
-    font-size: 0.78rem !important;
-    padding: 6px 24px 6px 30px !important;
+    font-size: 0.82rem !important;
+    padding: 6px 26px 6px 34px !important;
     border-radius: 9px !important;
   }
 
   .popup-search-form i.fa-magnifying-glass {
-    left: 10px !important;
-    font-size: 0.76rem !important;
+    left: 12px !important;
+    font-size: 0.80rem !important;
   }
 
-  .popup-actions-group {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    flex-shrink: 0 !important;
-    flex-wrap: nowrap !important;
-  }
-
+  /* Line 2 right: View Toggle */
   .popup-view-toggle {
     padding: 2px !important;
     border-radius: 8px !important;
     flex-shrink: 0 !important;
     display: flex !important;
     gap: 2px !important;
+    background: #f1f5f9 !important;
   }
 
   .popup-view-toggle a {
-    padding: 6px 7px !important;
-    font-size: 0.78rem !important;
+    padding: 6px 9px !important;
+    font-size: 0.80rem !important;
     border-radius: 6px !important;
   }
 
+  /* Line 3: Add Slide Button shifted to next line */
   .popup-add-btn {
-    height: 38px !important;
-    padding: 0 10px !important;
-    font-size: 0.76rem !important;
-    border-radius: 9px !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    height: 40px !important;
+    padding: 0 16px !important;
+    font-size: 0.84rem !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
     white-space: nowrap !important;
-    flex-shrink: 0 !important;
-    display: inline-flex !important;
+    display: flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    justify-content: center !important;
+    gap: 7px !important;
     box-sizing: border-box !important;
+    margin-top: 2px !important;
   }
 }
 
 /* Micro screens (<= 380px) */
 @media (max-width: 380px) {
   .popup-controls-wrap {
-    gap: 4px !important;
-  }
-  .popup-actions-group {
-    gap: 4px !important;
-  }
-  .popup-view-toggle a {
-    padding: 5px 5px !important;
-    font-size: 0.74rem !important;
-  }
-  .popup-add-btn {
-    padding: 0 7px !important;
-    font-size: 0.72rem !important;
-  }
-  .popup-add-btn span {
-    font-size: 0.72rem !important;
+    gap: 6px !important;
   }
   .popup-search-form input[name="search"] {
-    font-size: 0.72rem !important;
-    padding-left: 26px !important;
+    font-size: 0.76rem !important;
+    padding-left: 28px !important;
     padding-right: 20px !important;
   }
   .popup-search-form i.fa-magnifying-glass {
-    left: 7px !important;
-    font-size: 0.70rem !important;
+    left: 9px !important;
+    font-size: 0.74rem !important;
+  }
+  .popup-view-toggle a {
+    padding: 5px 7px !important;
+    font-size: 0.76rem !important;
+  }
+  .popup-add-btn {
+    height: 38px !important;
+    font-size: 0.80rem !important;
   }
 }
 </style>
@@ -1149,7 +1144,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </a>
     </div>
 
-    <!-- Controls Row: Search + View Toggle & Add Button in a Single Line -->
+    <!-- Controls: Search + View Toggle + Add Button -->
     <div class="popup-controls-wrap">
       <!-- Search -->
       <form method="GET" action="<?php echo ADMIN_URL; ?>/popup" class="popup-search-form" style="display: flex; align-items: center; position: relative;">
@@ -1164,24 +1159,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
       </form>
 
-      <!-- Right: View Toggle & Add Button -->
-      <div class="popup-actions-group" style="display: flex; gap: 8px; align-items: center;">
-        <!-- View mode switch -->
-        <div class="popup-view-toggle" style="display: flex; background: #f1f5f9; padding: 3px; border-radius: 8px;">
-          <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=grid" title="Grid View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'grid' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'grid' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'grid' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
-            <i class="fa-solid fa-table-cells-large"></i>
-          </a>
-          <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=table" title="Table View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'table' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'table' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'table' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
-            <i class="fa-solid fa-list"></i>
-          </a>
-        </div>
-
-        <!-- Add Slide Button -->
-        <button type="button" onclick="openAddModal();" class="roaster-add-btn popup-add-btn" style="background: linear-gradient(135deg, #0092df 0%, #0066aa 100%); color: #ffffff; display: flex; align-items: center; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 146, 223, 0.35);">
-          <i class="fa-solid fa-plus"></i>
-          <span>Add Slide</span>
-        </button>
+      <!-- View mode switch -->
+      <div class="popup-view-toggle" style="display: flex; background: #f1f5f9; padding: 3px; border-radius: 8px;">
+        <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=grid" title="Grid View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'grid' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'grid' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'grid' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
+          <i class="fa-solid fa-table-cells-large"></i>
+        </a>
+        <a href="?status=<?php echo urlencode($filter_status); ?>&search=<?php echo urlencode($search); ?>&view=table" title="Table View" style="padding: 6px 10px; border-radius: 6px; color: <?php echo $view_mode === 'table' ? '#0092df' : '#64748b'; ?>; background: <?php echo $view_mode === 'table' ? '#fff' : 'transparent'; ?>; box-shadow: <?php echo $view_mode === 'table' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'; ?>; text-decoration: none;">
+          <i class="fa-solid fa-list"></i>
+        </a>
       </div>
+
+      <!-- Add Slide Button -->
+      <button type="button" onclick="openAddModal();" class="roaster-add-btn popup-add-btn" style="background: linear-gradient(135deg, #0092df 0%, #0066aa 100%); color: #ffffff; display: flex; align-items: center; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 146, 223, 0.35);">
+        <i class="fa-solid fa-plus"></i>
+        <span>Add Slide</span>
+      </button>
     </div>
 
   </div>
