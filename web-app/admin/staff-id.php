@@ -860,6 +860,302 @@ require_once __DIR__ . '/../includes/layout-header.php';
     display: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK THEME COMPREHENSIVE ADAPTATIONS FOR STAFF ID CARD
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Top & Bottom Roaster Toolbar Cards */
+[data-theme="dark"] .roaster-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-person-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-search-box:focus-within {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-search-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  background: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .roaster-select-box i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-select-box select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box select:focus {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .roaster-select-box select option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+}
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .roaster-link-btn {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+}
+[data-theme="dark"] .roaster-link-btn:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .roaster-btn.ghost {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .scholars-count-badge strong {
+  color: #f8fafc !important;
+}
+
+/* 2. ID Card Stage & Realistic PVC Lanyard Accents */
+[data-theme="dark"] .lanyard-clip {
+  background: linear-gradient(180deg, #475569 0%, #334155 100%) !important;
+}
+[data-theme="dark"] .lanyard-clip::after {
+  background: #0f172a !important;
+}
+[data-theme="dark"] .pvc-card {
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px #334155 !important;
+}
+[data-theme="dark"] .pvc-card:hover {
+  box-shadow: 0 28px 55px -12px rgba(0, 146, 223, 0.4), 0 0 0 1px #0284c7 !important;
+}
+[data-theme="dark"] .card-label-badge {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+}
+
+/* 3. Directory Card & Table Header */
+[data-theme="dark"] .staff-id-directory-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .directory-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .directory-title-block .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .directory-session-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .directory-subtitle {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .directory-subtitle strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .directory-records-count {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .directory-records-count strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table thead th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+[data-theme="dark"] .staff-id-table tbody tr.active-staff-row {
+  background-color: rgba(2, 132, 199, 0.12) !important;
+}
+[data-theme="dark"] .staff-id-table tbody tr.active-staff-row td:first-child {
+  border-left-color: #0284c7 !important;
+}
+
+/* Table User Cell & Avatar */
+[data-theme="dark"] .staff-id-table tbody td .staff-avatar-img {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .staff-avatar-init {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .cell-name {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .cell-sub {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .sid-designation {
+  color: #cbd5e1 !important;
+}
+
+/* Pills & Badges */
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-dept-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-dept-pill i {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border-color: rgba(225, 29, 72, 0.3) !important;
+  color: #fb7185 !important;
+}
+[data-theme="dark"] .sid-qr-chip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-status-active {
+  background: rgba(2, 132, 199, 0.18) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-status-active .pulse-dot {
+  background: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(22, 101, 52, 0.2) !important;
+  border-color: rgba(22, 101, 52, 0.4) !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .sid-btn-secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-btn-secondary:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .sid-btn-action.sid-btn-viewing {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+
+/* Empty State */
+[data-theme="dark"] .staff-id-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td h4 {
+  color: #f8fafc !important;
+}
+
+/* 4. Pagination & Controls */
+[data-theme="dark"] .pagination-controls-wrap {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .pagination-meta-group span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-meta-group span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-limit-box label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .pagination-btn:hover:not(.disabled) {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--hrms-primary, #0092df) !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+  opacity: 0.5 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
+[data-theme="dark"] .pagination-legend-text {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .pagination-legend-text strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .pagination-legend-text span[style*="color: #cbd5e1"],
+[data-theme="dark"] .pagination-legend-text span[style*="color:#cbd5e1"] {
+  color: #334155 !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
