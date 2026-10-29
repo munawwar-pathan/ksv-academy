@@ -303,13 +303,63 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <style>
-/* ── Toolbar Single-Line Fit ── */
-.roaster-toolbar-card .roaster-search-box {
-  min-width: 180px;
-  max-width: 220px;
+/* ── Toolbar Single-Line Desktop Alignment & Spacing ── */
+.roaster-toolbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-.roaster-toolbar-card .roaster-select-box select {
-  min-width: 135px;
+
+.roaster-filter-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.roaster-toolbar-card .roaster-search-box {
+  min-width: 220px;
+  max-width: 260px;
+  flex: 1 1 220px;
+}
+
+.periods-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.periods-filter-row .roaster-select-box {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.periods-filter-row .roaster-select-box select {
+  min-width: 175px;
+  max-width: 215px;
+}
+
+.periods-filter-row .roaster-select-box:last-child select {
+  min-width: 125px;
+  max-width: 145px;
+}
+
+.periods-filter-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.periods-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
 }
 
 /* ── View Switcher Pills ── */
