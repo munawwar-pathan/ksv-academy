@@ -612,14 +612,69 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR EXPENSES & VOUCHERS
    ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Top KPI Stat Metrics Strip */
 [data-theme="dark"] .stat-card {
   background: #1e293b !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-number {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
 [data-theme="dark"] .stat-card-footer {
   border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #dc2626"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"] {
+  color: #fbbf24 !important;
 }
 
+/* 2. Filter & Search Toolbar */
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
   border-color: #334155 !important;
@@ -628,7 +683,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #0f172a !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .expenses-search-box:focus-within {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .expenses-search-box i {
+  color: #94a3b8 !important;
+}
 [data-theme="dark"] .expenses-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .expenses-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .expenses-search-box .clear-search-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .expenses-search-box .clear-search-btn:hover {
   color: #f8fafc !important;
 }
 [data-theme="dark"] .roaster-select-box select {
@@ -636,29 +707,51 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #334155 !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .roaster-select-box select:focus {
+  background: #0f172a !important;
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
 [data-theme="dark"] .roaster-select-box select option {
   background: #0f172a !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] .roaster-select-box i {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .roaster-btn.secondary {
   background: #334155 !important;
   color: #f1f5f9 !important;
   border-color: #475569 !important;
 }
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+}
 [data-theme="dark"] .roaster-btn.ghost {
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .roaster-btn.ghost:hover {
+  color: #f8fafc !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 [data-theme="dark"] .expenses-records-badge {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .expenses-records-badge strong {
+  color: #f8fafc !important;
+}
 
+/* 3. Expenses Directory Card & Header */
 [data-theme="dark"] .expenses-directory-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .expenses-card-header {
+  background: #1e293b !important;
   border-bottom-color: #334155 !important;
 }
 [data-theme="dark"] .expenses-card-title {
@@ -683,9 +776,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 [data-theme="dark"] .expenses-meta-divider {
-  color: #334155 !important;
+  color: #475569 !important;
 }
 
+/* 4. Expenses Master Table */
 [data-theme="dark"] .expenses-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
@@ -712,15 +806,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f87171 !important;
 }
 
+/* Badges & Action Buttons */
 [data-theme="dark"] .exp-cat-badge {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .exp-cat-badge i {
+  color: #94a3b8 !important;
+}
 [data-theme="dark"] .mode-pill-chip {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+[data-theme="dark"] .mode-pill-chip i {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .ref-code-pill {
   background: rgba(2, 132, 199, 0.15) !important;
@@ -756,6 +857,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #ffffff !important;
 }
 
+/* Empty State */
+[data-theme="dark"] .expenses-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .expenses-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .expenses-table tbody td h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .expenses-table tbody td p {
+  color: #94a3b8 !important;
+}
+
+/* 5. Pagination Controls */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
   border-top-color: #334155 !important;
@@ -782,27 +897,47 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .pagination-btn:hover:not(.disabled) {
   background: #334155 !important;
   color: #f8fafc !important;
+  border-color: #475569 !important;
 }
 [data-theme="dark"] .pagination-btn.active {
   background: var(--hrms-primary, #0092df) !important;
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
 }
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
 [data-theme="dark"] .pagination-legend-group {
   color: #94a3b8 !important;
 }
+[data-theme="dark"] .pagination-legend-group strong,
 [data-theme="dark"] .pagination-legend-text strong {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .pagination-legend-group span[style*="color: #cbd5e1"],
+[data-theme="dark"] .pagination-legend-group span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
 
+/* 6. Modals (Add Expense Voucher & View Voucher Details) */
+[data-theme="dark"] .hrms-modal-overlay {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
 [data-theme="dark"] .expenses-modal-box,
 [data-theme="dark"] .voucher-modal-box {
   background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .expenses-modal-header,
 [data-theme="dark"] .voucher-modal-header {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .expenses-modal-header h3,
 [data-theme="dark"] .voucher-modal-header h3 {
@@ -812,25 +947,56 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .voucher-modal-close {
   background: #334155 !important;
   color: #cbd5e1 !important;
+  border: 1px solid #475569 !important;
+}
+[data-theme="dark"] .expenses-modal-close:hover,
+[data-theme="dark"] .voucher-modal-close:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
 }
 [data-theme="dark"] .expenses-field-label {
   color: #cbd5e1 !important;
 }
-[data-theme="dark"] .expenses-modal-box .hrms-input {
+[data-theme="dark"] .expenses-modal-box .hrms-input,
+[data-theme="dark"] .voucher-modal-box .hrms-input {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] .expenses-modal-box .hrms-input:focus,
+[data-theme="dark"] .voucher-modal-box .hrms-input:focus {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
+}
+[data-theme="dark"] .expenses-modal-box .hrms-input::placeholder,
+[data-theme="dark"] .voucher-modal-box .hrms-input::placeholder {
+  color: #64748b !important;
 }
 [data-theme="dark"] .expenses-modal-box .hrms-input option {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .expenses-modal-box input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+[data-theme="dark"] .expenses-modal-box input[name="amount"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .expenses-modal-footer {
+  border-top: 1px solid #334155 !important;
+  padding-top: 16px !important;
+}
+
+/* 7. Voucher Details Card */
 [data-theme="dark"] .voucher-receipt-card {
   background: #0f172a !important;
   border-color: #334155 !important;
 }
 [data-theme="dark"] .voucher-meta-label {
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .voucher-ref-code {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .voucher-date-text {
   color: #f8fafc !important;
@@ -850,8 +1016,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .voucher-amount-label {
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .voucher-amount-val {
+  color: #f87171 !important;
+}
 [data-theme="dark"] .voucher-subcard {
-  background: #1e293b !important;
+  background: #0f172a !important;
   border-color: #334155 !important;
 }
 [data-theme="dark"] .voucher-subcard-label {
@@ -860,9 +1029,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .voucher-subcard-val {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .voucher-subcard-mode {
+  color: #38bdf8 !important;
+}
 [data-theme="dark"] .voucher-invoice-box {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+  background: rgba(2, 132, 199, 0.12) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .voucher-invoice-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .voucher-invoice-ref {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .voucher-notes-box {
   background: #0f172a !important;
