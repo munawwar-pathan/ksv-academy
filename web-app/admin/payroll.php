@@ -966,6 +966,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .staff-id-table tbody td .user-cell > div > div:last-child {
   color: #94a3b8 !important;
 }
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div > div:last-child span:first-child {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .staff-id-table tbody td .user-cell > div > div:last-child span:last-child {
+  color: #94a3b8 !important;
+}
 
 /* ID, Department & Period Pills */
 [data-theme="dark"] .sid-code-pill {
@@ -1723,10 +1729,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <div style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                       <?php echo htmlspecialchars($pr['full_name']); ?>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.73rem; color: #64748b; margin-top: 2px;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-size: 0.73rem; color: #64748b; margin-top: 3px;">
                       <span style="font-family: monospace; color: #0284c7; font-weight: 600;">@<?php echo htmlspecialchars($pr['username']); ?></span>
-                      <span>&bull;</span>
-                      <span><?php echo htmlspecialchars($pr['designation']); ?></span>
+                      <span style="font-size: 0.72rem; color: #64748b; line-height: 1.25;"><?php echo htmlspecialchars($pr['designation']); ?></span>
                     </div>
                   </div>
                 </div>
