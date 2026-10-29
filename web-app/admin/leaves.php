@@ -251,13 +251,58 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <style>
-/* ── Leave Management Custom Enhancements (Simple & Sober) ── */
-.roaster-toolbar-card .roaster-search-box {
-  min-width: 180px;
-  max-width: 230px;
+/* ── Toolbar Single-Line Desktop Alignment & Spacing ── */
+.roaster-toolbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-.roaster-toolbar-card .roaster-select-box select {
-  min-width: 140px;
+
+.roaster-filter-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.roaster-toolbar-card .roaster-search-box {
+  min-width: 220px;
+  max-width: 260px;
+  flex: 1 1 220px;
+}
+
+.leaves-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.leaves-filter-row .roaster-select-box {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.leaves-filter-row .roaster-select-box select {
+  min-width: 150px;
+  max-width: 185px;
+}
+
+.leaves-filter-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leaves-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
 }
 
 /* Master Leaves Table (Matching staff-id and staff-periods) */
@@ -275,6 +320,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
   letter-spacing: 0.04em;
   padding: 10px 12px;
   border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+.leaves-table th:first-child,
+.leaves-table td:first-child {
+  width: 25%;
+  min-width: 240px;
+}
+.leaves-table .leaves-staff-name {
+  white-space: nowrap;
+}
+.leaves-table .leaves-staff-dept {
   white-space: nowrap;
 }
 .leaves-table thead th:first-child,
@@ -867,6 +923,101 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .leaves-modal-footer {
   border-top: 1px solid #334155 !important;
   padding-top: 16px !important;
+}
+
+/* ── Mobile Responsive Rules (Staff Leaves) ── */
+@media (max-width: 768px) {
+  .roaster-filter-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .roaster-toolbar-card .roaster-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+  }
+
+  .leaves-filter-row {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .leaves-filter-row .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .leaves-filter-row .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 40px !important;
+    font-size: 0.78rem !important;
+    padding: 8px 24px 8px 28px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .leaves-filter-btn-group {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .leaves-filter-btn-group .roaster-btn {
+    flex: 1 !important;
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    margin: 0 !important;
+  }
+
+  .leaves-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 2px !important;
+  }
+
+  .leaves-records-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    margin: 0 !important;
+  }
+
+  .leaves-apply-btn {
+    width: 100% !important;
+    height: 38px !important;
+    max-width: 100% !important;
+    justify-content: center !important;
+    margin: 0 !important;
+  }
+
+  .leaves-table th:first-child,
+  .leaves-table td:first-child {
+    width: auto !important;
+    min-width: 160px !important;
+  }
+
+  .leaves-table .leaves-staff-name {
+    white-space: normal !important;
+  }
+
+  .leaves-table .leaves-staff-dept {
+    white-space: normal !important;
+  }
 }
 </style>
 
