@@ -1102,6 +1102,133 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .periods-modal-footer {
   border-top-color: #334155 !important;
 }
+
+/* ── Faculty Cell Subtitle (Table & Card) ── */
+.staff-periods-table .cell-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.staff-periods-table .sp-sub-bullet,
+.faculty-card-sub .sp-sub-bullet {
+  display: inline-block;
+  color: #94a3b8;
+}
+[data-theme="dark"] .staff-periods-table .sp-sub-bullet,
+[data-theme="dark"] .faculty-card-sub .sp-sub-bullet {
+  color: #475569 !important;
+}
+
+/* ── Mobile Responsive Rules (Staff Periods) ── */
+@media (max-width: 768px) {
+  .roaster-filter-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .roaster-toolbar-card .roaster-search-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+  }
+
+  .periods-filter-row {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .periods-filter-row .roaster-select-box {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .periods-filter-row .roaster-select-box select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 40px !important;
+    font-size: 0.78rem !important;
+    padding: 8px 24px 8px 28px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .periods-filter-row .roaster-select-box:last-child select {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .periods-filter-btn-group {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .periods-filter-btn-group .roaster-btn {
+    flex: 1 !important;
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    font-size: 0.80rem !important;
+    margin: 0 !important;
+  }
+
+  .periods-toolbar-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 2px !important;
+  }
+
+  .periods-toolbar-actions .scholars-count-badge {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    margin: 0 !important;
+  }
+
+  .periods-toolbar-actions .roaster-add-btn {
+    width: 100% !important;
+    height: 38px !important;
+    justify-content: center !important;
+    margin: 0 !important;
+  }
+
+  /* Faculty member table cell layout: prevent orphaned bullet */
+  .staff-periods-table .cell-sub {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+  }
+
+  .staff-periods-table .sp-sub-bullet {
+    display: none !important;
+  }
+
+  .staff-periods-table .sp-dept-name {
+    font-size: 0.70rem !important;
+    line-height: 1.3 !important;
+  }
+
+  .faculty-card-sub {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+  }
+
+  .faculty-card-sub .sp-sub-bullet {
+    display: none !important;
+  }
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -1374,13 +1501,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       <div class="cell-name" style="font-weight: 700; color: #0f172a; font-size: 0.88rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
                         <?php echo htmlspecialchars($p['staff_name']); ?>
                       </div>
-                      <div class="cell-sub" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                      <div class="cell-sub" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 5px;">
                         <span class="sp-code-pill">
                           <i class="fa-solid fa-hashtag" style="font-size: 0.60rem;"></i>
                           <span><?php echo htmlspecialchars($p['employee_code'] ?? 'KSV-FAC'); ?></span>
                         </span>
                         <?php if (!empty($p['department'])): ?>
-                          <span style="color: #94a3b8;">&bull;</span>
+                          <span class="sp-sub-bullet" style="color: #94a3b8;">&bull;</span>
                           <span class="sp-dept-name" style="color: #64748b;"><?php echo htmlspecialchars($p['department']); ?></span>
                         <?php endif; ?>
                       </div>
@@ -1619,13 +1746,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <h3 class="faculty-card-name" style="margin: 0; font-size: 0.98rem; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
                 <?php echo htmlspecialchars($st_data['staff_name']); ?>
               </h3>
-              <div class="faculty-card-sub" style="font-size: 0.74rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <div class="faculty-card-sub" style="font-size: 0.74rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
                 <span class="sp-code-pill">
                   <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
                   <span><?php echo htmlspecialchars($st_data['employee_code']); ?></span>
                 </span>
-                <span>&bull;</span>
-                <span><?php echo htmlspecialchars($st_data['designation']); ?> (<?php echo htmlspecialchars($st_data['department']); ?>)</span>
+                <span class="sp-sub-bullet" style="color: #94a3b8;">&bull;</span>
+                <span class="sp-dept-name" style="color: #64748b;"><?php echo htmlspecialchars($st_data['designation']); ?> (<?php echo htmlspecialchars($st_data['department']); ?>)</span>
               </div>
             </div>
           </div>
@@ -1662,7 +1789,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <div class="period-item-class" style="font-size: 0.74rem; color: #64748b; margin-bottom: 10px; display: flex; align-items: center; gap: 5px;">
                 <i class="fa-solid fa-graduation-cap" style="color: #94a3b8; font-size: 0.70rem;"></i>
                 <span><?php echo htmlspecialchars($p_item['class_name']); ?></span>
-                <span>&bull;</span>
+                <span class="sp-item-bullet" style="color: #94a3b8;">&bull;</span>
                 <span><?php echo htmlspecialchars($p_item['day_of_week']); ?></span>
               </div>
 
