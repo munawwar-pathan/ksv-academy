@@ -587,14 +587,69 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR EXPENSE CATEGORIES
    ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Top KPI Stat Metrics Strip */
 [data-theme="dark"] .stat-card {
   background: #1e293b !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-number {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
 [data-theme="dark"] .stat-card-footer {
   border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #dc2626"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"] {
+  color: #fbbf24 !important;
 }
 
+/* 2. Filter & Search Toolbar */
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
   border-color: #334155 !important;
@@ -603,7 +658,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #0f172a !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .exp-cat-search-box:focus-within {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .exp-cat-search-box i {
+  color: #94a3b8 !important;
+}
 [data-theme="dark"] .exp-cat-search-box input {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-cat-search-box input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .exp-cat-search-box .clear-search-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-cat-search-box .clear-search-btn:hover {
   color: #f8fafc !important;
 }
 [data-theme="dark"] .exp-cat-records-badge {
@@ -611,12 +682,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .exp-cat-records-badge strong {
+  color: #f8fafc !important;
+}
 
+/* 3. Categories Directory Card & Header */
 [data-theme="dark"] .exp-cat-directory-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .exp-cat-card-header {
+  background: #1e293b !important;
   border-bottom-color: #334155 !important;
 }
 [data-theme="dark"] .exp-cat-card-title {
@@ -641,9 +718,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 [data-theme="dark"] .exp-cat-meta-divider {
-  color: #334155 !important;
+  color: #475569 !important;
 }
 
+/* 4. Categories Master Table */
 [data-theme="dark"] .exp-cat-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
@@ -665,6 +743,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .cat-scope-desc {
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .cat-scope-empty {
+  color: #64748b !important;
+}
 [data-theme="dark"] .cat-code-pill {
   background: rgba(2, 132, 199, 0.15) !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
@@ -680,10 +761,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #334155 !important;
   color: #94a3b8 !important;
 }
+[data-theme="dark"] .cat-spent-text {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .cat-percent-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
 [data-theme="dark"] .cat-progress-track {
   background: #0f172a !important;
 }
 
+/* Action Buttons */
 [data-theme="dark"] .sid-action-btn {
   background: #0f172a !important;
   border-color: #334155 !important;
@@ -722,6 +812,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #64748b !important;
 }
 
+/* Empty State */
+[data-theme="dark"] .exp-cat-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .exp-cat-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-cat-table tbody td h4 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .exp-cat-table tbody td p {
+  color: #94a3b8 !important;
+}
+
+/* 5. Pagination Controls */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
   border-top-color: #334155 !important;
@@ -754,14 +858,27 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
 }
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
 
+/* 6. Modals (Add Category & Edit Category) */
+[data-theme="dark"] .hrms-modal-overlay {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
 [data-theme="dark"] .exp-cat-modal-box {
   background: #1e293b !important;
   color: #f8fafc !important;
   border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
 }
 [data-theme="dark"] .exp-cat-modal-header {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .exp-cat-modal-header h3 {
   color: #f8fafc !important;
@@ -770,7 +887,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .exp-cat-modal-close {
-  color: #94a3b8 !important;
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+[data-theme="dark"] .exp-cat-modal-close:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
 }
 [data-theme="dark"] .exp-cat-field-label {
   color: #cbd5e1 !important;
@@ -780,8 +909,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: #334155 !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .exp-cat-modal-box .hrms-input:focus {
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
+}
+[data-theme="dark"] .exp-cat-modal-box .hrms-input::placeholder {
+  color: #64748b !important;
+}
 [data-theme="dark"] .exp-cat-modal-footer {
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
+  padding-top: 16px !important;
 }
 </style>
 
