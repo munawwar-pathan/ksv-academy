@@ -59,6 +59,321 @@ foreach ($notices as $n) {
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
+<style>
+/* ══════════════════════════════════════════════════════════════════════
+   ANNOUNCEMENTS & NOTICEBOARD COMPREHENSIVE STYLES & DARK THEME
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Stat Card Orange (Base & Dark Theme) */
+.stat-card.orange .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+/* 1. Top Metric KPI Stat Cards */
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .stat-card .stat-label {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card .stat-number {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-icon-wrapper {
+  background: rgba(124, 58, 237, 0.2) !important;
+  color: #c084fc !important;
+}
+[data-theme="dark"] .stat-card.orange .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #10b981"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#10b981"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #7c3aed"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#7c3aed"] {
+  color: #c084fc !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #f59e0b"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#f59e0b"] {
+  color: #fbbf24 !important;
+}
+
+/* 2. Responsive Toolbar & Filters */
+[data-theme="dark"] .ann-toolbar-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .ann-tabs-nav {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .ann-tab-pill {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .ann-tab-pill:hover {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-tab-pill.active {
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+}
+[data-theme="dark"] .ann-tab-count {
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ann-tab-pill.active .ann-tab-count {
+  background: rgba(56, 189, 248, 0.2) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .ann-search-wrapper .ann-search-icon {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .ann-search-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-search-input:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
+}
+[data-theme="dark"] .ann-search-input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .ann-search-clear {
+  color: #f87171 !important;
+}
+
+/* 3. Main Noticeboard Card & Notice Items */
+[data-theme="dark"] .ann-main-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .ann-main-card-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .ann-main-card-header h2,
+[data-theme="dark"] .ann-main-card-header .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-records-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* Notice Item */
+[data-theme="dark"] .ann-item {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-left: 4px solid #0092df !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+[data-theme="dark"] .ann-item[data-target="staff"] {
+  border-left-color: #a855f7 !important;
+}
+[data-theme="dark"] .ann-item[data-target="parent"] {
+  border-left-color: #f59e0b !important;
+}
+[data-theme="dark"] .ann-item:hover {
+  background: #243347 !important;
+  border-top-color: #475569 !important;
+  border-right-color: #475569 !important;
+  border-bottom-color: #475569 !important;
+}
+[data-theme="dark"] .ann-item-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-item-time {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .ann-item-desc {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ann-item-footer {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .ann-posted-by {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .ann-posted-by strong {
+  color: #e2e8f0 !important;
+}
+
+/* Target Badges (Header icon badge) */
+[data-theme="dark"] .ann-target-badge-icon.target-all {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .ann-target-badge-icon.target-staff {
+  background: rgba(168, 85, 247, 0.2) !important;
+  color: #c084fc !important;
+}
+[data-theme="dark"] .ann-target-badge-icon.target-parent {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+}
+
+/* Target Pills (Footer badge) */
+[data-theme="dark"] .ann-target-pill.target-all {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .ann-target-pill.target-staff {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(168, 85, 247, 0.3) !important;
+}
+[data-theme="dark"] .ann-target-pill.target-parent {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Delete button on notice */
+[data-theme="dark"] .ann-delete-btn {
+  background: #0f172a !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .ann-delete-btn:hover {
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* Empty States */
+[data-theme="dark"] .ann-empty-icon {
+  color: #475569 !important;
+}
+[data-theme="dark"] .ann-empty-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-empty-desc {
+  color: #94a3b8 !important;
+}
+
+/* 4. Modals (Broadcast & Delete Modals) */
+[data-theme="dark"] .hrms-modal {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+[data-theme="dark"] .ann-modal-card,
+[data-theme="dark"] .ann-delete-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="dark"] .ann-modal-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .ann-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-modal-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .ann-modal-icon-badge {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .ann-modal-icon-badge.delete {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .ann-modal-body label.form-label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .ann-modal-body input.hrms-input,
+[data-theme="dark"] .ann-modal-body select.hrms-input,
+[data-theme="dark"] .ann-modal-body textarea.hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-modal-body input.hrms-input:focus,
+[data-theme="dark"] .ann-modal-body select.hrms-input:focus,
+[data-theme="dark"] .ann-modal-body textarea.hrms-input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2) !important;
+}
+[data-theme="dark"] .ann-modal-body select.hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-modal-body textarea.hrms-input::placeholder,
+[data-theme="dark"] .ann-modal-body input.hrms-input::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] .ann-modal-body span[style*="var(--hrms-text-muted)"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .ann-modal-footer {
+  background: #0f172a !important;
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] .btn-hrms-secondary {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .btn-hrms-secondary:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .modal-close-btn {
+  color: #94a3b8 !important;
+  background: transparent !important;
+}
+[data-theme="dark"] .modal-close-btn:hover {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-delete-preview-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #deleteNoticeTitle {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .ann-modal-body p[style*="var(--hrms-text)"] {
+  color: #cbd5e1 !important;
+}
+</style>
+
 <!-- ── Top Metric KPI Cards ── -->
 <div class="stat-grid" style="margin-bottom: 20px;">
   <!-- 1. Total Notices -->
