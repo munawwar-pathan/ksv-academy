@@ -403,6 +403,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     gap: 10px !important;
   }
   .expenses-filter-form {
+    display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
     width: 100% !important;
@@ -418,6 +419,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     border-radius: 9px !important;
   }
   .expenses-filter-row {
+    grid-column: 1 / -1 !important;
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
@@ -430,24 +432,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
   .expenses-filter-row .roaster-select-box select {
     width: 100% !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     height: 40px !important;
-    font-size: 0.80rem !important;
+    font-size: 0.78rem !important;
     border-radius: 9px !important;
     padding: 8px 24px 8px 28px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
   .expenses-filter-btn-group {
+    grid-column: 1 / -1 !important;
     display: flex !important;
     gap: 8px !important;
     width: 100% !important;
   }
   .expenses-filter-btn-group .roaster-btn {
     flex: 1 !important;
-    height: 40px !important;
+    width: 100% !important;
+    height: 38px !important;
     font-size: 0.80rem !important;
     padding: 0 16px !important;
     justify-content: center !important;
     border-radius: 9px !important;
     white-space: nowrap !important;
+    margin: 0 !important;
   }
   .expenses-toolbar-actions {
     display: grid !important;
@@ -628,12 +636,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
   }
 }
 
-/* Mobile Screens (<= 480px) */
-@media (max-width: 480px) {
-  .expenses-filter-row {
-    grid-template-columns: 1fr !important;
-  }
-}
 
 /* Micro Devices (<= 360px) */
 @media (max-width: 360px) {
