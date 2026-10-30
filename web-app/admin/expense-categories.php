@@ -215,6 +215,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <style>
+/* ── Modal Overlay Base Styling ── */
+.hrms-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  overflow-y: auto;
+  padding: 20px;
+}
+
 /* ── Staff ID Style Table & Badge Styles (Simple & Sober - Matching staff-id) ── */
 .staff-id-table {
   width: 100%;
@@ -1327,7 +1341,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                   <!-- Edit Category Button -->
                   <button type="button" 
-                          onclick='openEditCatModal(<?php echo json_encode($cat); ?>)' 
+                          onclick="openEditCatModal(<?php echo htmlspecialchars(json_encode($cat), ENT_QUOTES, 'UTF-8'); ?>);" 
                           class="sid-action-btn edit" 
                           title="Edit Category Details">
                     <i class="fa-solid fa-pen-to-square"></i>
@@ -1430,8 +1444,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      MODAL: ADD EXPENSE CATEGORY
      ══════════════════════════════════════════════════════ -->
-<div id="addCategoryModal" class="hrms-modal-overlay" style="display: none;">
-  <div class="hrms-modal-content exp-cat-modal-box" style="max-width: 500px; padding: 26px;">
+<div id="addCategoryModal" class="hrms-modal-overlay" onclick="if (event.target === this) closeAddCatModal();" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
+  <div class="hrms-modal-content exp-cat-modal-box" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 500px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
     
     <div class="exp-cat-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -1445,7 +1459,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span class="exp-cat-modal-sub" style="font-size: 0.76rem; color: #64748b;">Add a new institutional expenditure head</span>
         </div>
       </div>
-      <button type="button" onclick="closeAddCatModal();" class="exp-cat-modal-close" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #94a3b8;">&times;</button>
+      <button type="button" onclick="closeAddCatModal();" class="exp-cat-modal-close" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories">
@@ -1481,8 +1495,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      MODAL: EDIT EXPENSE CATEGORY
      ══════════════════════════════════════════════════════ -->
-<div id="editCategoryModal" class="hrms-modal-overlay" style="display: none;">
-  <div class="hrms-modal-content exp-cat-modal-box" style="max-width: 500px; padding: 26px;">
+<div id="editCategoryModal" class="hrms-modal-overlay" onclick="if (event.target === this) closeEditCatModal();" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
+  <div class="hrms-modal-content exp-cat-modal-box" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 500px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); max-height: 92vh; overflow-y: auto;">
     
     <div class="exp-cat-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -1496,7 +1510,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span class="exp-cat-modal-sub" style="font-size: 0.76rem; color: #64748b;">Modify accounting head details and descriptions</span>
         </div>
       </div>
-      <button type="button" onclick="closeEditCatModal();" class="exp-cat-modal-close" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #94a3b8;">&times;</button>
+      <button type="button" onclick="closeEditCatModal();" class="exp-cat-modal-close" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories">
@@ -1532,20 +1546,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 <script>
 function openAddCatModal() {
-  document.getElementById('addCategoryModal').style.display = 'flex';
+  const modal = document.getElementById('addCategoryModal');
+  if (modal) modal.style.display = 'flex';
 }
+
 function closeAddCatModal() {
-  document.getElementById('addCategoryModal').style.display = 'none';
+  const modal = document.getElementById('addCategoryModal');
+  if (modal) modal.style.display = 'none';
 }
 
 function openEditCatModal(cat) {
-  document.getElementById('edit_category_id').value = cat.id;
-  document.getElementById('edit_category_name').value = cat.category_name;
-  document.getElementById('edit_category_desc').value = cat.description || '';
-  document.getElementById('editCategoryModal').style.display = 'flex';
+  const modal = document.getElementById('editCategoryModal');
+  if (!modal) return;
+  const idInput = document.getElementById('edit_category_id');
+  const nameInput = document.getElementById('edit_category_name');
+  const descInput = document.getElementById('edit_category_desc');
+  if (idInput) idInput.value = cat.id || '';
+  if (nameInput) nameInput.value = cat.category_name || '';
+  if (descInput) descInput.value = cat.description || '';
+  modal.style.display = 'flex';
 }
+
 function closeEditCatModal() {
-  document.getElementById('editCategoryModal').style.display = 'none';
+  const modal = document.getElementById('editCategoryModal');
+  if (modal) modal.style.display = 'none';
 }
 
 // Client-side real-time filter for currently visible rows
@@ -1575,8 +1599,16 @@ function filterCategories() {
 window.addEventListener('click', function(e) {
   const addModal = document.getElementById('addCategoryModal');
   const editModal = document.getElementById('editCategoryModal');
-  if (e.target === addModal) addModal.style.display = 'none';
-  if (e.target === editModal) editModal.style.display = 'none';
+  if (e.target === addModal) closeAddCatModal();
+  if (e.target === editModal) closeEditCatModal();
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeAddCatModal();
+    closeEditCatModal();
+  }
 });
 </script>
 

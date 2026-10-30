@@ -4026,6 +4026,24 @@
   color: #38bdf8 !important;
 }
 
+/* ── Modal Overlay Universal Base Styling ── */
+.hrms-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  overflow-y: auto;
+  padding: 20px;
+}
+
+[data-theme="dark"] .hrms-modal-overlay {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
+
 /* ── Dark Theme Rules for Operational Expenses & Vouchers ── */
 [data-theme="dark"] .expenses-directory-card {
   background: #1e293b !important;
