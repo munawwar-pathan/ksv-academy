@@ -7725,6 +7725,95 @@
   color: #ffffff !important;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   STAFF PERIODS TIMETABLE DARK MODE ADAPTATIONS (staff/staff-periods)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .periods-stat-grid .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-number {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-progress {
+  background: #334155 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.purple .stat-icon-wrapper {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] .periods-card-header h3.card-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .periods-card-header p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sp-time-badge {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sp-clock-icon {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sp-duration-tag {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .periods-pagination-legend {
+  color: #94a3b8 !important;
+  border-top-color: #334155 !important;
+}
+
+
 
 
 
