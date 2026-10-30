@@ -3037,28 +3037,69 @@
   -webkit-border-radius: 6px !important;
 }
 
-/* ── Dark Theme Rules for Marksheet Management ── */
+/* ── Dark Theme Rules for Marksheet Management (admin/marksheet) ── */
 [data-theme="dark"] .scholar-control-card,
 [data-theme="dark"] .marksheet-directory-card {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
+}
+
+[data-theme="dark"] .current-scholar-meta h4,
+[data-theme="dark"] .current-scholar-meta h4 span {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .roll-badge-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .marksheet-card-header {
-  background: #0f172a !important;
-  border-bottom-color: #1e293b !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .marksheet-title-block .card-title {
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .marksheet-session-badge {
-  background: #1e293b !important;
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+}
+
+[data-theme="dark"] .marksheet-title-block p {
   color: #94a3b8 !important;
-  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .marksheet-title-block p strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .marksheet-records-count {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .marksheet-records-count strong {
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .marksheet-exam-select {
-  background: #1e293b !important;
+  background: #0f172a !important;
   color: #f8fafc !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color-scheme: dark !important;
 }
 
 [data-theme="dark"] .marksheet-exam-select option {
@@ -3066,13 +3107,18 @@
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .marksheet-print-btn {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+
 [data-theme="dark"] .report-card-container {
-  background: #0f172a !important;
+  background: #1e293b !important;
   border-color: #0284c7 !important;
 }
 
 [data-theme="dark"] .report-details-grid {
-  background: #1e293b !important;
+  background: #0f172a !important;
   border-color: #334155 !important;
 }
 
@@ -3093,18 +3139,18 @@
 }
 
 [data-theme="dark"] .report-table thead th {
-  background: #1e293b !important;
-  color: #94a3b8 !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
   border-bottom-color: #334155 !important;
 }
 
 [data-theme="dark"] .report-table tbody td {
-  border-bottom-color: #1e293b !important;
-  color: #e2e8f0 !important;
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .report-remarks-card {
-  background: #1e293b !important;
+  background: #0f172a !important;
   color: #cbd5e1 !important;
   border-left-color: #0284c7 !important;
 }
@@ -3114,22 +3160,131 @@
 }
 
 [data-theme="dark"] .marksheet-table thead th {
-  background: #1e293b !important;
+  background: #0f172a !important;
   color: #94a3b8 !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .marksheet-table tbody td {
-  border-bottom-color: #1e293b !important;
+  background: transparent !important;
+  border-bottom: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .marksheet-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
+}
+
+[data-theme="dark"] .marksheet-table tbody tr.active-student-row {
+  background-color: rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="dark"] .marksheet-table tbody tr.active-student-row td:first-child {
+  border-left: 3px solid #38bdf8 !important;
+}
+
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #334155"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#334155"] {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#64748b"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color: #94a3b8"],
+[data-theme="dark"] .marksheet-table tbody td div[style*="color:#94a3b8"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .ms-std-pill {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .ms-roll-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .ms-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border: 1px solid rgba(225, 29, 72, 0.3) !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  color: #fb7185 !important;
+}
+
+[data-theme="dark"] .ms-exam-chip {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .ms-perf-badge {
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+}
+
+[data-theme="dark"] .ms-status-active,
+[data-theme="dark"] .ms-status-verified,
+[data-theme="dark"] .ms-status-pending {
+  border-radius: 20px !important;
+  -webkit-border-radius: 20px !important;
+}
+
+[data-theme="dark"] .ms-btn-action,
+[data-theme="dark"] .ms-btn-secondary {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .ms-btn-secondary:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .ms-btn-action[style*="background: #f0f9ff"],
+[data-theme="dark"] .ms-btn-action[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.2) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .ms-generate-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .ms-generate-btn:hover {
+  background: #334155 !important;
+  border-color: #059669 !important;
+  color: #34d399 !important;
 }
 
 [data-theme="dark"] #createMarksheetModal .hrms-modal-content {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 16px !important;
+  -webkit-border-radius: 16px !important;
 }
 
 [data-theme="dark"] #createMarksheetModal h3 {
@@ -3137,7 +3292,42 @@
 }
 
 [data-theme="dark"] #createMarksheetModal label {
-  color: #94a3b8 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] #createMarksheetModal .hrms-input {
+  background: #0f172a !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable {
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+}
+
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable .hrms-input {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #createMarksheetModal .action-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] #createMarksheetModal .action-primary-btn {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 
 /* ── Dark Theme Rules for Faculty & Staff Management ── */

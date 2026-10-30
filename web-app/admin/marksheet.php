@@ -2005,7 +2005,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
    ══════════════════════════════════════════════════════════════════════ */
 [data-theme="dark"] .academic-stat-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 [data-theme="dark"] .stat-metric-val {
   color: #f8fafc !important;
@@ -2017,10 +2019,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Top Scholar Control Card */
 [data-theme="dark"] .scholar-control-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
-[data-theme="dark"] .current-scholar-meta h4 {
+[data-theme="dark"] .current-scholar-meta h4,
+[data-theme="dark"] .current-scholar-meta h4 span {
   color: #f8fafc !important;
 }
 [data-theme="dark"] .current-scholar-meta .meta-pills span,
@@ -2034,7 +2039,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .roll-badge-pill {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.35) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .marksheet-exam-form label,
@@ -2044,8 +2051,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .marksheet-exam-select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 [data-theme="dark"] .marksheet-exam-select option {
   background: #0f172a !important;
@@ -2053,6 +2063,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .marksheet-print-btn {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
 }
 [data-theme="dark"] .marksheet-print-btn:hover {
@@ -2155,9 +2167,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .report-table tbody tr:last-child td {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #0f172a"],
+[data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #334155"],
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#334155"] {
-  color: #cbd5e1 !important;
+  color: #f1f5f9 !important;
 }
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #007cbd"],
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#007cbd"] {
@@ -2239,7 +2255,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .report-remarks-card div div,
 [data-theme="dark"] .report-remarks-card div div[style*="color: #475569"] {
-  color: #94a3b8 !important;
+  color: #cbd5e1 !important;
 }
 [data-theme="dark"] .report-signatures-row {
   border-top-color: #334155 !important;
@@ -2264,6 +2280,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .report-empty-state-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  border-radius: 14px !important;
+  -webkit-border-radius: 14px !important;
 }
 [data-theme="dark"] .report-empty-state-card div[style*="background: #e0f2fe"],
 [data-theme="dark"] .report-empty-state-card div[style*="background:#e0f2fe"] {
@@ -2284,65 +2302,108 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Filter Toolbar */
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
+
+/* Search Box with Radius Fix */
 [data-theme="dark"] .roaster-search-box {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+[data-theme="dark"] .roaster-search-box:focus-within {
+  background: #0f172a !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
 [data-theme="dark"] .roaster-search-box i {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .roaster-search-box input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  -webkit-border-radius: 0 !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .roaster-search-box input::placeholder {
   color: #64748b !important;
 }
 [data-theme="dark"] .roaster-search-box .clear-search-btn {
+  background: #334155 !important;
   color: #94a3b8 !important;
+  border-radius: 50% !important;
 }
 [data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
+  background: #475569 !important;
   color: #f8fafc !important;
 }
+
+/* Select Box with Radius Fix */
 [data-theme="dark"] .roaster-select-box {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
-[data-theme="dark"] .roaster-select-box i {
-  color: #64748b !important;
+[data-theme="dark"] .roaster-select-box > i:first-child,
+[data-theme="dark"] .roaster-select-box .select-chevron {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .roaster-select-box select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+[data-theme="dark"] .roaster-select-box select:focus {
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
 [data-theme="dark"] .roaster-select-box select option {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
+
+/* Toolbar Buttons */
+[data-theme="dark"] .roaster-btn,
 [data-theme="dark"] .roaster-btn.secondary {
-  background: #0f172a !important;
-  color: #cbd5e1 !important;
-  border-color: #334155 !important;
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .roaster-btn.secondary:hover {
-  background: #334155 !important;
-  color: #f8fafc !important;
-  border-color: #475569 !important;
+  background: #475569 !important;
+  color: #ffffff !important;
+  border-color: #64748b !important;
 }
 [data-theme="dark"] .roaster-btn.ghost {
   color: #94a3b8 !important;
   background: transparent !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .roaster-btn.ghost:hover {
-  color: #f8fafc !important;
-  background: #334155 !important;
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
+
+/* Live Counts Badge */
 [data-theme="dark"] .scholars-count-badge {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .scholars-count-badge strong {
@@ -2356,12 +2417,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Scholar Academic Directory Card */
 [data-theme="dark"] .marksheet-directory-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 [data-theme="dark"] .marksheet-card-header {
   background: #1e293b !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .marksheet-title-block .card-title {
   color: #f8fafc !important;
@@ -2369,7 +2432,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .marksheet-session-badge {
   background: #0f172a !important;
   color: #cbd5e1 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 [data-theme="dark"] .marksheet-title-block p {
   color: #94a3b8 !important;
@@ -2389,6 +2454,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .ms-generate-btn {
   background: #0f172a !important;
   border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .ms-generate-btn:hover {
@@ -2404,17 +2471,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .marksheet-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .marksheet-table tbody td {
-  border-bottom-color: #334155 !important;
+  background: transparent !important;
+  border-bottom: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .marksheet-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
 }
 [data-theme="dark"] .marksheet-table tbody tr.active-student-row {
-  background-color: rgba(2, 132, 199, 0.12) !important;
+  background-color: rgba(2, 132, 199, 0.15) !important;
 }
 [data-theme="dark"] .marksheet-table tbody tr.active-student-row td:first-child {
   border-left: 3px solid #38bdf8 !important;
@@ -2436,21 +2504,24 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .marksheet-table tbody td div[style*="color: #334155"],
 [data-theme="dark"] .marksheet-table tbody td div[style*="color:#334155"] {
-  color: #e2e8f0 !important;
+  color: #f1f5f9 !important;
 }
 [data-theme="dark"] .marksheet-table tbody td .staff-avatar-img {
   border-color: #334155 !important;
 }
+[data-theme="dark"] .marksheet-table tbody td .staff-avatar-init,
 [data-theme="dark"] .marksheet-table tbody td .user-cell .staff-avatar-init {
   background: #334155 !important;
   color: #f8fafc !important;
-  border-color: #475569 !important;
+  border: 1px solid #475569 !important;
 }
 
 /* Badges & Chips */
 [data-theme="dark"] .ms-std-pill {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .ms-std-pill i {
@@ -2458,17 +2529,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .ms-roll-pill {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .ms-blood-badge {
   background: rgba(225, 29, 72, 0.15) !important;
   border: 1px solid rgba(225, 29, 72, 0.3) !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
   color: #fb7185 !important;
 }
 [data-theme="dark"] .ms-exam-chip {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .ms-exam-chip i {
@@ -2478,17 +2555,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Performance Badges */
 [data-theme="dark"] .ms-perf-badge.pass {
   background: rgba(22, 101, 52, 0.2) !important;
-  border-color: rgba(22, 101, 52, 0.4) !important;
+  border: 1px solid rgba(22, 101, 52, 0.4) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #4ade80 !important;
 }
 [data-theme="dark"] .ms-perf-badge.fail {
   background: rgba(220, 38, 38, 0.2) !important;
-  border-color: rgba(220, 38, 38, 0.4) !important;
+  border: 1px solid rgba(220, 38, 38, 0.4) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #f87171 !important;
 }
 [data-theme="dark"] .ms-perf-badge.none {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .marksheet-table tbody td div[style*="color: #166534"],
@@ -2503,7 +2586,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Status Badges */
 [data-theme="dark"] .ms-status-active {
   background: rgba(2, 132, 199, 0.2) !important;
-  border-color: rgba(2, 132, 199, 0.4) !important;
+  border: 1px solid rgba(2, 132, 199, 0.4) !important;
+  border-radius: 20px !important;
+  -webkit-border-radius: 20px !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .ms-status-active .pulse-dot {
@@ -2511,19 +2596,26 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .ms-status-verified {
   background: rgba(22, 101, 52, 0.2) !important;
-  border-color: rgba(22, 101, 52, 0.4) !important;
+  border: 1px solid rgba(22, 101, 52, 0.4) !important;
+  border-radius: 20px !important;
+  -webkit-border-radius: 20px !important;
   color: #4ade80 !important;
 }
 [data-theme="dark"] .ms-status-pending {
   background: rgba(202, 138, 4, 0.18) !important;
-  border-color: rgba(202, 138, 4, 0.4) !important;
+  border: 1px solid rgba(202, 138, 4, 0.4) !important;
+  border-radius: 20px !important;
+  -webkit-border-radius: 20px !important;
   color: #facc15 !important;
 }
 
-/* Action Buttons */
+/* Action Buttons in Directory Table */
+[data-theme="dark"] .ms-btn-action,
 [data-theme="dark"] .ms-btn-secondary {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .ms-btn-secondary:hover {
@@ -2550,10 +2642,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #ffffff !important;
 }
 
-/* Pagination Controls */
+/* Pagination Controls & Footer */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
 }
 [data-theme="dark"] .pagination-meta-group span,
 [data-theme="dark"] .pagination-meta-group span[style*="color: #475569"],
@@ -2570,8 +2662,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .pagination-limit-select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 [data-theme="dark"] .pagination-limit-select option {
   background: #0f172a !important;
@@ -2579,11 +2674,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .pagination-btn {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .pagination-btn:hover:not(.disabled) {
   background: #334155 !important;
+  border-color: #475569 !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .pagination-btn.active {
@@ -2637,12 +2735,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Modal: Create Marksheet Form */
 [data-theme="dark"] #createMarksheetModal .hrms-modal-content {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 16px !important;
+  -webkit-border-radius: 16px !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] #createMarksheetModal .hrms-modal-content > div:first-child {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1.5px solid #334155 !important;
 }
 [data-theme="dark"] #createMarksheetModal h3 {
   color: #f8fafc !important;
@@ -2650,6 +2750,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #createMarksheetModal .hrms-modal-content button[onclick*="closeCreateMarksheetModal"] {
   background: #0f172a !important;
   border: 1px solid #334155 !important;
+  border-radius: 50% !important;
   color: #cbd5e1 !important;
   transition: all 0.2s ease !important;
 }
@@ -2661,17 +2762,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #createMarksheetModal label {
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] #createMarksheetModal label[style*="color: #334155"],
+[data-theme="dark"] #createMarksheetModal label[style*="color:#334155"],
 [data-theme="dark"] #createMarksheetModal label[style*="color: #0f172a"],
 [data-theme="dark"] #createMarksheetModal label[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
 [data-theme="dark"] #createMarksheetModal .hrms-input {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 [data-theme="dark"] #createMarksheetModal .hrms-input:focus {
-  background: #18263e !important;
+  background: #0f172a !important;
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
@@ -2681,9 +2787,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 [data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.85);
+  filter: invert(1) brightness(0.9);
   cursor: pointer;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 [data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
@@ -2691,6 +2797,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #createMarksheetModal button[onclick*="addSubjectRow"] {
   background: rgba(22, 101, 52, 0.2) !important;
   border: 1px solid rgba(22, 101, 52, 0.45) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #4ade80 !important;
   transition: all 0.2s ease !important;
 }
@@ -2700,22 +2808,31 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #86efac !important;
 }
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable {
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable thead tr {
   background: #0f172a !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable th {
   background: #0f172a !important;
   color: #94a3b8 !important;
-  border-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable tbody tr {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable td {
   border-color: #334155 !important;
+}
+[data-theme="dark"] #createMarksheetModal #modalSubjectsTable .hrms-input {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #f8fafc !important;
 }
 [data-theme="dark"] #createMarksheetModal #modalSubjectsTable .sub-obt-input {
   color: #38bdf8 !important;
@@ -2731,7 +2848,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Modal Calculation Ribbon */
 [data-theme="dark"] #createMarksheetModal .modal-calc-ribbon {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] #createMarksheetModal .modal-calc-ribbon span[style*="color: #0369a1"],
 [data-theme="dark"] #createMarksheetModal .modal-calc-ribbon span[style*="color:#0369a1"] {
@@ -2751,6 +2870,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #createMarksheetModal .action-btn {
   background: #0f172a !important;
   border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #cbd5e1 !important;
   transition: all 0.2s ease !important;
 }
@@ -2761,6 +2882,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #createMarksheetModal .action-primary-btn {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
 }
