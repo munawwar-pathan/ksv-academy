@@ -7931,6 +7931,319 @@
   color: #c084fc !important;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   STAFF STUDENT ATTENDANCE DARK MODE ADAPTATIONS (staff/student-attendance)
+   ══════════════════════════════════════════════════════════════════ */
+/* 1. Stat Summary Cards */
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="dark"] .stat-card.red .stat-icon-wrapper {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"] {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .stat-card-footer span[style*="color: #dc2626"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+
+/* 2. Main Attendance Register Card & Header */
+[data-theme="dark"] .attendance-date-badge {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .att-filter-date,
+[data-theme="dark"] .att-filter-select,
+[data-theme="dark"] .hrms-card-header form input[type="date"],
+[data-theme="dark"] .hrms-card-header form select[name="standard"] {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  color-scheme: dark !important;
+}
+[data-theme="dark"] .att-filter-date:focus,
+[data-theme="dark"] .att-filter-select:focus,
+[data-theme="dark"] .hrms-card-header form input[type="date"]:focus,
+[data-theme="dark"] .hrms-card-header form select[name="standard"]:focus {
+  background: #18263e !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+[data-theme="dark"] .att-filter-date::-webkit-calendar-picker-indicator,
+[data-theme="dark"] .hrms-card-header form input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9);
+}
+[data-theme="dark"] .att-filter-select option,
+[data-theme="dark"] .hrms-card-header form select[name="standard"] option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+/* 3. Table Structure & Roster Cells */
+[data-theme="dark"] .student-id-table tbody td div[style*="background: #f1f5f9"],
+[data-theme="dark"] .student-id-table tbody td div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .student-id-table tbody td .user-cell > div[style*="background: #f1f5f9"],
+[data-theme="dark"] .student-id-table tbody td .user-cell > div[style*="background:#f1f5f9"] {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border-color: rgba(225, 29, 72, 0.3) !important;
+  color: #fb7185 !important;
+}
+[data-theme="dark"] .att-pill-chip.high {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .att-pill-chip.medium {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .att-pill-chip.low {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] .att-time-badge i {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .punch-action-btn.present:not(.active) {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .punch-action-btn.late:not(.active) {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .punch-action-btn.absent:not(.active) {
+  color: #f87171 !important;
+}
+
+/* 4. Pagination Controls & Footer Summary */
+[data-theme="dark"] .pagination-btn.disabled {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #475569 !important;
+  opacity: 0.5 !important;
+}
+[data-theme="dark"] .pagination-ellipsis {
+  color: #64748b !important;
+}
+[data-theme="dark"] #roasterFooterSummary {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #roasterFooterSummary span[style*="color: #059669"],
+[data-theme="dark"] #roasterFooterSummary span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] #roasterFooterSummary span[style*="color: #d97706"],
+[data-theme="dark"] #roasterFooterSummary span[style*="color:#d97706"] {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] #roasterFooterSummary span[style*="color: #dc2626"],
+[data-theme="dark"] #roasterFooterSummary span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+[data-theme="dark"] #roasterFooterSummary span[style*="color: #64748b"],
+[data-theme="dark"] #roasterFooterSummary span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+/* 5. Live Camera QR Scanner Modal */
+[data-theme="dark"] #scannerModal .hrms-modal-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-header > div:first-child > div:first-child {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-header p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #scannerModal .scholars-count-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #scannerModal .scholars-count-badge span[style*="color: #0284c7"],
+[data-theme="dark"] #scannerModal .scholars-count-badge span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #scannerModal .modal-close-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #scannerModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-body p {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-body p strong {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .scanner-control-btn.stop {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.35) !important;
+}
+[data-theme="dark"] .scanner-control-btn.stop:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+[data-theme="dark"] #scanResultBox[style*="background: #dcfce7"],
+[data-theme="dark"] #scanResultBox[style*="background:#dcfce7"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] #scanResultBox[style*="background: #fee2e2"],
+[data-theme="dark"] #scanResultBox[style*="background:#fee2e2"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-body div[style*="border-top: 1px dashed"] {
+  border-top-color: #334155 !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-body label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #scannerModal .hrms-modal-body label i {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] #manualQrInput {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+}
+[data-theme="dark"] #manualQrInput::placeholder {
+  color: #64748b !important;
+}
+[data-theme="dark"] #manualQrInput:focus {
+  background: #18263e !important;
+  border-color: var(--hrms-primary, #0092df) !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
+}
+
+/* 6. Late Punch Tooltip Popup */
+[data-theme="dark"] .late-punch-tooltip {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px #334155 !important;
+}
+[data-theme="dark"] .late-tooltip-arrow {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .late-tooltip-header {
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .late-tooltip-header i.fa-clock {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .late-tooltip-header span {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .late-tooltip-close {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .late-tooltip-close:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .late-tooltip-body {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #lateStudentName {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #lateStudentRoll {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .late-tooltip-body label {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] #lateTimeInput {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  color-scheme: dark !important;
+}
+[data-theme="dark"] #lateTimeInput:focus {
+  background: #18263e !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+}
+[data-theme="dark"] #lateTimeInput::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9);
+}
+[data-theme="dark"] .late-preset-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .late-preset-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+/* 7. Toast Notification */
+[data-theme="dark"] .punch-toast {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
 
 
 
