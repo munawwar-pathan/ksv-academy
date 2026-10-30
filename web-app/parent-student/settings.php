@@ -340,7 +340,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] .strength-meter-bar {
-  background: #273952;
+  background: #334155 !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -516,9 +516,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR PARENT & STUDENT SETTINGS
    ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Top Settings Tabs Navigation */
 [data-theme="dark"] .settings-nav-bar {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .settings-tab-pill {
   color: #94a3b8 !important;
@@ -530,79 +534,133 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .settings-tab-pill.active {
   color: #ffffff !important;
   background: linear-gradient(135deg, #0092df 0%, #0066aa 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 146, 223, 0.35) !important;
 }
 
+/* 2. Appearance & General Group Cards */
 [data-theme="dark"] .settings-group-card,
 [data-theme="dark"] .appearance-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .form-section-header {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] .form-section-icon {
+  background: rgba(2, 132, 199, 0.18) !important;
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .form-section-header h4 {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .form-section-header p {
+  color: #94a3b8 !important;
+}
+
+/* Theme Option Cards */
 [data-theme="dark"] .theme-option-box {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 2px solid #334155 !important;
+  border-radius: 12px !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] .theme-option-box:hover {
+  border-color: #0284c7 !important;
+  background: #1e293b !important;
 }
 [data-theme="dark"] .theme-option-box.active {
   border-color: #0284c7 !important;
   background: rgba(2, 132, 199, 0.12) !important;
+  box-shadow: 0 0 0 1px #0284c7, 0 4px 14px rgba(2, 132, 199, 0.25) !important;
+}
+[data-theme="dark"] .theme-option-box.active .theme-check-icon {
+  color: #0284c7 !important;
+}
+[data-theme="dark"] .theme-option-box:not(.active) .theme-check-icon {
+  color: #475569 !important;
 }
 [data-theme="dark"] .theme-name {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .theme-status-footer span:last-child {
+  color: #94a3b8 !important;
+}
+
+/* Wireframe Previews */
+[data-theme="dark"] .light-wireframe {
+  border: 1px solid #334155 !important;
+}
 [data-theme="dark"] .dark-wireframe {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] .dark-wireframe .wireframe-header {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] .dark-wireframe .wireframe-sidebar {
   background: #1e293b !important;
 }
 [data-theme="dark"] .dark-wireframe .wireframe-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
+
+/* Theme Tips Box */
 [data-theme="dark"] .theme-tips-box,
 [data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] {
   background: rgba(2, 132, 199, 0.1) !important;
-  border-color: rgba(2, 132, 199, 0.25) !important;
+  border: 1px solid rgba(2, 132, 199, 0.25) !important;
+  border-radius: 12px !important;
 }
-[data-theme="dark"] .theme-tips-box p {
+[data-theme="dark"] .theme-tips-box > div:first-child,
+[data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] > div:first-child {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .theme-tips-box p,
+[data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] p {
   color: #94a3b8 !important;
 }
 
+/* 3. Academic Profile Summary Card */
 [data-theme="dark"] .academic-profile-card,
 [data-theme="dark"] .change-password-card,
 [data-theme="dark"] .hrms-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .hrms-card-header {
   background: #1e293b !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
-[data-theme="dark"] .hrms-card-header .card-title {
+[data-theme="dark"] .hrms-card-header .card-title,
+[data-theme="dark"] .hrms-card-header .card-title span {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .hrms-card-header > span {
+[data-theme="dark"] .hrms-card-header p {
+  color: #94a3b8 !important;
+}
+
+/* Active Status Badge in Header */
+[data-theme="dark"] .hrms-card-header > span,
+[data-theme="dark"] .hrms-card-header > span[style*="#f0fdf4"],
+[data-theme="dark"] .hrms-card-header span[style*="background: #f0fdf4"] {
   background: rgba(16, 185, 129, 0.15) !important;
-  border-color: rgba(16, 185, 129, 0.35) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
   color: #34d399 !important;
 }
 
+/* Profile Info Grid */
 [data-theme="dark"] .profile-info-box,
 [data-theme="dark"] .profile-details-grid > div,
 [data-theme="dark"] .academic-profile-card div[style*="background: var(--hrms-bg)"] {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 10px !important;
 }
 [data-theme="dark"] .profile-info-box > div:first-child,
 [data-theme="dark"] .profile-details-grid > div > div:first-child {
@@ -612,48 +670,65 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .profile-details-grid > div > div:last-child {
   color: #f8fafc !important;
 }
-[data-theme="dark"] .profile-details-grid div[style*="color: #0284c7"] {
+[data-theme="dark"] .profile-details-grid div[style*="color: #0284c7"],
+[data-theme="dark"] .profile-info-box div[style*="color: #0284c7"] {
   color: #38bdf8 !important;
 }
-[data-theme="dark"] .card-body-padding > div:last-child {
-  border-top-color: #334155 !important;
+
+/* Profile Card Footer Note */
+[data-theme="dark"] .card-body-padding div[style*="border-top"],
+[data-theme="dark"] .academic-profile-card div[style*="border-top"] {
+  border-top: 1px solid #334155 !important;
 }
-[data-theme="dark"] .card-body-padding > div:last-child > div {
+[data-theme="dark"] .card-body-padding div[style*="border-top"] > div,
+[data-theme="dark"] .card-body-padding div[style*="color: #64748b"] {
   color: #94a3b8 !important;
 }
 
+/* 4. Tab 2: Security Profile Preview Card */
 [data-theme="dark"] .academy-preview-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
-[data-theme="dark"] .academy-preview-card .user-avatar-circle,
-[data-theme="dark"] .academy-preview-card div[style*="border: 3px solid #ffffff"] {
-  border-color: #1e293b !important;
+[data-theme="dark"] .academy-preview-card span[style*="background: #ede9fe"],
+[data-theme="dark"] .academy-preview-card span[style*="background:#ede9fe"] {
+  background: rgba(124, 58, 237, 0.15) !important;
+  border: 1px solid rgba(124, 58, 237, 0.35) !important;
+  color: #c084fc !important;
 }
-[data-theme="dark"] .academy-preview-card .user-profile-name,
-[data-theme="dark"] .academy-preview-card h3 {
+[data-theme="dark"] .academy-preview-card span[style*="color: #10b981"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .user-avatar-circle,
+[data-theme="dark"] .academy-preview-card div[style*="border: 3px solid #ffffff"],
+[data-theme="dark"] .academy-preview-card div[style*="border:3px solid #ffffff"] {
+  border: 3px solid #334155 !important;
+}
+[data-theme="dark"] .academy-preview-card h3,
+[data-theme="dark"] .academy-preview-card .user-profile-name {
   color: #f8fafc !important;
 }
 [data-theme="dark"] .academy-preview-card p[style*="font-family: monospace"] {
   color: #94a3b8 !important;
 }
-[data-theme="dark"] .academy-preview-card span[style*="background: #f0f9ff"] {
+[data-theme="dark"] .academy-preview-card span[style*="background: #f0f9ff"],
+[data-theme="dark"] .academy-preview-card span[style*="background:#f0f9ff"] {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.35) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
   color: #38bdf8 !important;
 }
-[data-theme="dark"] .academy-preview-card span[style*="background: #ede9fe"] {
-  background: rgba(139, 92, 246, 0.15) !important;
-  border-color: rgba(139, 92, 246, 0.35) !important;
-  color: #c084fc !important;
-}
+
+/* Security Meta Box */
 [data-theme="dark"] .security-meta-box,
 [data-theme="dark"] .academy-preview-card div[style*="background: var(--hrms-bg)"] {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 10px !important;
 }
 [data-theme="dark"] .academy-meta-row {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .academy-meta-label {
   color: #94a3b8 !important;
@@ -661,28 +736,63 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .academy-meta-val {
   color: #f8fafc !important;
 }
+
+/* Meta Icons Dark Tints */
+[data-theme="dark"] .academy-meta-icon[style*="#e0f2fe"],
+[data-theme="dark"] .academy-meta-icon[style*="#0284c7"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+}
+[data-theme="dark"] .academy-meta-icon[style*="#ecfdf5"],
+[data-theme="dark"] .academy-meta-icon[style*="#059669"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+[data-theme="dark"] .academy-meta-icon[style*="#fef2f2"],
+[data-theme="dark"] .academy-meta-icon[style*="#dc2626"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+[data-theme="dark"] .academy-meta-val[style*="color: #059669"],
+[data-theme="dark"] .academy-meta-val span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+
+/* Security Guidelines Box */
 [data-theme="dark"] .security-guidelines-box,
 [data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] {
   background: rgba(245, 158, 11, 0.08) !important;
-  border-color: rgba(245, 158, 11, 0.3) !important;
+  border: 1px dashed rgba(245, 158, 11, 0.3) !important;
+  border-radius: 10px !important;
 }
-[data-theme="dark"] .security-guidelines-box h4 {
-  color: #f59e0b !important;
+[data-theme="dark"] .security-guidelines-box h4,
+[data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] h4 {
+  color: #fbbf24 !important;
 }
-[data-theme="dark"] .security-guidelines-box ul li {
+[data-theme="dark"] .security-guidelines-box ul li,
+[data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] ul li {
   color: #cbd5e1 !important;
 }
 
+/* 5. Change Password Form */
 [data-theme="dark"] .input-field-label {
-  color: #cbd5e1 !important;
+  color: #f8fafc !important;
 }
 [data-theme="dark"] .settings-input {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #f8fafc !important;
 }
+[data-theme="dark"] .settings-input::placeholder {
+  color: #64748b !important;
+}
 [data-theme="dark"] .settings-input:focus {
-  border-color: #0092df !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
 }
 [data-theme="dark"] .password-toggle-btn {
   color: #94a3b8 !important;
@@ -692,6 +802,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #strengthLabel {
   color: #94a3b8 !important;
+}
+
+/* Password Submit Button */
+[data-theme="dark"] .password-submit-btn,
+[data-theme="dark"] .roaster-add-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 1px solid rgba(2, 132, 199, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .password-submit-btn:hover,
+[data-theme="dark"] .roaster-add-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45) !important;
 }
 </style>
 
