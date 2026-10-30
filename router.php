@@ -7,6 +7,12 @@
 // Global Timezone: Indian Standard Time (IST / UTC+05:30)
 date_default_timezone_set('Asia/Kolkata');
 
+// Error Handling: Suppress PHP notices and warnings on frontend UI, log errors securely
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
+
 $raw_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = urldecode($raw_path);
 $file = __DIR__ . $path;

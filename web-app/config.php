@@ -6,8 +6,14 @@
 // Global Timezone: Indian Standard Time (IST / UTC+05:30)
 date_default_timezone_set('Asia/Kolkata');
 
-// Security Hardening: Session Cookie Protection
-if (session_status() === PHP_SESSION_NONE) {
+// Error Handling: Suppress PHP notices and warnings on frontend UI, log errors securely
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
+
+// Security Hardening: Session Cookie Protection (only if headers not already sent)
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     ini_set('session.cookie_httponly', '1');
     ini_set('session.use_only_cookies', '1');
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
@@ -30,35 +36,35 @@ if ($is_local_env) {
     // ----------------------------------------------------
     // LOCALHOST ENVIRONMENT
     // ----------------------------------------------------
-    define('IS_LIVE', false);
-    define('LIVE_URL', 'https://ksvacademy.org');
-    define('DB_HOST', '127.0.0.1');
-    define('DB_PORT', 3306);
-    define('DB_NAME', 'ksvacademy');
-    define('DB_USER', 'root');
-    define('DB_PASS', 'myPassword$10');
-    define('DB_PASS_ALT', 'myPasswprd$10');
+    if (!defined('IS_LIVE')) define('IS_LIVE', false);
+    if (!defined('LIVE_URL')) define('LIVE_URL', 'https://ksvacademy.org');
+    if (!defined('DB_HOST')) define('DB_HOST', '127.0.0.1');
+    if (!defined('DB_PORT')) define('DB_PORT', 3306);
+    if (!defined('DB_NAME')) define('DB_NAME', 'ksvacademy');
+    if (!defined('DB_USER')) define('DB_USER', 'root');
+    if (!defined('DB_PASS')) define('DB_PASS', 'myPassword$10');
+    if (!defined('DB_PASS_ALT')) define('DB_PASS_ALT', 'myPasswprd$10');
 } else {
     // ----------------------------------------------------
     // LIVE SERVER ENVIRONMENT (https://ksvacademy.org)
     // ----------------------------------------------------
-    define('IS_LIVE', true);
-    define('LIVE_URL', 'https://ksvacademy.org');
-    define('DB_HOST', 'localhost');
-    define('DB_PORT', 3306);
-    define('DB_NAME', 'u471423132_ksvacademy');
-    define('DB_USER', 'u471423132_ksvacademy');
-    define('DB_PASS', '@KsvAdmin2027');
-    define('DB_PASS_ALT', '@KsvAdmin2027');
+    if (!defined('IS_LIVE')) define('IS_LIVE', true);
+    if (!defined('LIVE_URL')) define('LIVE_URL', 'https://ksvacademy.org');
+    if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
+    if (!defined('DB_PORT')) define('DB_PORT', 3306);
+    if (!defined('DB_NAME')) define('DB_NAME', 'u471423132_ksvacademy');
+    if (!defined('DB_USER')) define('DB_USER', 'u471423132_ksvacademy');
+    if (!defined('DB_PASS')) define('DB_PASS', '@KsvAdmin2027');
+    if (!defined('DB_PASS_ALT')) define('DB_PASS_ALT', '@KsvAdmin2027');
 }
 
 // App Paths
-define('HRMS_URL', '/web-app');
-define('WEBAPP_URL', '/web-app');
-define('ADMIN_URL', '/web-app/admin');
-define('STAFF_URL', '/web-app/staff');
-define('PARENT_URL', '/web-app/parent-student');
-define('APP_NAME', 'KSV Academy Web App');
+if (!defined('HRMS_URL')) define('HRMS_URL', '/web-app');
+if (!defined('WEBAPP_URL')) define('WEBAPP_URL', '/web-app');
+if (!defined('ADMIN_URL')) define('ADMIN_URL', '/web-app/admin');
+if (!defined('STAFF_URL')) define('STAFF_URL', '/web-app/staff');
+if (!defined('PARENT_URL')) define('PARENT_URL', '/web-app/parent-student');
+if (!defined('APP_NAME')) define('APP_NAME', 'KSV Academy Web App');
 
 /**
  * Get PDO Database Connection
@@ -241,36 +247,40 @@ function get_or_create_student_user($student, $db = null) {
 /**
  * Default Staff Permissions
  */
-define('DEFAULT_STAFF_PERMISSIONS', [
-    'dashboard',
-    'myself-attendance',
-    'admin_students',
-    'admin_student_attendance',
-    'admin_fees',
-    'admin_student_id',
-    'admin_marksheet',
-    'staff-id',
-    'staff-periods',
-    'leaves',
-    'payroll',
-    'announcements',
-    'admin_expenses',
-    'admin_expense_categories',
-    'admin_expense_report'
-]);
+if (!defined('DEFAULT_STAFF_PERMISSIONS')) {
+    define('DEFAULT_STAFF_PERMISSIONS', [
+        'dashboard',
+        'myself-attendance',
+        'admin_students',
+        'admin_student_attendance',
+        'admin_fees',
+        'admin_student_id',
+        'admin_marksheet',
+        'staff-id',
+        'staff-periods',
+        'leaves',
+        'payroll',
+        'announcements',
+        'admin_expenses',
+        'admin_expense_categories',
+        'admin_expense_report'
+    ]);
+}
 
 /**
  * Default Student / Parent Permissions
  */
-define('DEFAULT_STUDENT_PERMISSIONS', [
-    'dashboard',
-    'attendance',
-    'fees',
-    'student-id',
-    'marksheet',
-    'announcements',
-    'settings'
-]);
+if (!defined('DEFAULT_STUDENT_PERMISSIONS')) {
+    define('DEFAULT_STUDENT_PERMISSIONS', [
+        'dashboard',
+        'attendance',
+        'fees',
+        'student-id',
+        'marksheet',
+        'announcements',
+        'settings'
+    ]);
+}
 
 /**
  * Get permitted menu keys for a staff member

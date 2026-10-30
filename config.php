@@ -7,10 +7,26 @@
 // Global Timezone: Indian Standard Time (IST / UTC+05:30)
 date_default_timezone_set('Asia/Kolkata');
 
+// Error Handling: Suppress PHP notices and warnings on frontend UI, log errors securely
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
+
+// Session initialization (before any HTML output)
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.use_only_cookies', '1');
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        ini_set('session.cookie_secure', '1');
+    }
+    session_start();
+}
+
 // Site Information
-define('SITE_NAME', 'KSV Academy');
-define('SITE_TAGLINE', 'Where Learning Meets Excellence');
-define('SITE_MOTTO', 'Ab Sapnon ki Coaching Ulwe Mein! Strong Foundation, Sure Success.');
+if (!defined('SITE_NAME')) define('SITE_NAME', 'KSV Academy');
+if (!defined('SITE_TAGLINE')) define('SITE_TAGLINE', 'Where Learning Meets Excellence');
+if (!defined('SITE_MOTTO')) define('SITE_MOTTO', 'Ab Sapnon ki Coaching Ulwe Mein! Strong Foundation, Sure Success.');
 // Environment Detection (Live vs Localhost)
 $http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '');
 $is_ssl = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
@@ -25,40 +41,40 @@ $is_local_env = (
 );
 
 if ($is_local_env) {
-    define('IS_LIVE', false);
-    define('LIVE_URL', 'https://ksvacademy.org');
-    define('SITE_URL', $http_host ? $protocol . $http_host : 'http://localhost:8000');
+    if (!defined('IS_LIVE')) define('IS_LIVE', false);
+    if (!defined('LIVE_URL')) define('LIVE_URL', 'https://ksvacademy.org');
+    if (!defined('SITE_URL')) define('SITE_URL', $http_host ? $protocol . $http_host : 'http://localhost:8000');
 } else {
-    define('IS_LIVE', true);
-    define('LIVE_URL', 'https://ksvacademy.org');
-    define('SITE_URL', 'https://ksvacademy.org');
+    if (!defined('IS_LIVE')) define('IS_LIVE', true);
+    if (!defined('LIVE_URL')) define('LIVE_URL', 'https://ksvacademy.org');
+    if (!defined('SITE_URL')) define('SITE_URL', 'https://ksvacademy.org');
 }
-define('SITE_LOGO', 'assets/imgs/ksv-logo.jpg');
+if (!defined('SITE_LOGO')) define('SITE_LOGO', 'assets/imgs/ksv-logo.jpg');
 
 // Contact Details
-define('PHONE_PRIMARY', '+91 79059 00350');
-define('PHONE_SECONDARY', '+91 99840 58406');
-define('PHONE_RAW_1', '+917905900350');
-define('PHONE_RAW_2', '+919984058406');
-define('WHATSAPP_NUMBER', '917905900350');
-define('WHATSAPP_LINK', 'https://wa.me/917905900350?text=' . urlencode('Hello KSV Academy, I would like to inquire about admissions and the 3-day free demo classes.'));
-define('EMAIL_PRIMARY', 'KSVAcademy2024@gmail.com');
+if (!defined('PHONE_PRIMARY')) define('PHONE_PRIMARY', '+91 79059 00350');
+if (!defined('PHONE_SECONDARY')) define('PHONE_SECONDARY', '+91 99840 58406');
+if (!defined('PHONE_RAW_1')) define('PHONE_RAW_1', '+917905900350');
+if (!defined('PHONE_RAW_2')) define('PHONE_RAW_2', '+919984058406');
+if (!defined('WHATSAPP_NUMBER')) define('WHATSAPP_NUMBER', '917905900350');
+if (!defined('WHATSAPP_LINK')) define('WHATSAPP_LINK', 'https://wa.me/917905900350?text=' . urlencode('Hello KSV Academy, I would like to inquire about admissions and the 3-day free demo classes.'));
+if (!defined('EMAIL_PRIMARY')) define('EMAIL_PRIMARY', 'KSVAcademy2024@gmail.com');
 
 // Address
-define('ADDRESS_STREET', 'MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19');
-define('ADDRESS_LOCALITY', 'Ulwe, Navi Mumbai');
-define('ADDRESS_PINCODE', '410206');
-define('ADDRESS_STATE', 'Maharashtra, India');
-define('FULL_ADDRESS', 'MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19, Ulwe, Navi Mumbai, 410206');
+if (!defined('ADDRESS_STREET')) define('ADDRESS_STREET', 'MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19');
+if (!defined('ADDRESS_LOCALITY')) define('ADDRESS_LOCALITY', 'Ulwe, Navi Mumbai');
+if (!defined('ADDRESS_PINCODE')) define('ADDRESS_PINCODE', '410206');
+if (!defined('ADDRESS_STATE')) define('ADDRESS_STATE', 'Maharashtra, India');
+if (!defined('FULL_ADDRESS')) define('FULL_ADDRESS', 'MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19, Ulwe, Navi Mumbai, 410206');
 
 // Social Media Links
-define('URL_YOUTUBE', 'https://www.youtube.com/@KSVAcademy-i9t/videos');
-define('URL_INSTAGRAM', 'https://www.instagram.com/ksv.academy2024?igsh=ZDlscXZ1dWVodTk0');
-define('URL_FACEBOOK', 'https://www.facebook.com');
+if (!defined('URL_YOUTUBE')) define('URL_YOUTUBE', 'https://www.youtube.com/@KSVAcademy-i9t/videos');
+if (!defined('URL_INSTAGRAM')) define('URL_INSTAGRAM', 'https://www.instagram.com/ksv.academy2024?igsh=ZDlscXZ1dWVodTk0');
+if (!defined('URL_FACEBOOK')) define('URL_FACEBOOK', 'https://www.facebook.com');
 
 // Academic Session
-define('CURRENT_SESSION', '2026-27');
-define('SCHOLARSHIP_OFFER', 'Up to 60% Scholarship');
+if (!defined('CURRENT_SESSION')) define('CURRENT_SESSION', '2026-27');
+if (!defined('SCHOLARSHIP_OFFER')) define('SCHOLARSHIP_OFFER', 'Up to 60% Scholarship');
 
 // Base URL detection for clean routing
 function get_base_url() {
