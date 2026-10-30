@@ -341,6 +341,27 @@ require_once __DIR__ . '/includes/header.php';
       <p class="section-subtitle">From foundational schooling to university degrees and competitive exams, discover customized learning pathways.</p>
     </div>
 
+    <!-- Indian Students Batch Trust Strip -->
+    <div class="batches-trust-strip">
+      <div class="bts-left">
+        <div class="bts-avatars-wrap">
+          <img src="<?php echo url('assets/imgs/students/topper-girl.jpg'); ?>" alt="Indian Student at KSV Academy" class="bts-avatar">
+          <img src="<?php echo url('assets/imgs/students/topper-boy.jpg'); ?>" alt="Indian Student at KSV Academy" class="bts-avatar">
+          <img src="<?php echo url('assets/imgs/students/classroom-learning.jpg'); ?>" alt="Indian Student at KSV Academy" class="bts-avatar">
+          <span class="bts-avatar-count">500+</span>
+        </div>
+        <div class="bts-text">
+          <strong>500+ Students Learning Across Ulwe Batches</strong>
+          <span>Strict limit of 20–25 students per batch for personalized, 1-on-1 faculty attention</span>
+        </div>
+      </div>
+      <div class="bts-badges">
+        <span class="bts-pill"><i class="fa-solid fa-circle-check"></i> Free 3-Day Demo Pass</span>
+        <span class="bts-pill"><i class="fa-solid fa-circle-check"></i> Concept-First Training</span>
+        <span class="bts-pill"><i class="fa-solid fa-circle-check"></i> Biometric Attendance</span>
+      </div>
+    </div>
+
     <!-- Filter Buttons -->
     <div class="courses-tab-nav">
       <button type="button" class="course-tab-btn active" data-filter="all"><i class="fa-solid fa-border-all"></i> <span>All Programs</span></button>
@@ -357,28 +378,37 @@ require_once __DIR__ . '/includes/header.php';
         $cat = $c['category'];
         $theme_class = 'course-theme-school';
         $cat_icon = 'fa-school';
+        $course_img = 'assets/imgs/students/classroom-learning.jpg';
 
         if ($cat === 'competitive') {
           $theme_class = 'course-theme-competitive';
           $cat_icon = 'fa-atom';
+          $course_img = 'assets/imgs/students/topper-boy.jpg';
         } elseif ($cat === 'college') {
           $theme_class = 'course-theme-college';
           $cat_icon = 'fa-graduation-cap';
+          $course_img = 'assets/imgs/students/topper-girl.jpg';
         } elseif ($cat === 'degree') {
           $theme_class = 'course-theme-degree';
           $cat_icon = 'fa-building-columns';
+          $course_img = 'assets/imgs/gallers/gallery-9.png';
         } elseif ($cat === 'postgraduate') {
           $theme_class = 'course-theme-postgrad';
           $cat_icon = 'fa-award';
+          $course_img = 'assets/imgs/gallers/gallery-4.png';
         } elseif (stripos($c['title'], 'olympiad') !== false) {
           $theme_class = 'course-theme-olympiad';
           $cat_icon = 'fa-trophy';
+          $course_img = 'assets/imgs/gallers/gallery-3.png';
         }
       ?>
       <div class="course-card <?php echo $theme_class; ?>" data-category="<?php echo htmlspecialchars($c['category']); ?>">
         <div class="course-card-topbar"></div>
 
-        <div class="course-card-top">
+        <!-- Indian Student Batch Media Header -->
+        <div class="course-card-media">
+          <img src="<?php echo url($course_img); ?>" alt="<?php echo htmlspecialchars($c['title']); ?> - Indian Students Batch at KSV Academy" class="course-card-img" loading="lazy">
+          <div class="course-card-media-overlay"></div>
           <span class="course-cat-tag">
             <i class="fa-solid <?php echo $cat_icon; ?>"></i>
             <span><?php echo htmlspecialchars($c['category_name']); ?></span>

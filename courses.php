@@ -102,14 +102,37 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Courses Detailed Grid -->
     <div class="courses-grid">
       <?php foreach ($courses as $c): 
+        $cat = $c['category'];
         $themeClass = 'course-theme-' . htmlspecialchars($c['category']);
+        $cat_icon = 'fa-school';
+        $course_img = 'assets/imgs/students/classroom-learning.jpg';
+
+        if ($cat === 'competitive') {
+          $cat_icon = 'fa-atom';
+          $course_img = 'assets/imgs/students/topper-boy.jpg';
+        } elseif ($cat === 'college') {
+          $cat_icon = 'fa-graduation-cap';
+          $course_img = 'assets/imgs/students/topper-girl.jpg';
+        } elseif ($cat === 'degree') {
+          $cat_icon = 'fa-building-columns';
+          $course_img = 'assets/imgs/gallers/gallery-9.png';
+        } elseif ($cat === 'postgraduate') {
+          $cat_icon = 'fa-award';
+          $course_img = 'assets/imgs/gallers/gallery-4.png';
+        } elseif (stripos($c['title'], 'olympiad') !== false) {
+          $cat_icon = 'fa-trophy';
+          $course_img = 'assets/imgs/gallers/gallery-3.png';
+        }
       ?>
       <div class="course-card <?php echo $themeClass; ?>" data-category="<?php echo htmlspecialchars($c['category']); ?>" id="<?php echo htmlspecialchars($c['id']); ?>">
         <div class="course-card-topbar"></div>
 
-        <div class="course-card-top">
+        <!-- Indian Student Batch Media Header -->
+        <div class="course-card-media">
+          <img src="<?php echo url($course_img); ?>" alt="<?php echo htmlspecialchars($c['title']); ?> - Indian Students Batch at KSV Academy" class="course-card-img" loading="lazy">
+          <div class="course-card-media-overlay"></div>
           <span class="course-cat-tag">
-            <i class="fa-solid fa-book-open"></i>
+            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
             <span><?php echo htmlspecialchars($c['category_name']); ?></span>
           </span>
           <span class="course-status-pill">
