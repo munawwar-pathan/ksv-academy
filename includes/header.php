@@ -417,11 +417,11 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
       <!-- Brand Logo -->
       <a href="<?php echo url(); ?>" class="brand-logo" aria-label="KSV Academy Home">
         <div class="logo-symbol-wrapper">
-          <img src="<?php echo url(SITE_LOGO); ?>" alt="KSV Academy Logo" width="54" height="54" class="brand-img">
+          <img src="<?php echo url(SITE_LOGO); ?>" alt="KSV Academy Logo" width="48" height="48" class="brand-img">
         </div>
         <div class="logo-typography">
           <span class="brand-title">KSV ACADEMY</span>
-          <span class="brand-subtitle"> Where Learning Meets Excellence</span>
+          <span class="brand-subtitle">Where Learning Meets Excellence</span>
         </div>
       </a>
 
