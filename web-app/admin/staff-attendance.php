@@ -1552,10 +1552,12 @@ function showScanFeedback(success, text) {
 let currentLateBtn = null;
 
 function getCurrentTimeFormatted() {
-  const d = new Date();
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
+  return new Date().toLocaleTimeString('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
 }
 
 function openLateTooltip(btn, staffId, staffName, empCode, curTime) {

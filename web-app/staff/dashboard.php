@@ -1468,18 +1468,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
 </div>
 
 <script>
-// Simple & Sober Live Clock
+// Simple & Sober Live Clock (Asia/Kolkata IST)
 function updateStaffLiveClock() {
   const clockEl = document.getElementById('staffLiveClock');
   if (!clockEl) return;
   const now = new Date();
-  let hours = now.getHours();
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? String(hours).padStart(2, '0') : '12';
-  clockEl.textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+  clockEl.textContent = now.toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
 }
 setInterval(updateStaffLiveClock, 1000);
 </script>

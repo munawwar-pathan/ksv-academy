@@ -3,6 +3,9 @@
  * KSV Academy HRMS & Portal - Configuration & DB Connection
  */
 
+// Global Timezone: Indian Standard Time (IST / UTC+05:30)
+date_default_timezone_set('Asia/Kolkata');
+
 // Security Hardening: Session Cookie Protection
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', '1');
@@ -85,6 +88,7 @@ function get_db_connection() {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
+            $pdo->exec("SET time_zone = '+05:30'");
             return $pdo;
         } catch (PDOException $e) {
             $last_exception = $e;
@@ -101,6 +105,7 @@ function get_db_connection() {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
+            $pdo->exec("SET time_zone = '+05:30'");
             return $pdo;
         } catch (PDOException $e) {
             $last_exception = $e;

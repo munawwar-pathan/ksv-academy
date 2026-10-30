@@ -253,12 +253,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // 5. Live Digital Clock for Staff Punch Status
+  // 5. Live Digital Clock for Staff Punch Status (Asia/Kolkata IST)
   const liveClockEl = document.getElementById('staffLiveClock');
   if (liveClockEl) {
     function updateClock() {
       const now = new Date();
       liveClockEl.textContent = now.toLocaleTimeString('en-US', {
+        timeZone: 'Asia/Kolkata',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',

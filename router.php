@@ -4,6 +4,9 @@
  * Mirrors the rewrite rules defined in .htaccess for Apache.
  */
 
+// Global Timezone: Indian Standard Time (IST / UTC+05:30)
+date_default_timezone_set('Asia/Kolkata');
+
 $raw_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = urldecode($raw_path);
 $file = __DIR__ . $path;

@@ -4,6 +4,9 @@
  * Where Learning Meets Excellence
  */
 
+// Global Timezone: Indian Standard Time (IST / UTC+05:30)
+date_default_timezone_set('Asia/Kolkata');
+
 // Site Information
 define('SITE_NAME', 'KSV Academy');
 define('SITE_TAGLINE', 'Where Learning Meets Excellence');
