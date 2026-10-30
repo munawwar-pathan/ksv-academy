@@ -17,7 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 1. Add Photo
     if ($action === 'add_photo') {
         $title = trim($_POST['title'] ?? '');
-        $category = trim($_POST['category'] ?? 'Campus');
+        $caption = trim($_POST['caption'] ?? '');
+        $category = trim($_POST['category'] ?? 'Smart Classrooms');
+        $sort_order = intval($_POST['sort_order'] ?? 0);
+        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
         $image = '';
 
         // Process File Upload
@@ -37,23 +40,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $image = '/web-app/uploads/gallery/' . $filename;
                 }
             }
-        }
-
-        // Fallback to Image URL if no file uploaded
-        if (empty($image) && !empty($_POST['image_url'])) {
+        } elseif (!empty($_POST['selected_existing_file'])) {
+            $sel = trim($_POST['selected_existing_file']);
+            $image = (strpos($sel, '/') === 0) ? $sel : ('/assets/imgs/gallers/' . $sel);
+        } elseif (!empty($_POST['image_url'])) {
             $image = trim($_POST['image_url']);
         }
 
         if (!empty($title) && !empty($image)) {
-            $stmt = $db->prepare("INSERT INTO gallery (title, category, image, created_at) VALUES (?, ?, ?, NOW())");
-            $stmt->execute([$title, $category, $image]);
-            set_flash('success', "Media '{$title}' added to gallery successfully!");
+            $stmt = $db->prepare("INSERT INTO gallery (title, caption, category, image, sort_order, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->execute([$title, $caption, $category, $image, $sort_order, $status]);
+            $status_note = ($status === 'active') ? 'Live on website' : 'Paused';
+            set_flash('success', "Media '{$title}' added to gallery successfully! ({$status_note})");
         } else {
             set_flash('error', "Please provide both a title and an image.");
         }
 
         $redirect_view = $_POST['redirect_view'] ?? 'table';
-        header('Location: ' . ADMIN_URL . '/gallery?view=' . urlencode($redirect_view));
+        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
+        header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 
@@ -61,7 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'edit_photo') {
         $id = intval($_POST['id'] ?? 0);
         $title = trim($_POST['title'] ?? '');
-        $category = trim($_POST['category'] ?? 'Campus');
+        $caption = trim($_POST['caption'] ?? '');
+        $category = trim($_POST['category'] ?? 'Smart Classrooms');
+        $sort_order = intval($_POST['sort_order'] ?? 0);
+        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
         $image = trim($_POST['current_image'] ?? '');
 
         // New File Upload
@@ -81,24 +89,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $image = '/web-app/uploads/gallery/' . $filename;
                 }
             }
+        } elseif (!empty($_POST['selected_existing_file'])) {
+            $sel = trim($_POST['selected_existing_file']);
+            $image = (strpos($sel, '/') === 0) ? $sel : ('/assets/imgs/gallers/' . $sel);
         } elseif (!empty($_POST['image_url'])) {
             $image = trim($_POST['image_url']);
         }
 
         if ($id > 0 && !empty($title) && !empty($image)) {
-            $stmt = $db->prepare("UPDATE gallery SET title = ?, category = ?, image = ? WHERE id = ?");
-            $stmt->execute([$title, $category, $image, $id]);
-            set_flash('success', "Gallery media updated successfully!");
+            $stmt = $db->prepare("UPDATE gallery SET title = ?, caption = ?, category = ?, image = ?, sort_order = ?, status = ? WHERE id = ?");
+            $stmt->execute([$title, $caption, $category, $image, $sort_order, $status, $id]);
+            $status_note = ($status === 'active') ? 'Live on website' : 'Paused';
+            set_flash('success', "Gallery media updated successfully! ({$status_note})");
         } else {
             set_flash('error', "Title and image cannot be empty.");
         }
 
         $redirect_view = $_POST['redirect_view'] ?? 'table';
-        header('Location: ' . ADMIN_URL . '/gallery?view=' . urlencode($redirect_view));
+        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
+        header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 
-    // 3. Delete Photo
+    // 3. Toggle Status (Active / Paused)
+    if ($action === 'toggle_status') {
+        $id = intval($_POST['id'] ?? 0);
+        if ($id > 0) {
+            $stmt = $db->prepare("SELECT status, title FROM gallery WHERE id = ?");
+            $stmt->execute([$id]);
+            $row = $stmt->fetch();
+            if ($row) {
+                $current_status = $row['status'] ?? 'active';
+                $new_status = ($current_status === 'active') ? 'inactive' : 'active';
+                $upd = $db->prepare("UPDATE gallery SET status = ? WHERE id = ?");
+                $upd->execute([$new_status, $id]);
+                $msg = ($new_status === 'active') 
+                    ? "Media '{$row['title']}' is now Active & Live on website." 
+                    : "Media '{$row['title']}' is now Paused (hidden from website).";
+                set_flash('success', $msg);
+            }
+        }
+        $redirect_view = $_POST['redirect_view'] ?? 'table';
+        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
+        header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
+        exit;
+    }
+
+    // 4. Delete Photo
     if ($action === 'delete_photo') {
         $id = intval($_POST['id'] ?? 0);
         if ($id > 0) {
@@ -119,15 +156,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         $redirect_view = $_POST['redirect_view'] ?? 'table';
-        header('Location: ' . ADMIN_URL . '/gallery?view=' . urlencode($redirect_view));
+        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
+        header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 }
 
 // ── Query Data ──────────────────────────────────────────────────────────────
 $filter_category = trim($_GET['category'] ?? '');
+$filter_status = trim($_GET['status'] ?? 'all');
 $search = trim($_GET['search'] ?? '');
 $view_mode = trim($_GET['view'] ?? 'table'); // 'table' or 'grid'
+
+// Scan existing gallery photos in assets/imgs/gallers/
+$existing_gallery_files = [];
+$gal_dir = dirname(__DIR__, 2) . '/assets/imgs/gallers';
+if (is_dir($gal_dir)) {
+    $scanned = @scandir($gal_dir);
+    if ($scanned) {
+        foreach ($scanned as $f) {
+            if ($f[0] !== '.' && in_array(strtolower(pathinfo($f, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp', 'avif'])) {
+                $existing_gallery_files[] = [
+                    'name' => $f,
+                    'path' => '/assets/imgs/gallers/' . $f
+                ];
+            }
+        }
+    }
+}
 
 // Pagination Setup (10, 20, 30, 40, 50)
 $allowed_limits = [10, 20, 30, 40, 50];
@@ -140,13 +196,19 @@ $page = max(1, intval($_GET['page'] ?? 1));
 $where_clauses = ["1=1"];
 $params = [];
 
+if (!empty($filter_status) && in_array($filter_status, ['active', 'inactive'])) {
+    $where_clauses[] = "status = ?";
+    $params[] = $filter_status;
+}
+
 if (!empty($filter_category) && $filter_category !== 'all') {
     $where_clauses[] = "category = ?";
     $params[] = $filter_category;
 }
 
 if (!empty($search)) {
-    $where_clauses[] = "(title LIKE ? OR category LIKE ?)";
+    $where_clauses[] = "(title LIKE ? OR caption LIKE ? OR category LIKE ?)";
+    $params[] = "%$search%";
     $params[] = "%$search%";
     $params[] = "%$search%";
 }
@@ -159,6 +221,11 @@ $count_stmt = $db->prepare($count_query);
 $count_stmt->execute($params);
 $total_records = (int)$count_stmt->fetchColumn();
 
+// Overall status counts
+$active_count = (int)$db->query("SELECT COUNT(*) FROM gallery WHERE status = 'active'")->fetchColumn();
+$paused_count = (int)$db->query("SELECT COUNT(*) FROM gallery WHERE status = 'inactive'")->fetchColumn();
+$total_all_count = (int)$db->query("SELECT COUNT(*) FROM gallery")->fetchColumn();
+
 $total_pages = max(1, ceil($total_records / $limit));
 if ($page > $total_pages) {
     $page = $total_pages;
@@ -167,8 +234,8 @@ $offset = ($page - 1) * $limit;
 $start_record = $total_records > 0 ? $offset + 1 : 0;
 $end_record = min($offset + $limit, $total_records);
 
-// Fetch paginated records
-$query = "SELECT * FROM gallery WHERE {$where_sql} ORDER BY id DESC LIMIT ? OFFSET ?";
+// Fetch paginated records ordered by sort_order then id
+$query = "SELECT * FROM gallery WHERE {$where_sql} ORDER BY sort_order ASC, id DESC LIMIT ? OFFSET ?";
 $stmt = $db->prepare($query);
 $p_idx = 1;
 foreach ($params as $param_val) {
@@ -177,17 +244,17 @@ foreach ($params as $param_val) {
 $stmt->bindValue($p_idx++, (int)$limit, PDO::PARAM_INT);
 $stmt->bindValue($p_idx++, (int)$offset, PDO::PARAM_INT);
 $stmt->execute();
-$gallery_items = $stmt->fetchAll();
+$gallery_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get list of distinct categories for filters
 $categories_stmt = $db->query("SELECT category, COUNT(*) as cnt FROM gallery GROUP BY category ORDER BY category ASC");
 $category_counts = $categories_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-$total_all_count = array_sum($category_counts);
 
 // Helper function to build pagination url
-function get_gallery_pagination_url($target_page, $filter_category, $search, $view_mode, $limit) {
+function get_gallery_pagination_url($target_page, $filter_category, $filter_status, $search, $view_mode, $limit) {
     $p = [];
     if (!empty($filter_category) && $filter_category !== 'all') $p['category'] = $filter_category;
+    if (!empty($filter_status) && $filter_status !== 'all') $p['status'] = $filter_status;
     if (!empty($search)) $p['search'] = $search;
     if ($view_mode !== 'table') $p['view'] = $view_mode;
     if ($limit !== 10) $p['limit'] = $limit;
@@ -198,14 +265,17 @@ function get_gallery_pagination_url($target_page, $filter_category, $search, $vi
 
 // Helper function to return icon for category
 function get_category_icon($cat) {
-    $c = strtolower(trim($cat));
-    if (strpos($c, 'camp') !== false) return 'fa-landmark';
-    if (strpos($c, 'event') !== false) return 'fa-champagne-glasses';
-    if (strpos($c, 'sport') !== false) return 'fa-trophy';
-    if (strpos($c, 'acad') !== false) return 'fa-graduation-cap';
-    if (strpos($c, 'celeb') !== false) return 'fa-wand-magic-sparkles';
+    $c = strtolower(trim((string)$cat));
+    if (strpos($c, 'doubt') !== false || strpos($c, 'mentor') !== false) return 'fa-comments';
+    if (strpos($c, 'smart') !== false) return 'fa-desktop';
     if (strpos($c, 'class') !== false) return 'fa-chalkboard-user';
-    return 'fa-tag';
+    if (strpos($c, 'lib') !== false || strpos($c, 'book') !== false || strpos($c, 'study') !== false) return 'fa-book-open-reader';
+    if (strpos($c, 'sport') !== false) return 'fa-trophy';
+    if (strpos($c, 'event') !== false) return 'fa-champagne-glasses';
+    if (strpos($c, 'acad') !== false || strpos($c, 'sci') !== false) return 'fa-graduation-cap';
+    if (strpos($c, 'celeb') !== false) return 'fa-wand-magic-sparkles';
+    if (strpos($c, 'camp') !== false) return 'fa-landmark';
+    return 'fa-camera';
 }
 
 require_once __DIR__ . '/../includes/layout-header.php';
@@ -298,7 +368,85 @@ require_once __DIR__ . '/../includes/layout-header.php';
 .cat-pill.sports { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
 .cat-pill.academics { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
 .cat-pill.celebrations { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.cat-pill.classrooms { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
 .cat-pill.other { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+/* Status Badges */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.status-pill.active {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+.status-pill.paused {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+[data-theme="dark"] .status-pill.active {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .status-pill.paused {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.gallery-order-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+[data-theme="dark"] .gallery-order-badge {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+.existing-file-thumb {
+  width: 76px;
+  height: 52px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid #cbd5e1;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  background: #0f172a;
+  flex-shrink: 0;
+}
+.existing-file-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.existing-file-thumb:hover {
+  transform: translateY(-2px);
+  border-color: #0092df;
+}
+.existing-file-thumb.selected {
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.4);
+}
 
 /* Table Thumbnail */
 .gallery-thumb-container {
@@ -941,39 +1089,70 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <div class="roaster-toolbar-card gallery-toolbar-card no-print" style="margin-bottom: 24px;">
   <div class="roaster-toolbar-inner gallery-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
-    <!-- Left: Category Pills with Icons & Scroll Controls -->
-    <div class="gallery-categories-wrapper">
-      <button type="button" class="gallery-nav-scroll-btn left" aria-label="Scroll categories left" title="Scroll left">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-
-      <div class="gallery-categories-nav">
-        <a href="?category=all&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo (empty($filter_category) || $filter_category === 'all') ? 'active' : ''; ?>">
+    <!-- Left: Status & Category Pills with Scroll Controls -->
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1; min-width: 300px;">
+      
+      <!-- 1. Status Filter Pills (All, Active, Paused) -->
+      <div style="display: inline-flex; align-items: center; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <a href="?status=all<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
+           class="gallery-tab-pill <?php echo ($filter_status === 'all' || empty($filter_status)) ? 'active' : ''; ?>" style="padding: 6px 12px; font-size: 0.78rem;">
           <i class="fa-solid fa-layer-group"></i>
-          <span>All Photos</span>
+          <span>All</span>
           <span class="tab-badge"><?php echo $total_all_count; ?></span>
         </a>
-
-        <?php foreach ($category_counts as $cat_name => $count): ?>
-          <?php $cat_icon = get_category_icon($cat_name); ?>
-          <a href="?category=<?php echo urlencode($cat_name); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-tab-pill <?php echo $filter_category === $cat_name ? 'active' : ''; ?>">
-            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
-            <span><?php echo htmlspecialchars($cat_name); ?></span>
-            <span class="tab-badge"><?php echo $count; ?></span>
-          </a>
-        <?php endforeach; ?>
+        <a href="?status=active<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
+           class="gallery-tab-pill <?php echo $filter_status === 'active' ? 'active' : ''; ?>" style="padding: 6px 12px; font-size: 0.78rem;">
+          <i class="fa-solid fa-circle-check" style="<?php echo $filter_status === 'active' ? 'color:#fff;' : 'color:#059669;'; ?>"></i>
+          <span>Live</span>
+          <span class="tab-badge"><?php echo $active_count; ?></span>
+        </a>
+        <a href="?status=inactive<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
+           class="gallery-tab-pill <?php echo $filter_status === 'inactive' ? 'active' : ''; ?>" style="padding: 6px 12px; font-size: 0.78rem;">
+          <i class="fa-solid fa-pause" style="<?php echo $filter_status === 'inactive' ? 'color:#fff;' : 'color:#d97706;'; ?>"></i>
+          <span>Paused</span>
+          <span class="tab-badge"><?php echo $paused_count; ?></span>
+        </a>
       </div>
 
-      <button type="button" class="gallery-nav-scroll-btn right" aria-label="Scroll categories right" title="Scroll right">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
+      <!-- 2. Category Nav with Left/Right Buttons -->
+      <div class="gallery-categories-wrapper" style="flex: 1; min-width: 220px;">
+        <button type="button" class="gallery-nav-scroll-btn left" aria-label="Scroll categories left" title="Scroll left">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <div class="gallery-categories-nav">
+          <a href="?category=all&status=<?php echo urlencode($filter_status); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
+             class="gallery-tab-pill <?php echo (empty($filter_category) || $filter_category === 'all') ? 'active' : ''; ?>">
+            <i class="fa-solid fa-tags"></i>
+            <span>All Categories</span>
+          </a>
+
+          <?php foreach ($category_counts as $cat_name => $count): ?>
+            <?php $cat_icon = get_category_icon($cat_name); ?>
+            <a href="?category=<?php echo urlencode($cat_name); ?>&status=<?php echo urlencode($filter_status); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
+               class="gallery-tab-pill <?php echo $filter_category === $cat_name ? 'active' : ''; ?>">
+              <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+              <span><?php echo htmlspecialchars($cat_name); ?></span>
+              <span class="tab-badge"><?php echo $count; ?></span>
+            </a>
+          <?php endforeach; ?>
+        </div>
+
+        <button type="button" class="gallery-nav-scroll-btn right" aria-label="Scroll categories right" title="Scroll right">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
     </div>
 
     <!-- Right: Search, View Switcher & Add Button -->
-    <div class="gallery-toolbar-right">
+    <div class="gallery-toolbar-right" style="display: flex; align-items: center; gap: 10px;">
       
       <!-- Search Form -->
       <form method="GET" action="<?php echo ADMIN_URL; ?>/gallery" class="gallery-search-form">
+        <?php if (!empty($filter_status) && $filter_status !== 'all'): ?>
+          <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
+        <?php endif; ?>
         <?php if (!empty($filter_category)): ?>
           <input type="hidden" name="category" value="<?php echo htmlspecialchars($filter_category); ?>">
         <?php endif; ?>
@@ -983,20 +1162,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php endif; ?>
         
         <i class="fa-solid fa-magnifying-glass gallery-search-icon"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search photos..." class="gallery-search-input">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search title or caption..." class="gallery-search-input">
         <?php if (!empty($search)): ?>
-          <a href="?category=<?php echo urlencode($filter_category); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-search-clear" title="Clear search">&times;</a>
+          <a href="?status=<?php echo urlencode($filter_status); ?>&category=<?php echo urlencode($filter_category); ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="gallery-search-clear" title="Clear search">&times;</a>
         <?php endif; ?>
       </form>
 
       <div class="gallery-toolbar-actions-group">
         <!-- View Switcher -->
         <div class="gallery-view-switcher">
-          <a href="?view=table<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'table' ? 'primary' : 'secondary'; ?>" title="Table View">
+          <a href="?view=table&status=<?php echo urlencode($filter_status); ?><?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
+             class="action-btn-pill <?php echo $view_mode === 'table' ? 'primary' : 'secondary'; ?>" title="Table View">
             <i class="fa-solid fa-table-list"></i>
             <span>Table</span>
           </a>
-          <a href="?view=grid<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="action-btn-pill <?php echo $view_mode === 'grid' ? 'primary' : 'secondary'; ?>" title="Grid View">
+          <a href="?view=grid&status=<?php echo urlencode($filter_status); ?><?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
+             class="action-btn-pill <?php echo $view_mode === 'grid' ? 'primary' : 'secondary'; ?>" title="Grid View">
             <i class="fa-solid fa-grip"></i>
             <span>Grid</span>
           </a>
@@ -1024,8 +1205,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
       No Gallery Photos Found
     </h3>
     <p style="font-size: 0.85rem; color: #64748b; max-width: 440px; margin: 0 auto 20px;">
-      <?php if (!empty($search) || !empty($filter_category)): ?>
-        No photos match your current search or category filter. Try resetting filters or uploading a new image.
+      <?php if (!empty($search) || !empty($filter_category) || ($filter_status !== 'all' && !empty($filter_status))): ?>
+        No photos match your current search or status/category filters. Try resetting filters or uploading a new image.
       <?php else: ?>
         There are currently no media items in your school gallery. Start showcasing campus moments by uploading photos!
       <?php endif; ?>
@@ -1044,28 +1225,42 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="gallery-grid">
       <?php foreach ($gallery_items as $item): ?>
         <?php
-          $cat_key = strtolower(trim($item['category']));
+          $cat_key = strtolower(trim($item['category'] ?? ''));
           $badge_class = 'other';
           if (strpos($cat_key, 'camp') !== false) $badge_class = 'campus';
           elseif (strpos($cat_key, 'event') !== false) $badge_class = 'events';
           elseif (strpos($cat_key, 'sport') !== false) $badge_class = 'sports';
           elseif (strpos($cat_key, 'acad') !== false) $badge_class = 'academics';
           elseif (strpos($cat_key, 'celeb') !== false) $badge_class = 'celebrations';
-          $icon_class = get_category_icon($item['category']);
+          elseif (strpos($cat_key, 'class') !== false) $badge_class = 'classrooms';
+          $icon_class = get_category_icon($item['category'] ?? '');
+          $is_active = (($item['status'] ?? 'active') === 'active');
         ?>
         <div class="gallery-card">
           <div class="gallery-card-img-wrap" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')">
             <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" class="gallery-card-img" onerror="this.src='/assets/imgs/ksv-logo.png'">
             
-            <div class="gallery-card-badge">
+            <div class="gallery-card-badge" style="display: flex; gap: 6px; align-items: center;">
               <span class="cat-pill <?php echo $badge_class; ?>">
                 <i class="fa-solid <?php echo $icon_class; ?>"></i>
                 <?php echo htmlspecialchars($item['category']); ?>
               </span>
+              <span class="gallery-order-badge" title="Sort Order">
+                #<?php echo intval($item['sort_order']); ?>
+              </span>
             </div>
 
-            <div class="gallery-card-quick-zoom" title="Preview Photo">
-              <i class="fa-solid fa-expand"></i>
+            <!-- Top Right Status Pill -->
+            <div style="position: absolute; top: 12px; right: 12px; z-index: 2;">
+              <?php if ($is_active): ?>
+                <span class="status-pill active" title="Active on website">
+                  <i class="fa-solid fa-circle-check"></i> Live
+                </span>
+              <?php else: ?>
+                <span class="status-pill paused" title="Paused (hidden from website)">
+                  <i class="fa-solid fa-pause"></i> Paused
+                </span>
+              <?php endif; ?>
             </div>
 
             <div class="gallery-card-overlay">
@@ -1078,30 +1273,57 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <div class="gallery-card-body">
             <div>
               <h4 class="gallery-card-title"><?php echo htmlspecialchars($item['title']); ?></h4>
+              <?php if (!empty($item['caption'])): ?>
+                <p style="font-size: 0.78rem; color: #64748b; line-height: 1.4; margin: 4px 0 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                  <?php echo htmlspecialchars($item['caption']); ?>
+                </p>
+              <?php endif; ?>
               <div class="gallery-card-meta">
                 <i class="fa-regular fa-calendar-check" style="color: #94a3b8;"></i>
                 <span><?php echo date('d M Y, h:i A', strtotime($item['created_at'])); ?></span>
               </div>
             </div>
 
-            <div class="gallery-card-actions">
-              <button type="button" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" class="action-btn-pill secondary" style="padding: 6px 11px; font-size: 0.76rem;" title="View Preview">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-
-              <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item)); ?>);" class="action-btn-pill primary" style="padding: 6px 12px; font-size: 0.76rem;" title="Edit Media Details">
-                <i class="fa-solid fa-pen-to-square"></i>
-                <span>Edit</span>
-              </button>
-
-              <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete \'<?php echo addslashes($item['title']); ?>\'?');">
-                <input type="hidden" name="action" value="delete_photo">
+            <div class="gallery-card-actions" style="display: flex; justify-content: space-between; align-items: center;">
+              <!-- Toggle Active / Pause Form -->
+              <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;">
+                <input type="hidden" name="action" value="toggle_status">
                 <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
                 <input type="hidden" name="redirect_view" value="grid">
-                <button type="submit" class="action-btn-pill secondary" style="padding: 6px 10px; font-size: 0.76rem; color: #dc2626; border-color: #fecdd3;" title="Delete Media">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
+                <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
+                <?php if ($is_active): ?>
+                  <button type="submit" class="action-btn-pill secondary" style="padding: 5px 10px; font-size: 0.74rem; color: #b45309; border-color: #fde68a; background: #fffbeb;" title="Pause Media (Hide from website)">
+                    <i class="fa-solid fa-pause"></i>
+                    <span>Pause</span>
+                  </button>
+                <?php else: ?>
+                  <button type="submit" class="action-btn-pill secondary" style="padding: 5px 10px; font-size: 0.74rem; color: #047857; border-color: #a7f3d0; background: #ecfdf5;" title="Activate Media (Show on website)">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Activate</span>
+                  </button>
+                <?php endif; ?>
               </form>
+
+              <div style="display: flex; gap: 6px;">
+                <button type="button" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" class="action-btn-pill secondary" style="padding: 6px 10px; font-size: 0.76rem;" title="View Preview">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+
+                <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item)); ?>);" class="action-btn-pill primary" style="padding: 6px 12px; font-size: 0.76rem;" title="Edit Media Details">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  <span>Edit</span>
+                </button>
+
+                <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to delete \'<?php echo addslashes($item['title']); ?>\'?');">
+                  <input type="hidden" name="action" value="delete_photo">
+                  <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                  <input type="hidden" name="redirect_view" value="grid">
+                  <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
+                  <button type="submit" class="action-btn-pill secondary" style="padding: 6px 10px; font-size: 0.76rem; color: #dc2626; border-color: #fecdd3;" title="Delete Media">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
@@ -1207,16 +1429,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <thead>
             <tr>
               <th style="width: 76px; text-align: center;">Photo</th>
-              <th style="min-width: 220px;">Title &amp; File Details</th>
-              <th style="min-width: 150px;">Category</th>
-              <th style="min-width: 140px;">Uploaded Date</th>
-              <th style="text-align: right; width: 120px;">Actions</th>
+              <th style="min-width: 220px;">Title &amp; Subtitle</th>
+              <th style="min-width: 140px;">Category</th>
+              <th style="width: 75px; text-align: center;">Order</th>
+              <th style="width: 135px; text-align: center;">Status</th>
+              <th style="min-width: 120px;">Uploaded</th>
+              <th style="text-align: right; width: 130px;">Actions</th>
             </tr>
           </thead>
           <tbody>
             <?php if (empty($gallery_items)): ?>
               <tr>
-                <td colspan="5" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
+                <td colspan="7" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
                   <i class="fa-regular fa-images" style="font-size: 2rem; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
                   <span>No media records found matching current filter.</span>
                 </td>
@@ -1224,14 +1448,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php else: ?>
               <?php foreach ($gallery_items as $item): ?>
                 <?php
-                  $cat_key = strtolower(trim($item['category']));
+                  $cat_key = strtolower(trim($item['category'] ?? ''));
                   $badge_class = 'other';
                   if (strpos($cat_key, 'camp') !== false) $badge_class = 'campus';
                   elseif (strpos($cat_key, 'event') !== false) $badge_class = 'events';
                   elseif (strpos($cat_key, 'sport') !== false) $badge_class = 'sports';
                   elseif (strpos($cat_key, 'acad') !== false) $badge_class = 'academics';
                   elseif (strpos($cat_key, 'celeb') !== false) $badge_class = 'celebrations';
-                  $icon_class = get_category_icon($item['category']);
+                  elseif (strpos($cat_key, 'class') !== false) $badge_class = 'classrooms';
+                  $icon_class = get_category_icon($item['category'] ?? '');
+                  $is_active = (($item['status'] ?? 'active') === 'active');
                 ?>
                 <tr>
                   <!-- 1. Image Thumbnail -->
@@ -1244,13 +1470,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     </div>
                   </td>
 
-                  <!-- 2. Title -->
+                  <!-- 2. Title & Caption -->
                   <td>
                     <div style="font-weight: 700; font-size: 0.88rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
                       <?php echo htmlspecialchars($item['title']); ?>
                     </div>
-                    <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
-                      Path: <?php echo htmlspecialchars(substr($item['image'], 0, 42) . (strlen($item['image']) > 42 ? '...' : '')); ?>
+                    <?php if (!empty($item['caption'])): ?>
+                      <div style="font-size: 0.76rem; color: #64748b; margin-top: 2px;">
+                        <?php echo htmlspecialchars($item['caption']); ?>
+                      </div>
+                    <?php endif; ?>
+                    <div style="font-size: 0.70rem; color: #94a3b8; margin-top: 2px;">
+                      Path: <code><?php echo htmlspecialchars(substr($item['image'], 0, 36) . (strlen($item['image']) > 36 ? '...' : '')); ?></code>
                     </div>
                   </td>
 
@@ -1262,17 +1493,50 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     </span>
                   </td>
 
-                  <!-- 4. Uploaded Date -->
+                  <!-- 4. Sort Order -->
+                  <td style="text-align: center;">
+                    <span class="gallery-order-badge" title="Sort Order on Homepage &amp; Gallery">
+                      #<?php echo intval($item['sort_order']); ?>
+                    </span>
+                  </td>
+
+                  <!-- 5. Status & Quick Toggle -->
+                  <td style="text-align: center;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px;">
+                      <?php if ($is_active): ?>
+                        <span class="status-pill active" title="Active • Visible on Homepage &amp; Gallery">
+                          <i class="fa-solid fa-circle-check"></i> Live
+                        </span>
+                      <?php else: ?>
+                        <span class="status-pill paused" title="Paused • Hidden from website">
+                          <i class="fa-solid fa-pause"></i> Paused
+                        </span>
+                      <?php endif; ?>
+
+                      <!-- Quick Toggle Button -->
+                      <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;">
+                        <input type="hidden" name="action" value="toggle_status">
+                        <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                        <input type="hidden" name="redirect_view" value="table">
+                        <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
+                        <button type="submit" class="action-btn-pill secondary" style="padding: 3px 6px; font-size: 0.7rem;" title="<?php echo $is_active ? 'Click to Pause' : 'Click to Activate'; ?>">
+                          <i class="fa-solid <?php echo $is_active ? 'fa-pause' : 'fa-play'; ?>" style="color: <?php echo $is_active ? '#d97706' : '#059669'; ?>;"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+
+                  <!-- 6. Uploaded Date -->
                   <td>
-                    <span style="font-size: 0.82rem; color: #475569; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
-                      <i class="fa-regular fa-calendar" style="color: #94a3b8; font-size: 0.74rem;"></i>
+                    <span style="font-size: 0.80rem; color: #475569; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;">
+                      <i class="fa-regular fa-calendar" style="color: #94a3b8; font-size: 0.72rem;"></i>
                       <?php echo date('d M Y', strtotime($item['created_at'])); ?>
                     </span>
                   </td>
 
-                  <!-- 5. Actions -->
+                  <!-- 7. Actions -->
                   <td style="text-align: right;">
-                    <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                    <div style="display: flex; gap: 5px; justify-content: flex-end; align-items: center;">
                       <button type="button" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" class="action-btn-pill secondary" style="padding: 4px 8px;" title="Preview Photo">
                         <i class="fa-solid fa-eye" style="font-size: 0.72rem;"></i>
                       </button>
@@ -1281,10 +1545,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
                         <i class="fa-solid fa-pencil" style="font-size: 0.72rem;"></i>
                       </button>
 
-                      <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline;" onsubmit="return confirm('Delete \'<?php echo addslashes($item['title']); ?>\' from gallery?');">
+                      <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;" onsubmit="return confirm('Delete \'<?php echo addslashes($item['title']); ?>\' from gallery?');">
                         <input type="hidden" name="action" value="delete_photo">
                         <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
                         <input type="hidden" name="redirect_view" value="table">
+                        <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
                         <button type="submit" class="action-btn-pill secondary" style="padding: 4px 8px; color: #dc2626; border-color: #fecdd3;" title="Delete Photo">
                           <i class="fa-solid fa-trash-can" style="font-size: 0.72rem;"></i>
                         </button>
@@ -1315,7 +1580,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <label for="perPageLimitSelectTable" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
             <select id="perPageLimitSelectTable" class="pagination-limit-select" onchange="window.location.href = this.value;">
               <?php foreach ($allowed_limits as $l): ?>
-                <option value="<?php echo htmlspecialchars(get_gallery_pagination_url(1, $filter_category, $search, $view_mode, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+                <option value="<?php echo htmlspecialchars(get_gallery_pagination_url(1, $filter_category, $filter_status, $search, $view_mode, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
                   <?php echo $l; ?>
                 </option>
               <?php endforeach; ?>
@@ -1327,7 +1592,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php if ($total_pages > 1): ?>
           <nav class="pagination-nav" aria-label="Media Gallery Table Pagination">
             <!-- Prev Page -->
-            <a href="<?php echo $page > 1 ? htmlspecialchars(get_gallery_pagination_url($page - 1, $filter_category, $search, $view_mode, $limit)) : '#'; ?>" 
+            <a href="<?php echo $page > 1 ? htmlspecialchars(get_gallery_pagination_url($page - 1, $filter_category, $filter_status, $search, $view_mode, $limit)) : '#'; ?>" 
                class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
                aria-label="Previous Page"
                title="Previous Page">
@@ -1340,7 +1605,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               for ($p = 1; $p <= $total_pages; $p++):
                 if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
             ?>
-              <a href="<?php echo htmlspecialchars(get_gallery_pagination_url($p, $filter_category, $search, $view_mode, $limit)); ?>" 
+              <a href="<?php echo htmlspecialchars(get_gallery_pagination_url($p, $filter_category, $filter_status, $search, $view_mode, $limit)); ?>" 
                  class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
                 <?php echo $p; ?>
               </a>
@@ -1354,7 +1619,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             ?>
 
             <!-- Next Page -->
-            <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_gallery_pagination_url($page + 1, $filter_category, $search, $view_mode, $limit)) : '#'; ?>" 
+            <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_gallery_pagination_url($page + 1, $filter_category, $filter_status, $search, $view_mode, $limit)) : '#'; ?>" 
                class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
                aria-label="Next Page"
                title="Next Page">
@@ -1371,10 +1636,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <?php endif; ?>
 
 <!-- ══════════════════════════════════════════════════════
-     MODAL 1: ADD / UPLOAD MEDIA
+     MODAL 1: ADD PHOTO TO GALLERY
      ══════════════════════════════════════════════════════ -->
 <div id="addMediaModal" class="hrms-modal" onclick="if (event.target === this) closeAddModal();">
-  <div class="hrms-modal-card" style="max-width: 500px;">
+  <div class="hrms-modal-card" style="max-width: 540px;">
     
     <div class="hrms-modal-header">
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -1383,9 +1648,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
         <div>
           <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-            Upload Gallery Media
+            Add Photo to Gallery
           </h3>
-          <span style="font-size: 0.74rem; color: #64748b;">Add photo with title, category and image</span>
+          <span style="font-size: 0.74rem; color: #64748b;">Showcase classrooms, campus facilities, and events</span>
         </div>
       </div>
       <button type="button" class="modal-close-btn" onclick="closeAddModal();" style="border: none; cursor: pointer; padding: 4px 8px; font-size: 1.2rem;">
@@ -1397,54 +1662,104 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" enctype="multipart/form-data">
         <input type="hidden" name="action" value="add_photo">
         <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
+        <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
 
         <!-- 1. Photo Title -->
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
             Photo Title <span style="color: #ef4444;">*</span>
           </label>
-          <input type="text" name="title" class="form-control" required placeholder="e.g. Annual Sports Day 2026 Athletics" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.86rem;">
+          <input type="text" name="title" class="form-control" required placeholder="e.g. Interactive Physics Classroom Session" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem;">
         </div>
 
-        <!-- 2. Category -->
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
-            Category <span style="color: #ef4444;">*</span>
+        <!-- 2. Subtitle / Caption -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            Subtitle / Caption (Displayed on hover &amp; lightboxes)
           </label>
-          <select name="category" class="form-control" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.86rem; background: #ffffff;">
-            <option value="Campus">Campus</option>
-            <option value="Events">Events</option>
-            <option value="Sports">Sports</option>
-            <option value="Academics">Academics</option>
-            <option value="Celebrations">Celebrations</option>
-            <option value="Classrooms">Classrooms</option>
-            <option value="General">General</option>
+          <input type="text" name="caption" class="form-control" placeholder="e.g. Live problem solving with senior mentors inside AC classroom" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem;">
+        </div>
+
+        <!-- 3. Category & Sort Order in 2 Columns -->
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+              Category <span style="color: #ef4444;">*</span>
+            </label>
+            <select name="category" class="form-control" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; background: #ffffff;">
+              <option value="Smart Classrooms" selected>Smart Classrooms</option>
+              <option value="Doubt Clearing">Doubt Clearing</option>
+              <option value="Study Library">Study Library</option>
+              <option value="Academics">Academics</option>
+              <option value="Campus Life">Campus Life</option>
+              <option value="Events">Events</option>
+              <option value="Celebrations">Celebrations</option>
+              <option value="Sports">Sports</option>
+              <option value="Classrooms">Classrooms</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+              Sort Order
+            </label>
+            <input type="number" name="sort_order" value="0" min="0" class="form-control" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem;">
+          </div>
+        </div>
+
+        <!-- 4. Status -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            Publication Status
+          </label>
+          <select name="status" class="form-control" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; background: #ffffff;">
+            <option value="active" selected>Active (Live &amp; Visible on Website)</option>
+            <option value="inactive">Paused (Temporarily Hidden from Website)</option>
           </select>
         </div>
 
-        <!-- 3. Image File Upload -->
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
-            Upload Image File <span style="color: #ef4444;">*</span>
+        <!-- 5. Existing Campus Photos Quick Picker -->
+        <?php if (!empty($existing_gallery_files)): ?>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            <span>Or Choose Existing Campus Photo (<?php echo count($existing_gallery_files); ?> found)</span>
+            <span style="font-size: 0.72rem; color: #0092df; font-weight: 600;">Click to select</span>
           </label>
-          <div class="gallery-dropzone" onclick="document.getElementById('addImageFile').click();">
-            <i class="fa-solid fa-cloud-arrow-up gallery-dropzone-icon" style="font-size: 1.8rem; color: #0092df; margin-bottom: 8px;"></i>
-            <div class="gallery-dropzone-title" style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">Click to browse image file</div>
-            <div class="gallery-dropzone-sub" style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Supports JPG, PNG, WEBP, AVIF</div>
+          <div style="display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px; max-height: 84px;">
+            <?php foreach ($existing_gallery_files as $ef): ?>
+              <div class="existing-file-thumb" onclick="selectExistingGalleryFile('<?php echo htmlspecialchars($ef['name']); ?>', '<?php echo htmlspecialchars($ef['path']); ?>', 'addSelectedExistingFile', 'addImgPreviewWrap', 'addImgPreview', 'addImageUrl', this);" title="<?php echo htmlspecialchars($ef['name']); ?>">
+                <img src="<?php echo htmlspecialchars($ef['path']); ?>" alt="<?php echo htmlspecialchars($ef['name']); ?>">
+              </div>
+            <?php endforeach; ?>
+          </div>
+          <input type="hidden" name="selected_existing_file" id="addSelectedExistingFile" value="">
+        </div>
+        <?php endif; ?>
+
+        <!-- 6. Image File Upload -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            Upload New Image File (From Computer)
+          </label>
+          <div class="gallery-dropzone" onclick="document.getElementById('addImageFile').click();" style="padding: 18px 12px; cursor: pointer; text-align: center; border: 1.5px dashed #cbd5e1; border-radius: 10px; background: #f8fafc;">
+            <i class="fa-solid fa-cloud-arrow-up gallery-dropzone-icon" style="font-size: 1.6rem; color: #0092df; margin-bottom: 6px;"></i>
+            <div class="gallery-dropzone-title" style="font-size: 0.82rem; font-weight: 700; color: #0f172a;">Click to browse image file</div>
+            <div class="gallery-dropzone-sub" style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">Supports JPG, PNG, WEBP, AVIF</div>
             <input type="file" name="image_file" id="addImageFile" accept="image/*" style="display: none;" onchange="previewUploadImage(this, 'addImgPreview');">
           </div>
         </div>
 
-        <!-- Or Image URL -->
-        <div class="form-group" style="margin-bottom: 20px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+        <!-- 7. Or Image URL -->
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
             Or Image URL / Relative Path
           </label>
-          <input type="text" name="image_url" id="addImageUrl" placeholder="/assets/imgs/gallers/gallery-1.png" class="form-control" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;" oninput="previewUrlImage(this.value, 'addImgPreview');">
+          <input type="text" name="image_url" id="addImageUrl" placeholder="/assets/imgs/gallers/gallery-1.png" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;" oninput="previewUrlImage(this.value, 'addImgPreview');">
         </div>
 
         <!-- Live Preview Box -->
-        <div id="addImgPreviewWrap" class="gallery-live-preview-box" style="margin-bottom: 22px; display: none; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px;">
+        <div id="addImgPreviewWrap" class="gallery-live-preview-box" style="margin-bottom: 18px; display: none; text-align: center; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px;">
           <img id="addImgPreview" src="" alt="Preview" style="max-height: 140px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
           <div class="gallery-live-preview-hint" style="font-size: 0.74rem; color: #64748b; margin-top: 6px;">Selected Image Preview</div>
         </div>
@@ -1469,7 +1784,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL 2: EDIT MEDIA DETAILS
      ══════════════════════════════════════════════════════ -->
 <div id="editMediaModal" class="hrms-modal" onclick="if (event.target === this) closeEditModal();">
-  <div class="hrms-modal-card" style="max-width: 500px;">
+  <div class="hrms-modal-card" style="max-width: 540px;">
     
     <div class="hrms-modal-header">
       <div style="display: flex; align-items: center; gap: 10px;">
@@ -1480,7 +1795,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
             Edit Gallery Media
           </h3>
-          <span style="font-size: 0.74rem; color: #64748b;">Update photo title, category, or replace image</span>
+          <span style="font-size: 0.74rem; color: #64748b;">Update photo title, caption, sort order, and status</span>
         </div>
       </div>
       <button type="button" class="modal-close-btn" onclick="closeEditModal();" style="border: none; cursor: pointer; padding: 4px 8px; font-size: 1.2rem;">
@@ -1494,54 +1809,106 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <input type="hidden" name="id" id="edit_id">
         <input type="hidden" name="current_image" id="edit_current_image">
         <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
+        <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
 
         <!-- 1. Photo Title -->
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
             Photo Title <span style="color: #ef4444;">*</span>
           </label>
-          <input type="text" name="title" id="edit_title" class="form-control" required style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.86rem;">
+          <input type="text" name="title" id="edit_title" class="form-control" required style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem;">
         </div>
 
-        <!-- 2. Category -->
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
-            Category <span style="color: #ef4444;">*</span>
+        <!-- 2. Subtitle / Caption -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            Subtitle / Caption
           </label>
-          <select name="category" id="edit_category" class="form-control" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.86rem; background: #ffffff;">
-            <option value="Campus">Campus</option>
-            <option value="Events">Events</option>
-            <option value="Sports">Sports</option>
-            <option value="Academics">Academics</option>
-            <option value="Celebrations">Celebrations</option>
-            <option value="Classrooms">Classrooms</option>
-            <option value="General">General</option>
+          <input type="text" name="caption" id="edit_caption" class="form-control" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem;">
+        </div>
+
+        <!-- 3. Category & Sort Order in 2 Columns -->
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+              Category <span style="color: #ef4444;">*</span>
+            </label>
+            <select name="category" id="edit_category" class="form-control" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; background: #ffffff;">
+              <option value="Smart Classrooms">Smart Classrooms</option>
+              <option value="Doubt Clearing">Doubt Clearing</option>
+              <option value="Study Library">Study Library</option>
+              <option value="Academics">Academics</option>
+              <option value="Campus Life">Campus Life</option>
+              <option value="Events">Events</option>
+              <option value="Celebrations">Celebrations</option>
+              <option value="Sports">Sports</option>
+              <option value="Classrooms">Classrooms</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+              Sort Order
+            </label>
+            <input type="number" name="sort_order" id="edit_sort_order" min="0" class="form-control" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem;">
+          </div>
+        </div>
+
+        <!-- 4. Status -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            Publication Status
+          </label>
+          <select name="status" id="edit_status" class="form-control" style="width: 100%; padding: 9px 13px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.85rem; background: #ffffff;">
+            <option value="active">Active (Live &amp; Visible on Website)</option>
+            <option value="inactive">Paused (Temporarily Hidden from Website)</option>
           </select>
         </div>
 
-        <!-- 3. Current Image Preview & Replace Option -->
-        <div class="gallery-current-preview-box" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
-          <label class="gallery-current-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Current Image</label>
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <img id="edit_preview_img" src="" alt="Current Image" style="width: 90px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
-            <div class="gallery-current-hint" style="font-size: 0.76rem; color: #64748b; line-height: 1.4;">
-              To change this photo, select a new file below or enter a new image path.
+        <!-- 5. Current Image Preview -->
+        <div class="gallery-current-preview-box" style="margin-bottom: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px;">
+          <label class="gallery-current-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Current Image</label>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <img id="edit_preview_img" src="" alt="Current Image" style="width: 80px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+            <div class="gallery-current-hint" style="font-size: 0.74rem; color: #64748b; line-height: 1.4;">
+              To change this photo, select from existing photos below or upload a new file.
             </div>
           </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 16px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
-            Upload New Image File (Optional)
+        <!-- 6. Existing Campus Photos Quick Picker in Edit -->
+        <?php if (!empty($existing_gallery_files)): ?>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            <span>Or Pick From Campus Photos</span>
+            <span style="font-size: 0.72rem; color: #0092df; font-weight: 600;">Click to select</span>
+          </label>
+          <div style="display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px; max-height: 84px;">
+            <?php foreach ($existing_gallery_files as $ef): ?>
+              <div class="existing-file-thumb" onclick="selectExistingGalleryFile('<?php echo htmlspecialchars($ef['name']); ?>', '<?php echo htmlspecialchars($ef['path']); ?>', 'editSelectedExistingFile', null, 'edit_preview_img', 'edit_image_url', this);" title="<?php echo htmlspecialchars($ef['name']); ?>">
+                <img src="<?php echo htmlspecialchars($ef['path']); ?>" alt="<?php echo htmlspecialchars($ef['name']); ?>">
+              </div>
+            <?php endforeach; ?>
+          </div>
+          <input type="hidden" name="selected_existing_file" id="editSelectedExistingFile" value="">
+        </div>
+        <?php endif; ?>
+
+        <!-- 7. Upload New Image File -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
+            Upload New File (Optional)
           </label>
           <input type="file" name="image_file" accept="image/*" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem; background: #ffffff;">
         </div>
 
-        <div class="form-group" style="margin-bottom: 22px;">
-          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">
+        <!-- 8. Image URL / Path -->
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
             Or Update Image URL / Path
           </label>
-          <input type="text" name="image_url" id="edit_image_url" placeholder="/assets/imgs/gallers/gallery-1.png" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;">
+          <input type="text" name="image_url" id="edit_image_url" placeholder="/assets/imgs/gallers/gallery-1.png" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;">
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
@@ -1606,12 +1973,15 @@ function closeAddModal() {
 }
 
 function openEditModal(item) {
-  document.getElementById('edit_id').value = item.id;
-  document.getElementById('edit_title').value = item.title;
-  document.getElementById('edit_category').value = item.category;
-  document.getElementById('edit_current_image').value = item.image;
-  document.getElementById('edit_image_url').value = item.image;
-  document.getElementById('edit_preview_img').src = item.image;
+  document.getElementById('edit_id').value = item.id || '';
+  document.getElementById('edit_title').value = item.title || '';
+  document.getElementById('edit_caption').value = item.caption || '';
+  document.getElementById('edit_category').value = item.category || 'Smart Classrooms';
+  document.getElementById('edit_sort_order').value = item.sort_order || 0;
+  document.getElementById('edit_status').value = item.status || 'active';
+  document.getElementById('edit_current_image').value = item.image || '';
+  document.getElementById('edit_image_url').value = item.image || '';
+  document.getElementById('edit_preview_img').src = item.image || '';
 
   const modal = document.getElementById('editMediaModal');
   if (modal) modal.classList.add('show');
@@ -1629,12 +1999,13 @@ function openLightbox(imgSrc, title, category) {
   const catEl = document.getElementById('lbCategory');
   catEl.innerText = category;
   catEl.className = 'cat-pill other';
-  const c = category.toLowerCase();
+  const c = (category || '').toLowerCase();
   if (c.includes('camp')) catEl.className = 'cat-pill campus';
   else if (c.includes('event')) catEl.className = 'cat-pill events';
   else if (c.includes('sport')) catEl.className = 'cat-pill sports';
   else if (c.includes('acad')) catEl.className = 'cat-pill academics';
   else if (c.includes('celeb')) catEl.className = 'cat-pill celebrations';
+  else if (c.includes('class')) catEl.className = 'cat-pill classrooms';
 
   const lb = document.getElementById('lightboxModal');
   if (lb) lb.classList.add('show');
@@ -1650,18 +2021,48 @@ function previewUploadImage(input, targetImgId) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const img = document.getElementById(targetImgId);
-      img.src = e.target.result;
-      document.getElementById(targetImgId + 'Wrap').style.display = 'block';
+      if (img) img.src = e.target.result;
+      const wrap = document.getElementById(targetImgId + 'Wrap');
+      if (wrap) wrap.style.display = 'block';
     }
     reader.readAsDataURL(input.files[0]);
   }
 }
 
 function previewUrlImage(url, targetImgId) {
-  if (url.trim() !== '') {
+  if (url && url.trim() !== '') {
     const img = document.getElementById(targetImgId);
-    img.src = url.trim();
-    document.getElementById(targetImgId + 'Wrap').style.display = 'block';
+    if (img) img.src = url.trim();
+    const wrap = document.getElementById(targetImgId + 'Wrap');
+    if (wrap) wrap.style.display = 'block';
+  }
+}
+
+// Select an existing image from assets/imgs/gallers/
+function selectExistingGalleryFile(filename, webPath, hiddenInputId, previewWrapId, previewImgId, urlInputId, el) {
+  const hiddenInput = document.getElementById(hiddenInputId);
+  if (hiddenInput) hiddenInput.value = filename;
+
+  if (urlInputId) {
+    const urlInput = document.getElementById(urlInputId);
+    if (urlInput) urlInput.value = webPath;
+  }
+
+  // Visual selection highlighting
+  const parent = el.parentNode;
+  if (parent) {
+    const items = parent.querySelectorAll('.existing-file-thumb');
+    items.forEach(function(item) { item.classList.remove('selected'); });
+    el.classList.add('selected');
+  }
+
+  if (previewImgId) {
+    const previewImg = document.getElementById(previewImgId);
+    if (previewImg) previewImg.src = webPath;
+  }
+  if (previewWrapId) {
+    const wrap = document.getElementById(previewWrapId);
+    if (wrap) wrap.style.display = 'block';
   }
 }
 
@@ -1692,7 +2093,6 @@ window.addEventListener('keydown', function(e) {
     }
   }
 
-  // Convert vertical mousewheel to horizontal scroll over the nav
   nav.addEventListener('wheel', function(e) {
     if (e.deltaY !== 0) {
       e.preventDefault();
@@ -1701,7 +2101,6 @@ window.addEventListener('keydown', function(e) {
     }
   }, { passive: false });
 
-  // Mouse drag-to-scroll
   let isDown = false;
   let startX;
   let scrollLeft;
@@ -1725,7 +2124,6 @@ window.addEventListener('keydown', function(e) {
   window.addEventListener('resize', updateScrollButtons);
   setTimeout(updateScrollButtons, 50);
 
-  // Chevron click handlers
   if (btnLeft) {
     btnLeft.addEventListener('click', function(e) {
       e.preventDefault();

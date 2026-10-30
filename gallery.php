@@ -6,6 +6,17 @@ $page_title = 'Campus Gallery & Student Life | KSV Academy Ulwe';
 $page_description = 'Explore life at KSV Academy Ulwe. Take a photo tour of our modern classrooms, interactive physics & chemistry sessions, test series, and celebratory milestones.';
 $page_keywords = 'KSV Academy gallery, coaching photos Ulwe, classroom photos Ulwe, student life KSV Academy, Salam Khan physics classroom';
 
+$all_active_gallery = get_active_gallery_items();
+$gallery_count = count($all_active_gallery);
+
+// Extract distinct categories
+$gallery_categories = ['All'];
+foreach ($all_active_gallery as $g_item) {
+    if (!empty($g_item['category']) && !in_array($g_item['category'], $gallery_categories)) {
+        $gallery_categories[] = $g_item['category'];
+    }
+}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
@@ -45,7 +56,7 @@ require_once __DIR__ . '/includes/header.php';
       <!-- Quick Stats Counter Strip -->
       <div class="hero-stats-row" style="max-width: 760px; margin: 0 auto;">
         <div class="stat-item">
-          <span class="stat-number" data-target="8" data-suffix="+">8+</span>
+          <span class="stat-number" data-target="<?php echo $gallery_count; ?>" data-suffix="+"><?php echo $gallery_count; ?>+</span>
           <span class="stat-label">Campus Spaces</span>
         </div>
         <div class="stat-divider"></div>
@@ -77,17 +88,38 @@ require_once __DIR__ . '/includes/header.php';
       <p class="section-subtitle">A glimpse into our classrooms, faculty interactions, student workshops, and milestone celebrations in Ulwe Sector 19.</p>
     </div>
 
-    <div class="gallery-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
-      <?php foreach ($gallery_images as $img): ?>
-      <div class="gallery-card" data-src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" data-caption="<?php echo htmlspecialchars($img['caption']); ?>">
+    <!-- Category Filter Tabs -->
+    <?php if (count($gallery_categories) > 1): ?>
+    <div class="gallery-client-filter-bar" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 30px;">
+      <?php foreach ($gallery_categories as $idx => $cat_name): 
+        $cat_icon = ($cat_name === 'All') ? 'fa-layer-group' : get_gallery_category_icon($cat_name);
+      ?>
+      <button type="button" 
+              class="gallery-filter-pill-btn <?php echo $idx === 0 ? 'active' : ''; ?>" 
+              data-cat="<?php echo htmlspecialchars($cat_name); ?>"
+              onclick="filterPublicGallery(this, '<?php echo htmlspecialchars(addslashes($cat_name)); ?>')">
+        <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+        <span><?php echo htmlspecialchars($cat_name); ?></span>
+      </button>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <div class="gallery-grid" id="publicGalleryGrid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+      <?php foreach ($all_active_gallery as $img): 
+        $cat = !empty($img['category']) ? $img['category'] : 'Campus Life';
+        $cat_icon = get_gallery_category_icon($cat);
+        $caption_text = !empty($img['caption']) ? $img['caption'] : $img['title'];
+      ?>
+      <div class="gallery-card" data-src="<?php echo htmlspecialchars($img['image']); ?>" data-caption="<?php echo htmlspecialchars($caption_text); ?>" data-category="<?php echo htmlspecialchars($cat); ?>">
         <div class="gallery-thumb-wrapper">
-          <img src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" alt="<?php echo htmlspecialchars($img['caption']); ?>" class="gallery-thumb" loading="lazy">
+          <img src="<?php echo htmlspecialchars($img['image']); ?>" alt="<?php echo htmlspecialchars($caption_text); ?>" class="gallery-thumb" loading="lazy">
         </div>
         
         <div class="gallery-top-badges">
           <span class="gallery-category-pill">
-            <i class="fa-solid fa-tag"></i>
-            <span><?php echo htmlspecialchars($img['category']); ?></span>
+            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+            <span><?php echo htmlspecialchars($cat); ?></span>
           </span>
           <span class="gallery-zoom-icon" title="View Fullscreen">
             <i class="fa-solid fa-expand"></i>
@@ -97,7 +129,7 @@ require_once __DIR__ . '/includes/header.php';
         <div class="gallery-overlay">
           <div class="gallery-overlay-inner">
             <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">KSV Academy • Ulwe Sector 19</span>
-            <p class="gallery-overlay-caption"><?php echo htmlspecialchars($img['caption']); ?></p>
+            <p class="gallery-overlay-caption"><?php echo htmlspecialchars($caption_text); ?></p>
           </div>
         </div>
       </div>
@@ -105,6 +137,69 @@ require_once __DIR__ . '/includes/header.php';
     </div>
   </div>
 </section>
+
+<style>
+.gallery-filter-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.gallery-filter-pill-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+.gallery-filter-pill-btn.active {
+  background: linear-gradient(135deg, #02457a 0%, #0092df 100%);
+  color: #ffffff;
+  border-color: #0092df;
+  box-shadow: 0 4px 14px rgba(0, 146, 223, 0.3);
+}
+[data-theme="dark"] .gallery-filter-pill-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+[data-theme="dark"] .gallery-filter-pill-btn:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+[data-theme="dark"] .gallery-filter-pill-btn.active {
+  background: linear-gradient(135deg, #0092df 0%, #0066aa 100%);
+  color: #ffffff;
+  border-color: #0092df;
+}
+</style>
+
+<script>
+function filterPublicGallery(btn, targetCat) {
+  var btns = document.querySelectorAll('.gallery-filter-pill-btn');
+  btns.forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  var cards = document.querySelectorAll('#publicGalleryGrid .gallery-card');
+  cards.forEach(function(card) {
+    var cardCat = card.getAttribute('data-category') || '';
+    if (targetCat === 'All' || cardCat.toLowerCase() === targetCat.toLowerCase()) {
+      card.style.display = 'flex';
+      card.style.opacity = '1';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
 
 <!-- 3. Classroom Infrastructure Features -->
 <section class="section-py bg-soft">

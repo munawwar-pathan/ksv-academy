@@ -1063,20 +1063,17 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <div class="gallery-grid">
-      <?php foreach (array_slice($gallery_images, 0, 4) as $idx => $img): 
+      <?php 
+      $home_gallery_items = get_active_gallery_items(4);
+      $all_active_gallery_count = count(get_active_gallery_items());
+      foreach ($home_gallery_items as $idx => $img): 
         $cat = !empty($img['category']) ? $img['category'] : 'Campus Life';
-        $cat_icon = 'fa-chalkboard-user';
-        if ($cat === 'Doubt Clearing' || $cat === 'Study Sessions') {
-          $cat_icon = 'fa-comments';
-        } elseif ($cat === 'Smart Classrooms') {
-          $cat_icon = 'fa-desktop';
-        } elseif ($cat === 'Study Library') {
-          $cat_icon = 'fa-book-open-reader';
-        }
+        $cat_icon = get_gallery_category_icon($cat);
+        $caption_text = !empty($img['caption']) ? $img['caption'] : $img['title'];
       ?>
-      <div class="gallery-card" data-src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" data-caption="<?php echo htmlspecialchars($img['caption']); ?>">
+      <div class="gallery-card" data-src="<?php echo htmlspecialchars($img['image']); ?>" data-caption="<?php echo htmlspecialchars($caption_text); ?>">
         <div class="gallery-thumb-wrapper">
-          <img src="<?php echo url('assets/imgs/gallers/' . $img['file']); ?>" alt="<?php echo htmlspecialchars($img['caption']); ?>" class="gallery-thumb" loading="lazy">
+          <img src="<?php echo htmlspecialchars($img['image']); ?>" alt="<?php echo htmlspecialchars($caption_text); ?>" class="gallery-thumb" loading="lazy">
         </div>
         
         <!-- Persistent Top Badges -->
@@ -1093,7 +1090,7 @@ require_once __DIR__ . '/includes/header.php';
         <!-- Persistent Bottom Frosted Caption Strip -->
         <div class="gallery-overlay">
           <div class="gallery-overlay-inner">
-            <p class="gallery-overlay-caption"><?php echo htmlspecialchars($img['caption']); ?></p>
+            <p class="gallery-overlay-caption"><?php echo htmlspecialchars($caption_text); ?></p>
             <span class="gallery-location-tag"><i class="fa-solid fa-location-dot"></i> Ulwe Sector 19 Campus</span>
           </div>
         </div>
@@ -1105,7 +1102,7 @@ require_once __DIR__ . '/includes/header.php';
       <a href="<?php echo url('gallery'); ?>" class="btn-gallery-explore">
         <i class="fa-solid fa-images"></i>
         <span>Explore Full Campus Photo Gallery</span>
-        <span class="gallery-count-pill">30+ Photos</span>
+        <span class="gallery-count-pill"><?php echo $all_active_gallery_count > 0 ? ($all_active_gallery_count . '+ Photos') : 'View All'; ?></span>
         <i class="fa-solid fa-chevron-right"></i>
       </a>
     </div>

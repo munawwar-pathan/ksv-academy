@@ -490,7 +490,7 @@ $gallery_images = [
     [
         'file' => 'gallery-1.png',
         'caption' => 'Interactive Classroom Session with Mr. Salam Khan',
-        'category' => 'Classroom Batches'
+        'category' => 'Smart Classrooms'
     ],
     [
         'file' => 'gallery-7.png',
@@ -508,9 +508,9 @@ $gallery_images = [
         'category' => 'Study Library'
     ],
     [
-        'file' => 'gallery-7.png',
-        'caption' => 'Dedicated Faculty Guidance & Board Preparation',
-        'category' => 'Mentorship'
+        'file' => 'gallery-2.png',
+        'caption' => 'Science Exhibition & Innovation Lab Demonstration',
+        'category' => 'Academics'
     ],
     [
         'file' => 'gallery-8.png',
@@ -520,7 +520,7 @@ $gallery_images = [
     [
         'file' => 'gallery-9.png',
         'caption' => 'Collaborative Group Study & Problem Solving',
-        'category' => 'Students'
+        'category' => 'Campus Life'
     ],
     [
         'file' => 'gallery-10.png',
@@ -528,3 +528,150 @@ $gallery_images = [
         'category' => 'Classrooms'
     ]
 ];
+
+/**
+ * Fetch active media items for website gallery sections & gallery page.
+ * Powered dynamically by web-app/admin/gallery.
+ *
+ * @param int|null $limit
+ * @param string|null $category
+ * @return array
+ */
+function get_active_gallery_items($limit = null, $category = null) {
+    global $gallery_images;
+
+    try {
+        $db = null;
+        if (function_exists('get_db_connection')) {
+            $db = get_db_connection();
+        } elseif (file_exists(__DIR__ . '/web-app/config.php')) {
+            require_once __DIR__ . '/web-app/config.php';
+            if (function_exists('get_db_connection')) {
+                $db = get_db_connection();
+            }
+        }
+
+        if (!empty($db)) {
+            // Check available columns
+            $has_status = false;
+            $has_sort = false;
+            try {
+                $st_chk = $db->query("SHOW COLUMNS FROM gallery LIKE 'status'");
+                $has_status = ($st_chk && $st_chk->rowCount() > 0);
+            } catch (Throwable $e) {}
+
+            try {
+                $so_chk = $db->query("SHOW COLUMNS FROM gallery LIKE 'sort_order'");
+                $has_sort = ($so_chk && $so_chk->rowCount() > 0);
+            } catch (Throwable $e) {}
+
+            $sql = "SELECT * FROM gallery";
+            $where = [];
+            $params = [];
+
+            if ($has_status) {
+                $where[] = "status = 'active'";
+            }
+
+            if (!empty($category) && $category !== 'all') {
+                $where[] = "category = ?";
+                $params[] = $category;
+            }
+
+            if (!empty($where)) {
+                $sql .= " WHERE " . implode(' AND ', $where);
+            }
+
+            if ($has_sort) {
+                $sql .= " ORDER BY sort_order ASC, id DESC";
+            } else {
+                $sql .= " ORDER BY id DESC";
+            }
+
+            if ($limit !== null && (int)$limit > 0) {
+                $sql .= " LIMIT " . (int)$limit;
+            }
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!empty($rows)) {
+                $items = [];
+                foreach ($rows as $r) {
+                    $raw_img = trim($r['image'] ?? '');
+                    if (strpos($raw_img, 'http://') === 0 || strpos($raw_img, 'https://') === 0) {
+                        $img_url = $raw_img;
+                    } elseif (strpos($raw_img, '/') === 0) {
+                        $img_url = url(ltrim($raw_img, '/'));
+                    } else {
+                        $img_url = url($raw_img);
+                    }
+
+                    $caption = !empty($r['caption']) ? $r['caption'] : (!empty($r['title']) ? $r['title'] : 'Campus Life');
+
+                    $items[] = [
+                        'id' => (int)$r['id'],
+                        'title' => $r['title'] ?? 'Campus Life',
+                        'caption' => $caption,
+                        'category' => !empty($r['category']) ? $r['category'] : 'Campus Life',
+                        'image' => $img_url,
+                        'raw_image' => $raw_img,
+                        'sort_order' => (int)($r['sort_order'] ?? 0),
+                        'status' => $r['status'] ?? 'active',
+                        'created_at' => $r['created_at'] ?? ''
+                    ];
+                }
+                return $items;
+            }
+        }
+    } catch (Throwable $e) {
+        // Fallback below
+    }
+
+    // Static fallback
+    $fallback_items = [];
+    $raw_list = is_array($gallery_images) ? $gallery_images : [];
+    foreach ($raw_list as $idx => $g) {
+        $img_url = url('assets/imgs/gallers/' . $g['file']);
+        $fallback_items[] = [
+            'id' => $idx + 1,
+            'title' => $g['caption'] ?? ('Campus Life Photo ' . ($idx + 1)),
+            'caption' => $g['caption'] ?? '',
+            'category' => $g['category'] ?? 'Campus Life',
+            'image' => $img_url,
+            'raw_image' => '/assets/imgs/gallers/' . $g['file'],
+            'sort_order' => $idx + 1,
+            'status' => 'active',
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+    }
+
+    if (!empty($category) && $category !== 'all') {
+        $fallback_items = array_values(array_filter($fallback_items, function($it) use ($category) {
+            return strcasecmp($it['category'], $category) === 0;
+        }));
+    }
+
+    if ($limit !== null && (int)$limit > 0) {
+        return array_slice($fallback_items, 0, (int)$limit);
+    }
+    return $fallback_items;
+}
+
+/**
+ * Helper to return FontAwesome icon for gallery categories
+ */
+function get_gallery_category_icon($cat) {
+    $c = strtolower(trim((string)$cat));
+    if (strpos($c, 'doubt') !== false || strpos($c, 'mentor') !== false) return 'fa-comments';
+    if (strpos($c, 'smart') !== false) return 'fa-desktop';
+    if (strpos($c, 'class') !== false) return 'fa-chalkboard-user';
+    if (strpos($c, 'lib') !== false || strpos($c, 'book') !== false || strpos($c, 'study') !== false) return 'fa-book-open-reader';
+    if (strpos($c, 'sport') !== false) return 'fa-trophy';
+    if (strpos($c, 'event') !== false) return 'fa-champagne-glasses';
+    if (strpos($c, 'acad') !== false || strpos($c, 'sci') !== false) return 'fa-graduation-cap';
+    if (strpos($c, 'celeb') !== false) return 'fa-wand-magic-sparkles';
+    return 'fa-camera';
+}
+
