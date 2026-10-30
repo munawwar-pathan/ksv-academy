@@ -33,7 +33,7 @@ if ($current_user['role'] === 'super_admin') {
 } elseif ($current_user['role'] === 'staff') {
     $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'staff') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'parent') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'parent', 'student') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 }
 
 $total_notices = count($notices);
@@ -135,6 +135,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #475569;
   border: 1px solid #e2e8f0;
   text-transform: capitalize;
+}
+
+.notice-badge-target.target-all {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.notice-badge-target.target-parent,
+.notice-badge-target.target-student {
+  background: #f0f9ff;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+
+.notice-badge-target.target-staff {
+  background: #faf5ff;
+  color: #7c3aed;
+  border-color: #e9d5ff;
 }
 
 .periods-card-footer {
@@ -325,37 +344,50 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* ══════════════════════════════════════════════════════
-   DARK MODE COMPATIBILITY
+   DARK MODE COMPATIBILITY & REFINEMENTS
    ══════════════════════════════════════════════════════ */
+/* 1. Main Noticeboard Card */
 [data-theme="dark"] .periods-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
 }
 
 [data-theme="dark"] .periods-card-header {
   background: #1e293b !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
-[data-theme="dark"] .periods-card-header .card-title {
-  color: #f1f5f9 !important;
+[data-theme="dark"] .periods-card-header .card-title,
+[data-theme="dark"] .periods-card-header .card-title[style*="color: #0f172a"],
+[data-theme="dark"] .periods-card-header .card-title[style*="color:#0f172a"] {
+  color: #f8fafc !important;
 }
 
-[data-theme="dark"] .periods-card-header .card-title span {
+[data-theme="dark"] .periods-card-header .card-title i {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .periods-card-header .card-title span,
+[data-theme="dark"] .periods-card-header .card-title span[style*="background: #f8fafc"],
+[data-theme="dark"] .periods-card-header .card-title span[style*="background:#f8fafc"] {
   background: #0f172a !important;
   color: #94a3b8 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 
-[data-theme="dark"] .periods-card-header p {
+[data-theme="dark"] .periods-card-header p,
+[data-theme="dark"] .periods-card-header p[style*="color: #64748b"],
+[data-theme="dark"] .periods-card-header p[style*="color:#64748b"] {
   color: #94a3b8 !important;
 }
 
+/* 2. Notice Items */
 [data-theme="dark"] .notice-item {
   background: #0f172a !important;
-  border-color: #334155 !important;
-  border-left-color: #0284c7 !important;
+  border: 1px solid #334155 !important;
+  border-left: 3px solid #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
 }
 
 [data-theme="dark"] .notice-item:hover {
@@ -365,11 +397,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] .notice-title {
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .notice-time {
   color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-time i {
+  color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .notice-desc {
@@ -377,74 +413,176 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] .notice-footer-meta {
-  border-top-color: #1e293b !important;
+  border-top: 1px solid #334155 !important;
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .notice-badge-target {
-  background: #1e293b !important;
-  color: #cbd5e1 !important;
-  border-color: #334155 !important;
+[data-theme="dark"] .notice-footer-meta strong {
+  color: #f8fafc !important;
 }
 
+[data-theme="dark"] .notice-footer-meta span i[style*="color: #0284c7"],
+[data-theme="dark"] .notice-footer-meta span i[style*="color:#0284c7"],
+[data-theme="dark"] .notice-footer-meta span i {
+  color: #38bdf8 !important;
+}
+
+/* Audience Target Badges */
+[data-theme="dark"] .notice-badge-target {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .notice-badge-target.target-all {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .notice-badge-target.target-parent,
+[data-theme="dark"] .notice-badge-target.target-student {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .notice-badge-target.target-staff {
+  background: rgba(168, 85, 247, 0.15) !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
+  color: #c084fc !important;
+}
+
+/* 3. Card Footer */
 [data-theme="dark"] .periods-card-footer {
   background: #0f172a !important;
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
   color: #94a3b8 !important;
 }
 
+[data-theme="dark"] .periods-card-footer strong {
+  color: #38bdf8 !important;
+}
+
+/* 4. Empty Notice State */
 [data-theme="dark"] .empty-notice-state {
   color: #94a3b8 !important;
 }
 
 [data-theme="dark"] .empty-notice-icon {
-  background: #0f172a !important;
-  color: #64748b !important;
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
 }
 
-[data-theme="dark"] .empty-notice-state h4 {
-  color: #f1f5f9 !important;
+[data-theme="dark"] .empty-notice-state h4,
+[data-theme="dark"] .empty-notice-state h4[style*="color: #0f172a"],
+[data-theme="dark"] .empty-notice-state h4[style*="color:#0f172a"] {
+  color: #f8fafc !important;
 }
 
-[data-theme="dark"] .empty-notice-state p {
+[data-theme="dark"] .empty-notice-state p,
+[data-theme="dark"] .empty-notice-state p[style*="color: #64748b"],
+[data-theme="dark"] .empty-notice-state p[style*="color:#64748b"] {
   color: #94a3b8 !important;
+}
+
+/* 5. Buttons */
+[data-theme="dark"] .roaster-btn.primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+}
+
+[data-theme="dark"] .roaster-btn.primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45) !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+/* 6. Broadcast Modal */
+[data-theme="dark"] .hrms-modal,
+[data-theme="dark"] #announcementModal {
+  background: rgba(0, 0, 0, 0.75) !important;
 }
 
 [data-theme="dark"] #announcementModal .hrms-modal-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
 }
 
 [data-theme="dark"] #announcementModal .hrms-modal-header {
   background: #1e293b !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
-[data-theme="dark"] #announcementModal .hrms-modal-header h3 {
-  color: #f1f5f9 !important;
+[data-theme="dark"] #announcementModal .hrms-modal-header h3,
+[data-theme="dark"] #announcementModal .hrms-modal-header h3[style*="color: #0f172a"],
+[data-theme="dark"] #announcementModal .hrms-modal-header h3[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-header h3 i {
+  color: #38bdf8 !important;
 }
 
 [data-theme="dark"] #announcementModal .modal-close-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
   color: #94a3b8 !important;
+  padding: 4px 8px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 [data-theme="dark"] #announcementModal .modal-close-btn:hover {
-  color: #f1f5f9 !important;
+  background: #334155 !important;
+  color: #f8fafc !important;
 }
 
-[data-theme="dark"] #announcementModal .hrms-modal-body label.form-label {
+[data-theme="dark"] #announcementModal .hrms-modal-body {
+  background: #1e293b !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-body label.form-label,
+[data-theme="dark"] #announcementModal label.form-label[style*="color: #334155"],
+[data-theme="dark"] #announcementModal label.form-label[style*="color:#334155"] {
   color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] #announcementModal .hrms-modal-body .hrms-input {
   background: #0f172a !important;
+  border: 1px solid #334155 !important;
   color: #f8fafc !important;
-  border-color: #334155 !important;
 }
 
 [data-theme="dark"] #announcementModal .hrms-modal-body .hrms-input:focus {
   border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25) !important;
+  outline: none !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-body select.hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #announcementModal .hrms-modal-body .hrms-input::placeholder {
+  color: #64748b !important;
 }
 </style>
 
@@ -498,7 +636,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <i class="fa-regular fa-user" style="color: #0284c7; margin-right: 4px;"></i>
                 Posted by: <strong><?php echo htmlspecialchars($ann['posted_by'] ?: 'Directorate'); ?></strong>
               </span>
-              <span class="notice-badge-target">
+              <span class="notice-badge-target target-<?php echo htmlspecialchars($ann['target_role']); ?>">
                 Audience: <?php echo htmlspecialchars($ann['target_role'] === 'parent' ? 'Parents & Students' : ($ann['target_role'] === 'staff' ? 'Faculty & Staff' : 'All')); ?>
               </span>
             </div>
