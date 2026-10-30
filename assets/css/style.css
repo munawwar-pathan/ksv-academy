@@ -9377,3 +9377,803 @@ textarea.form-control {
 }
 
 
+
+/* ========================================================
+   HOME PAGE EXPANSION: 3 ATTRACTIVE INDIAN STUDENT SECTIONS
+   ======================================================== */
+
+/* ----------------------------------------------------
+   1. Achievers / Toppers Spotlight Section
+   ---------------------------------------------------- */
+.achievers-section-wrapper {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-body, #ffffff);
+}
+
+.achievers-metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 45px;
+}
+
+.achievers-metric-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid rgba(0, 146, 223, 0.16);
+  border-radius: 18px;
+  padding: 22px 20px;
+  text-align: center;
+  box-shadow: 0 10px 30px -10px rgba(0, 70, 107, 0.08);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.achievers-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-500, #0092df), #38bdf8);
+  border-radius: 18px 18px 0 0;
+}
+
+.achievers-metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 36px -12px rgba(0, 146, 223, 0.22);
+}
+
+.amc-number {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: var(--primary-600, #007cbd);
+  line-height: 1.1;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+
+.amc-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-dark, #0f172a);
+  margin-bottom: 4px;
+}
+
+.amc-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+}
+
+.achievers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.topper-card {
+  background: var(--card-bg, #ffffff);
+  border: 1px solid rgba(0, 146, 223, 0.18);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 15px 45px -12px rgba(0, 47, 71, 0.09);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.topper-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0, 146, 223, 0.4);
+  box-shadow: 0 24px 55px -15px rgba(0, 146, 223, 0.22);
+}
+
+.topper-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+
+.topper-photo-wrap {
+  width: 130px;
+  height: 155px;
+  flex-shrink: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.18);
+  border: 3px solid #ffffff;
+}
+
+.topper-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.topper-card:hover .topper-photo {
+  transform: scale(1.05);
+}
+
+.topper-rank-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 47, 71, 0.95) 100%);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 4px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.topper-header-info {
+  flex: 1;
+}
+
+.topper-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 146, 223, 0.1);
+  color: var(--primary-700, #006194);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(0, 146, 223, 0.25);
+}
+
+.topper-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-dark, #0f172a);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.topper-score-highlight {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: #0284c7;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.topper-school {
+  font-size: 0.82rem;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topper-quote {
+  background: rgba(0, 146, 223, 0.04);
+  border-left: 3px solid var(--primary-500, #0092df);
+  padding: 14px 16px;
+  border-radius: 0 12px 12px 0;
+  font-size: 0.90rem;
+  line-height: 1.55;
+  color: var(--text-dark, #334155);
+  font-style: italic;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.topper-scores-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px dashed rgba(0, 146, 223, 0.2);
+  padding-top: 16px;
+}
+
+.topper-score-chip {
+  background: var(--bg-soft, #f8fafc);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dark, #0f172a);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topper-score-chip i {
+  color: #10b981;
+}
+
+.achievers-cta-strip {
+  background: linear-gradient(135deg, #002f47 0%, #00466b 50%, #006194 100%);
+  border-radius: 20px;
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 15px 35px -10px rgba(0, 47, 71, 0.35);
+  color: #ffffff;
+}
+
+.acs-text h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.acs-text p {
+  font-size: 0.88rem;
+  color: #bae6fd;
+  margin: 0;
+}
+
+.acs-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+
+/* ----------------------------------------------------
+   2. Learning Culture & Classroom Experience Section
+   ---------------------------------------------------- */
+.learning-culture-section {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-soft, #f8fafc);
+}
+
+.culture-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 50px;
+  align-items: center;
+}
+
+.culture-visual-wrap {
+  position: relative;
+}
+
+.culture-main-img-card {
+  position: relative;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(0, 47, 71, 0.18);
+  border: 4px solid #ffffff;
+}
+
+.culture-img {
+  width: 100%;
+  height: 480px;
+  object-fit: cover;
+  display: block;
+}
+
+.culture-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 25, 38, 0.05) 0%, rgba(0, 25, 38, 0.45) 100%);
+  pointer-events: none;
+}
+
+.culture-floating-chip {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 146, 223, 0.25);
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+.culture-floating-chip:hover {
+  transform: translateY(-3px);
+}
+
+.culture-floating-chip.top-left {
+  top: 24px;
+  left: -20px;
+}
+
+.culture-floating-chip.top-right {
+  top: 36px;
+  right: -20px;
+}
+
+.culture-chip-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--primary-soft, rgba(0, 146, 223, 0.12));
+  color: var(--primary-600, #007cbd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+}
+
+.culture-chip-text strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.culture-chip-text span {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.culture-bottom-card {
+  position: absolute;
+  bottom: -24px;
+  left: 20px;
+  right: 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 16px 40px -10px rgba(0, 47, 71, 0.18);
+  border: 1px solid rgba(0, 146, 223, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 2;
+}
+
+.culture-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 28px 0 32px;
+}
+
+.culture-feature-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--card-bg, #ffffff);
+  border: 1px solid rgba(0, 146, 223, 0.14);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
+}
+
+.culture-feature-card:hover {
+  transform: translateX(6px);
+  border-color: rgba(0, 146, 223, 0.35);
+  box-shadow: 0 8px 25px -6px rgba(0, 146, 223, 0.15);
+}
+
+.cfc-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-50, #e8f5fc) 0%, rgba(0, 146, 223, 0.15) 100%);
+  color: var(--primary-600, #007cbd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.cfc-content h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark, #0f172a);
+  margin-bottom: 4px;
+}
+
+.cfc-content p {
+  font-size: 0.84rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.5;
+  margin: 0;
+}
+
+
+/* ----------------------------------------------------
+   3. K-SAT Scholarship & Admission Drive Section
+   ---------------------------------------------------- */
+.scholarship-drive-section {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-body, #ffffff);
+}
+
+.ksat-banner-card {
+  background: linear-gradient(135deg, #001926 0%, #002f47 50%, #00466b 100%);
+  border-radius: 28px;
+  padding: 44px 48px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 70px -15px rgba(0, 47, 71, 0.45);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #ffffff;
+}
+
+.ksat-bg-glow {
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0, 146, 223, 0.35) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ksat-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.ksat-badge-hot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 6px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+.ksat-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+.ksat-title .highlight-gold {
+  background: linear-gradient(90deg, #fef08a 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ksat-desc {
+  font-size: 0.98rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 28px;
+  max-width: 540px;
+}
+
+.ksat-steps-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.ksat-step-item {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 16px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.ksat-step-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-bottom: 4px;
+}
+
+.ksat-step-title {
+  font-size: 0.90rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.ksat-step-sub {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ksat-info-card {
+  background: rgba(2, 24, 36, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 20px;
+  padding: 28px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ksat-info-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ksat-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.ksat-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: #e2e8f0;
+}
+
+.ksat-detail-row i {
+  color: #38bdf8;
+  font-size: 1rem;
+  margin-top: 2px;
+}
+
+.ksat-btn-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+/* ----------------------------------------------------
+   DARK THEME OVERRIDES FOR NEW SECTIONS
+   ---------------------------------------------------- */
+[data-theme="dark"] .achievers-section-wrapper {
+  background: #001926;
+}
+
+[data-theme="dark"] .achievers-metric-card {
+  background: #002235;
+  border-color: rgba(56, 189, 248, 0.18);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .amc-number {
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .amc-label {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .amc-desc {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .topper-card {
+  background: #002235;
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: 0 15px 45px -12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .topper-card:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 24px 55px -15px rgba(0, 146, 223, 0.3);
+}
+
+[data-theme="dark"] .topper-photo-wrap {
+  border-color: #002f47;
+}
+
+[data-theme="dark"] .topper-badge-pill {
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .topper-name {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .topper-score-highlight {
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .topper-quote {
+  background: rgba(56, 189, 248, 0.05);
+  border-left-color: #38bdf8;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .topper-score-chip {
+  background: #001926;
+  border-color: rgba(56, 189, 248, 0.2);
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .learning-culture-section {
+  background: #00141f;
+}
+
+[data-theme="dark"] .culture-main-img-card {
+  border-color: #002f47;
+}
+
+[data-theme="dark"] .culture-floating-chip {
+  background: rgba(0, 34, 53, 0.92);
+  border-color: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .culture-chip-text strong {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .culture-chip-text span {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .culture-bottom-card {
+  background: #002235;
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+[data-theme="dark"] .culture-bottom-card strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .culture-bottom-card span {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .culture-feature-card {
+  background: #002235;
+  border-color: rgba(56, 189, 248, 0.18);
+}
+
+[data-theme="dark"] .culture-feature-card:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+[data-theme="dark"] .cfc-content h4 {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .cfc-content p {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .cfc-icon {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+}
+
+
+/* ----------------------------------------------------
+   RESPONSIVE DESIGN (TABLETS & PHONES)
+   ---------------------------------------------------- */
+@media (max-width: 991px) {
+  .achievers-metrics-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .achievers-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .culture-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .culture-img {
+    height: 380px;
+  }
+
+  .ksat-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .ksat-banner-card {
+    padding: 32px 24px;
+  }
+
+  .ksat-title {
+    font-size: 1.85rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .achievers-metrics-strip {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .topper-card {
+    padding: 22px 18px;
+  }
+
+  .topper-card-top {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .topper-school {
+    justify-content: center;
+  }
+
+  .achievers-cta-strip {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .acs-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .acs-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .culture-floating-chip.top-left,
+  .culture-floating-chip.top-right {
+    position: static;
+    margin-bottom: 10px;
+  }
+
+  .culture-bottom-card {
+    position: static;
+    margin-top: 16px;
+  }
+
+  .ksat-steps-row {
+    grid-template-columns: 1fr;
+  }
+}

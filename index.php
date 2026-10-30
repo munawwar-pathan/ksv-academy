@@ -446,6 +446,108 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 </section>
 
+<!-- 3.5 Academic Achievers & Toppers Spotlight -->
+<section class="section-py achievers-section-wrapper" id="achieversSection">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow"><i class="fa-solid fa-trophy"></i> Hall of Fame</span>
+      <h2 class="section-title">Celebrating Our <span class="hero-highlight">Academic Achievers</span></h2>
+      <p class="section-subtitle">Year after year, KSV Academy students in Ulwe achieve top percentiles and 100% board distinction through systematic concept mentorship.</p>
+    </div>
+
+    <!-- Metrics Summary Strip -->
+    <div class="achievers-metrics-strip">
+      <div class="achievers-metric-card">
+        <div class="amc-number">98.6%</div>
+        <div class="amc-label">Highest Board Score</div>
+        <div class="amc-desc">CBSE Class 10th Ulwe Center Topper</div>
+      </div>
+      <div class="achievers-metric-card">
+        <div class="amc-number">99.2%ile</div>
+        <div class="amc-label">Top JEE Main Score</div>
+        <div class="amc-desc">All India Top 1% Percentile in PCM</div>
+      </div>
+      <div class="achievers-metric-card">
+        <div class="amc-number">48+</div>
+        <div class="amc-label">Scored 90%+ Marks</div>
+        <div class="amc-desc">Across CBSE, ICSE &amp; Maharashtra State</div>
+      </div>
+      <div class="achievers-metric-card">
+        <div class="amc-number">100%</div>
+        <div class="amc-label">Board Passing Rate</div>
+        <div class="amc-desc">Consecutive 100% Success Record</div>
+      </div>
+    </div>
+
+    <!-- Achievers Cards Grid -->
+    <div class="achievers-grid">
+      <!-- Card 1: Girl Topper -->
+      <div class="topper-card">
+        <div class="topper-card-top">
+          <div class="topper-photo-wrap">
+            <img src="<?php echo url('assets/imgs/students/topper-girl.jpg'); ?>" alt="Ananya Deshmukh - CBSE 10th Board Topper KSV Academy" class="topper-photo" loading="lazy">
+            <div class="topper-rank-badge">Ulwe Topper</div>
+          </div>
+          <div class="topper-header-info">
+            <span class="topper-badge-pill"><i class="fa-solid fa-award"></i> CBSE Class 10 Board Ranker</span>
+            <h3 class="topper-name">Ananya Deshmukh</h3>
+            <div class="topper-score-highlight">98.6% Overall</div>
+            <div class="topper-school"><i class="fa-solid fa-school"></i> DAV Public School, Ulwe Navi Mumbai</div>
+          </div>
+        </div>
+        <div class="topper-quote">
+          &ldquo;The teachers at KSV Academy cleared every fundamental concept with incredible clarity. Regular mock test series and personal doubt sessions with Salam Sir and Mishra Sir made board exams completely stress-free!&rdquo;
+        </div>
+        <div class="topper-scores-strip">
+          <span class="topper-score-chip"><i class="fa-solid fa-circle-check"></i> Mathematics: 100/100</span>
+          <span class="topper-score-chip"><i class="fa-solid fa-circle-check"></i> Science: 99/100</span>
+          <span class="topper-score-chip"><i class="fa-solid fa-circle-check"></i> English: 98/100</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Boy Topper -->
+      <div class="topper-card">
+        <div class="topper-card-top">
+          <div class="topper-photo-wrap">
+            <img src="<?php echo url('assets/imgs/students/topper-boy.jpg'); ?>" alt="Aarav Mehta - IIT-JEE &amp; 12th Board Achiever KSV Academy" class="topper-photo" loading="lazy">
+            <div class="topper-rank-badge">JEE Achiever</div>
+          </div>
+          <div class="topper-header-info">
+            <span class="topper-badge-pill"><i class="fa-solid fa-medal"></i> IIT-JEE Main &amp; 12th Pinnacle</span>
+            <h3 class="topper-name">Aarav Mehta</h3>
+            <div class="topper-score-highlight">99.2 Percentile</div>
+            <div class="topper-school"><i class="fa-solid fa-graduation-cap"></i> 96.4% in 12th Science Board</div>
+          </div>
+        </div>
+        <div class="topper-quote">
+          &ldquo;Learning formulas is easy, but understanding the physics behind every equation is what KSV Academy taught me. The small batch size meant I could ask questions freely at any time.&rdquo;
+        </div>
+        <div class="topper-scores-strip">
+          <span class="topper-score-chip"><i class="fa-solid fa-circle-check"></i> Physics: 99.4 %ile</span>
+          <span class="topper-score-chip"><i class="fa-solid fa-circle-check"></i> Chemistry: 99.1 %ile</span>
+          <span class="topper-score-chip"><i class="fa-solid fa-circle-check"></i> Mathematics: 98.8 %ile</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom CTA Strip -->
+    <div class="achievers-cta-strip">
+      <div class="acs-text">
+        <h4>Aiming for Top Ranks in 2026–27?</h4>
+        <p>Give your child the unfair advantage of expert mentorship, disciplined test series, and small batches.</p>
+      </div>
+      <div class="acs-actions">
+        <button type="button" class="btn btn-warning" data-modal="demoModal">
+          <i class="fa-solid fa-ticket"></i> Book Free 3-Day Demo
+        </button>
+        <a href="<?php echo url('courses'); ?>" class="btn btn-outline-light">
+          <i class="fa-solid fa-compass"></i> View Programs
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- 4. Star Faculty Showcase (The Educators) -->
 <section class="section-py bg-soft" id="facultySection">
   <div class="container">
@@ -692,6 +794,102 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 </section>
 
+<!-- 5.5 The KSV Classroom Difference: Learning Culture -->
+<section class="section-py learning-culture-section" id="learningCultureSection">
+  <div class="container">
+    <div class="culture-grid">
+      <!-- Left Visual Card with Real Indian Students Photo -->
+      <div class="culture-visual-wrap">
+        <div class="culture-main-img-card">
+          <img src="<?php echo url('assets/imgs/students/classroom-learning.jpg'); ?>" alt="Indian Students Interactive Classroom Learning at KSV Academy Ulwe" class="culture-img" loading="lazy">
+          <div class="culture-img-overlay"></div>
+        </div>
+
+        <!-- Floating Badge 1 (Top Left) -->
+        <div class="culture-floating-chip top-left">
+          <div class="culture-chip-icon"><i class="fa-solid fa-users"></i></div>
+          <div class="culture-chip-text">
+            <strong>Max 25 Students</strong>
+            <span>Individual Attention Guaranteed</span>
+          </div>
+        </div>
+
+        <!-- Floating Badge 2 (Top Right) -->
+        <div class="culture-floating-chip top-right">
+          <div class="culture-chip-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;"><i class="fa-solid fa-shield-check"></i></div>
+          <div class="culture-chip-text">
+            <strong>Concept-First Approach</strong>
+            <span>Zero Rote Learning</span>
+          </div>
+        </div>
+
+        <!-- Bottom Integrated Card -->
+        <div class="culture-bottom-card">
+          <div class="culture-chip-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"><i class="fa-solid fa-hand-holding-heart"></i></div>
+          <div>
+            <strong style="display:block; font-size: 0.88rem; color: #0f172a;">Daily Open Doubt Desk</strong>
+            <span style="font-size: 0.76rem; color: #64748b;">Students clear doubts with faculty immediately after every session</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Features & Philosophy -->
+      <div class="culture-content-wrap">
+        <span class="section-eyebrow"><i class="fa-solid fa-lightbulb"></i> The KSV Difference</span>
+        <h2 class="section-title">Where Curiosity Meets <span class="hero-highlight">Focused Mentorship</span></h2>
+        <p class="section-subtitle" style="text-align: left; margin: 0 0 20px 0;">Unlike overcrowded 80+ student coaching factories, KSV Academy believes true academic excellence happens when teachers personally know each student's strengths and learning pace.</p>
+
+        <div class="culture-features-list">
+          <!-- Feature 1 -->
+          <div class="culture-feature-card">
+            <div class="cfc-icon"><i class="fa-solid fa-atom"></i></div>
+            <div class="cfc-content">
+              <h4>Foundational Concept Mastery</h4>
+              <p>We teach students <em>why</em> formulas work, building intuitive problem-solving abilities that excel in school boards and entrance exams alike.</p>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="culture-feature-card">
+            <div class="cfc-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="cfc-content">
+              <h4>Weekly Diagnostic OMR &amp; Subjective Tests</h4>
+              <p>Chapter-wise assessments provide immediate ranking, error logs, and detailed progress reports accessible to parents 24/7 on our portal.</p>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="culture-feature-card">
+            <div class="cfc-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;"><i class="fa-solid fa-fingerprint"></i></div>
+            <div class="cfc-content">
+              <h4>Smart Biometric Attendance &amp; Instant SMS</h4>
+              <p>Real-time automated check-in and check-out logs keep parents completely assured of their ward's punctuality and safety in Ulwe.</p>
+            </div>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="culture-feature-card">
+            <div class="cfc-icon" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6;"><i class="fa-solid fa-book-open-reader"></i></div>
+            <div class="cfc-content">
+              <h4>Dedicated AC Reading Library</h4>
+              <p>A quiet, distraction-free environment equipped with complete reference textbooks, past 10-year question banks, and faculty support.</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" data-modal="demoModal">
+            <i class="fa-solid fa-calendar-check"></i> Experience a Live Class (Free)
+          </button>
+          <a href="<?php echo WHATSAPP_LINK; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp">
+            <i class="fa-brands fa-whatsapp"></i> Speak to Counsellor
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- 6. Free 3-Day Demo Class & QR Code Section -->
 <section class="section-py bg-soft demo-section-wrapper" id="demoSection">
   <div class="container">
@@ -900,6 +1098,101 @@ require_once __DIR__ . '/includes/header.php';
         <span class="gallery-count-pill">30+ Photos</span>
         <i class="fa-solid fa-chevron-right"></i>
       </a>
+    </div>
+  </div>
+</section>
+
+<!-- 7.5 K-SAT Scholarship & Admission Drive -->
+<section class="section-py scholarship-drive-section" id="scholarshipDriveSection">
+  <div class="container">
+    <div class="ksat-banner-card">
+      <div class="ksat-bg-glow"></div>
+      
+      <div class="ksat-grid">
+        <!-- Left: Scholarship Offer & 3-Step Process -->
+        <div class="ksat-left-col">
+          <span class="ksat-badge-hot">
+            <i class="fa-solid fa-bolt"></i> Academic Session 2026–27 Scholarship Drive
+          </span>
+          <h2 class="ksat-title">
+            KSV Talent &amp; Scholarship Test <br>
+            <span class="highlight-gold">Win Up to 60% Merit Scholarship</span>
+          </h2>
+          <p class="ksat-desc">
+            Empowering deserving students across Ulwe &amp; Navi Mumbai. Take our 45-minute diagnostic assessment to unlock substantial tuition fee waivers, free foundational study kits, and personalized career roadmaps.
+          </p>
+
+          <!-- 3-Step Simple Process -->
+          <div class="ksat-steps-row">
+            <div class="ksat-step-item">
+              <div class="ksat-step-num">STEP 01</div>
+              <div class="ksat-step-title">Register Online</div>
+              <p class="ksat-step-sub">100% Free • No registration fees required</p>
+            </div>
+            <div class="ksat-step-item">
+              <div class="ksat-step-num">STEP 02</div>
+              <div class="ksat-step-title">Take 45-Min Test</div>
+              <p class="ksat-step-sub">Sunday slots at Ulwe Sector 19 center</p>
+            </div>
+            <div class="ksat-step-item">
+              <div class="ksat-step-num">STEP 03</div>
+              <div class="ksat-step-title">Claim Fee Waiver</div>
+              <p class="ksat-step-sub">Instant merit-based concession up to 60%</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Test Details & Instant Action Card -->
+        <div class="ksat-right-col">
+          <div class="ksat-info-card">
+            <div>
+              <div class="ksat-info-title">
+                <i class="fa-solid fa-award" style="color: #38bdf8;"></i> Test Highlights &amp; Venue
+              </div>
+              
+              <div class="ksat-details-list">
+                <div class="ksat-detail-row">
+                  <i class="fa-solid fa-clock"></i>
+                  <div>
+                    <strong>Exam Timing:</strong><br>
+                    <span>Every Sunday (10:00 AM &amp; 04:00 PM Slots)</span>
+                  </div>
+                </div>
+                <div class="ksat-detail-row">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                  <div>
+                    <strong>Eligible Classes:</strong><br>
+                    <span>Class 5th to 12th (CBSE, ICSE, State) &amp; Degree</span>
+                  </div>
+                </div>
+                <div class="ksat-detail-row">
+                  <i class="fa-solid fa-location-dot"></i>
+                  <div>
+                    <strong>Venue:</strong><br>
+                    <span>Sector 19, Ulwe, Navi Mumbai (Opp. Om Sai Hospital)</span>
+                  </div>
+                </div>
+                <div class="ksat-detail-row">
+                  <i class="fa-solid fa-gift"></i>
+                  <div>
+                    <strong>Special Bonus:</strong><br>
+                    <span>Free Comprehensive Formula Handbook &amp; Study Planner</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ksat-btn-actions">
+              <button type="button" class="btn btn-warning" data-modal="demoModal" style="width: 100%; justify-content: center; font-weight: 800;">
+                <i class="fa-solid fa-ticket"></i> Register for Scholarship (Free)
+              </button>
+              <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-outline-light" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-phone"></i> Call Admission Desk: <?php echo PHONE_PRIMARY; ?>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
