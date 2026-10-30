@@ -1,6 +1,28 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+// Fallback clean-URL and 404 routing for web servers that route fallback requests through index.php
+$req_path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$base = get_base_url();
+if (!empty($base) && strpos($req_path, $base) === 0) {
+    $req_path = substr($req_path, strlen($base));
+}
+$trimmed_path = trim($req_path, '/');
+
+if (!empty($trimmed_path) && $trimmed_path !== 'index.php' && $trimmed_path !== 'index') {
+    // If clean PHP file exists (e.g. /about -> about.php, /courses -> courses.php)
+    $clean_php_file = __DIR__ . '/' . $trimmed_path . '.php';
+    if (file_exists($clean_php_file)) {
+        require $clean_php_file;
+        exit;
+    }
+
+    // If requested route does not exist: serve 404 Not Found page
+    http_response_code(404);
+    require __DIR__ . '/404.php';
+    exit;
+}
+
 $active_page = 'home';
 $page_title = 'KSV Academy | Best Coaching Classes in Ulwe | 5th-12th, IIT-JEE, NEET, MH-CET, Degree';
 $page_description = 'KSV Academy Ulwe Navi Mumbai offers top-notch coaching for Classes 5th to 12th (CBSE, ICSE, State), IIT-JEE, NEET, MH-CET and Degree Courses (B.Com, BMS, BCA). Book your 3-Days Free Demo today!';
@@ -10,7 +32,7 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <!-- 1. Hero Section -->
-<section class="hero-section">
+<section class="hero-section" id="heroSection">
   <div class="container hero-grid">
     <div class="hero-content">
       <!-- Dual Eyebrow Badges -->
@@ -178,11 +200,12 @@ require_once __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<!-- 2. The 3 Core Pillars -->
-<section class="section-py pillars-section">
+<!-- 2. The 3 Core Pillars (About KSV Academy) -->
+<section class="section-py pillars-section" id="aboutSection">
+  <span id="about" style="position: absolute; visibility: hidden; pointer-events: none;"></span>
   <div class="container">
     <div class="section-header">
-      <span class="section-eyebrow"><i class="fa-solid fa-compass"></i> Why Choose KSV Academy</span>
+      <span class="section-eyebrow"><i class="fa-solid fa-compass"></i> About KSV Academy • Why Choose Us</span>
       <h2 class="section-title">Designed for Consistent <span class="hero-highlight">Academic Success</span></h2>
       <p class="section-subtitle">Our proven pedagogy, disciplined small batches, and dedicated mentorship set us apart in Ulwe.</p>
     </div>
@@ -1110,7 +1133,9 @@ require_once __DIR__ . '/includes/header.php';
 </section>
 
 <!-- 7.5 K-SAT Scholarship & Admission Drive -->
-<section class="section-py scholarship-drive-section" id="scholarshipDriveSection">
+<section class="section-py scholarship-drive-section" id="admissionsSection">
+  <span id="scholarshipDriveSection" style="position: absolute; visibility: hidden; pointer-events: none;"></span>
+  <span id="admissions" style="position: absolute; visibility: hidden; pointer-events: none;"></span>
   <div class="container">
     <div class="ksat-banner-card">
       <div class="ksat-bg-glow"></div>

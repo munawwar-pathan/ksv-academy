@@ -72,6 +72,13 @@ if ($path !== '/' && file_exists($php_file)) {
     return true;
 }
 
-// Default to index.php
-require __DIR__ . '/index.php';
+// If root path, serve index.php
+if ($path === '/' || $path === '') {
+    require __DIR__ . '/index.php';
+    return true;
+}
+
+// Any other non-existent route: serve 404 page with 404 HTTP status
+http_response_code(404);
+require __DIR__ . '/404.php';
 return true;

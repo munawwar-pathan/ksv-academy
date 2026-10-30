@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initStickyHeader();
   initNavDropdowns();
   initMobileDrawer();
+  initInPageSmoothNav();
   initCourseTabs();
   initFaqAccordion();
   initModals();
@@ -678,6 +679,9 @@ function initReloadPromoModal() {
   const promoModal = document.getElementById('reloadPromoModal');
   if (!promoModal) return;
 
+  // Don't interrupt direct section navigation if user arrived with a target hash
+  if (window.location.hash) return;
+
   // Automatically trigger modal popup on page load/reload after smooth entrance delay
   setTimeout(() => {
     // Only open if no other modal is currently active
@@ -887,5 +891,121 @@ function initTopBarTicker() {
     }, 500);
   }, 3200);
 }
+
+/* ==========================================================================
+   15. In-Page Smooth Section Navigation & ScrollSpy
+   ========================================================================== */
+function initInPageSmoothNav() {
+  const isHomePage = window.location.pathname === '' || 
+                     window.location.pathname === '/' || 
+                     window.location.pathname.endsWith('/index.php');
+
+  const links = document.querySelectorAll('a[data-scroll], .desktop-navigation a[href*="#"], .drawer-menu-list a[href*="#"]');
+
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      const dataScroll = link.getAttribute('data-scroll');
+      const href = link.getAttribute('href') || '';
+      let targetSelector = dataScroll;
+
+      if (!targetSelector && href.includes('#')) {
+        targetSelector = href.substring(href.indexOf('#'));
+      }
+
+      if (!targetSelector || targetSelector === '#') return;
+
+      const targetEl = document.querySelector(targetSelector);
+      if (targetEl) {
+        e.preventDefault();
+
+        // Calculate smooth scroll offset with sticky header height
+        const header = document.querySelector('.site-header');
+        const headerHeight = header ? header.offsetHeight : 80;
+        const targetPos = targetEl.getBoundingClientRect().top + window.pageYOffset - headerHeight - 10;
+
+        window.scrollTo({
+          top: Math.max(0, targetPos),
+          behavior: 'smooth'
+        });
+
+        // Close mobile drawer if active
+        const drawer = document.getElementById('mobileDrawer');
+        const overlay = document.getElementById('drawerOverlay');
+        if (drawer && drawer.classList.contains('active')) {
+          drawer.classList.remove('active');
+          if (overlay) overlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+
+        // Close dropdown if open
+        document.querySelectorAll('.has-dropdown').forEach(p => p.classList.remove('dropdown-open'));
+
+        // Update clean URL hash without jumping
+        if (window.history && window.history.pushState) {
+          window.history.pushState(null, '', targetSelector);
+        }
+      }
+    });
+  });
+
+  // Handle URL hash on initial page load (e.g. user visits from inner page: /#aboutSection)
+  if (window.location.hash) {
+    const initialTarget = document.querySelector(window.location.hash);
+    if (initialTarget) {
+      setTimeout(() => {
+        const header = document.querySelector('.site-header');
+        const headerHeight = header ? header.offsetHeight : 80;
+        const targetPos = initialTarget.getBoundingClientRect().top + window.pageYOffset - headerHeight - 10;
+        window.scrollTo({
+          top: Math.max(0, targetPos),
+          behavior: 'smooth'
+        });
+      }, 250);
+    }
+  }
+
+  // ScrollSpy on Homepage: updates active menu link as user scrolls past sections
+  if (isHomePage) {
+    const sections = [
+      { id: 'heroSection', navSelector: 'a[data-scroll="#heroSection"], a[href="#heroSection"], a[href="/"]' },
+      { id: 'aboutSection', navSelector: 'a[data-scroll="#aboutSection"], a[href="#aboutSection"]' },
+      { id: 'coursesSection', navSelector: 'a[data-scroll="#coursesSection"], a[href="#coursesSection"]' },
+      { id: 'facultySection', navSelector: 'a[data-scroll="#facultySection"], a[href="#facultySection"]' },
+      { id: 'admissionsSection', navSelector: 'a[data-scroll="#admissionsSection"], a[href="#admissionsSection"]' },
+      { id: 'gallerySection', navSelector: 'a[data-scroll="#gallerySection"], a[href="#gallerySection"]' },
+      { id: 'contactSection', navSelector: 'a[data-scroll="#contactSection"], a[href="#contactSection"]' }
+    ];
+
+    const onScrollSpy = () => {
+      const scrollPos = window.scrollY + 140;
+      let currentSectionId = '';
+
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const secEl = document.getElementById(sections[i].id);
+        if (secEl) {
+          const top = secEl.offsetTop;
+          if (scrollPos >= top) {
+            currentSectionId = sections[i].id;
+            break;
+          }
+        }
+      }
+
+      if (currentSectionId) {
+        const allNavLinks = document.querySelectorAll('.desktop-navigation .nav-link, .drawer-menu-list a');
+        allNavLinks.forEach(l => l.classList.remove('active'));
+
+        const targetGroup = sections.find(s => s.id === currentSectionId);
+        if (targetGroup) {
+          const activeLinks = document.querySelectorAll(targetGroup.navSelector);
+          activeLinks.forEach(l => l.classList.add('active'));
+        }
+      }
+    };
+
+    window.addEventListener('scroll', onScrollSpy, { passive: true });
+  }
+}
+
 
 

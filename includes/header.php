@@ -3,6 +3,16 @@ require_once __DIR__ . '/../config.php';
 
 // Active page context detection
 $active_page_name = isset($active_page) ? $active_page : 'home';
+$is_home_page = ($active_page_name === 'home');
+
+// Navigation Section Anchor Mappings (for home in-page smooth scroll & cross-page navigation)
+$nav_home_url       = $is_home_page ? '#heroSection' : url();
+$nav_about_url      = $is_home_page ? '#aboutSection' : url('#aboutSection');
+$nav_courses_url    = $is_home_page ? '#coursesSection' : url('#coursesSection');
+$nav_faculty_url    = $is_home_page ? '#facultySection' : url('#facultySection');
+$nav_admissions_url = $is_home_page ? '#admissionsSection' : url('#admissionsSection');
+$nav_gallery_url    = $is_home_page ? '#gallerySection' : url('#gallerySection');
+$nav_contact_url    = $is_home_page ? '#contactSection' : url('#contactSection');
 
 // Clean canonical URL determination (strips tracking query strings)
 $parsed_req_path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
@@ -24,7 +34,8 @@ $breadcrumb_titles = [
     'admissions' => 'Admissions & Scholarships',
     'faculty'    => 'Expert Faculty',
     'gallery'    => 'Campus Gallery',
-    'contact'    => 'Contact & Helpdesk'
+    'contact'    => 'Contact & Helpdesk',
+    '404'        => '404 Page Not Found'
 ];
 $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
 ?>
@@ -428,17 +439,17 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
       <nav class="desktop-navigation" aria-label="Primary Navigation">
         <ul class="nav-menu-list">
           <li class="nav-item">
-            <a href="<?php echo url(); ?>" class="nav-link <?php echo is_active('home'); ?>">
+            <a href="<?php echo $nav_home_url; ?>" class="nav-link <?php echo is_active('home'); ?>" data-scroll="#heroSection">
               <span>Home</span>
             </a>
           </li>
           <li class="nav-item">
-            <a href="<?php echo url('about'); ?>" class="nav-link <?php echo is_active('about'); ?>">
+            <a href="<?php echo $nav_about_url; ?>" class="nav-link <?php echo is_active('about'); ?>" data-scroll="#aboutSection">
               <span>About Us</span>
             </a>
           </li>
           <li class="nav-item has-dropdown">
-            <a href="<?php echo url('courses'); ?>" class="nav-link <?php echo is_active('courses'); ?>" id="coursesDropdownToggle">
+            <a href="<?php echo $nav_courses_url; ?>" class="nav-link <?php echo is_active('courses'); ?>" id="coursesDropdownToggle" data-scroll="#coursesSection">
               <span>Courses</span>
               <!-- <span class="nav-courses-badge">New Batches</span> -->
               <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
@@ -490,22 +501,22 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
             </div>
           </li>
           <li class="nav-item">
-            <a href="<?php echo url('faculty'); ?>" class="nav-link <?php echo is_active('faculty'); ?>">
+            <a href="<?php echo $nav_faculty_url; ?>" class="nav-link <?php echo is_active('faculty'); ?>" data-scroll="#facultySection">
               <span>Faculty</span>
             </a>
           </li>
           <li class="nav-item">
-            <a href="<?php echo url('admissions'); ?>" class="nav-link <?php echo is_active('admissions'); ?>">
+            <a href="<?php echo $nav_admissions_url; ?>" class="nav-link <?php echo is_active('admissions'); ?>" data-scroll="#admissionsSection">
               <span>Admissions</span>
             </a>
           </li>
           <li class="nav-item">
-            <a href="<?php echo url('gallery'); ?>" class="nav-link <?php echo is_active('gallery'); ?>">
+            <a href="<?php echo $nav_gallery_url; ?>" class="nav-link <?php echo is_active('gallery'); ?>" data-scroll="#gallerySection">
               <span>Gallery</span>
             </a>
           </li>
           <li class="nav-item">
-            <a href="<?php echo url('contact'); ?>" class="nav-link <?php echo is_active('contact'); ?>">
+            <a href="<?php echo $nav_contact_url; ?>" class="nav-link <?php echo is_active('contact'); ?>" data-scroll="#contactSection">
               <span>Contact</span>
             </a>
           </li>
@@ -550,10 +561,10 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
     <div class="drawer-body">
 
       <ul class="drawer-menu-list">
-        <li><a href="<?php echo url(); ?>" class="<?php echo is_active('home'); ?>"><i class="fa-solid fa-house"></i> Home</a></li>
-        <li><a href="<?php echo url('about'); ?>" class="<?php echo is_active('about'); ?>"><i class="fa-solid fa-circle-info"></i> About Us</a></li>
+        <li><a href="<?php echo $nav_home_url; ?>" class="<?php echo is_active('home'); ?>" data-scroll="#heroSection"><i class="fa-solid fa-house"></i> Home</a></li>
+        <li><a href="<?php echo $nav_about_url; ?>" class="<?php echo is_active('about'); ?>" data-scroll="#aboutSection"><i class="fa-solid fa-circle-info"></i> About Us</a></li>
         <li class="drawer-item-dropdown">
-          <a href="<?php echo url('courses'); ?>" class="<?php echo is_active('courses'); ?>"><i class="fa-solid fa-book-open"></i> Courses &amp; Batches</a>
+          <a href="<?php echo $nav_courses_url; ?>" class="<?php echo is_active('courses'); ?>" data-scroll="#coursesSection"><i class="fa-solid fa-book-open"></i> Courses &amp; Batches</a>
           <div class="drawer-sub-links">
             <a href="<?php echo url('courses?filter=school'); ?>" data-course-filter="school">&bull; School Section (5th–10th)</a>
             <a href="<?php echo url('courses?filter=competitive'); ?>" data-course-filter="competitive">&bull; IIT-JEE / NEET / MH-CET</a>
@@ -562,10 +573,10 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
             <a href="<?php echo url('courses?filter=postgraduate'); ?>" data-course-filter="postgraduate">&bull; Postgraduate Programs</a>
           </div>
         </li>
-        <li><a href="<?php echo url('faculty'); ?>" class="<?php echo is_active('faculty'); ?>"><i class="fa-solid fa-chalkboard-user"></i> Star Faculty</a></li>
-        <li><a href="<?php echo url('admissions'); ?>" class="<?php echo is_active('admissions'); ?>"><i class="fa-solid fa-award"></i> Admissions & Scholarship</a></li>
-        <li><a href="<?php echo url('gallery'); ?>" class="<?php echo is_active('gallery'); ?>"><i class="fa-solid fa-images"></i> Campus & Class Gallery</a></li>
-        <li><a href="<?php echo url('contact'); ?>" class="<?php echo is_active('contact'); ?>"><i class="fa-solid fa-headset"></i> Student Support & Contact</a></li>
+        <li><a href="<?php echo $nav_faculty_url; ?>" class="<?php echo is_active('faculty'); ?>" data-scroll="#facultySection"><i class="fa-solid fa-chalkboard-user"></i> Star Faculty</a></li>
+        <li><a href="<?php echo $nav_admissions_url; ?>" class="<?php echo is_active('admissions'); ?>" data-scroll="#admissionsSection"><i class="fa-solid fa-award"></i> Admissions &amp; Scholarship</a></li>
+        <li><a href="<?php echo $nav_gallery_url; ?>" class="<?php echo is_active('gallery'); ?>" data-scroll="#gallerySection"><i class="fa-solid fa-images"></i> Campus &amp; Class Gallery</a></li>
+        <li><a href="<?php echo $nav_contact_url; ?>" class="<?php echo is_active('contact'); ?>" data-scroll="#contactSection"><i class="fa-solid fa-headset"></i> Student Support &amp; Contact</a></li>
         <li class="drawer-login-menu-item">
           <a href="<?php echo url('web-app'); ?>" class="drawer-login-menu-link">
             <div class="drawer-login-left">

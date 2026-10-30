@@ -16,8 +16,9 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{DOCUMENT_ROOT}/$1.php -f
 RewriteRule ^(.*?)/?$ $1.php [L]
 
-# 3. Handle default directory index
+# 3. Handle default directory index & 404 Error Page
 DirectoryIndex index.php index.html
+ErrorDocument 404 /404.php
 
 # ----------------------------------------------------------------------
 # Performance & Gzip Compression

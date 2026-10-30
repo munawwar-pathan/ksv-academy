@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../config.php';
 ?>
   <!-- Global Footer -->
-  <footer class="site-footer">
+  <footer class="site-footer" id="contactSection">
+    <span id="contact" style="position: absolute; visibility: hidden; pointer-events: none;"></span>
     <div class="footer-top-strip">
       <div class="container footer-strip-container">
         <div class="strip-item">
