@@ -456,7 +456,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 1. Top KPI Stat Metrics Strip */
 [data-theme="dark"] .stat-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 [data-theme="dark"] .stat-label {
   color: #94a3b8 !important;
@@ -487,6 +489,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .stat-card-progress {
   background: #334155 !important;
 }
+[data-theme="dark"] .stat-card.green .stat-card-progress-bar {
+  background: #34d399 !important;
+}
+[data-theme="dark"] .stat-card.purple .stat-card-progress-bar {
+  background: #f87171 !important;
+}
+[data-theme="dark"] .stat-card.blue .stat-card-progress-bar {
+  background: #a78bfa !important;
+}
+[data-theme="dark"] .stat-card.amber .stat-card-progress-bar {
+  background: #38bdf8 !important;
+}
 [data-theme="dark"] .stat-card.green .stat-icon-wrapper {
   background: rgba(16, 185, 129, 0.15) !important;
   color: #34d399 !important;
@@ -508,7 +522,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border: 1px solid rgba(0, 146, 223, 0.3) !important;
 }
 [data-theme="dark"] .stat-card-footer {
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .stat-card-footer .text-muted {
@@ -534,16 +548,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 2. Subnavigation & Toolbar */
 [data-theme="dark"] .exp-rep-toolbar-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 [data-theme="dark"] .exp-rep-nav-btn {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .exp-rep-nav-btn:hover {
   background: #334155 !important;
   color: #f8fafc !important;
+  border-color: #475569 !important;
 }
 [data-theme="dark"] .exp-rep-nav-btn i.fa-file-invoice-dollar {
   color: #38bdf8 !important;
@@ -556,21 +575,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .exp-rep-session-badge {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .exp-rep-session-badge strong {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .exp-rep-print-btn {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
 
 /* 3. Cards & Headers */
 [data-theme="dark"] .exp-rep-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .exp-rep-card-header {
-  border-bottom-color: #334155 !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .exp-rep-card-title {
   color: #f8fafc !important;
@@ -581,13 +609,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .exp-rep-header-badge {
   background: #0f172a !important;
   color: #cbd5e1 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 
 /* 4. Category-Wise Allocation */
 [data-theme="dark"] .exp-rep-cat-item {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .exp-rep-cat-item:hover {
   background: #1e293b !important;
@@ -604,7 +636,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .exp-rep-cat-pct {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .exp-rep-progress-track {
@@ -615,35 +649,48 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* Category Icon Translucent Tint Adaptations */
-[data-theme="dark"] .exp-rep-cat-icon[style*="#b45309"] {
+[data-theme="dark"] .exp-rep-cat-icon {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 7px !important;
+  -webkit-border-radius: 7px !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-rep-cat-icon[style*="#b45309"],
+[data-theme="dark"] .exp-rep-cat-icon[style*="#fef3c7"] {
   background: rgba(245, 158, 11, 0.15) !important;
   color: #fbbf24 !important;
-  border-color: rgba(245, 158, 11, 0.3) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-cat-icon[style*="#0369a1"] {
+[data-theme="dark"] .exp-rep-cat-icon[style*="#0369a1"],
+[data-theme="dark"] .exp-rep-cat-icon[style*="#e0f2fe"] {
   background: rgba(2, 132, 199, 0.15) !important;
   color: #38bdf8 !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-cat-icon[style*="#7e22ce"] {
+[data-theme="dark"] .exp-rep-cat-icon[style*="#7e22ce"],
+[data-theme="dark"] .exp-rep-cat-icon[style*="#f3e8ff"] {
   background: rgba(124, 58, 237, 0.15) !important;
   color: #c084fc !important;
-  border-color: rgba(124, 58, 237, 0.3) !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-cat-icon[style*="#047857"] {
+[data-theme="dark"] .exp-rep-cat-icon[style*="#047857"],
+[data-theme="dark"] .exp-rep-cat-icon[style*="#ecfdf5"] {
   background: rgba(16, 185, 129, 0.15) !important;
   color: #34d399 !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-cat-icon[style*="#c2410c"] {
+[data-theme="dark"] .exp-rep-cat-icon[style*="#c2410c"],
+[data-theme="dark"] .exp-rep-cat-icon[style*="#fff7ed"] {
   background: rgba(249, 115, 22, 0.15) !important;
   color: #fb923c !important;
-  border-color: rgba(249, 115, 22, 0.3) !important;
+  border-color: rgba(249, 115, 22, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-cat-icon[style*="#475569"] {
+[data-theme="dark"] .exp-rep-cat-icon[style*="#475569"],
+[data-theme="dark"] .exp-rep-cat-icon[style*="#f1f5f9"] {
   background: rgba(148, 163, 184, 0.15) !important;
   color: #cbd5e1 !important;
-  border-color: rgba(148, 163, 184, 0.3) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
 }
 
 /* 5. Monthly Expenditure Trend Table */
@@ -651,16 +698,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .exp-rep-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .staff-id-table tbody td,
 [data-theme="dark"] .exp-rep-table tbody td {
-  border-bottom-color: #334155 !important;
+  background: transparent !important;
+  border-bottom: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .staff-id-table tbody tr:hover,
 [data-theme="dark"] .exp-rep-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
 }
 [data-theme="dark"] .exp-rep-month-cell {
   color: #f8fafc !important;
@@ -670,7 +718,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .exp-rep-vouchers-pill {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .exp-rep-month-amount {
@@ -681,7 +731,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .exp-rep-share-badge {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .exp-rep-table td .fa-calendar-xmark {
@@ -691,7 +743,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 6. Disbursement Channels & Modes */
 [data-theme="dark"] .exp-rep-method-card {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .exp-rep-method-card:hover {
   background: #1e293b !important;
@@ -708,7 +762,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .exp-rep-method-pct {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .exp-rep-methods-grid p {
@@ -716,35 +772,47 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* Payment Method Icon Translucent Tint Adaptations */
-[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#059669"] {
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#059669"],
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#ecfdf5"] {
   background: rgba(16, 185, 129, 0.15) !important;
   color: #34d399 !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#2563eb"] {
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#2563eb"],
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#eff6ff"] {
   background: rgba(37, 99, 235, 0.15) !important;
   color: #60a5fa !important;
-  border-color: rgba(37, 99, 235, 0.3) !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#7c3aed"] {
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#7c3aed"],
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#f5f3ff"] {
   background: rgba(124, 58, 237, 0.15) !important;
   color: #a78bfa !important;
-  border-color: rgba(124, 58, 237, 0.3) !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#d97706"] {
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#d97706"],
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#fffbeb"] {
   background: rgba(245, 158, 11, 0.15) !important;
   color: #fbbf24 !important;
-  border-color: rgba(245, 158, 11, 0.3) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
 }
-[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#64748b"] {
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#64748b"],
+[data-theme="dark"] .exp-rep-method-card .exp-rep-method-icon[style*="#f8fafc"] {
   background: rgba(148, 163, 184, 0.15) !important;
   color: #cbd5e1 !important;
-  border-color: rgba(148, 163, 184, 0.3) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
 }
 
 /* 7. Executive Ledger Reconcilement Matrix */
 [data-theme="dark"] .exp-rep-ledger-table td {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .exp-rep-ledger-cell-title {
   color: #cbd5e1 !important;
@@ -775,13 +843,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 [data-theme="dark"] .exp-rep-row-balance.is-surplus {
-  background: rgba(22, 101, 52, 0.22) !important;
+  background: rgba(22, 101, 52, 0.25) !important;
 }
 [data-theme="dark"] .exp-rep-row-balance.is-surplus .exp-rep-ledger-cell-val {
   color: #34d399 !important;
 }
 [data-theme="dark"] .exp-rep-row-balance.is-deficit {
-  background: rgba(220, 38, 38, 0.2) !important;
+  background: rgba(220, 38, 38, 0.22) !important;
 }
 [data-theme="dark"] .exp-rep-row-balance.is-deficit .exp-rep-ledger-cell-val {
   color: #f87171 !important;
@@ -790,16 +858,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 [data-theme="dark"] .exp-rep-ledger-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
 }
 [data-theme="dark"] .exp-rep-row-outflow:hover {
   background-color: #1e293b !important;
 }
 [data-theme="dark"] .exp-rep-row-balance.is-surplus:hover {
-  background-color: rgba(22, 101, 52, 0.3) !important;
+  background-color: rgba(22, 101, 52, 0.35) !important;
 }
 [data-theme="dark"] .exp-rep-row-balance.is-deficit:hover {
-  background-color: rgba(220, 38, 38, 0.3) !important;
+  background-color: rgba(220, 38, 38, 0.32) !important;
 }
 </style>
 
