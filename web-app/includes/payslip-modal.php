@@ -378,6 +378,335 @@ if (!isset($active_session)) {
 #payslipModalBody::-webkit-scrollbar-thumb:hover {
   background: #0369a1 !important;
 }
+
+/* ── Dark Mode Overrides for Payslip Modal & Receipt Card ── */
+[data-theme="dark"] #payslipViewModal .receipt-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="dark"] #payslipViewModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #payslipViewModal .hrms-modal-header h4 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #payslipViewModal #modalPayslipSub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #payslipViewModal .modal-close-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #payslipViewModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #payslipModalBody {
+  background: #0f172a !important;
+  scrollbar-color: #0284c7 #0f172a !important;
+}
+
+[data-theme="dark"] #payslipModalBody::-webkit-scrollbar-track {
+  background: #0f172a !important;
+  border-left: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #payslipModalBody::-webkit-scrollbar-thumb {
+  background: #0284c7 !important;
+  border: 2px solid #0f172a !important;
+}
+
+[data-theme="dark"] #payslipViewModal .payslip-modal-footer,
+[data-theme="dark"] #payslipViewModal .no-print[style*="border-top"],
+[data-theme="dark"] #payslipViewModal div.no-print:last-child {
+  background: #1e293b !important;
+  border-top: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #payslipViewModal button[onclick="printPayslip();"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #payslipViewModal button[onclick="printPayslip();"]:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .pay-receipt {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .pay-receipt .ri-brand-row {
+  border-bottom: 2px solid #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .ri-logo-box {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .ri-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .ri-sub {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .ri-address {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-doc-band {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-doc-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-doc-title i {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-doc-session {
+  background: rgba(2, 132, 199, 0.2) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-meta-grid {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .rmg-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .rmg-val {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .rmg-val.bold {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .rmg-val.mono-badge {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .rmg-val[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table-wrapper {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table td {
+  border-bottom: 1px solid #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #64748b"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table span[style*="color: #059669"],
+[data-theme="dark"] .pay-receipt .receipt-table span[style*="color:#059669"],
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color: #059669"],
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table span[style*="color: #dc2626"],
+[data-theme="dark"] .pay-receipt .receipt-table span[style*="color:#dc2626"],
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color: #dc2626"],
+[data-theme="dark"] .pay-receipt .receipt-table td[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+
+/* Gross Monthly Earnings Row Dark Mode */
+[data-theme="dark"] .pay-receipt .receipt-gross-row,
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"],
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"],
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background: #f8fafc"],
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background:#f8fafc"] {
+  background: rgba(51, 65, 85, 0.45) !important;
+  border-top: 1px dashed #334155 !important;
+  border-bottom: 1px dashed #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-gross-row td,
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"] td,
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"] td,
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background: #f8fafc"] td,
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background:#f8fafc"] td {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-gross-row td[style*="color: #475569"],
+[data-theme="dark"] .pay-receipt .receipt-gross-row td[style*="color:#475569"],
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"] td[style*="color: #475569"],
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"] td[style*="color:#475569"] {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-gross-row td:last-child,
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"] td:last-child,
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"] td:last-child {
+  color: #f8fafc !important;
+}
+
+/* Total Row */
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td {
+  background: #1e293b !important;
+  border-top: 1.5px solid #334155 !important;
+  border-bottom: none !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td[style*="color: #0f172a"],
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-table tr.total-row td:last-child {
+  color: #34d399 !important;
+}
+
+/* Payout Status & Session Strip */
+[data-theme="dark"] .pay-receipt .receipt-status-strip,
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"],
+[data-theme="dark"] .pay-receipt div[style*="background:#f8fafc"] {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-status-strip span,
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] span {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-status-strip strong,
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-status-strip strong[style*="color: #059669"],
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-status-strip strong[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt div[style*="background: #f8fafc"] strong[style*="color: #0284c7"] {
+  color: #38bdf8 !important;
+}
+
+/* Words Box */
+[data-theme="dark"] .pay-receipt .receipt-words-box {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px dashed rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-words-box .words-label {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-words-box .words-val,
+[data-theme="dark"] .pay-receipt .words-val {
+  color: #a7f3d0 !important;
+}
+
+/* Signatures & Seal */
+[data-theme="dark"] .pay-receipt .auth-sign-line {
+  border-bottom: 1.5px dashed #475569 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pay-receipt .auth-sign-line[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .auth-sign-line[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .auth-sign-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .auth-seal-badge {
+  border-color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+}
+
+[data-theme="dark"] .seal-text-top {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .seal-text-mid {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .seal-text-bot {
+  color: #38bdf8 !important;
+}
+
+/* Bottom QR & Notes */
+[data-theme="dark"] .pay-receipt .receipt-bottom-bar {
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .rb-qr-wrap {
+  background: #ffffff !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .pay-receipt .rb-notes {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pay-receipt .rb-notes strong {
+  color: #f8fafc !important;
+}
 </style>
 
 <!-- ── Verified Payslip Receipt View Modal ── -->
@@ -414,7 +743,7 @@ if (!isset($active_session)) {
     <div id="payslipRenderContainer" style="position: fixed; left: -9999px; top: 0; width: 480px;"></div>
 
     <!-- Modal Footer Action Buttons (Print, Download, Share) -->
-    <div class="no-print" style="padding: 12px 18px; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+    <div class="payslip-modal-footer no-print" style="padding: 12px 18px; background: #ffffff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
       
       <!-- Print Button -->
       <button type="button" onclick="printPayslip();" class="btn-hrms btn-hrms-outline btn-hrms-sm" style="font-weight: 700; gap: 6px; justify-content: center; padding: 9px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #334155; cursor: pointer; display: flex; align-items: center;" title="Print on printer or save as PDF">
@@ -597,7 +926,7 @@ function buildPayslip(payroll) {
                   +₹${allow.toLocaleString('en-IN', { minimumFractionDigits: 2 })}/-
                 </td>
               </tr>
-              <tr style="background: #f8fafc; font-weight: 800; border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1;">
+              <tr class="receipt-gross-row" style="background: #f8fafc; font-weight: 800; border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1;">
                 <td style="text-align: center; color: #64748b; font-size: 9px;">•</td>
                 <td style="padding: 5px 10px; font-size: 9.5px; color: #475569; text-transform: uppercase; font-weight: 800;">
                   Gross Monthly Earnings
@@ -629,7 +958,7 @@ function buildPayslip(payroll) {
         </div>
 
         <!-- Payout Status & Mode Strip -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 9.5px;">
+        <div class="receipt-status-strip" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 9.5px;">
           <div>
             <span style="color: #64748b; display: block; font-size: 8.5px; text-transform: uppercase; font-weight: 700;">Disbursement Status</span>
             <strong style="color: #059669; font-family: 'Outfit', sans-serif; font-size: 11px;">

@@ -1046,8 +1046,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 [data-theme="dark"] #payslipModalBody {
   background: #0f172a !important;
+  scrollbar-color: #0284c7 #0f172a !important;
 }
 
+[data-theme="dark"] #payslipModalBody::-webkit-scrollbar-track {
+  background: #0f172a !important;
+  border-left: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #payslipModalBody::-webkit-scrollbar-thumb {
+  background: #0284c7 !important;
+  border: 2px solid #0f172a !important;
+}
+
+[data-theme="dark"] #payslipViewModal .payslip-modal-footer,
 [data-theme="dark"] #payslipViewModal .no-print[style*="border-top"],
 [data-theme="dark"] #payslipViewModal div.no-print:last-child {
   background: #1e293b !important;
@@ -1055,14 +1067,45 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] #payslipViewModal button[onclick="printPayslip();"] {
-  background: #1e293b !important;
-  border-color: #475569 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
   color: #e2e8f0 !important;
 }
 
 [data-theme="dark"] #payslipViewModal button[onclick="printPayslip();"]:hover {
   background: #334155 !important;
   color: #ffffff !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-gross-row,
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"],
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"],
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background: #f8fafc"],
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background:#f8fafc"] {
+  background: rgba(51, 65, 85, 0.45) !important;
+  border-top: 1px dashed #334155 !important;
+  border-bottom: 1px dashed #334155 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-gross-row td,
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"] td,
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"] td,
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background: #f8fafc"] td,
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background:#f8fafc"] td {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-gross-row td[style*="color: #475569"],
+[data-theme="dark"] .pay-receipt .receipt-gross-row td[style*="color:#475569"],
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"] td[style*="color: #475569"],
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"] td[style*="color:#475569"] {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .pay-receipt .receipt-gross-row td:last-child,
+[data-theme="dark"] .pay-receipt tr[style*="background: #f8fafc"] td:last-child,
+[data-theme="dark"] .pay-receipt tr[style*="background:#f8fafc"] td:last-child {
+  color: #f8fafc !important;
 }
 </style>
 
