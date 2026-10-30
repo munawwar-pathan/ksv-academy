@@ -2480,19 +2480,19 @@
 
 [data-theme="dark"] .staff-id-table thead th,
 [data-theme="dark"] .student-id-table thead th {
-  background: #1e293b !important;
+  background: #0f172a !important;
   color: #94a3b8 !important;
   border-bottom-color: #334155 !important;
 }
 
 [data-theme="dark"] .staff-id-table tbody td,
 [data-theme="dark"] .student-id-table tbody td {
-  border-bottom-color: #1e293b !important;
+  border-bottom-color: #334155 !important;
 }
 
 [data-theme="dark"] .staff-id-table tbody tr:hover,
 [data-theme="dark"] .student-id-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
 }
 
 [data-theme="dark"] .cell-name {
@@ -2835,27 +2835,42 @@
 /* ── Dark Theme Rules for Student & Staff ID Card ── */
 [data-theme="dark"] .staff-id-directory-card,
 [data-theme="dark"] .student-id-directory-card {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 
 [data-theme="dark"] .directory-card-header {
-  background: #0f172a !important;
-  border-bottom-color: #1e293b !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .directory-title-block .card-title {
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .directory-session-badge {
-  background: #1e293b !important;
-  color: #94a3b8 !important;
-  border-color: #334155 !important;
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 
-[data-theme="dark"] .directory-subtitle {
+[data-theme="dark"] .directory-subtitle,
+[data-theme="dark"] .directory-title-block p {
   color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .directory-subtitle strong,
+[data-theme="dark"] .directory-title-block p strong {
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .directory-records-count {
   color: #94a3b8 !important;
+  border-top-color: #334155 !important;
 }
 
 [data-theme="dark"] .directory-records-count strong {
@@ -2865,6 +2880,9 @@
 [data-theme="dark"] .card-label-badge {
   background: #1e293b !important;
   color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 20px !important;
+  -webkit-border-radius: 20px !important;
 }
 
 [data-theme="dark"] .roaster-person-title,
@@ -2879,29 +2897,38 @@
 }
 
 [data-theme="dark"] .sid-dept-pill {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-  color: #94a3b8 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 
 [data-theme="dark"] .sid-qr-chip {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-  color: #94a3b8 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+}
+[data-theme="dark"] .sid-qr-chip i {
+  color: #38bdf8 !important;
 }
 
-[data-theme="dark"] .staff-id-table tbody tr.active-staff-row {
-  background-color: rgba(2, 132, 199, 0.16) !important;
+[data-theme="dark"] .staff-id-table tbody tr.active-staff-row,
+[data-theme="dark"] .student-id-table tbody tr.active-student-row {
+  background-color: rgba(2, 132, 199, 0.15) !important;
 }
 
-[data-theme="dark"] .staff-id-table tbody tr.active-staff-row td:first-child {
-  border-left: 3px solid #0284c7 !important;
+[data-theme="dark"] .staff-id-table tbody tr.active-staff-row td:first-child,
+[data-theme="dark"] .student-id-table tbody tr.active-student-row td:first-child {
+  border-left: 3px solid #38bdf8 !important;
 }
 
 [data-theme="dark"] .staff-avatar-init {
-  background: #1e293b !important;
-  color: #cbd5e1 !important;
-  border-color: #334155 !important;
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border: 1px solid #475569 !important;
 }
 
 [data-theme="dark"] .sid-designation {
@@ -2909,13 +2936,16 @@
 }
 
 [data-theme="dark"] .sid-btn-secondary {
-  background: #1e293b !important;
-  border-color: #334155 !important;
-  color: #e2e8f0 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .sid-btn-secondary:hover {
   background: #334155 !important;
+  border-color: #475569 !important;
   color: #ffffff !important;
 }
 
@@ -2923,6 +2953,8 @@
   background: rgba(2, 132, 199, 0.22) !important;
   border-color: rgba(2, 132, 199, 0.45) !important;
   color: #38bdf8 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 
 [data-theme="dark"] .pagination-legend-text {
@@ -2931,6 +2963,78 @@
 
 [data-theme="dark"] .pagination-legend-text strong {
   color: #f8fafc !important;
+}
+
+/* ── Dark Theme Specifics for Student ID (admin/student-id) ── */
+[data-theme="dark"] .student-id-table tbody td {
+  background: transparent !important;
+  border-bottom: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#0f172a"] {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #334155"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#334155"] {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .student-id-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .student-id-table tbody td div[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .sid-std-pill {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .sid-roll-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(225, 29, 72, 0.15) !important;
+  border: 1px solid rgba(225, 29, 72, 0.3) !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  color: #fb7185 !important;
+}
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(22, 101, 52, 0.2) !important;
+  border: 1px solid rgba(22, 101, 52, 0.4) !important;
+  border-radius: 20px !important;
+  -webkit-border-radius: 20px !important;
+  color: #4ade80 !important;
+}
+[data-theme="dark"] .sid-status-active {
+  background: rgba(2, 132, 199, 0.2) !important;
+  border: 1px solid rgba(2, 132, 199, 0.4) !important;
+  border-radius: 20px !important;
+  -webkit-border-radius: 20px !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .sid-btn-action {
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+}
+[data-theme="dark"] .sid-btn-action[style*="background: #f0f9ff"],
+[data-theme="dark"] .sid-btn-action[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.2) !important;
+  border-color: rgba(2, 132, 199, 0.4) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .pagination-limit-select {
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+}
+[data-theme="dark"] .pagination-btn {
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 
 /* ── Dark Theme Rules for Marksheet Management ── */
