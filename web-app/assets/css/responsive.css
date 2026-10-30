@@ -7852,6 +7852,27 @@
   border-top-color: #334155 !important;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   STAFF PAYROLL LEDGER DARK MODE ADAPTATIONS (staff/payroll)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .payroll-pagination-legend {
+  color: #94a3b8 !important;
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .staff-id-table .roaster-btn.secondary {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .staff-id-table .roaster-btn.secondary:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+
 
 
 
