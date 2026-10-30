@@ -360,6 +360,83 @@ require_once __DIR__ . '/../includes/layout-header.php';
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
+
+  /* Strict White Paper Output on both Dark and Light mode */
+  [data-theme="dark"],
+  [data-theme="dark"] body,
+  [data-theme="dark"] html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  [data-theme="dark"] .marksheet-print-canvas,
+  [data-theme="dark"] .report-card-container {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0092df !important;
+    box-shadow: none !important;
+  }
+
+  [data-theme="dark"] .report-school-title {
+    color: #007cbd !important;
+  }
+
+  [data-theme="dark"] .report-school-tagline {
+    color: #334155 !important;
+  }
+
+  [data-theme="dark"] .report-school-subinfo {
+    color: #64748b !important;
+  }
+
+  [data-theme="dark"] .report-details-grid {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  [data-theme="dark"] .detail-item strong {
+    color: #475569 !important;
+  }
+
+  [data-theme="dark"] .detail-item span {
+    color: #0f172a !important;
+  }
+
+  [data-theme="dark"] .report-table {
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  [data-theme="dark"] .report-table th,
+  [data-theme="dark"] .report-table td {
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  [data-theme="dark"] .report-table thead th {
+    background: #0f172a !important;
+    color: #ffffff !important;
+  }
+
+  [data-theme="dark"] .report-table tbody tr:nth-child(even) {
+    background: #fcfdfe !important;
+  }
+
+  [data-theme="dark"] .report-table tbody tr:last-child {
+    background: #f8fafc !important;
+    border-top: 2px solid #0092df !important;
+  }
+
+  [data-theme="dark"] .report-remarks-card {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-left: 4px solid #0092df !important;
+    color: #334155 !important;
+  }
+
+  [data-theme="dark"] .report-signatures-row {
+    border-top: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+  }
 }
 
 /* ── Academic KPI Statistics Grid ── */
@@ -2072,208 +2149,217 @@ require_once __DIR__ . '/../includes/layout-header.php';
   box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45) !important;
 }
 
-/* Official Report Card Container */
+/* Official Report Card Container (Always Pure White in Both Light & Dark Mode) */
+.report-card-container,
 [data-theme="dark"] .report-card-container {
-  background: #1e293b !important;
-  border-color: #0284c7 !important;
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(2, 132, 199, 0.35) !important;
+  background: #ffffff !important;
+  border: 2px solid #0092df !important;
+  color: #0f172a !important;
+}
+[data-theme="dark"] .report-card-container {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 146, 223, 0.3) !important;
 }
 [data-theme="dark"] .report-school-title {
-  color: #f8fafc !important;
+  color: #007cbd !important;
 }
 [data-theme="dark"] .report-school-tagline {
-  color: #cbd5e1 !important;
+  color: #334155 !important;
 }
 [data-theme="dark"] .report-school-subinfo,
 [data-theme="dark"] .report-school-subinfo[style*="color: #64748b"],
 [data-theme="dark"] .report-school-subinfo[style*="color:#64748b"] {
-  color: #94a3b8 !important;
+  color: #64748b !important;
 }
 [data-theme="dark"] .verification-qr-wrap > div {
-  border-color: #334155 !important;
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
 }
 [data-theme="dark"] .report-card-container .report-details-grid {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
 }
-[data-theme="dark"] .detail-item strong {
-  color: #94a3b8 !important;
+[data-theme="dark"] .report-card-container .detail-item strong {
+  color: #475569 !important;
 }
-[data-theme="dark"] .detail-item span {
-  color: #f8fafc !important;
+[data-theme="dark"] .report-card-container .detail-item span {
+  color: #0f172a !important;
 }
-[data-theme="dark"] .detail-item span[style*="color: #0f172a"],
-[data-theme="dark"] .detail-item span[style*="color:#0f172a"] {
-  color: #f8fafc !important;
+[data-theme="dark"] .report-card-container .detail-item span[style*="color: #0f172a"],
+[data-theme="dark"] .report-card-container .detail-item span[style*="color:#0f172a"] {
+  color: #0f172a !important;
 }
-[data-theme="dark"] .detail-item span[style*="color: #007cbd"],
-[data-theme="dark"] .detail-item span[style*="color:#007cbd"] {
-  color: #38bdf8 !important;
+[data-theme="dark"] .report-card-container .detail-item span[style*="color: #007cbd"],
+[data-theme="dark"] .report-card-container .detail-item span[style*="color:#007cbd"] {
+  color: #007cbd !important;
 }
-[data-theme="dark"] .detail-item span[style*="color: #475569"],
-[data-theme="dark"] .detail-item span[style*="color:#475569"] {
-  color: #cbd5e1 !important;
+[data-theme="dark"] .report-card-container .detail-item span[style*="color: #475569"],
+[data-theme="dark"] .report-card-container .detail-item span[style*="color:#475569"] {
+  color: #475569 !important;
 }
-[data-theme="dark"] .detail-item span span[style*="color: #64748b"],
-[data-theme="dark"] .detail-item span span[style*="color:#64748b"] {
-  color: #94a3b8 !important;
+[data-theme="dark"] .report-card-container .detail-item span span[style*="color: #64748b"],
+[data-theme="dark"] .report-card-container .detail-item span span[style*="color:#64748b"] {
+  color: #64748b !important;
 }
-[data-theme="dark"] .detail-item span[style*="background: #e0f2fe"],
-[data-theme="dark"] .detail-item span[style*="background:#e0f2fe"] {
-  background: rgba(2, 132, 199, 0.2) !important;
-  border: 1px solid rgba(2, 132, 199, 0.4) !important;
-  color: #38bdf8 !important;
+[data-theme="dark"] .report-card-container .detail-item span[style*="background: #e0f2fe"],
+[data-theme="dark"] .report-card-container .detail-item span[style*="background:#e0f2fe"] {
+  background: #e0f2fe !important;
+  border: 1px solid #bae6fd !important;
+  color: #0284c7 !important;
 }
 
-/* Statement of Marks Table */
+/* Statement of Marks Table (Always White & Clean) */
 [data-theme="dark"] .report-table {
-  border-color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
 }
 [data-theme="dark"] .report-table th,
 [data-theme="dark"] .report-table td {
-  border-color: #334155 !important;
-  color: #cbd5e1 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
 }
 [data-theme="dark"] .report-table thead th {
   background: #0f172a !important;
-  color: #f8fafc !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .report-table tbody tr:nth-child(even) {
+  background: #fcfdfe !important;
+}
+[data-theme="dark"] .report-table tbody tr:nth-child(odd) {
+  background: #ffffff !important;
+}
+[data-theme="dark"] .report-table tbody tr:hover {
+  background: #f0f9ff !important;
 }
 [data-theme="dark"] .report-table tbody td[style*="color: #1e293b"],
 [data-theme="dark"] .report-table tbody td[style*="color:#1e293b"] {
-  color: #f8fafc !important;
+  color: #1e293b !important;
 }
 [data-theme="dark"] .report-table tbody td[style*="color: #64748b"],
 [data-theme="dark"] .report-table tbody td[style*="color:#64748b"] {
-  color: #94a3b8 !important;
+  color: #64748b !important;
 }
 [data-theme="dark"] .report-table tbody td[style*="color: #059669"],
 [data-theme="dark"] .report-table tbody td[style*="color:#059669"] {
-  color: #34d399 !important;
+  color: #059669 !important;
 }
 [data-theme="dark"] .report-table tbody td[style*="color: #dc2626"],
 [data-theme="dark"] .report-table tbody td[style*="color:#dc2626"] {
-  color: #f87171 !important;
-}
-[data-theme="dark"] .report-table tbody tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02) !important;
-}
-[data-theme="dark"] .report-table tbody tr:hover {
-  background: rgba(2, 132, 199, 0.1) !important;
+  color: #dc2626 !important;
 }
 [data-theme="dark"] .report-table tbody tr:last-child {
-  background: #0f172a !important;
-  border-top-color: #0284c7 !important;
+  background: #f8fafc !important;
+  border-top: 2px solid #0092df !important;
 }
 [data-theme="dark"] .report-table tbody tr:last-child td {
-  color: #f8fafc !important;
+  color: #0f172a !important;
 }
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #0f172a"],
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#0f172a"] {
-  color: #f8fafc !important;
+  color: #0f172a !important;
 }
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #334155"],
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#334155"] {
-  color: #f1f5f9 !important;
+  color: #334155 !important;
 }
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color: #007cbd"],
 [data-theme="dark"] .report-table tbody tr:last-child td[style*="color:#007cbd"] {
-  color: #38bdf8 !important;
+  color: #007cbd !important;
 }
 [data-theme="dark"] .grade-pill-badge.pass {
-  background: rgba(2, 132, 199, 0.2) !important;
-  color: #38bdf8 !important;
+  background: #dcfce7 !important;
+  color: #15803d !important;
 }
 [data-theme="dark"] .grade-pill-badge.fail {
-  background: rgba(220, 38, 38, 0.2) !important;
-  color: #f87171 !important;
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
 }
 
 /* Performance KPI Badges */
 [data-theme="dark"] .report-card-container .summary-kpi-card.percentage {
-  background: rgba(22, 101, 52, 0.18) !important;
-  border-color: rgba(22, 101, 52, 0.4) !important;
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-title,
 [data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-title[style*="color: #15803d"] {
-  color: #86efac !important;
+  color: #15803d !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-val,
 [data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-val[style*="color: #166534"] {
-  color: #4ade80 !important;
+  color: #166534 !important;
 }
 
 [data-theme="dark"] .report-card-container .summary-kpi-card.grade {
-  background: rgba(30, 64, 175, 0.18) !important;
-  border-color: rgba(30, 64, 175, 0.4) !important;
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-title,
 [data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-title[style*="color: #1d4ed8"] {
-  color: #93c5fd !important;
+  color: #1d4ed8 !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-val,
 [data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-val[style*="color: #1e40af"] {
-  color: #60a5fa !important;
+  color: #1e40af !important;
 }
 
 [data-theme="dark"] .report-card-container .summary-kpi-card.pass {
-  background: rgba(22, 101, 52, 0.18) !important;
-  border-color: rgba(22, 101, 52, 0.4) !important;
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-title,
 [data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-title[style*="color: #15803d"] {
-  color: #86efac !important;
+  color: #15803d !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-val,
 [data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-val[style*="color: #166534"] {
-  color: #4ade80 !important;
+  color: #166534 !important;
 }
 
 [data-theme="dark"] .report-card-container .summary-kpi-card.fail {
-  background: rgba(185, 28, 28, 0.18) !important;
-  border-color: rgba(185, 28, 28, 0.4) !important;
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-title,
 [data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-title[style*="color: #991b1b"] {
-  color: #fca5a5 !important;
+  color: #991b1b !important;
 }
 [data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-val,
 [data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-val[style*="color: #b91c1c"] {
-  color: #f87171 !important;
+  color: #b91c1c !important;
 }
 
 /* Remarks & Signatures */
 [data-theme="dark"] .report-remarks-card {
-  background: #0f172a !important;
-  border-color: #0284c7 !important;
-  color: #cbd5e1 !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 4px solid #0092df !important;
+  color: #334155 !important;
 }
 [data-theme="dark"] .report-remarks-card i {
-  color: #0284c7 !important;
+  color: #0092df !important;
 }
 [data-theme="dark"] .report-remarks-card strong {
-  color: #f8fafc !important;
+  color: #0f172a !important;
 }
 [data-theme="dark"] .report-remarks-card div div,
 [data-theme="dark"] .report-remarks-card div div[style*="color: #475569"] {
-  color: #cbd5e1 !important;
+  color: #475569 !important;
 }
 [data-theme="dark"] .report-signatures-row {
-  border-top-color: #334155 !important;
-  color: #94a3b8 !important;
+  border-top: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
 }
 [data-theme="dark"] .sig-line {
-  border-top-color: #475569 !important;
-  color: #94a3b8 !important;
+  border-top: 1px solid #94a3b8 !important;
+  color: #475569 !important;
 }
 [data-theme="dark"] .sig-crest-circle {
-  border-color: #0284c7 !important;
-  color: #0284c7 !important;
+  border-color: #0092df !important;
+  color: #0092df !important;
 }
 [data-theme="dark"] .sig-crest-circle span[style*="color: #64748b"] {
-  color: #94a3b8 !important;
+  color: #64748b !important;
 }
 [data-theme="dark"] .sig-principal-name {
-  color: #38bdf8 !important;
+  color: #007cbd !important;
 }
 
 /* Empty State Card */
