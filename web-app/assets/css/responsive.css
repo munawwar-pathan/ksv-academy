@@ -2818,18 +2818,62 @@
   border-radius: 20px !important;
 }
 
-[data-theme="dark"] #receiptPrintModal .hrms-modal-header {
+[data-theme="dark"] #receiptPrintModal .hrms-modal-header,
+[data-theme="dark"] #receiptPrintModal div[style*="padding: 14px 20px"] {
   background: #1e293b !important;
   border-bottom: 1px solid #334155 !important;
 }
 
-[data-theme="dark"] #receiptModalBody {
-  background: #0f172a !important;
+[data-theme="dark"] #receiptPrintModal h3 {
+  color: #f8fafc !important;
 }
 
-[data-theme="dark"] #receiptPrintModal .receipt-modal-card > div.no-print:last-child {
+[data-theme="dark"] #receiptPrintModal #receiptModalSub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .modal-close-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #receiptModalBody {
+  background: #0f172a !important;
+  scrollbar-color: #0284c7 #0f172a !important;
+}
+
+[data-theme="dark"] #receiptModalBody::-webkit-scrollbar-track {
+  background: #0f172a !important;
+  border-left: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #receiptModalBody::-webkit-scrollbar-thumb {
+  background: #0284c7 !important;
+  border: 2px solid #0f172a !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .receipt-modal-footer,
+[data-theme="dark"] #receiptPrintModal .receipt-modal-card > div.no-print:last-child,
+[data-theme="dark"] #receiptPrintModal .no-print[style*="border-top"] {
   background: #1e293b !important;
   border-top: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal button[onclick="printReceipt();"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal button[onclick="printReceipt();"]:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
 }
 
 /* ── Dark Theme Rules for Student & Staff ID Card ── */
@@ -8879,6 +8923,22 @@
   background: rgba(245, 158, 11, 0.15) !important;
   color: #fbbf24 !important;
   border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #0284c7"] {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #d97706"] {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #7c3aed"] {
+  color: #a78bfa !important;
 }
 
 [data-theme="dark"] .periods-card {

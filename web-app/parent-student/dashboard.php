@@ -783,6 +783,82 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #cbd5e1 !important;
 }
 
+[data-theme="dark"] .hero-badge strong {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .hero-badge i[style*="color: #64748b"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .hero-action-btn i {
+  color: #38bdf8 !important;
+}
+
+/* 4 Academic & Financial KPI Cards */
+[data-theme="dark"] .periods-stat-grid .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-number {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-progress {
+  background: #334155 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card.purple .stat-icon-wrapper {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: #a78bfa !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #0284c7"] {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #d97706"] {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .periods-stat-grid .stat-card-footer span[style*="color: #7c3aed"] {
+  color: #a78bfa !important;
+}
+
 [data-theme="dark"] .sid-status-active,
 [data-theme="dark"] .sid-status-verified {
   background: rgba(22, 101, 52, 0.25) !important;
@@ -837,6 +913,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .periods-card-header h3.card-title i {
+  color: #38bdf8 !important;
+}
+
 [data-theme="dark"] .periods-card-header p {
   color: #94a3b8 !important;
 }
@@ -855,6 +935,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 [data-theme="dark"] .periods-card-footer span strong {
   color: #f8fafc !important;
+}
+
+[data-theme="dark"] .periods-card-footer span[style*="color: #059669"],
+[data-theme="dark"] .periods-card-footer span strong[style*="color: #059669"] {
+  color: #34d399 !important;
 }
 
 [data-theme="dark"] .staff-id-table thead th {
@@ -880,9 +965,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 [data-theme="dark"] .staff-id-table tbody td span[style*="color: #64748b"],
 [data-theme="dark"] .staff-id-table tbody td div[style*="color: #64748b"],
-[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"],
-[data-theme="dark"] .staff-id-table tbody td span[style*="color: #334155"] {
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"] {
   color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #334155"] {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-table .roaster-btn.secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .staff-id-table .roaster-btn.secondary:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .staff-id-table .roaster-btn.secondary i {
+  color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .staff-id-table tbody td div[style*="background: #e2e8f0"] {
@@ -949,6 +1053,71 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .roaster-btn.primary {
   background: #0284c7 !important;
   border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+/* Official Receipt Modal Shell */
+[data-theme="dark"] #receiptPrintModal .receipt-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .hrms-modal-header,
+[data-theme="dark"] #receiptPrintModal div[style*="padding: 14px 20px"] {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #receiptPrintModal #receiptModalSub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .modal-close-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] #receiptModalBody {
+  background: #0f172a !important;
+  scrollbar-color: #0284c7 #0f172a !important;
+}
+
+[data-theme="dark"] #receiptModalBody::-webkit-scrollbar-track {
+  background: #0f172a !important;
+  border-left: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #receiptModalBody::-webkit-scrollbar-thumb {
+  background: #0284c7 !important;
+  border: 2px solid #0f172a !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .receipt-modal-footer,
+[data-theme="dark"] #receiptPrintModal .no-print[style*="border-top"],
+[data-theme="dark"] #receiptPrintModal div.no-print:last-child {
+  background: #1e293b !important;
+  border-top: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal button[onclick="printReceipt();"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #receiptPrintModal button[onclick="printReceipt();"]:hover {
+  background: #334155 !important;
   color: #ffffff !important;
 }
 </style>
