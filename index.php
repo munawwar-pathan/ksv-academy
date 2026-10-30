@@ -588,33 +588,13 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 
     <div class="faculty-grid">
-      <?php foreach ($faculties as $fac): 
-        $id = $fac['id'];
-        $theme_class = 'fac-theme-blue';
-        $subj_icon = 'fa-atom';
-        $subj_label = 'Physics';
-
-        if ($id === 'rameshwar-mishra') {
-          $theme_class = 'fac-theme-emerald';
-          $subj_icon = 'fa-flask-vial';
-          $subj_label = 'Chemistry';
-        } elseif ($id === 'aman-kumar-soni') {
-          $theme_class = 'fac-theme-amber';
-          $subj_icon = 'fa-square-root-variable';
-          $subj_label = 'Chem &amp; Math';
-        } elseif ($id === 'hafiza-palikar') {
-          $theme_class = 'fac-theme-purple';
-          $subj_icon = 'fa-infinity';
-          $subj_label = 'Mathematics';
-        } elseif ($id === 'rafeek-khan') {
-          $theme_class = 'fac-theme-cyan';
-          $subj_icon = 'fa-laptop-code';
-          $subj_label = 'CS &amp; Math';
-        } elseif ($id === 'lubna-khan') {
-          $theme_class = 'fac-theme-rose';
-          $subj_icon = 'fa-book-open-reader';
-          $subj_label = 'English &amp; SST';
-        }
+      <?php 
+      $home_faculties = get_active_faculties(3);
+      foreach ($home_faculties as $idx => $fac): 
+        $theme_meta = get_faculty_theme_info($fac, $idx);
+        $theme_class = $theme_meta['theme'];
+        $subj_icon = $theme_meta['icon'];
+        $subj_label = $theme_meta['label'];
       ?>
       <div class="faculty-card <?php echo $theme_class; ?>" id="<?php echo htmlspecialchars($fac['id']); ?>">
         <div class="faculty-card-topbar"></div>
@@ -626,7 +606,7 @@ require_once __DIR__ . '/includes/header.php';
           <div class="faculty-photo-badges">
             <span class="faculty-subj-badge">
               <i class="fa-solid <?php echo $subj_icon; ?>"></i>
-              <span><?php echo $subj_label; ?></span>
+              <span><?php echo htmlspecialchars($subj_label); ?></span>
             </span>
             <span class="faculty-exp-badge">
               <i class="fa-solid fa-award"></i>

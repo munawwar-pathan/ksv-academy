@@ -79,16 +79,12 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="faculty-grid">
       <?php
-      $theme_map = [
-        'salam-khan' => 'fac-theme-blue',
-        'rameshwar-mishra' => 'fac-theme-emerald',
-        'aman-kumar-soni' => 'fac-theme-cyan',
-        'hafiza-palikar' => 'fac-theme-amber',
-        'rafeek-khan' => 'fac-theme-purple',
-        'lubna-khan' => 'fac-theme-rose'
-      ];
-      foreach ($faculties as $fac): 
-        $themeClass = $theme_map[$fac['id']] ?? 'fac-theme-blue';
+      $all_faculties = get_active_faculties();
+      foreach ($all_faculties as $idx => $fac): 
+        $theme_meta = get_faculty_theme_info($fac, $idx);
+        $themeClass = $theme_meta['theme'];
+        $subj_icon = $theme_meta['icon'];
+        $subj_label = $theme_meta['label'];
       ?>
       <div class="faculty-card <?php echo $themeClass; ?>" id="<?php echo htmlspecialchars($fac['id']); ?>">
         <div class="faculty-card-topbar"></div>
@@ -99,8 +95,8 @@ require_once __DIR__ . '/includes/header.php';
           
           <div class="faculty-photo-badges">
             <span class="faculty-subj-badge">
-              <i class="fa-solid fa-atom"></i>
-              <span><?php echo htmlspecialchars($fac['specialization']); ?></span>
+              <i class="fa-solid <?php echo $subj_icon; ?>"></i>
+              <span><?php echo htmlspecialchars($subj_label); ?></span>
             </span>
             <span class="faculty-exp-badge">
               <i class="fa-solid fa-medal"></i>

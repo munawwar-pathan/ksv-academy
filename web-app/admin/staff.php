@@ -83,6 +83,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
         $salary = floatval($_POST['salary'] ?? 55000);
         $blood_group = trim($_POST['blood_group'] ?? 'B+');
         $address = trim($_POST['address'] ?? '');
+        $specialization = trim($_POST['specialization'] ?? $department);
+        $experience = trim($_POST['experience'] ?? '5+ Years');
+        $highlight = trim($_POST['highlight'] ?? '');
+        $bio = trim($_POST['bio'] ?? '');
+        $sort_order = intval($_POST['sort_order'] ?? 0);
+        $user_status = in_array($_POST['user_status'] ?? 'active', ['active', 'inactive']) ? $_POST['user_status'] : 'active';
+        
+        $photo = '/assets/imgs/ksv-logo.jpg';
+        $avatar = '';
+
+        // Handle Photo Upload
+        if (isset($_FILES['photo_file']) && !empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
+            $p_name = $_FILES['photo_file']['name'];
+            $p_tmp = $_FILES['photo_file']['tmp_name'];
+            $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
+            if (in_array($p_ext, ['jpg', 'jpeg', 'png', 'webp', 'avif'])) {
+                $basename = 'faculty-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
+                $dest = __DIR__ . '/../../assets/imgs/faculties/' . $basename;
+                if (move_uploaded_file($p_tmp, $dest)) {
+                    @chmod($dest, 0644);
+                    $photo = '/assets/imgs/faculties/' . $basename;
+                    $avatar = $basename;
+                }
+            }
+        } elseif (!empty($_POST['photo_path'])) {
+            $photo = trim($_POST['photo_path']);
+            $avatar = basename($photo);
+        }
 
         if (!empty($full_name) && !empty($username)) {
             try {
@@ -97,8 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
 
                 // 1. Create User
                 $hash = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $db->prepare("INSERT INTO users (username, password, role, email, phone, full_name, status) VALUES (?, ?, 'staff', ?, ?, ?, 'active')");
-                $stmt->execute([$username, $hash, $email, $phone, $full_name]);
+                $stmt = $db->prepare("INSERT INTO users (username, password, role, email, phone, full_name, avatar, status) VALUES (?, ?, 'staff', ?, ?, ?, ?, ?)");
+                $stmt->execute([$username, $hash, $email, $phone, $full_name, $avatar, $user_status]);
                 $user_id = $db->lastInsertId();
 
                 // 2. Generate Employee Code
@@ -110,18 +138,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                 $stmt_prof = $db->prepare("
                     INSERT INTO staff_profiles (
                         session_id, user_id, employee_code, department, designation, qualification,
-                        joining_date, monthly_salary, phone, email, address, blood_group, qr_code, today_status
+                        joining_date, monthly_salary, phone, email, address, blood_group, qr_code, today_status,
+                        photo, specialization, experience, bio, highlight, sort_order
                     ) VALUES (
                         ?, ?, ?, ?, ?, ?,
-                        CURDATE(), ?, ?, ?, ?, ?, ?, 'Present'
+                        CURDATE(), ?, ?, ?, ?, ?, ?, 'Present',
+                        ?, ?, ?, ?, ?, ?
                     )
                 ");
                 $stmt_prof->execute([
                     $session_id, $user_id, $emp_code, $department, $designation, $qualification,
-                    $salary, $phone, $email, $address, $blood_group, $qr_code
+                    $salary, $phone, $email, $address, $blood_group, $qr_code,
+                    $photo, $specialization, $experience, $bio, $highlight, $sort_order
                 ]);
 
-                set_flash('success', "Faculty member {$full_name} ({$emp_code}) added successfully with username '{$username}'!");
+                $live_note = ($user_status === 'active') ? 'Live on website faculty list' : 'Inactive in draft';
+                set_flash('success', "Faculty member {$full_name} ({$emp_code}) registered successfully! ({$live_note})");
                 header('Location: ' . ADMIN_URL . '/staff');
                 exit;
             } catch (Exception $e) {
@@ -142,9 +174,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
         $salary = floatval($_POST['salary'] ?? 55000);
         $blood_group = trim($_POST['blood_group'] ?? 'B+');
         $address = trim($_POST['address'] ?? '');
+        $specialization = trim($_POST['specialization'] ?? '');
+        $experience = trim($_POST['experience'] ?? '');
+        $highlight = trim($_POST['highlight'] ?? '');
+        $bio = trim($_POST['bio'] ?? '');
+        $sort_order = intval($_POST['sort_order'] ?? 0);
+        $user_status = in_array($_POST['user_status'] ?? 'active', ['active', 'inactive']) ? $_POST['user_status'] : 'active';
         $permissions = isset($_POST['permissions']) && is_array($_POST['permissions']) 
             ? json_encode(array_values(array_map('trim', $_POST['permissions']))) 
             : json_encode([]);
+
+        // Handle Photo Upload
+        $new_photo = null;
+        $new_avatar = null;
+        if (isset($_FILES['photo_file']) && !empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
+            $p_name = $_FILES['photo_file']['name'];
+            $p_tmp = $_FILES['photo_file']['tmp_name'];
+            $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
+            if (in_array($p_ext, ['jpg', 'jpeg', 'png', 'webp', 'avif'])) {
+                $basename = 'faculty-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
+                $dest = __DIR__ . '/../../assets/imgs/faculties/' . $basename;
+                if (move_uploaded_file($p_tmp, $dest)) {
+                    @chmod($dest, 0644);
+                    $new_photo = '/assets/imgs/faculties/' . $basename;
+                    $new_avatar = $basename;
+                }
+            }
+        } elseif (!empty($_POST['photo_path'])) {
+            $new_photo = trim($_POST['photo_path']);
+            $new_avatar = basename($new_photo);
+        }
 
         if ($staff_id > 0 && !empty($full_name)) {
             try {
@@ -152,8 +211,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                 $stmt_uid->execute([$staff_id]);
                 $user_id = $stmt_uid->fetchColumn();
                 if ($user_id) {
-                    $stmt_u = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
-                    $stmt_u->execute([$full_name, $email, $phone, $user_id]);
+                    if ($new_avatar !== null) {
+                        $stmt_u = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, status = ?, avatar = ? WHERE id = ?");
+                        $stmt_u->execute([$full_name, $email, $phone, $user_status, $new_avatar, $user_id]);
+                    } else {
+                        $stmt_u = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, status = ? WHERE id = ?");
+                        $stmt_u->execute([$full_name, $email, $phone, $user_status, $user_id]);
+                    }
 
                     if (!empty($_POST['password'])) {
                         $hash = password_hash($_POST['password'], PASSWORD_DEFAULT);
@@ -161,20 +225,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                     }
                 }
 
-                $stmt_p = $db->prepare("
-                    UPDATE staff_profiles 
-                    SET department = ?, designation = ?, qualification = ?, monthly_salary = ?, phone = ?, email = ?, address = ?, blood_group = ?, menu_permissions = ?
-                    WHERE id = ?
-                ");
-                $stmt_p->execute([$department, $designation, $qualification, $salary, $phone, $email, $address, $blood_group, $permissions, $staff_id]);
+                if ($new_photo !== null) {
+                    $stmt_p = $db->prepare("
+                        UPDATE staff_profiles 
+                        SET department = ?, designation = ?, qualification = ?, monthly_salary = ?, phone = ?, email = ?, address = ?, blood_group = ?, menu_permissions = ?,
+                            specialization = ?, experience = ?, highlight = ?, bio = ?, sort_order = ?, photo = ?
+                        WHERE id = ?
+                    ");
+                    $stmt_p->execute([
+                        $department, $designation, $qualification, $salary, $phone, $email, $address, $blood_group, $permissions,
+                        $specialization, $experience, $highlight, $bio, $sort_order, $new_photo, $staff_id
+                    ]);
+                } else {
+                    $stmt_p = $db->prepare("
+                        UPDATE staff_profiles 
+                        SET department = ?, designation = ?, qualification = ?, monthly_salary = ?, phone = ?, email = ?, address = ?, blood_group = ?, menu_permissions = ?,
+                            specialization = ?, experience = ?, highlight = ?, bio = ?, sort_order = ?
+                        WHERE id = ?
+                    ");
+                    $stmt_p->execute([
+                        $department, $designation, $qualification, $salary, $phone, $email, $address, $blood_group, $permissions,
+                        $specialization, $experience, $highlight, $bio, $sort_order, $staff_id
+                    ]);
+                }
 
-                set_flash('success', "Faculty profile and menu permissions for {$full_name} updated successfully!");
+                $status_txt = ($user_status === 'active') ? 'Active (Live on website)' : 'Inactive (Hidden from website)';
+                set_flash('success', "Faculty profile for {$full_name} updated successfully! Status: {$status_txt}.");
                 header('Location: ' . ADMIN_URL . '/staff');
                 exit;
             } catch (Exception $e) {
                 set_flash('error', 'Error updating staff: ' . $e->getMessage());
             }
         }
+    }
+
+    // Toggle Staff Status (Active / Inactive)
+    if ($action === 'toggle_staff_status') {
+        $staff_id = intval($_POST['staff_id'] ?? 0);
+        if ($staff_id > 0) {
+            $stmt = $db->prepare("SELECT u.id, u.status, u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
+            $stmt->execute([$staff_id]);
+            $u = $stmt->fetch();
+            if ($u) {
+                $new_status = ($u['status'] === 'active') ? 'inactive' : 'active';
+                $db->prepare("UPDATE users SET status = ? WHERE id = ?")->execute([$new_status, $u['id']]);
+                $lbl = ($new_status === 'active') ? 'ACTIVE (live on website faculty list)' : 'INACTIVE (hidden from website)';
+                set_flash('success', "Faculty member '{$u['full_name']}' is now {$lbl}.");
+            }
+        }
+        header('Location: ' . ADMIN_URL . '/staff');
+        exit;
     }
 
     // Delete Staff
@@ -289,7 +389,7 @@ $query = "
     FROM staff_profiles sp
     JOIN users u ON sp.user_id = u.id
     WHERE {$where_sql}
-    ORDER BY sp.id ASC
+    ORDER BY CASE WHEN sp.sort_order = 0 THEN 9999 ELSE sp.sort_order END ASC, sp.id ASC
     LIMIT ? OFFSET ?
 ";
 $stmt = $db->prepare($query);
@@ -1536,11 +1636,29 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <?php endif; ?>
               </td>
 
-              <!-- 7. Status -->
+              <!-- 7. Status & Active/Pause Toggle -->
               <td>
-                <span class="sid-status-active">
-                  <i class="fa-solid fa-check" style="font-size: 0.65rem;"></i> Active
-                </span>
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                  <?php if ($sm['user_status'] === 'active'): ?>
+                    <span class="sid-status-active" title="Active • Live in website faculty section">
+                      <i class="fa-solid fa-circle-check" style="font-size: 0.65rem;"></i> Active
+                    </span>
+                  <?php else: ?>
+                    <span class="sid-status-inactive" style="background: rgba(217, 119, 6, 0.12); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.3); border-radius: 20px; padding: 2px 8px; font-size: 0.68rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Inactive • Hidden from website">
+                      <i class="fa-solid fa-circle-pause" style="font-size: 0.65rem;"></i> Inactive
+                    </span>
+                  <?php endif; ?>
+
+                  <?php if ($current_user['role'] === 'super_admin'): ?>
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="margin: 0;">
+                      <input type="hidden" name="action" value="toggle_staff_status">
+                      <input type="hidden" name="staff_id" value="<?php echo $sm['id']; ?>">
+                      <button type="submit" style="background: none; border: none; padding: 0; font-size: 0.70rem; color: <?php echo $sm['user_status'] === 'active' ? '#d97706' : '#059669'; ?>; cursor: pointer; text-decoration: underline; font-weight: 600;">
+                        <?php echo $sm['user_status'] === 'active' ? 'Pause' : 'Activate'; ?>
+                      </button>
+                    </form>
+                  <?php endif; ?>
+                </div>
               </td>
 
               <!-- 8. Login Actions (Login Direct & Change Password) -->
@@ -1694,7 +1812,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('addStaffModal')" aria-label="Close modal">&times;</button>
     </div>
 
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff">
+    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" enctype="multipart/form-data">
       <input type="hidden" name="action" value="add_staff">
 
       <div class="hrms-modal-body" style="padding: 24px; max-height: calc(85vh - 140px); overflow-y: auto;">
@@ -1733,6 +1851,54 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Academic Qualification</label>
             <input type="text" name="qualification" value="M.Sc (Chemistry), B.Ed" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
           </div>
+        </div>
+
+        <!-- Specialization & Experience for Faculty Website Card -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Specialization / Subject Focus</label>
+            <input type="text" name="specialization" placeholder="e.g. Organic &amp; Physical Chemistry" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Teaching Experience</label>
+            <input type="text" name="experience" placeholder="e.g. 10+ Years" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+        </div>
+
+        <!-- Frontend Display Sequence & Website Publishing Status -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Website Sort Order (#1 shows first)</label>
+            <input type="number" name="sort_order" value="<?php echo count($staff_members) + 1; ?>" min="0" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Website Status</label>
+            <select name="user_status" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+              <option value="active">Active (Visible on Homepage &amp; Faculty page)</option>
+              <option value="inactive">Inactive (Hidden from public website)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Faculty Portrait Photo Upload -->
+        <div class="form-group" style="margin-bottom: 16px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px 14px;">
+          <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px; color: #166534;">
+            <i class="fa-solid fa-camera"></i> Faculty Portrait Photo (Optional)
+          </label>
+          <input type="file" name="photo_file" accept="image/*" class="hrms-input" style="width: 100%; padding: 6px 8px; font-size: 12px; border: 1px dashed #16a34a; border-radius: 6px; background: #fff;">
+          <span style="font-size: 11px; color: #15803d; display: block; margin-top: 3px;">Upload portrait photo for website faculty card. Stored in <code>assets/imgs/faculties/</code>.</span>
+        </div>
+
+        <!-- Key Credential Highlight -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Key Highlight / Credential Badge</label>
+          <input type="text" name="highlight" placeholder="e.g. 15 Years Experience • Master of Organic Chemistry" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+        </div>
+
+        <!-- Bio / Description -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Faculty Bio / Teaching Methodology</label>
+          <textarea name="bio" rows="2" class="hrms-input" placeholder="A brief profile explaining teaching philosophy, achievements and student mentorship approach..." style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;"></textarea>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
@@ -1904,7 +2070,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('editStaffModal')" aria-label="Close modal">&times;</button>
     </div>
 
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff">
+    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" enctype="multipart/form-data">
       <input type="hidden" name="action" value="update_staff">
       <input type="hidden" name="staff_id" id="edit_staff_id" value="">
 
@@ -1957,6 +2123,60 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <option value="AB-">AB-</option>
             </select>
           </div>
+        </div>
+
+        <!-- Row 3b: Specialization & Experience for Faculty Website Card -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Specialization / Subject Focus</label>
+            <input type="text" name="specialization" id="edit_specialization" placeholder="e.g. Physics &amp; Mathematics" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Teaching Experience</label>
+            <input type="text" name="experience" id="edit_experience" placeholder="e.g. 10+ Years" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+        </div>
+
+        <!-- Row 3c: Website Sort Order & Status -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Website Sort Order (#1 shows first)</label>
+            <input type="number" name="sort_order" id="edit_sort_order" min="0" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Website Publishing Status</label>
+            <select name="user_status" id="edit_user_status" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+              <option value="active">Active (Visible on Homepage &amp; Faculty page)</option>
+              <option value="inactive">Inactive (Hidden from public website)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 3d: Faculty Portrait Photo Preview & Replace -->
+        <div class="form-group" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px 14px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">
+            Faculty Portrait Photo
+          </label>
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <div style="width: 50px; height: 65px; border-radius: 8px; overflow: hidden; background: #0f172a; flex-shrink: 0; border: 1px solid #cbd5e1;">
+              <img id="edit_photo_preview" src="/assets/imgs/ksv-logo.jpg" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="flex: 1;">
+              <input type="file" name="photo_file" accept="image/*" class="hrms-input" style="width: 100%; padding: 6px 8px; font-size: 12px; border: 1px dashed #0284c7; border-radius: 6px; background: #fff;">
+              <span style="font-size: 11px; color: #64748b; display: block; margin-top: 3px;">Select a new portrait image file to replace current photo.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3e: Credential Highlight & Bio -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Key Highlight / Credential Badge</label>
+          <input type="text" name="highlight" id="edit_highlight" placeholder="e.g. 10+ Years Experience • NEET, IIT-JEE Specialist" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Faculty Bio / Teaching Methodology</label>
+          <textarea name="bio" id="edit_bio" rows="2" class="hrms-input" placeholder="A brief profile explaining teaching philosophy, achievements and student mentorship approach..." style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;"></textarea>
         </div>
 
         <!-- Row 4: Contact Phone & Email -->
@@ -2404,6 +2624,29 @@ function openEditStaffModal(sm) {
   
   const addrEl = document.getElementById('edit_address');
   if (addrEl) addrEl.value = sm.address || '';
+
+  const specEl = document.getElementById('edit_specialization');
+  if (specEl) specEl.value = sm.specialization || sm.department || '';
+
+  const expEl = document.getElementById('edit_experience');
+  if (expEl) expEl.value = sm.experience || '';
+
+  const highEl = document.getElementById('edit_highlight');
+  if (highEl) highEl.value = sm.highlight || '';
+
+  const bioEl = document.getElementById('edit_bio');
+  if (bioEl) bioEl.value = sm.bio || '';
+
+  const sortEl = document.getElementById('edit_sort_order');
+  if (sortEl) sortEl.value = sm.sort_order || 0;
+
+  const statusEl = document.getElementById('edit_user_status');
+  if (statusEl) statusEl.value = sm.user_status || 'active';
+
+  const previewEl = document.getElementById('edit_photo_preview');
+  if (previewEl) {
+    previewEl.src = sm.photo || (sm.avatar ? ('/assets/imgs/faculties/' + sm.avatar) : '/assets/imgs/ksv-logo.jpg');
+  }
 
   // Populate Menu Permissions
   let perms = [];

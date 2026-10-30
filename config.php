@@ -208,6 +208,177 @@ $faculties = [
     ]
 ];
 
+/**
+ * Fetch dynamic active faculty profiles from database (managed via /web-app/admin/staff)
+ * with graceful fallback to static $faculties array.
+ */
+function get_active_faculties($limit = null) {
+    global $faculties;
+    try {
+        require_once __DIR__ . '/web-app/config.php';
+        $db = get_db_connection();
+        if ($db) {
+            $sql = "
+                SELECT sp.*, u.username, u.full_name, u.avatar, u.status as user_status
+                FROM staff_profiles sp
+                JOIN users u ON sp.user_id = u.id
+                WHERE u.status = 'active'
+                ORDER BY CASE WHEN sp.sort_order = 0 THEN 9999 ELSE sp.sort_order END ASC, sp.id ASC
+            ";
+            if ($limit !== null && (int)$limit > 0) {
+                $sql .= " LIMIT " . (int)$limit;
+            }
+            $stmt = $db->query($sql);
+            if ($stmt) {
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if (!empty($rows)) {
+                    $formatted = [];
+                    foreach ($rows as $r) {
+                        // Determine photo
+                        $photo = '';
+                        if (!empty($r['photo']) && $r['photo'] !== '/assets/imgs/ksv-logo.jpg') {
+                            $photo = ltrim($r['photo'], '/');
+                        } elseif (!empty($r['avatar'])) {
+                            if (file_exists(__DIR__ . '/assets/imgs/faculties/' . $r['avatar'])) {
+                                $photo = 'assets/imgs/faculties/' . $r['avatar'];
+                            } elseif (file_exists(__DIR__ . '/assets/imgs/' . $r['avatar'])) {
+                                $photo = 'assets/imgs/' . $r['avatar'];
+                            }
+                        }
+                        if (empty($photo)) {
+                            $lower = strtolower($r['full_name']);
+                            if (strpos($lower, 'salam') !== false || strpos($lower, 'director') !== false) {
+                                $photo = 'assets/imgs/faculties/founder-director.png';
+                            } elseif (strpos($lower, 'mishra') !== false || strpos($lower, 'rameshwar') !== false) {
+                                $photo = 'assets/imgs/faculties/mr-rameshwar-mishra.png';
+                            } elseif (strpos($lower, 'aman') !== false) {
+                                $photo = 'assets/imgs/faculties/mr-aman-kumar-soni.png';
+                            } elseif (strpos($lower, 'hafiza') !== false) {
+                                $photo = 'assets/imgs/faculties/hafiza-palikar.png';
+                            } elseif (strpos($lower, 'rafeek') !== false) {
+                                $photo = 'assets/imgs/faculties/rafeek-khan.png';
+                            } elseif (strpos($lower, 'lubna') !== false) {
+                                $photo = 'assets/imgs/faculties/mrs-lubna-khan.png';
+                            } elseif (strpos($lower, 'priya') !== false) {
+                                $photo = 'assets/imgs/faculties/staff-priya.png';
+                            } else {
+                                $photo = 'assets/imgs/ksv-logo.jpg';
+                            }
+                        }
+
+                        // Experience fallback
+                        $exp = !empty($r['experience']) ? $r['experience'] : '';
+                        if (empty($exp) && !empty($r['joining_date'])) {
+                            $joined_year = (int)date('Y', strtotime($r['joining_date']));
+                            $curr_year = (int)date('Y');
+                            $diff = max(1, $curr_year - $joined_year);
+                            $exp = $diff . '+ Years';
+                        }
+                        if (empty($exp)) {
+                            $exp = 'Senior Faculty';
+                        }
+
+                        // Specialization fallback
+                        $spec = !empty($r['specialization']) ? $r['specialization'] : (!empty($r['department']) ? $r['department'] : 'Academic Mentor');
+
+                        // Highlight fallback
+                        $highlight = !empty($r['highlight']) ? $r['highlight'] : "{$exp} Experience • Concept & Board Specialist";
+
+                        // Bio fallback
+                        $bio = !empty($r['bio']) ? $r['bio'] : "Experienced educator at KSV Academy dedicated to conceptual clarity, rigorous problem-solving, and mentoring students to top competitive exam ranks.";
+
+                        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $r['full_name']), '-'));
+
+                        $formatted[] = [
+                            'id' => $slug ?: ('staff-' . $r['id']),
+                            'staff_id' => $r['id'],
+                            'user_id' => $r['user_id'],
+                            'employee_code' => $r['employee_code'],
+                            'name' => $r['full_name'],
+                            'title' => $r['designation'] ?: 'Faculty Member',
+                            'department' => $r['department'],
+                            'degrees' => $r['qualification'] ?: 'M.Sc, B.Ed',
+                            'specialization' => $spec,
+                            'experience' => $exp,
+                            'image' => $photo,
+                            'bio' => $bio,
+                            'highlight' => $highlight,
+                            'sort_order' => (int)($r['sort_order'] ?? 0)
+                        ];
+                    }
+                    return $formatted;
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        // Fallback
+    }
+
+    if ($limit !== null && (int)$limit > 0) {
+        return array_slice($faculties, 0, (int)$limit);
+    }
+    return $faculties;
+}
+
+/**
+ * Return theme class and subject badge icon for a faculty card
+ */
+function get_faculty_theme_info($fac, $idx = 0) {
+    $themes = ['fac-theme-blue', 'fac-theme-emerald', 'fac-theme-amber', 'fac-theme-purple', 'fac-theme-cyan', 'fac-theme-rose'];
+    $spec_lower = strtolower(($fac['specialization'] ?? '') . ' ' . ($fac['department'] ?? '') . ' ' . ($fac['name'] ?? ''));
+
+    if (strpos($spec_lower, 'chem') !== false && strpos($spec_lower, 'math') !== false) {
+        return [
+            'theme' => 'fac-theme-amber',
+            'icon' => 'fa-square-root-variable',
+            'label' => 'Chem & Math'
+        ];
+    } elseif (strpos($spec_lower, 'chem') !== false) {
+        return [
+            'theme' => 'fac-theme-emerald',
+            'icon' => 'fa-flask-vial',
+            'label' => 'Chemistry'
+        ];
+    } elseif (strpos($spec_lower, 'math') !== false || strpos($spec_lower, 'calculus') !== false || strpos($spec_lower, 'algebra') !== false) {
+        return [
+            'theme' => 'fac-theme-purple',
+            'icon' => 'fa-infinity',
+            'label' => 'Mathematics'
+        ];
+    } elseif (strpos($spec_lower, 'computer') !== false || strpos($spec_lower, 'cs') !== false || strpos($spec_lower, 'code') !== false) {
+        return [
+            'theme' => 'fac-theme-cyan',
+            'icon' => 'fa-laptop-code',
+            'label' => 'CS & Math'
+        ];
+    } elseif (strpos($spec_lower, 'english') !== false || strpos($spec_lower, 'sst') !== false || strpos($spec_lower, 'humanities') !== false) {
+        return [
+            'theme' => 'fac-theme-rose',
+            'icon' => 'fa-book-open-reader',
+            'label' => 'English & SST'
+        ];
+    } elseif (strpos($spec_lower, 'bio') !== false || strpos($spec_lower, 'life') !== false || strpos($spec_lower, 'neet') !== false) {
+        return [
+            'theme' => 'fac-theme-emerald',
+            'icon' => 'fa-dna',
+            'label' => 'Biology'
+        ];
+    } elseif (strpos($spec_lower, 'phys') !== false || strpos($spec_lower, 'salam') !== false || strpos($spec_lower, 'director') !== false) {
+        return [
+            'theme' => 'fac-theme-blue',
+            'icon' => 'fa-atom',
+            'label' => 'Physics'
+        ];
+    }
+
+    $theme = $themes[$idx % count($themes)];
+    return [
+        'theme' => $theme,
+        'icon' => 'fa-chalkboard-user',
+        'label' => !empty($fac['specialization']) ? $fac['specialization'] : (!empty($fac['department']) ? $fac['department'] : 'Academic Mentor')
+    ];
+}
+
 // Courses Data categorized KGS style
 $courses = [
     [
