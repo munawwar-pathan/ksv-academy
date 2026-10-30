@@ -7474,6 +7474,203 @@
   color: #ffffff !important;
 }
 
+/* ── Staff Myself Attendance Dark Mode Adaptations ── */
+[data-theme="dark"] .attendance-register-card,
+[data-theme="dark"] .attendance-card-header {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .attendance-header-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .attendance-header-subtitle {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .month-records-badge {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .month-picker-control {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .month-picker-control a {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .month-picker-control a:hover {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .month-picker-control input[type="month"] {
+  background: transparent !important;
+  color: #f1f5f9 !important;
+  color-scheme: dark !important;
+}
+
+[data-theme="dark"] .current-month-btn {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .current-month-btn:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .today-punch-form span[style*="background: #f0fdf4"],
+[data-theme="dark"] .today-punch-form span[style*="background:#f0fdf4"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .attendance-table th {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .attendance-table td {
+  border-bottom-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .attendance-table tbody tr:hover {
+  background: rgba(51, 65, 85, 0.3) !important;
+}
+
+[data-theme="dark"] .attendance-table .col-num {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .attendance-date-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .attendance-table .col-date > div:last-child:not([style*="#dc2626"]) {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .attendance-table .today-row,
+[data-theme="dark"] .attendance-table tr[style*="background: #f0f9ff"],
+[data-theme="dark"] .attendance-table tr[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="dark"] .attendance-table .today-row td {
+  background: transparent !important;
+}
+
+/* Check-In & Check-Out Pills */
+[data-theme="dark"] .attendance-table .sid-dept-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Duration Pill */
+[data-theme="dark"] .attendance-table .sid-code-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .attendance-table .sid-code-pill i {
+  color: #94a3b8 !important;
+}
+
+/* Status Pill Badges in Dark Mode */
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background: #f0fdf4"],
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background:#f0fdf4"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background: #fffbeb"],
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background:#fffbeb"] {
+  background: rgba(217, 119, 6, 0.15) !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background: #fef2f2"],
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background:#fef2f2"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background: #eff6ff"],
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background:#eff6ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background: #f8fafc"],
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background:#f8fafc"] {
+  background: rgba(148, 163, 184, 0.12) !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background: #fff7ed"],
+[data-theme="dark"] .attendance-table .sid-status-active[style*="background:#fff7ed"] {
+  background: rgba(249, 115, 22, 0.15) !important;
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  color: #fb923c !important;
+}
+
+/* Remarks */
+[data-theme="dark"] .attendance-table .col-remarks span {
+  color: #cbd5e1 !important;
+}
+
+/* Footer Summary */
+[data-theme="dark"] .attendance-footer-summary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .footer-summary-left strong {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .attendance-footer-summary strong[style*="color: #166534"],
+[data-theme="dark"] .attendance-footer-summary strong[style*="color:#166534"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .attendance-footer-summary strong[style*="color: #b91c1c"],
+[data-theme="dark"] .attendance-footer-summary strong[style*="color:#b91c1c"] {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .attendance-footer-summary strong[style*="color: #d97706"],
+[data-theme="dark"] .attendance-footer-summary strong[style*="color:#d97706"] {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .attendance-footer-summary strong[style*="color: #0284c7"],
+[data-theme="dark"] .attendance-footer-summary strong[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .summary-dot {
+  color: #475569 !important;
+}
+
 
 
 
