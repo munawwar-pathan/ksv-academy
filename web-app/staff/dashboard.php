@@ -771,42 +771,282 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .sober-stat-card,
 [data-theme="dark"] .hrms-card,
 [data-theme="dark"] .hrms-card-header {
-  background: #1e293b;
-  border-color: #334155;
+  background: #1e293b !important;
+  border-color: #334155 !important;
 }
+
 [data-theme="dark"] .sober-name,
 [data-theme="dark"] .sober-stat-value,
 [data-theme="dark"] .card-title,
-[data-theme="dark"] .sober-clock-digits,
-[data-theme="dark"] .notice-title {
-  color: #f1f5f9;
+[data-theme="dark"] .sober-clock-digits {
+  color: #f1f5f9 !important;
 }
+
+[data-theme="dark"] .sober-stat-title {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sober-stat-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sober-stat-footer a {
+  color: #38bdf8 !important;
+}
+
 [data-theme="dark"] .sober-avatar {
-  background: #0f172a;
-  border-color: #334155;
-  color: #cbd5e1;
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
 }
+
+/* Badges & Status Pills in Dark Mode */
+[data-theme="dark"] .sid-code-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sid-dept-pill {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .sid-dept-pill i {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .sid-status-active {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .sid-blood-badge {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .sober-stat-card .sid-code-pill,
+[data-theme="dark"] .staff-id-table .sid-code-pill {
+  background: rgba(5, 150, 105, 0.15) !important;
+  border-color: rgba(5, 150, 105, 0.35) !important;
+  color: #34d399 !important;
+}
+
+/* Digital Punch Area */
 [data-theme="dark"] .sober-clock-box,
 [data-theme="dark"] .sober-punch-cell {
-  background: #0f172a;
-  border-color: #334155;
+  background: #0f172a !important;
+  border-color: #334155 !important;
 }
-[data-theme="dark"] .btn-sober-secondary {
-  background: #1e293b;
-  border-color: #475569;
-  color: #e2e8f0;
+
+[data-theme="dark"] .sober-clock-shift {
+  color: #94a3b8 !important;
 }
-[data-theme="dark"] .btn-sober-secondary:hover {
-  background: #334155;
-  color: #ffffff;
+
+[data-theme="dark"] .sober-punch-label {
+  color: #94a3b8 !important;
 }
-[data-theme="dark"] .sober-stat-footer {
-  border-top-color: #334155;
+
+[data-theme="dark"] .sober-punch-val {
+  color: #f1f5f9 !important;
 }
+
+[data-theme="dark"] .sober-punch-cell.check-in .sober-punch-val {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .sober-punch-cell.check-out .sober-punch-val {
+  color: #f1f5f9 !important;
+}
+
 [data-theme="dark"] .sober-admin-notice {
-  background: #0f172a;
-  border-color: #334155;
-  color: #94a3b8;
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* Buttons */
+[data-theme="dark"] .btn-sober-secondary {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .btn-sober-secondary:hover {
+  background: #334155 !important;
+  border-color: #64748b !important;
+  color: #ffffff !important;
+}
+
+/* Tables (Payroll & Leaves) */
+[data-theme="dark"] .hrms-card-header span[style*="color: #64748b"],
+[data-theme="dark"] .hrms-card-header span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .hrms-card-header strong {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .hrms-table th,
+[data-theme="dark"] .staff-id-table th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #334155 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .hrms-table td,
+[data-theme="dark"] .staff-id-table td {
+  border-bottom: 1px solid #334155 !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .hrms-table tbody tr:hover,
+[data-theme="dark"] .staff-id-table tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.3) !important;
+}
+
+[data-theme="dark"] .hrms-table td strong {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .table-reason-cell small {
+  color: #94a3b8 !important;
+}
+
+/* Academy Circulars / Notices */
+[data-theme="dark"] .notice-card-body {
+  background: #1e293b !important;
+}
+
+[data-theme="dark"] .notice-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .notice-time {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-desc {
+  color: #cbd5e1 !important;
+}
+
+/* Apply Leave Modal */
+[data-theme="dark"] #applyLeaveModal .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="dark"] #applyLeaveModal .hrms-modal-header {
+  border-bottom: 1px solid #334155 !important;
+  background: #1e293b !important;
+}
+
+[data-theme="dark"] #applyLeaveModal .hrms-modal-header h3 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #applyLeaveModal .modal-close-btn {
+  color: #94a3b8 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #applyLeaveModal .modal-close-btn:hover {
+  color: #f1f5f9 !important;
+  background: #334155 !important;
+}
+
+[data-theme="dark"] #applyLeaveModal .hrms-modal-body {
+  background: #1e293b !important;
+}
+
+[data-theme="dark"] #applyLeaveModal .form-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] #applyLeaveModal select.hrms-input,
+[data-theme="dark"] #applyLeaveModal input.hrms-input,
+[data-theme="dark"] #applyLeaveModal textarea.hrms-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #applyLeaveModal select.hrms-input option {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #applyLeaveModal .hrms-input:focus {
+  border-color: #0284c7 !important;
+  outline: none;
+}
+
+/* Payslip View Modal Shell */
+[data-theme="dark"] #payslipViewModal .receipt-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-theme="dark"] #payslipViewModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-theme="dark"] #payslipViewModal .hrms-modal-header h4 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #payslipViewModal #modalPayslipSub {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #payslipViewModal .modal-close-btn {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] #payslipViewModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #payslipModalBody {
+  background: #0f172a !important;
+}
+
+[data-theme="dark"] #payslipViewModal .no-print[style*="border-top"],
+[data-theme="dark"] #payslipViewModal div.no-print:last-child {
+  background: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] #payslipViewModal button[onclick="printPayslip();"] {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] #payslipViewModal button[onclick="printPayslip();"]:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
 }
 </style>
 
