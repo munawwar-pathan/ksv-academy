@@ -4029,11 +4029,13 @@
 /* ── Dark Theme Rules for Operational Expenses & Vouchers ── */
 [data-theme="dark"] .expenses-directory-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 
 [data-theme="dark"] .expenses-card-header {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .expenses-card-title,
@@ -4046,8 +4048,10 @@
 
 [data-theme="dark"] .expenses-session-badge {
   background: #0f172a !important;
-  color: #94a3b8 !important;
-  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 
 [data-theme="dark"] .expenses-subtitle,
@@ -4057,7 +4061,11 @@
 }
 
 [data-theme="dark"] .expenses-header-meta {
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .expenses-disbursed-total {
+  color: #f87171 !important;
 }
 
 [data-theme="dark"] .expenses-meta-divider {
@@ -4068,17 +4076,18 @@
 [data-theme="dark"] .staff-id-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .expenses-table tbody td,
 [data-theme="dark"] .staff-id-table tbody td {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .expenses-table tbody tr:hover,
 [data-theme="dark"] .staff-id-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
 }
 
 [data-theme="dark"] .exp-vendor-text {
@@ -4089,30 +4098,37 @@
 [data-theme="dark"] .exp-cat-badge,
 [data-theme="dark"] .mode-pill-chip {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .ref-code-pill {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.35) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .sid-action-btn {
-  background: #1e293b !important;
-  border-color: #334155 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .sid-action-btn:hover {
   background: #334155 !important;
   color: #ffffff !important;
+  border-color: #475569 !important;
 }
 
 [data-theme="dark"] .sid-action-btn.view {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.35) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
   color: #38bdf8 !important;
 }
 
@@ -4123,7 +4139,7 @@
 
 [data-theme="dark"] .sid-action-btn.delete {
   background: rgba(239, 68, 68, 0.15) !important;
-  border-color: rgba(239, 68, 68, 0.35) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
   color: #f87171 !important;
 }
 
@@ -4137,11 +4153,15 @@
 [data-theme="dark"] .voucher-modal-box {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
+  border-radius: 16px !important;
+  -webkit-border-radius: 16px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .expenses-modal-header,
 [data-theme="dark"] .voucher-modal-header {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .expenses-modal-header h3,
@@ -4151,18 +4171,101 @@
 
 [data-theme="dark"] .expenses-modal-close,
 [data-theme="dark"] .voucher-modal-close {
-  background: #0f172a !important;
-  color: #94a3b8 !important;
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 50% !important;
+  -webkit-border-radius: 50% !important;
+}
+
+[data-theme="dark"] .expenses-modal-close:hover,
+[data-theme="dark"] .voucher-modal-close:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .expenses-field-label {
   color: #cbd5e1 !important;
 }
 
+[data-theme="dark"] .expenses-modal-box .hrms-input,
+[data-theme="dark"] .voucher-modal-box .hrms-input,
+[data-theme="dark"] #addExpenseModal .hrms-input,
+[data-theme="dark"] #voucherModal .hrms-input {
+  background: #0f172a !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+[data-theme="dark"] .expenses-modal-box .hrms-input:focus,
+[data-theme="dark"] .voucher-modal-box .hrms-input:focus,
+[data-theme="dark"] #addExpenseModal .hrms-input:focus,
+[data-theme="dark"] #voucherModal .hrms-input:focus {
+  background: #0f172a !important;
+  border-color: #0092df !important;
+  box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
+}
+
+[data-theme="dark"] .expenses-modal-box .hrms-input::placeholder,
+[data-theme="dark"] .voucher-modal-box .hrms-input::placeholder,
+[data-theme="dark"] #addExpenseModal .hrms-input::placeholder,
+[data-theme="dark"] #voucherModal .hrms-input::placeholder {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .expenses-modal-box .hrms-input option,
+[data-theme="dark"] #addExpenseModal .hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .expenses-modal-box input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] #addExpenseModal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9);
+}
+
+[data-theme="dark"] .expenses-modal-box input[name="amount"],
+[data-theme="dark"] #addExpenseModal input[name="amount"] {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .expenses-modal-footer {
+  border-top: 1px solid #334155 !important;
+  padding-top: 16px !important;
+}
+
+[data-theme="dark"] .expenses-cancel-btn,
+[data-theme="dark"] .voucher-print-btn,
+[data-theme="dark"] .voucher-close-btn {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+
+[data-theme="dark"] .expenses-cancel-btn:hover,
+[data-theme="dark"] .voucher-print-btn:hover,
+[data-theme="dark"] .voucher-close-btn:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+  border-color: #64748b !important;
+}
+
+[data-theme="dark"] .expenses-submit-btn {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+
 /* Voucher Receipt Details Card in Modal */
 [data-theme="dark"] .voucher-receipt-card {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 
 [data-theme="dark"] .voucher-meta-label,
@@ -4170,19 +4273,32 @@
   color: #94a3b8 !important;
 }
 
+[data-theme="dark"] .voucher-ref-code {
+  color: #38bdf8 !important;
+}
+
 [data-theme="dark"] .voucher-date-text,
-[data-theme="dark"] .voucher-title-text,
-[data-theme="dark"] .voucher-amount-label {
+[data-theme="dark"] .voucher-title-text {
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .voucher-amount-label {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .voucher-amount-val {
+  color: #f87171 !important;
+}
+
 [data-theme="dark"] .voucher-amount-row {
-  border-top-color: #334155 !important;
+  border-top: 1px dashed #334155 !important;
 }
 
 [data-theme="dark"] .voucher-subcard {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 
 [data-theme="dark"] .voucher-subcard-label {
@@ -4193,26 +4309,41 @@
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .voucher-subcard-mode {
+  color: #38bdf8 !important;
+}
+
 [data-theme="dark"] .voucher-invoice-box {
-  background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.35) !important;
+  background: rgba(2, 132, 199, 0.12) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+
+[data-theme="dark"] .voucher-invoice-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .voucher-invoice-ref {
+  color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .voucher-notes-box {
   background: #0f172a !important;
-  border-left-color: #0092df !important;
+  border-left: 3px solid #0092df !important;
+  border-radius: 0 6px 6px 0 !important;
 }
 
 [data-theme="dark"] .voucher-notes-label {
-  color: #94a3b8 !important;
-}
-
-[data-theme="dark"] .voucher-notes-text {
   color: #cbd5e1 !important;
 }
 
+[data-theme="dark"] .voucher-notes-text {
+  color: #94a3b8 !important;
+}
+
 [data-theme="dark"] .voucher-modal-footer {
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
 }
 
 /* ── Dark Theme Rules for Expense Categories & Heads ── */

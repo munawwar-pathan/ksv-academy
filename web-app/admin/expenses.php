@@ -718,7 +718,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 1. Top KPI Stat Metrics Strip */
 [data-theme="dark"] .stat-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 [data-theme="dark"] .stat-label {
   color: #94a3b8 !important;
@@ -779,13 +781,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 2. Filter & Search Toolbar */
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
-[data-theme="dark"] .expenses-search-box {
+[data-theme="dark"] .expenses-search-box,
+[data-theme="dark"] .roaster-toolbar-card .expenses-search-box {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color: #f8fafc !important;
 }
-[data-theme="dark"] .expenses-search-box:focus-within {
+[data-theme="dark"] .expenses-search-box:focus-within,
+[data-theme="dark"] .roaster-toolbar-card .expenses-search-box:focus-within {
   border-color: #0092df !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
@@ -793,23 +802,39 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .expenses-search-box input {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .expenses-search-box input::placeholder {
   color: #64748b !important;
 }
 [data-theme="dark"] .expenses-search-box .clear-search-btn {
+  background: #334155 !important;
   color: #94a3b8 !important;
+  border-radius: 50% !important;
+  -webkit-border-radius: 50% !important;
 }
 [data-theme="dark"] .expenses-search-box .clear-search-btn:hover {
+  background: #475569 !important;
   color: #f8fafc !important;
 }
-[data-theme="dark"] .roaster-select-box select {
+[data-theme="dark"] .roaster-select-box {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+[data-theme="dark"] .roaster-select-box select,
+[data-theme="dark"] .expenses-filter-row .roaster-select-box select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
-[data-theme="dark"] .roaster-select-box select:focus {
+[data-theme="dark"] .roaster-select-box select:focus,
+[data-theme="dark"] .expenses-filter-row .roaster-select-box select:focus {
   background: #0f172a !important;
   border-color: #0092df !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
@@ -824,37 +849,51 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .roaster-btn.secondary {
   background: #334155 !important;
   color: #f1f5f9 !important;
-  border-color: #475569 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .roaster-btn.secondary:hover {
   background: #475569 !important;
   color: #ffffff !important;
+  border-color: #64748b !important;
 }
 [data-theme="dark"] .roaster-btn.ghost {
   color: #94a3b8 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .roaster-btn.ghost:hover {
-  color: #f8fafc !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  color: #f87171 !important;
+  background: rgba(239, 68, 68, 0.15) !important;
 }
 [data-theme="dark"] .expenses-records-badge {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .expenses-records-badge strong {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .roaster-add-btn,
+[data-theme="dark"] .expenses-add-btn {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
 
 /* 3. Expenses Directory Card & Header */
 [data-theme="dark"] .expenses-directory-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .expenses-card-header {
   background: #1e293b !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .expenses-card-title,
 [data-theme="dark"] .expenses-title-text {
@@ -863,7 +902,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .expenses-session-badge {
   background: #0f172a !important;
   color: #cbd5e1 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
 }
 [data-theme="dark"] .expenses-subtitle {
   color: #94a3b8 !important;
@@ -886,14 +927,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .expenses-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .expenses-table tbody td {
-  border-bottom-color: #334155 !important;
+  background: transparent !important;
+  border-bottom: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .expenses-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
 }
 [data-theme="dark"] .exp-date-text,
 [data-theme="dark"] .exp-title-text {
@@ -912,7 +954,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Badges & Action Buttons */
 [data-theme="dark"] .exp-cat-badge {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .exp-cat-badge i {
@@ -920,7 +964,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .mode-pill-chip {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .mode-pill-chip i {
@@ -928,22 +974,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .ref-code-pill {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .voucher-id-pill {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .sid-action-btn {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .sid-action-btn.view {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .sid-action-btn.view:hover {
@@ -952,7 +1004,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sid-action-btn.delete {
   background: rgba(220, 38, 38, 0.15) !important;
-  border-color: rgba(220, 38, 38, 0.3) !important;
+  border: 1px solid rgba(220, 38, 38, 0.3) !important;
   color: #f87171 !important;
 }
 [data-theme="dark"] .sid-action-btn.delete:hover {
@@ -963,7 +1015,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Empty State */
 [data-theme="dark"] .expenses-table tbody td div[style*="background: #f1f5f9"],
 [data-theme="dark"] .expenses-table tbody td div[style*="background:#f1f5f9"] {
-  background: #334155 !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 50% !important;
+  -webkit-border-radius: 50% !important;
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .expenses-table tbody td h4 {
@@ -972,11 +1027,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .expenses-table tbody td p {
   color: #94a3b8 !important;
 }
+[data-theme="dark"] .expenses-table tbody td strong {
+  color: #f8fafc !important;
+}
 
 /* 5. Pagination Controls */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
 }
 [data-theme="dark"] .pagination-meta-group span {
   color: #94a3b8 !important;
@@ -989,12 +1047,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .pagination-limit-select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 [data-theme="dark"] .pagination-btn {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .pagination-btn:hover:not(.disabled) {
@@ -1035,6 +1098,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .voucher-modal-box {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
+  border-radius: 16px !important;
+  -webkit-border-radius: 16px !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
   color: #f8fafc !important;
 }
@@ -1051,6 +1116,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #334155 !important;
   color: #cbd5e1 !important;
   border: 1px solid #475569 !important;
+  border-radius: 50% !important;
+  -webkit-border-radius: 50% !important;
 }
 [data-theme="dark"] .expenses-modal-close:hover,
 [data-theme="dark"] .voucher-modal-close:hover {
@@ -1061,39 +1128,74 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .expenses-modal-box .hrms-input,
-[data-theme="dark"] .voucher-modal-box .hrms-input {
+[data-theme="dark"] .voucher-modal-box .hrms-input,
+[data-theme="dark"] #addExpenseModal .hrms-input,
+[data-theme="dark"] #voucherModal .hrms-input {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 [data-theme="dark"] .expenses-modal-box .hrms-input:focus,
-[data-theme="dark"] .voucher-modal-box .hrms-input:focus {
+[data-theme="dark"] .voucher-modal-box .hrms-input:focus,
+[data-theme="dark"] #addExpenseModal .hrms-input:focus,
+[data-theme="dark"] #voucherModal .hrms-input:focus {
+  background: #0f172a !important;
   border-color: #0092df !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.25) !important;
 }
 [data-theme="dark"] .expenses-modal-box .hrms-input::placeholder,
-[data-theme="dark"] .voucher-modal-box .hrms-input::placeholder {
+[data-theme="dark"] .voucher-modal-box .hrms-input::placeholder,
+[data-theme="dark"] #addExpenseModal .hrms-input::placeholder,
+[data-theme="dark"] #voucherModal .hrms-input::placeholder {
   color: #64748b !important;
 }
-[data-theme="dark"] .expenses-modal-box .hrms-input option {
+[data-theme="dark"] .expenses-modal-box .hrms-input option,
+[data-theme="dark"] #addExpenseModal .hrms-input option {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
-[data-theme="dark"] .expenses-modal-box input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+[data-theme="dark"] .expenses-modal-box input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] #addExpenseModal input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.9);
 }
-[data-theme="dark"] .expenses-modal-box input[name="amount"] {
+[data-theme="dark"] .expenses-modal-box input[name="amount"],
+[data-theme="dark"] #addExpenseModal input[name="amount"] {
   color: #f87171 !important;
 }
 [data-theme="dark"] .expenses-modal-footer {
   border-top: 1px solid #334155 !important;
   padding-top: 16px !important;
 }
+[data-theme="dark"] .expenses-cancel-btn,
+[data-theme="dark"] .voucher-print-btn,
+[data-theme="dark"] .voucher-close-btn {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+[data-theme="dark"] .expenses-cancel-btn:hover,
+[data-theme="dark"] .voucher-print-btn:hover,
+[data-theme="dark"] .voucher-close-btn:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+  border-color: #64748b !important;
+}
+[data-theme="dark"] .expenses-submit-btn {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
 
 /* 7. Voucher Details Card */
 [data-theme="dark"] .voucher-receipt-card {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  -webkit-border-radius: 12px !important;
 }
 [data-theme="dark"] .voucher-meta-label {
   color: #94a3b8 !important;
@@ -1114,7 +1216,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .voucher-amount-row {
-  border-top-color: #334155 !important;
+  border-top: 1px dashed #334155 !important;
 }
 [data-theme="dark"] .voucher-amount-label {
   color: #cbd5e1 !important;
@@ -1124,7 +1226,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .voucher-subcard {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .voucher-subcard-label {
   color: #94a3b8 !important;
@@ -1137,7 +1241,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .voucher-invoice-box {
   background: rgba(2, 132, 199, 0.12) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .voucher-invoice-label {
   color: #94a3b8 !important;
@@ -1147,7 +1253,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .voucher-notes-box {
   background: #0f172a !important;
-  border-left-color: #0092df !important;
+  border-left: 3px solid #0092df !important;
+  border-radius: 0 6px 6px 0 !important;
 }
 [data-theme="dark"] .voucher-notes-label {
   color: #cbd5e1 !important;
@@ -1156,7 +1263,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .voucher-modal-footer {
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
 }
 </style>
 
