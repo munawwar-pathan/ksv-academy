@@ -537,10 +537,10 @@ require_once __DIR__ . '/includes/header.php';
         <p>Give your child the unfair advantage of expert mentorship, disciplined test series, and small batches.</p>
       </div>
       <div class="acs-actions">
-        <button type="button" class="btn btn-warning" data-modal="demoModal">
+        <button type="button" class="btn btn-gold" data-modal="demoModal">
           <i class="fa-solid fa-ticket"></i> Book Free 3-Day Demo
         </button>
-        <a href="<?php echo url('courses'); ?>" class="btn btn-outline-light">
+        <a href="<?php echo url('courses'); ?>" class="btn btn-outline-white">
           <i class="fa-solid fa-compass"></i> View Programs
         </a>
       </div>
@@ -1183,10 +1183,10 @@ require_once __DIR__ . '/includes/header.php';
             </div>
 
             <div class="ksat-btn-actions">
-              <button type="button" class="btn btn-warning" data-modal="demoModal" style="width: 100%; justify-content: center; font-weight: 800;">
+              <button type="button" class="btn btn-gold" data-modal="demoModal" style="width: 100%; justify-content: center; font-weight: 800;">
                 <i class="fa-solid fa-ticket"></i> Register for Scholarship (Free)
               </button>
-              <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-outline-light" style="width: 100%; justify-content: center;">
+              <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-outline-white" style="width: 100%; justify-content: center;">
                 <i class="fa-solid fa-phone"></i> Call Admission Desk: <?php echo PHONE_PRIMARY; ?>
               </a>
             </div>

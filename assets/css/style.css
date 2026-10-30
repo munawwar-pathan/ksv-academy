@@ -9634,6 +9634,45 @@ textarea.form-control {
   flex-shrink: 0;
 }
 
+.acs-actions .btn {
+  font-weight: 700;
+  padding: 10px 20px;
+  font-size: 0.90rem;
+}
+
+.acs-actions .btn-gold,
+.btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #001926 !important;
+  border: 1px solid #f59e0b !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
+}
+
+.acs-actions .btn-gold:hover,
+.btn-warning:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #001926 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.55) !important;
+}
+
+.acs-actions .btn-outline-white,
+.btn-outline-light {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.7) !important;
+  font-weight: 700 !important;
+}
+
+.acs-actions .btn-outline-white:hover,
+.btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
 
 /* ----------------------------------------------------
    2. Learning Culture & Classroom Experience Section
@@ -9964,6 +10003,39 @@ textarea.form-control {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.ksat-btn-actions .btn-gold,
+.ksat-btn-actions .btn-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #001926 !important;
+  font-weight: 800 !important;
+  border: 1px solid #f59e0b !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;
+}
+
+.ksat-btn-actions .btn-gold:hover,
+.ksat-btn-actions .btn-warning:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #001926 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.55) !important;
+}
+
+.ksat-btn-actions .btn-outline-white,
+.ksat-btn-actions .btn-outline-light {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.7) !important;
+  font-weight: 700 !important;
+}
+
+.ksat-btn-actions .btn-outline-white:hover,
+.ksat-btn-actions .btn-outline-light:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
 }
 
 
