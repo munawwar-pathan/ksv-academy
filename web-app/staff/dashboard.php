@@ -932,6 +932,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #1e293b !important;
 }
 
+[data-theme="dark"] .notice-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  border-left: 3px solid #0284c7 !important;
+}
+
+[data-theme="dark"] .notice-item:hover {
+  background: #162032 !important;
+  border-color: #475569 !important;
+  border-left-color: #38bdf8 !important;
+}
+
 [data-theme="dark"] .notice-title {
   color: #f1f5f9 !important;
 }
@@ -942,6 +954,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 [data-theme="dark"] .notice-desc {
   color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .notice-list > p {
+  color: #94a3b8 !important;
 }
 
 /* Apply Leave Modal */
