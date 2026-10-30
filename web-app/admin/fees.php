@@ -1237,11 +1237,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 2. Enhanced Filter Toolbar */
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] .roaster-search-box {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
 }
 [data-theme="dark"] .roaster-search-box:focus-within {
   background: #0f172a !important;
@@ -1271,7 +1272,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .roaster-select-box select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .roaster-select-box select:focus {
@@ -1286,7 +1288,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .roaster-btn.secondary {
   background: #334155 !important;
   color: #f1f5f9 !important;
-  border-color: #475569 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
 }
 [data-theme="dark"] .roaster-btn.secondary:hover {
   background: #475569 !important;
@@ -1295,6 +1298,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .roaster-btn.ghost {
   background: rgba(255, 255, 255, 0.05) !important;
   border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .roaster-btn.ghost:hover {
@@ -1304,7 +1308,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .scholars-count-badge {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .scholars-count-badge strong {
@@ -1318,10 +1323,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 3. Fee Ledger Card & Header */
 [data-theme="dark"] .fee-ledger-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] .fee-card-header {
-  border-bottom-color: #334155 !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] .fee-title-block .card-title {
   color: #f8fafc !important;
@@ -1333,7 +1339,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .fee-session-badge {
   background: #0f172a !important;
   color: #cbd5e1 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] .fee-title-block p {
   color: #94a3b8 !important;
@@ -1350,22 +1356,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #feeLedgerTable thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] #feeLedgerTable tbody td {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] #feeLedgerTable tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+  background-color: rgba(51, 65, 85, 0.3) !important;
 }
 
 /* Empty State Table Cell */
 [data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] div[style*="background: #f1f5f9"],
 [data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] div[style*="background:#f1f5f9"] {
-  background: #0f172a !important;
-  color: #64748b !important;
-  border: 1px solid #334155 !important;
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  border: 1px solid #475569 !important;
 }
 [data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] h4 {
   color: #f8fafc !important;
@@ -1375,6 +1381,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] p strong {
   color: #f8fafc !important;
+}
+[data-theme="dark"] #feeLedgerTable tbody td[colspan="9"] .roaster-btn.secondary {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 8px !important;
 }
 
 /* Student Profile Cell & Initial Circle */
@@ -1397,19 +1409,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sid-blood-badge {
   background: rgba(225, 29, 72, 0.15) !important;
-  border-color: rgba(225, 29, 72, 0.35) !important;
+  border: 1px solid rgba(225, 29, 72, 0.35) !important;
   color: #fb7185 !important;
 }
 
 /* Badges & Indicators */
 [data-theme="dark"] .sid-receipt-pill {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .sid-roll-pill {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] #feeLedgerTable tbody td div[style*="color: #64748b"],
@@ -1418,7 +1430,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sid-std-pill {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .sid-std-pill i {
@@ -1426,11 +1438,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #feeLedgerTable tbody td div[style*="color: #94a3b8"],
 [data-theme="dark"] #feeLedgerTable tbody td div[style*="color:#94a3b8"] {
-  color: #64748b !important;
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .sid-feehead-pill {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .sid-feehead-pill i {
@@ -1446,7 +1458,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sid-mode-pill {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .sid-mode-pill.cash {
@@ -1481,9 +1493,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* Action Buttons in Ledger Row */
+[data-theme="dark"] .sid-btn-action {
+  border-radius: 6px !important;
+}
 [data-theme="dark"] .sid-btn-primary {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .sid-btn-primary:hover {
@@ -1496,7 +1511,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .sid-btn-secondary {
   background: rgba(22, 101, 52, 0.15) !important;
-  border-color: rgba(22, 101, 52, 0.3) !important;
+  border: 1px solid rgba(22, 101, 52, 0.3) !important;
   color: #4ade80 !important;
 }
 [data-theme="dark"] .sid-btn-secondary:hover {
@@ -1515,7 +1530,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 5. Pagination Controls */
 [data-theme="dark"] .pagination-controls-wrap {
   background: #1e293b !important;
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
 }
 [data-theme="dark"] .pagination-meta-group span {
   color: #94a3b8 !important;
@@ -1528,7 +1543,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .pagination-limit-select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .pagination-limit-select:focus {
@@ -1541,7 +1557,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .pagination-btn {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .pagination-btn:hover:not(.disabled) {
@@ -1618,6 +1635,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #collectFeeModal .hrms-modal-card {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
+  border-radius: 18px !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
 }
 [data-theme="dark"] #collectFeeModal .hrms-modal-header {
@@ -1636,8 +1654,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 [data-theme="dark"] #collectFeeModal .modal-close-btn {
-  background: #1e293b !important;
+  background: #0f172a !important;
   border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #cbd5e1 !important;
   transition: all 0.2s ease !important;
 }
@@ -1645,6 +1664,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #334155 !important;
   color: #f8fafc !important;
   border-color: #475569 !important;
+}
+[data-theme="dark"] #collectFeeModal .hrms-modal-body {
+  background: #1e293b !important;
 }
 [data-theme="dark"] #collectFeeModal label.form-label {
   color: #e2e8f0 !important;
@@ -1657,7 +1679,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #collectFeeModal select.hrms-input {
   background: #0f172a !important;
   color: #f8fafc !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+}
+[data-theme="dark"] #collectFeeModal input[type="date"] {
+  color-scheme: dark !important;
 }
 [data-theme="dark"] #collectFeeModal input.hrms-input:focus,
 [data-theme="dark"] #collectFeeModal select.hrms-input:focus {
@@ -1676,7 +1702,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #collectFeeModal #collectAmountInput {
   background: #0f172a !important;
   color: #34d399 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
 }
 [data-theme="dark"] #collectFeeModal #collectAmountInput:focus {
   background: #18263e !important;
@@ -1692,21 +1719,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
 [data-theme="dark"] #collectFeeModal input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.85);
+  filter: invert(1) brightness(0.9);
   cursor: pointer;
-  opacity: 0.85;
+  opacity: 0.9;
   transition: opacity 0.2s ease;
 }
 [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator:hover,
 [data-theme="dark"] #collectFeeModal input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
-  filter: invert(1);
 }
 [data-theme="dark"] .due-banner.is-due,
 [data-theme="dark"] #studentDueBanner.is-due,
 [data-theme="dark"] #studentDueBanner {
   background: rgba(239, 68, 68, 0.14) !important;
   border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  border-radius: 8px !important;
   color: #f87171 !important;
 }
 [data-theme="dark"] .due-banner.is-due strong,
@@ -1718,6 +1745,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #studentDueBanner.is-cleared {
   background: rgba(16, 185, 129, 0.14) !important;
   border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  border-radius: 8px !important;
   color: #34d399 !important;
 }
 [data-theme="dark"] .due-banner.is-cleared strong,
@@ -1725,8 +1753,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #6ee7b7 !important;
 }
 [data-theme="dark"] #collectFeeModal .collect-cancel-btn {
-  background: #1e293b !important;
+  background: #0f172a !important;
   border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #cbd5e1 !important;
   font-weight: 600 !important;
   transition: all 0.2s ease !important;
@@ -1739,6 +1768,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #collectFeeModal .collect-submit-btn {
   background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
   border: none !important;
+  border-radius: 8px !important;
   color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
   transition: all 0.2s ease !important;
@@ -1753,10 +1783,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #receiptPrintModal .receipt-modal-card {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
+  border-radius: 20px !important;
 }
 [data-theme="dark"] #receiptPrintModal .hrms-modal-header {
   background: #1e293b !important;
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
 }
 [data-theme="dark"] #receiptPrintModal .hrms-modal-header > div > div:first-child {
   background: rgba(2, 132, 199, 0.15) !important;
@@ -1771,7 +1802,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #receiptPrintModal .modal-close-btn {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] #receiptPrintModal .modal-close-btn:hover {
@@ -1793,17 +1825,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] #receiptPrintModal .receipt-modal-card > div.no-print:last-child {
   background: #1e293b !important;
-  border-top-color: #334155 !important;
+  border-top: 1px solid #334155 !important;
 }
 [data-theme="dark"] #receiptPrintModal .btn-hrms-outline {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] #receiptPrintModal .btn-hrms-outline:hover {
   background: #334155 !important;
   border-color: #475569 !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] #receiptPrintModal #btn_download_receipt,
+[data-theme="dark"] #receiptPrintModal #btn_share_receipt {
+  border-radius: 8px !important;
 }
 
 /* ── Dark Theme for Pay Receipt Card (Screen View inside Receipt Modal) ── */
@@ -1886,6 +1923,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-bottom: 1px solid #1e293b !important;
   color: #cbd5e1 !important;
 }
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background: #f0f9ff"],
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background: #f0f9ff"] td,
+[data-theme="dark"] .pay-receipt .receipt-table tr[style*="background:#f0f9ff"] td {
+  color: #f8fafc !important;
+}
 [data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #0f172a"],
 [data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#0f172a"] {
   color: #f8fafc !important;
@@ -1895,6 +1940,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(2, 132, 199, 0.2) !important;
   color: #38bdf8 !important;
   border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color: #0284c7"],
+[data-theme="dark"] .pay-receipt .receipt-table td span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .pay-receipt .receipt-table td[style*="color: #0f172a"],
 [data-theme="dark"] .pay-receipt .receipt-table td[style*="color:#0f172a"] {

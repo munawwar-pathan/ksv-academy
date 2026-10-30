@@ -2687,90 +2687,149 @@
   border-color: #334155 !important;
 }
 
-/* ── Dark Theme Rules for Fee Management ── */
+/* ── Dark Theme Rules for Fee Management (admin/fees) ── */
 [data-theme="dark"] .fee-ledger-card {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .fee-card-header {
-  background: #0f172a !important;
-  border-bottom-color: #1e293b !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .fee-session-badge {
-  background: #1e293b !important;
-  color: #94a3b8 !important;
-  border-color: #334155 !important;
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .sid-receipt-pill {
   background: rgba(2, 132, 199, 0.15) !important;
   color: #38bdf8 !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
 }
 
 [data-theme="dark"] .sid-feehead-pill {
-  background: #1e293b !important;
-  color: #94a3b8 !important;
-  border-color: #334155 !important;
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .sid-mode-pill {
-  background: #1e293b !important;
+  background: #0f172a !important;
   color: #cbd5e1 !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 
 [data-theme="dark"] .sid-mode-pill.cash {
-  background: rgba(16, 185, 129, 0.15) !important;
-  color: #34d399 !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(22, 101, 52, 0.15) !important;
+  color: #4ade80 !important;
+  border-color: rgba(22, 101, 52, 0.35) !important;
 }
 
 [data-theme="dark"] .sid-mode-pill.upi {
   background: rgba(2, 132, 199, 0.15) !important;
   color: #38bdf8 !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
 }
 
 [data-theme="dark"] .sid-mode-pill.netbanking,
 [data-theme="dark"] .sid-mode-pill.bank {
-  background: rgba(147, 51, 234, 0.15) !important;
-  color: #c084fc !important;
-  border-color: rgba(147, 51, 234, 0.3) !important;
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: #a78bfa !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
 }
 
 [data-theme="dark"] .sid-mode-pill.cheque {
-  background: rgba(245, 158, 11, 0.15) !important;
+  background: rgba(180, 83, 9, 0.15) !important;
   color: #fbbf24 !important;
-  border-color: rgba(245, 158, 11, 0.3) !important;
+  border-color: rgba(180, 83, 9, 0.35) !important;
+}
+
+[data-theme="dark"] .sid-mode-pill.creditcard {
+  background: rgba(217, 70, 239, 0.15) !important;
+  border-color: rgba(217, 70, 239, 0.35) !important;
+  color: #e879f9 !important;
+}
+
+[data-theme="dark"] .sid-btn-action {
+  border-radius: 6px !important;
 }
 
 [data-theme="dark"] .sid-btn-primary {
   background: rgba(2, 132, 199, 0.15) !important;
   color: #38bdf8 !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
 }
 
 [data-theme="dark"] .sid-btn-primary:hover {
   background: #0284c7 !important;
   color: #ffffff !important;
+  border-color: #0284c7 !important;
 }
 
 [data-theme="dark"] .sid-btn-secondary {
-  background: rgba(16, 185, 129, 0.15) !important;
-  color: #34d399 !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(22, 101, 52, 0.15) !important;
+  color: #4ade80 !important;
+  border: 1px solid rgba(22, 101, 52, 0.3) !important;
 }
 
 [data-theme="dark"] .sid-btn-secondary:hover {
-  background: #10b981 !important;
+  background: #16a34a !important;
   color: #ffffff !important;
+  border-color: #16a34a !important;
 }
 
 [data-theme="dark"] #collectFeeModal .collect-modal-actions {
-  border-top-color: #1e293b !important;
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] #collectFeeModal .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 18px !important;
+}
+
+[data-theme="dark"] #collectFeeModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #collectFeeModal .hrms-modal-body {
+  background: #1e293b !important;
+}
+
+[data-theme="dark"] #collectFeeModal input.hrms-input,
+[data-theme="dark"] #collectFeeModal select.hrms-input {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+}
+
+[data-theme="dark"] #collectFeeModal input[type="date"] {
+  color-scheme: dark !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .receipt-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 20px !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] #receiptModalBody {
+  background: #0f172a !important;
+}
+
+[data-theme="dark"] #receiptPrintModal .receipt-modal-card > div.no-print:last-child {
+  background: #1e293b !important;
+  border-top: 1px solid #334155 !important;
 }
 
 /* ── Dark Theme Rules for Student & Staff ID Card ── */
