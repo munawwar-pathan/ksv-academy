@@ -567,10 +567,10 @@ require_once __DIR__ . '/includes/header.php';
         <p>Give your child the unfair advantage of expert mentorship, disciplined test series, and small batches.</p>
       </div>
       <div class="acs-actions">
-        <button type="button" class="btn btn-gold" data-modal="demoModal">
+        <button type="button" class="btn btn-gold" data-modal="demoModal" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important; color: #001926 !important; font-weight: 800 !important; border: 1px solid #f59e0b !important; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4) !important;">
           <i class="fa-solid fa-ticket"></i> Book Free 3-Day Demo
         </button>
-        <a href="<?php echo url('courses'); ?>" class="btn btn-outline-white">
+        <a href="<?php echo url('courses'); ?>" class="btn btn-outline-white" style="background: transparent !important; color: #ffffff !important; border: 1.5px solid rgba(255, 255, 255, 0.85) !important; font-weight: 700 !important;">
           <i class="fa-solid fa-compass"></i> View Programs
         </a>
       </div>

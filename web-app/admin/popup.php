@@ -112,30 +112,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $caption = trim($_POST['caption'] ?? '');
         $link_url = trim($_POST['link_url'] ?? '/admissions');
         $sort_order = intval($_POST['sort_order'] ?? 0);
-        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive']) ? $_POST['status'] : 'active';
+        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
         $image = '';
-
-        // Check if an existing file was chosen from popup folder
-        if (!empty($_POST['selected_existing_file'])) {
-            $chosen = basename(trim($_POST['selected_existing_file']));
-            if (file_exists($popup_fs_dir . '/' . $chosen)) {
-                $image = '/assets/imgs/popup/' . $chosen;
-            }
-        }
+        $upload_error = '';
 
         // Process File Upload directly into assets/imgs/popup/
         if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
-            $p_name = $_FILES['image_file']['name'];
-            $p_tmp = $_FILES['image_file']['tmp_name'];
-            $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+            $p_err = $_FILES['image_file']['error'];
+            if ($p_err === UPLOAD_ERR_OK) {
+                $p_name = $_FILES['image_file']['name'];
+                $p_tmp = $_FILES['image_file']['tmp_name'];
+                $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
+                $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
 
-            if (in_array($p_ext, $allowed_exts)) {
-                $clean_basename = 'popup-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
-                $dest = $popup_fs_dir . '/' . $clean_basename;
-                if (move_uploaded_file($p_tmp, $dest)) {
-                    $image = '/assets/imgs/popup/' . $clean_basename;
+                if (in_array($p_ext, $allowed_exts)) {
+                    $clean_basename = 'popup-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
+                    $dest = $popup_fs_dir . '/' . $clean_basename;
+                    if (move_uploaded_file($p_tmp, $dest)) {
+                        @chmod($dest, 0644);
+                        $image = '/assets/imgs/popup/' . $clean_basename;
+                    } else {
+                        $upload_error = "Failed to save file to assets/imgs/popup/. Please check write permissions.";
+                    }
+                } else {
+                    $upload_error = "File extension '.{$p_ext}' is not supported. Please use JPG, JPEG, PNG, WEBP, or AVIF.";
                 }
+            } elseif ($p_err !== UPLOAD_ERR_NO_FILE) {
+                $upload_error = "Upload failed with error code: " . $p_err;
+            }
+        }
+
+        // Check if an existing file was chosen from popup folder
+        if (empty($image) && !empty($_POST['selected_existing_file'])) {
+            $chosen = basename(trim($_POST['selected_existing_file']));
+            if (file_exists($popup_fs_dir . '/' . $chosen)) {
+                $image = '/assets/imgs/popup/' . $chosen;
             }
         }
 
@@ -147,9 +158,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($title) && !empty($image)) {
             $stmt = $db->prepare("INSERT INTO popup_sliders (title, image, caption, link_url, sort_order, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
             $stmt->execute([$title, $image, $caption, $link_url, $sort_order, $status]);
-            set_flash('success', "Slide '{$title}' added successfully!");
+            $status_note = ($status === 'active') ? 'Live on homepage modal' : 'Paused in draft';
+            set_flash('success', "Slide '{$title}' added successfully! ({$status_note})");
         } else {
-            set_flash('error', "Please provide a Slide Title and select or upload an Image.");
+            $err_msg = !empty($upload_error) ? $upload_error : "Please provide a Slide Title and upload/select an Image.";
+            set_flash('error', $err_msg);
         }
 
         $redirect_view = $_POST['redirect_view'] ?? 'grid';
@@ -164,30 +177,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $caption = trim($_POST['caption'] ?? '');
         $link_url = trim($_POST['link_url'] ?? '/admissions');
         $sort_order = intval($_POST['sort_order'] ?? 0);
-        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive']) ? $_POST['status'] : 'active';
+        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
         $image = trim($_POST['current_image'] ?? '');
-
-        // Check if existing file selected
-        if (!empty($_POST['selected_existing_file'])) {
-            $chosen = basename(trim($_POST['selected_existing_file']));
-            if (file_exists($popup_fs_dir . '/' . $chosen)) {
-                $image = '/assets/imgs/popup/' . $chosen;
-            }
-        }
+        $upload_error = '';
 
         // Process File Upload
         if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
-            $p_name = $_FILES['image_file']['name'];
-            $p_tmp = $_FILES['image_file']['tmp_name'];
-            $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-            $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+            $p_err = $_FILES['image_file']['error'];
+            if ($p_err === UPLOAD_ERR_OK) {
+                $p_name = $_FILES['image_file']['name'];
+                $p_tmp = $_FILES['image_file']['tmp_name'];
+                $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
+                $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
 
-            if (in_array($p_ext, $allowed_exts)) {
-                $clean_basename = 'popup-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
-                $dest = $popup_fs_dir . '/' . $clean_basename;
-                if (move_uploaded_file($p_tmp, $dest)) {
-                    $image = '/assets/imgs/popup/' . $clean_basename;
+                if (in_array($p_ext, $allowed_exts)) {
+                    $clean_basename = 'popup-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
+                    $dest = $popup_fs_dir . '/' . $clean_basename;
+                    if (move_uploaded_file($p_tmp, $dest)) {
+                        @chmod($dest, 0644);
+                        $image = '/assets/imgs/popup/' . $clean_basename;
+                    } else {
+                        $upload_error = "Could not replace image in assets/imgs/popup/.";
+                    }
+                } else {
+                    $upload_error = "Extension '.{$p_ext}' not supported.";
                 }
+            }
+        } elseif (!empty($_POST['selected_existing_file'])) {
+            $chosen = basename(trim($_POST['selected_existing_file']));
+            if (file_exists($popup_fs_dir . '/' . $chosen)) {
+                $image = '/assets/imgs/popup/' . $chosen;
             }
         } elseif (!empty($_POST['image_url'])) {
             $image = trim($_POST['image_url']);
@@ -196,9 +215,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id > 0 && !empty($title) && !empty($image)) {
             $stmt = $db->prepare("UPDATE popup_sliders SET title = ?, image = ?, caption = ?, link_url = ?, sort_order = ?, status = ? WHERE id = ?");
             $stmt->execute([$title, $image, $caption, $link_url, $sort_order, $status, $id]);
-            set_flash('success', "Popup slide updated successfully!");
+            $status_note = ($status === 'active') ? 'Live on homepage modal' : 'Paused';
+            set_flash('success', "Popup slide updated successfully! ({$status_note})");
         } else {
-            set_flash('error', "Slide Title and Image cannot be empty.");
+            $err_msg = !empty($upload_error) ? $upload_error : "Slide Title and Image cannot be empty.";
+            set_flash('error', $err_msg);
         }
 
         $redirect_view = $_POST['redirect_view'] ?? 'grid';
@@ -206,17 +227,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // 3. Toggle Status (Active / Inactive)
+    // 3. Toggle Status (Active / Paused)
     if ($action === 'toggle_status') {
         $id = intval($_POST['id'] ?? 0);
         if ($id > 0) {
-            $stmt = $db->prepare("SELECT status FROM popup_sliders WHERE id = ?");
+            $stmt = $db->prepare("SELECT status, title FROM popup_sliders WHERE id = ?");
             $stmt->execute([$id]);
-            $current_status = $stmt->fetchColumn();
-            $new_status = ($current_status === 'active') ? 'inactive' : 'active';
-            $upd = $db->prepare("UPDATE popup_sliders SET status = ? WHERE id = ?");
-            $upd->execute([$new_status, $id]);
-            set_flash('success', "Slide status changed to " . ucfirst($new_status) . ".");
+            $row = $stmt->fetch();
+            if ($row) {
+                $current_status = $row['status'];
+                $new_status = ($current_status === 'active') ? 'inactive' : 'active';
+                $upd = $db->prepare("UPDATE popup_sliders SET status = ? WHERE id = ?");
+                $upd->execute([$new_status, $id]);
+                $status_msg = ($new_status === 'active') 
+                    ? "Slide '{$row['title']}' is now ACTIVE (live on homepage popup)." 
+                    : "Slide '{$row['title']}' is now PAUSED (hidden from homepage popup).";
+                set_flash('success', $status_msg);
+            }
         }
         $redirect_view = $_POST['redirect_view'] ?? 'grid';
         header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($_GET['status'] ?? 'all') . '&view=' . urlencode($redirect_view));
@@ -247,7 +274,7 @@ $params = [];
 
 if ($filter_status === 'active') {
     $query .= " AND status = 'active'";
-} elseif ($filter_status === 'inactive') {
+} elseif ($filter_status === 'inactive' || $filter_status === 'paused') {
     $query .= " AND status = 'inactive'";
 }
 
@@ -354,22 +381,26 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .popup-status-pill {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 800;
   padding: 4px 10px;
   border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 .popup-status-pill.active {
-  background: rgba(16, 185, 129, 0.9);
+  background: rgba(16, 185, 129, 0.95);
   color: #ffffff;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 }
-.popup-status-pill.inactive {
-  background: rgba(100, 116, 139, 0.85);
+.popup-status-pill.inactive,
+.popup-status-pill.paused {
+  background: rgba(217, 119, 6, 0.95);
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
 }
 
 .popup-dim-overlay {
@@ -666,11 +697,29 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #1e293b !important;
   border-color: #475569 !important;
 }
-[data-theme="dark"] .action-btn-pill[style*="#d97706"] {
+[data-theme="dark"] .action-btn-pill.action-pause,
+[data-theme="dark"] table button[title*="Pause"] {
+  background: rgba(217, 119, 6, 0.15) !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
   color: #fbbf24 !important;
 }
-[data-theme="dark"] .action-btn-pill[style*="#059669"] {
+[data-theme="dark"] .action-btn-pill.action-pause:hover,
+[data-theme="dark"] table button[title*="Pause"]:hover {
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .action-btn-pill.action-activate,
+[data-theme="dark"] table button[title*="Activate"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
   color: #34d399 !important;
+}
+[data-theme="dark"] .action-btn-pill.action-activate:hover,
+[data-theme="dark"] table button[title*="Activate"]:hover {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  color: #ffffff !important;
 }
 [data-theme="dark"] .popup-card-footer button[onclick^="openEditModal"] {
   background: rgba(2, 132, 199, 0.15) !important;
@@ -1134,13 +1183,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </a>
 
       <a href="?status=active&view=<?php echo urlencode($view_mode); ?>" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: <?php echo $filter_status === 'active' ? '#fff' : '#64748b'; ?>; background: <?php echo $filter_status === 'active' ? '#10b981' : 'transparent'; ?>;">
+        <i class="fa-solid fa-circle-check" style="font-size: 0.75rem;"></i>
         <span>Active</span>
         <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 10px; background: <?php echo $filter_status === 'active' ? 'rgba(255,255,255,0.3)' : '#e2e8f0'; ?>;"><?php echo $active_count; ?></span>
       </a>
 
-      <a href="?status=inactive&view=<?php echo urlencode($view_mode); ?>" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: <?php echo $filter_status === 'inactive' ? '#fff' : '#64748b'; ?>; background: <?php echo $filter_status === 'inactive' ? '#64748b' : 'transparent'; ?>;">
-        <span>Inactive</span>
-        <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 10px; background: <?php echo $filter_status === 'inactive' ? 'rgba(255,255,255,0.3)' : '#e2e8f0'; ?>;"><?php echo $inactive_count; ?></span>
+      <a href="?status=paused&view=<?php echo urlencode($view_mode); ?>" style="text-decoration: none; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; color: <?php echo ($filter_status === 'paused' || $filter_status === 'inactive') ? '#fff' : '#64748b'; ?>; background: <?php echo ($filter_status === 'paused' || $filter_status === 'inactive') ? '#d97706' : 'transparent'; ?>;">
+        <i class="fa-solid fa-circle-pause" style="font-size: 0.75rem;"></i>
+        <span>Paused</span>
+        <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 10px; background: <?php echo ($filter_status === 'paused' || $filter_status === 'inactive') ? 'rgba(255,255,255,0.3)' : '#e2e8f0'; ?>;"><?php echo $inactive_count; ?></span>
       </a>
     </div>
 
@@ -1215,9 +1266,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <span class="popup-order-pill" title="Slide Sort Order">
                 <i class="fa-solid fa-arrow-down-1-9"></i> #<?php echo intval($slide['sort_order']); ?>
               </span>
-              <span class="popup-status-pill <?php echo $slide['status']; ?>">
-                <?php echo ucfirst($slide['status']); ?>
-              </span>
+              <?php if ($slide['status'] === 'active'): ?>
+                <span class="popup-status-pill active" title="Active • Live in website promo slider">
+                  <i class="fa-solid fa-circle-check"></i> Active
+                </span>
+              <?php else: ?>
+                <span class="popup-status-pill paused" title="Paused • Hidden from website promo slider">
+                  <i class="fa-solid fa-circle-pause"></i> Paused
+                </span>
+              <?php endif; ?>
             </div>
 
             <!-- Detected Image Dimensions Badge on Poster -->
@@ -1255,10 +1312,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <input type="hidden" name="action" value="toggle_status">
                 <input type="hidden" name="id" value="<?php echo $slide['id']; ?>">
                 <input type="hidden" name="redirect_view" value="grid">
-                <button type="submit" class="action-btn-pill" style="padding: 5px 10px; font-size: 0.72rem; font-weight: 700; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer; color: <?php echo $slide['status'] === 'active' ? '#d97706' : '#059669'; ?>;" title="Click to toggle status">
-                  <i class="fa-solid <?php echo $slide['status'] === 'active' ? 'fa-eye-slash' : 'fa-eye'; ?>"></i>
-                  <span><?php echo $slide['status'] === 'active' ? 'Pause' : 'Activate'; ?></span>
-                </button>
+                <?php if ($slide['status'] === 'active'): ?>
+                  <button type="submit" class="action-btn-pill action-pause" style="padding: 6px 12px; font-size: 0.74rem; font-weight: 700; border-radius: 6px; border: 1px solid #fcd34d; background: #fffbeb; cursor: pointer; color: #b45309; display: inline-flex; align-items: center; gap: 5px;" title="Pause Slide (temporarily hide from frontend)">
+                    <i class="fa-solid fa-pause"></i>
+                    <span>Pause</span>
+                  </button>
+                <?php else: ?>
+                  <button type="submit" class="action-btn-pill action-activate" style="padding: 6px 12px; font-size: 0.74rem; font-weight: 700; border-radius: 6px; border: 1px solid #a7f3d0; background: #ecfdf5; cursor: pointer; color: #047857; display: inline-flex; align-items: center; gap: 5px;" title="Activate Slide (publish to frontend slider)">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Activate</span>
+                  </button>
+                <?php endif; ?>
               </form>
 
               <div style="display: flex; gap: 6px;">
@@ -1335,20 +1399,45 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <?php echo htmlspecialchars($slide['link_url'] ?: '/admissions'); ?>
                 </td>
                 <td style="padding: 14px 16px;">
-                  <span class="popup-status-pill <?php echo $slide['status']; ?>" style="font-size: 0.68rem; padding: 3px 8px;">
-                    <?php echo ucfirst($slide['status']); ?>
-                  </span>
+                  <?php if ($slide['status'] === 'active'): ?>
+                    <span class="popup-status-pill active" style="font-size: 0.70rem; padding: 4px 10px;" title="Active • Live on frontend popup">
+                      <i class="fa-solid fa-circle-check"></i> Active
+                    </span>
+                  <?php else: ?>
+                    <span class="popup-status-pill paused" style="font-size: 0.70rem; padding: 4px 10px;" title="Paused • Hidden from frontend popup">
+                      <i class="fa-solid fa-circle-pause"></i> Paused
+                    </span>
+                  <?php endif; ?>
                 </td>
                 <td style="padding: 14px 16px; text-align: right;">
-                  <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                    <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($slide)); ?>);" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;">
+                  <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                    <!-- Toggle Status (Pause / Activate) -->
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=table" style="margin: 0;">
+                      <input type="hidden" name="action" value="toggle_status">
+                      <input type="hidden" name="id" value="<?php echo $slide['id']; ?>">
+                      <input type="hidden" name="redirect_view" value="table">
+                      <?php if ($slide['status'] === 'active'): ?>
+                        <button type="submit" style="background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; border-radius: 6px; padding: 6px 10px; font-size: 0.74rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Pause slide (hide from frontend)">
+                          <i class="fa-solid fa-pause"></i> <span>Pause</span>
+                        </button>
+                      <?php else: ?>
+                        <button type="submit" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 6px; padding: 6px 10px; font-size: 0.74rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Activate slide (show on frontend)">
+                          <i class="fa-solid fa-play"></i> <span>Activate</span>
+                        </button>
+                      <?php endif; ?>
+                    </form>
+
+                    <!-- Edit Button -->
+                    <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($slide)); ?>);" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;" title="Edit Slide">
                       <i class="fa-solid fa-pen-to-square"></i>
                     </button>
+
+                    <!-- Delete Button -->
                     <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=table" style="margin: 0;" onsubmit="return confirm('Delete slide \'<?php echo addslashes($slide['title']); ?>\'?');">
                       <input type="hidden" name="action" value="delete_slide">
                       <input type="hidden" name="id" value="<?php echo $slide['id']; ?>">
                       <input type="hidden" name="redirect_view" value="table">
-                      <button type="submit" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; cursor: pointer;">
+                      <button type="submit" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; cursor: pointer;" title="Delete Slide">
                         <i class="fa-solid fa-trash-can"></i>
                       </button>
                     </form>
@@ -1489,8 +1578,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
             Status
           </label>
           <select name="status" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.86rem; background: #fff; box-sizing: border-box;">
-            <option value="active">Active (Visible in promo slider)</option>
-            <option value="inactive">Inactive (Hidden)</option>
+            <option value="active">Active (Visible in website promo slider)</option>
+            <option value="inactive">Paused (Temporarily hidden from slider)</option>
           </select>
         </div>
 
@@ -1644,8 +1733,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
             Status
           </label>
           <select name="status" id="editSlideStatus" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.86rem; background: #fff; box-sizing: border-box;">
-            <option value="active">Active (Visible)</option>
-            <option value="inactive">Inactive (Hidden)</option>
+            <option value="active">Active (Visible in website promo slider)</option>
+            <option value="inactive">Paused (Temporarily hidden from slider)</option>
           </select>
         </div>
 
@@ -1695,7 +1784,8 @@ function openEditModal(slide) {
   document.getElementById('editSlideCurrentImage').value = slide.image || '';
 
   var curImg = document.getElementById('editCurrentPreviewImg');
-  var src = slide.image.startsWith('/') ? slide.image : ('/' + slide.image);
+  var rawImg = slide.image || '';
+  var src = (rawImg.startsWith('http://') || rawImg.startsWith('https://')) ? rawImg : (rawImg.startsWith('/') ? rawImg : ('/' + rawImg));
   curImg.src = src;
 
   // Read dimensions of current image

@@ -123,18 +123,30 @@ require_once __DIR__ . '/../config.php';
 <?php
 // Load dynamic promo popup slides cleanly from database using central configuration
 $active_popup_slides = [];
+$db_has_popup_table = false;
+$total_popup_records = 0;
+
 try {
     require_once __DIR__ . '/../web-app/config.php';
     $ps_pdo = get_db_connection();
-    $ps_stmt = $ps_pdo->query("SELECT * FROM popup_sliders WHERE status = 'active' ORDER BY sort_order ASC, id ASC");
-    if ($ps_stmt) {
-        $active_popup_slides = $ps_stmt->fetchAll();
+    if ($ps_pdo) {
+        $chk_table = $ps_pdo->query("SHOW TABLES LIKE 'popup_sliders'");
+        if ($chk_table && $chk_table->rowCount() > 0) {
+            $db_has_popup_table = true;
+            $total_popup_records = (int)$ps_pdo->query("SELECT COUNT(*) FROM popup_sliders")->fetchColumn();
+            $ps_stmt = $ps_pdo->query("SELECT * FROM popup_sliders WHERE status = 'active' ORDER BY sort_order ASC, id ASC");
+            if ($ps_stmt) {
+                $active_popup_slides = $ps_stmt->fetchAll();
+            }
+        }
     }
 } catch (Throwable $e) {
     $active_popup_slides = [];
+    $db_has_popup_table = false;
 }
 
-if (empty($active_popup_slides)) {
+// Fallback ONLY IF database table does not exist or has zero records configured
+if (!$db_has_popup_table || $total_popup_records === 0) {
     $active_popup_slides = [
         [
             'title' => 'Admissions & Scholarship 2026-27',
@@ -158,6 +170,7 @@ if (empty($active_popup_slides)) {
 }
 ?>
 
+<?php if (!empty($active_popup_slides)): ?>
 <!-- 3. Automatic Reload Scholarship & Admission Popup Modal -->
 <div class="modal-backdrop promo-modal-backdrop" id="reloadPromoModal" role="dialog" aria-modal="true" aria-labelledby="promoModalTitle">
   <div class="promo-modal-dialog">
@@ -260,13 +273,23 @@ if (empty($active_popup_slides)) {
           <div class="promo-slides-wrapper">
             <div class="promo-slides-track" id="promoSlidesTrack">
               <?php foreach ($active_popup_slides as $ps_idx => $ps_slide):
-                  $ps_clean_img = ltrim($ps_slide['image'], '/');
-                  $ps_link = !empty($ps_slide['link_url']) ? ((strpos($ps_slide['link_url'], 'http') === 0) ? $ps_slide['link_url'] : url(ltrim($ps_slide['link_url'], '/'))) : url('admissions');
+                  $raw_img = trim($ps_slide['image'] ?? '');
+                  if (preg_match('#^https?://#i', $raw_img)) {
+                      $ps_img_src = $raw_img;
+                  } else {
+                      $ps_img_src = url(ltrim($raw_img, '/'));
+                  }
+                  $raw_link = trim($ps_slide['link_url'] ?? '');
+                  if (!empty($raw_link)) {
+                      $ps_link = preg_match('#^https?://#i', $raw_link) ? $raw_link : url(ltrim($raw_link, '/'));
+                  } else {
+                      $ps_link = url('admissions');
+                  }
                   $ps_caption = !empty($ps_slide['caption']) ? $ps_slide['caption'] : $ps_slide['title'];
               ?>
               <div class="promo-slide <?php echo $ps_idx === 0 ? 'active' : ''; ?>" data-index="<?php echo $ps_idx; ?>">
                 <a href="<?php echo htmlspecialchars($ps_link); ?>" class="promo-slide-link" title="<?php echo htmlspecialchars($ps_slide['title']); ?>">
-                  <img src="<?php echo url($ps_clean_img); ?>" alt="<?php echo htmlspecialchars($ps_slide['title']); ?>" class="promo-slider-img" loading="<?php echo $ps_idx === 0 ? 'eager' : 'lazy'; ?>">
+                  <img src="<?php echo htmlspecialchars($ps_img_src); ?>" alt="<?php echo htmlspecialchars($ps_slide['title']); ?>" class="promo-slider-img" loading="<?php echo $ps_idx === 0 ? 'eager' : 'lazy'; ?>">
                   <span class="promo-slide-caption"><i class="fa-solid fa-award"></i> <?php echo htmlspecialchars($ps_caption); ?></span>
                 </a>
               </div>
@@ -274,6 +297,7 @@ if (empty($active_popup_slides)) {
             </div>
           </div>
 
+          <?php if (count($active_popup_slides) > 1): ?>
           <!-- Slider Controls -->
           <button type="button" class="promo-nav-btn prev-btn" id="promoPrevBtn" aria-label="Previous Poster">
             <i class="fa-solid fa-chevron-left"></i>
@@ -288,10 +312,12 @@ if (empty($active_popup_slides)) {
               <button type="button" class="promo-dot <?php echo $ps_idx === 0 ? 'active' : ''; ?>" data-slide="<?php echo $ps_idx; ?>" aria-label="Poster <?php echo $ps_idx + 1; ?>"></button>
             <?php endforeach; ?>
           </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
   </div>
 </div>
+<?php endif; // !empty($active_popup_slides) ?>
 
 
