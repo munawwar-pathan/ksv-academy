@@ -306,6 +306,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
   white-space: nowrap;
 }
 
+/* Stat Card Red light fallback */
+.stat-card.red .stat-icon-wrapper {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+}
+.stat-card.red .stat-card-progress-bar {
+  background: #dc2626;
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    RESPONSIVE MOBILE VIEW ENHANCEMENTS FOR STUDENT ATTENDANCE REGISTER
    ══════════════════════════════════════════════════════════════════════ */
@@ -513,6 +523,87 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR STUDENT ATTENDANCE REGISTER
    ══════════════════════════════════════════════════════════════════════ */
+/* 1. Monthly KPI Stat Summary Cards */
+[data-theme="dark"] .stat-grid-4 .stat-card,
+[data-theme="dark"] .periods-stat-grid .stat-card,
+[data-theme="dark"] .stat-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .stat-card:hover {
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .stat-label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .stat-number {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .stat-card-progress {
+  background: #334155 !important;
+}
+
+[data-theme="dark"] .stat-card-footer {
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .stat-card-footer strong {
+  color: #f8fafc !important;
+}
+
+/* Stat Card Icon Wrappers */
+[data-theme="dark"] .stat-card.green .stat-icon-wrapper {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-theme="dark"] .stat-card.red .stat-icon-wrapper {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .stat-card.amber .stat-icon-wrapper {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-theme="dark"] .stat-card.blue .stat-icon-wrapper {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+
+/* Stat Card Footer Status Tags */
+[data-theme="dark"] .stat-card-footer span[style*="color: #059669"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#059669"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .stat-card-footer span[style*="color: #dc2626"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .stat-card-footer span[style*="color: #d97706"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#d97706"] {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .stat-card-footer span[style*="color: #0284c7"],
+[data-theme="dark"] .stat-card-footer span[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+/* 2. Attendance Register Card & Header */
 [data-theme="dark"] .attendance-register-card,
 [data-theme="dark"] .hrms-card {
   background: #1e293b !important;
@@ -551,6 +642,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .child-select-dropdown option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+
 [data-theme="dark"] .month-nav-box {
   background: #0f172a !important;
   border-color: #334155 !important;
@@ -561,14 +657,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 
+[data-theme="dark"] .month-nav-prev:hover,
+[data-theme="dark"] .month-nav-next:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+  border-radius: 6px;
+}
+
 [data-theme="dark"] .month-picker-input {
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 
 [data-theme="dark"] .current-month-btn {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .current-month-btn:hover {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .today-status-badge.active-academic {
@@ -583,6 +693,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #4ade80 !important;
 }
 
+/* 3. Table Rows, Cells & Sunday Highlighting */
 [data-theme="dark"] .staff-id-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
@@ -598,78 +709,131 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #192339 !important;
 }
 
-[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td {
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td,
+[data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"] td {
   background: rgba(2, 132, 199, 0.12) !important;
 }
 
-[data-theme="dark"] .staff-id-table tbody td div[style*="color: #0f172a"] {
+[data-theme="dark"] .staff-id-table tbody td:first-child,
+[data-theme="dark"] .staff-id-table tbody td[style*="color: #475569"],
+[data-theme="dark"] .staff-id-table tbody td[style*="color:#475569"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
 
-[data-theme="dark"] .staff-id-table tbody td div[style*="color: #64748b"] {
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #64748b"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color:#64748b"] {
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"] {
+[data-theme="dark"] .staff-id-table tbody td div[style*="color: #dc2626"],
+[data-theme="dark"] .staff-id-table tbody td div[style*="color:#dc2626"] {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color:#475569"] {
   color: #94a3b8 !important;
 }
 
+/* 4. Pills & Badges in Table */
+[data-theme="dark"] .staff-id-table .sid-dept-pill,
 [data-theme="dark"] .sid-dept-pill {
   background: #0f172a !important;
   border-color: #334155 !important;
-  color: #cbd5e1 !important;
+  color: #f8fafc !important;
 }
 
+[data-theme="dark"] .staff-id-table .sid-code-pill,
 [data-theme="dark"] .sid-code-pill {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
 
-[data-theme="dark"] .sid-status-active[style*="color: #166534"] {
+[data-theme="dark"] .sid-code-pill i {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .sid-status-active[style*="color: #166534"],
+[data-theme="dark"] .sid-status-active[style*="color:#166534"] {
   background: rgba(22, 101, 52, 0.25) !important;
   border-color: rgba(74, 222, 128, 0.3) !important;
   color: #4ade80 !important;
 }
 
-[data-theme="dark"] .sid-status-active[style*="color: #b45309"] {
+[data-theme="dark"] .sid-status-active[style*="color: #b45309"],
+[data-theme="dark"] .sid-status-active[style*="color:#b45309"] {
   background: rgba(217, 119, 6, 0.2) !important;
   border-color: rgba(251, 191, 36, 0.3) !important;
   color: #fbbf24 !important;
 }
 
-[data-theme="dark"] .sid-status-active[style*="color: #b91c1c"] {
+[data-theme="dark"] .sid-status-active[style*="color: #b91c1c"],
+[data-theme="dark"] .sid-status-active[style*="color:#b91c1c"] {
   background: rgba(220, 38, 38, 0.2) !important;
   border-color: rgba(248, 113, 113, 0.3) !important;
   color: #f87171 !important;
 }
 
-[data-theme="dark"] .sid-status-active[style*="color: #1d4ed8"] {
+[data-theme="dark"] .sid-status-active[style*="color: #1d4ed8"],
+[data-theme="dark"] .sid-status-active[style*="color:#1d4ed8"] {
   background: rgba(37, 99, 235, 0.2) !important;
   border-color: rgba(96, 165, 250, 0.3) !important;
   color: #60a5fa !important;
 }
 
-[data-theme="dark"] .sid-status-active[style*="color: #64748b"] {
+[data-theme="dark"] .sid-status-active[style*="color: #64748b"],
+[data-theme="dark"] .sid-status-active[style*="color:#64748b"] {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .sid-status-active[style*="color: #c2410c"] {
+[data-theme="dark"] .sid-status-active[style*="color: #c2410c"],
+[data-theme="dark"] .sid-status-active[style*="color:#c2410c"] {
   background: rgba(234, 88, 12, 0.2) !important;
   border-color: rgba(251, 146, 60, 0.3) !important;
   color: #fb923c !important;
 }
 
+/* 5. Table Footer Summary */
 [data-theme="dark"] .attendance-card-footer {
   background: #0f172a !important;
   border-top-color: #334155 !important;
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .attendance-card-footer strong {
+[data-theme="dark"] .attendance-card-footer .footer-month-text strong {
   color: #f8fafc !important;
+}
+
+[data-theme="dark"] .attendance-card-footer strong[style*="color: #166534"],
+[data-theme="dark"] .attendance-card-footer strong[style*="color:#166534"] {
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .attendance-card-footer strong[style*="color: #b91c1c"],
+[data-theme="dark"] .attendance-card-footer strong[style*="color:#b91c1c"] {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .attendance-card-footer strong[style*="color: #d97706"],
+[data-theme="dark"] .attendance-card-footer strong[style*="color:#d97706"] {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .attendance-card-footer strong[style*="color: #0284c7"],
+[data-theme="dark"] .attendance-card-footer strong[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .footer-stats-pills span {
+  color: #94a3b8 !important;
 }
 </style>
 
