@@ -241,6 +241,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
+
+  /* Strict White Paper Output on both Dark and Light mode */
+  [data-theme="dark"],
+  [data-theme="dark"] body,
+  [data-theme="dark"] html {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  [data-theme="dark"] .marksheet-print-canvas,
+  [data-theme="dark"] .report-card-container {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0092df !important;
+    box-shadow: none !important;
+  }
 }
 
 /* ── Academic KPI Statistics Grid (4 Cards like staff/payroll.php) ── */
@@ -968,36 +984,355 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR STUDENT MARKSHEET
    ══════════════════════════════════════════════════════════════════════ */
+/* Parent Multi-Child Selector Banner */
 [data-theme="dark"] .child-selector-banner {
   background: #1e293b !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
 }
 
-[data-theme="dark"] .child-selector-banner > span {
+[data-theme="dark"] .child-selector-banner > span,
+[data-theme="dark"] .child-selector-banner span[style*="color: #475569"],
+[data-theme="dark"] .child-selector-banner span[style*="color:#475569"] {
   color: #cbd5e1 !important;
 }
 
+/* Top Scholar Control Bar */
 [data-theme="dark"] .scholar-control-card {
   background: #1e293b !important;
   border-color: #334155 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 
-[data-theme="dark"] .current-scholar-meta h4 {
+[data-theme="dark"] .current-scholar-meta h4,
+[data-theme="dark"] .current-scholar-meta h4 span {
   color: #f8fafc !important;
+}
+
+[data-theme="dark"] .current-scholar-meta .meta-pills span,
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color: #64748b"],
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color:#64748b"] {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color: #cbd5e1"],
+[data-theme="dark"] .current-scholar-meta .meta-pills span[style*="color:#cbd5e1"] {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .roll-badge-pill {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+/* Exam Selector & Action Buttons */
+[data-theme="dark"] .marksheet-exam-form label,
+[data-theme="dark"] .marksheet-exam-form label[style*="color: #475569"],
+[data-theme="dark"] .marksheet-exam-form label[style*="color:#475569"] {
+  color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .marksheet-exam-select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+[data-theme="dark"] .marksheet-exam-select option {
+  background: #0f172a !important;
   color: #f8fafc !important;
 }
 
+[data-theme="dark"] .marksheet-download-btn i {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .marksheet-print-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+}
+
+[data-theme="dark"] .marksheet-print-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45) !important;
+}
+
+/* Official Report Card Container (Pure White Certificate in Both Light & Dark Mode) */
+.report-card-container,
+[data-theme="dark"] .report-card-container,
+[data-theme="dark"] .marksheet-print-canvas {
+  background: #ffffff !important;
+  border: 2px solid #0092df !important;
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .report-card-container {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px #334155 !important;
+}
+
+[data-theme="dark"] .report-school-title {
+  color: #007cbd !important;
+}
+
+[data-theme="dark"] .report-school-tagline {
+  color: #334155 !important;
+}
+
+[data-theme="dark"] .report-school-subinfo,
+[data-theme="dark"] .report-school-subinfo[style*="color: #64748b"],
+[data-theme="dark"] .report-school-subinfo[style*="color:#64748b"] {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .verification-qr-wrap > div {
+  border-color: #cbd5e1 !important;
+  background: #ffffff !important;
+}
+
+[data-theme="dark"] .report-card-container .report-details-grid {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="dark"] .report-card-container .detail-item strong {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .report-card-container .detail-item span {
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .report-card-container .detail-item span[style*="color: #007cbd"],
+[data-theme="dark"] .report-card-container .detail-item span[style*="color:#007cbd"] {
+  color: #007cbd !important;
+}
+
+[data-theme="dark"] .report-card-container .detail-item span[style*="color: #475569"],
+[data-theme="dark"] .report-card-container .detail-item span[style*="color:#475569"] {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .report-card-container .detail-item span span[style*="color: #64748b"],
+[data-theme="dark"] .report-card-container .detail-item span span[style*="color:#64748b"] {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .report-card-container .detail-item span[style*="background: #e0f2fe"],
+[data-theme="dark"] .report-card-container .detail-item span[style*="background:#e0f2fe"] {
+  background: #e0f2fe !important;
+  border: 1px solid #bae6fd !important;
+  color: #0284c7 !important;
+}
+
+/* Statement of Marks Table (White & Crisp) */
+[data-theme="dark"] .report-card-container .report-table {
+  border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table th,
+[data-theme="dark"] .report-card-container .report-table td {
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table thead th {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:nth-child(even) {
+  background: #fcfdfe !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:nth-child(odd) {
+  background: #ffffff !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:hover {
+  background: #f0f9ff !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color: #1e293b"],
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color:#1e293b"] {
+  color: #1e293b !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color: #64748b"],
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color:#64748b"] {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color: #059669"],
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color:#059669"] {
+  color: #059669 !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color: #dc2626"],
+[data-theme="dark"] .report-card-container .report-table tbody td[style*="color:#dc2626"] {
+  color: #dc2626 !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child {
+  background: #f8fafc !important;
+  border-top: 2px solid #0092df !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child td {
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child td[style*="color: #0f172a"],
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child td[style*="color:#0f172a"] {
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child td[style*="color: #334155"],
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child td[style*="color:#334155"] {
+  color: #334155 !important;
+}
+
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child td[style*="color: #007cbd"],
+[data-theme="dark"] .report-card-container .report-table tbody tr:last-child td[style*="color:#007cbd"] {
+  color: #007cbd !important;
+}
+
+[data-theme="dark"] .report-card-container .grade-pill-badge.pass {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+[data-theme="dark"] .report-card-container .grade-pill-badge.fail {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+/* Performance Summary KPI Row */
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage {
+  background: #f0fdf4 !important;
+  border-color: #bbf7d0 !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-title {
+  color: #15803d !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.percentage .kpi-val {
+  color: #166534 !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-title {
+  color: #1d4ed8 !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.grade .kpi-val {
+  color: #1e40af !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-title {
+  color: #15803d !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.pass .kpi-val {
+  color: #166534 !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail {
+  background: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-title {
+  color: #991b1b !important;
+}
+
+[data-theme="dark"] .report-card-container .summary-kpi-card.fail .kpi-val {
+  color: #b91c1c !important;
+}
+
+/* Remarks & Signatures */
+[data-theme="dark"] .report-remarks-card {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 4px solid #0092df !important;
+  color: #334155 !important;
+}
+
+[data-theme="dark"] .report-remarks-card i {
+  color: #0092df !important;
+}
+
+[data-theme="dark"] .report-remarks-card strong {
+  color: #0f172a !important;
+}
+
+[data-theme="dark"] .report-remarks-card div div {
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .report-signatures-row {
+  border-top: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+[data-theme="dark"] .sig-crest-circle {
+  border-color: #0092df !important;
+  color: #0092df !important;
+}
+
+[data-theme="dark"] .sig-crest-circle span[style*="color: #64748b"] {
+  color: #64748b !important;
+}
+
+[data-theme="dark"] .sig-principal-name {
+  color: #007cbd !important;
+}
+
+/* Empty State Card */
+[data-theme="dark"] .hrms-card[style*="border: 1.5px dashed"],
+[data-theme="dark"] .hrms-card[style*="border:1.5px dashed"] {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .hrms-card[style*="border: 1.5px dashed"] div[style*="background: #e0f2fe"],
+[data-theme="dark"] .hrms-card[style*="border:1.5px dashed"] div[style*="background:#e0f2fe"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .hrms-card[style*="border: 1.5px dashed"] h3,
+[data-theme="dark"] .hrms-card[style*="border:1.5px dashed"] h3 {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .hrms-card[style*="border: 1.5px dashed"] p,
+[data-theme="dark"] .hrms-card[style*="border:1.5px dashed"] p {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .hrms-card[style*="border: 1.5px dashed"] p strong,
+[data-theme="dark"] .hrms-card[style*="border:1.5px dashed"] p strong {
+  color: #f8fafc !important;
+}
+
+/* Evaluation History Ledger Card */
 [data-theme="dark"] .periods-card {
   background: #1e293b !important;
   border-color: #334155 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
 }
 
 [data-theme="dark"] .periods-card-header {
@@ -1013,16 +1348,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .periods-card-header > span {
+[data-theme="dark"] #examHistoryTable .periods-card-header div[style*="background: #e0f2fe"],
+[data-theme="dark"] #examHistoryTable .periods-card-header div[style*="background:#e0f2fe"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .periods-card-header > span,
+[data-theme="dark"] #examHistoryTable .periods-card-header > span,
+[data-theme="dark"] #examHistoryTable .periods-card-header > span[style*="background: #f8fafc"],
+[data-theme="dark"] #examHistoryTable .periods-card-header > span[style*="background:#f8fafc"] {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
   color: #94a3b8 !important;
 }
 
-[data-theme="dark"] .periods-card-header > span strong {
+[data-theme="dark"] .periods-card-header > span strong,
+[data-theme="dark"] #examHistoryTable .periods-card-header > span strong,
+[data-theme="dark"] #examHistoryTable .periods-card-header > span strong[style*="color: #0f172a"],
+[data-theme="dark"] #examHistoryTable .periods-card-header > span strong[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
 
+/* Evaluation History Table */
 [data-theme="dark"] .staff-id-table thead th {
   background: #0f172a !important;
   color: #94a3b8 !important;
@@ -1038,18 +1387,50 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #192339 !important;
 }
 
-[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td {
-  background: rgba(2, 132, 199, 0.12) !important;
+/* Active Exam Row Highlight */
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"],
+[data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
 }
 
-[data-theme="dark"] .staff-id-table tbody td strong[style*="color: #0f172a"] {
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td,
+[data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"] td {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody td strong[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td strong[style*="color:#0f172a"],
+[data-theme="dark"] .staff-id-table tbody td[style*="color: #0f172a"],
+[data-theme="dark"] .staff-id-table tbody td[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
 
-[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"] {
+[data-theme="dark"] .staff-id-table tbody td span[style*="color: #475569"],
+[data-theme="dark"] .staff-id-table tbody td span[style*="color:#475569"],
+[data-theme="dark"] .staff-id-table tbody td[style*="color: #64748b"] {
   color: #94a3b8 !important;
 }
 
+[data-theme="dark"] .staff-id-table tbody td[style*="color: #0284c7"],
+[data-theme="dark"] .staff-id-table tbody td[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
+}
+
+/* Status Badges */
+[data-theme="dark"] .sid-status-verified {
+  background: rgba(22, 101, 52, 0.2) !important;
+  border: 1px solid rgba(74, 222, 128, 0.35) !important;
+  color: #4ade80 !important;
+}
+
+[data-theme="dark"] .sid-status-verified[style*="background: #fef2f2"],
+[data-theme="dark"] .sid-status-verified[style*="background:#fef2f2"] {
+  background: rgba(220, 38, 38, 0.2) !important;
+  border: 1px solid rgba(248, 113, 113, 0.35) !important;
+  color: #f87171 !important;
+}
+
+/* Action Buttons */
 [data-theme="dark"] .roaster-btn.secondary {
   background: #0f172a !important;
   border-color: #334155 !important;
