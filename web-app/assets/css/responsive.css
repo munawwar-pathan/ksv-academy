@@ -2500,23 +2500,35 @@
 }
 
 [data-theme="dark"] .roaster-toolbar-card {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  border-radius: 12px !important;
 }
 
 [data-theme="dark"] .roaster-search-box {
-  background: #1e293b !important;
-  border-color: #334155 !important;
+  background: #0f172a !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
 }
 
 [data-theme="dark"] .roaster-search-box input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  -webkit-border-radius: 0 !important;
   color: #f8fafc !important;
 }
 
 [data-theme="dark"] .roaster-select-box select {
-  background: #1e293b !important;
-  border-color: #334155 !important;
+  background: #0f172a !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 
 [data-theme="dark"] .roaster-select-box select option {
@@ -2525,28 +2537,48 @@
 }
 
 [data-theme="dark"] .roaster-btn.secondary {
-  background: #1e293b !important;
+  background: #334155 !important;
   color: #e2e8f0 !important;
-  border-color: #334155 !important;
+  border-color: #475569 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
 }
 
 [data-theme="dark"] .scholars-count-badge {
-  background: #1e293b !important;
+  background: #0f172a !important;
   border-color: #334155 !important;
-  color: #94a3b8 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
+  color: #cbd5e1 !important;
 }
 
 [data-theme="dark"] .hrms-modal-card {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 16px !important;
 }
 
 [data-theme="dark"] .hrms-modal-header {
-  border-bottom-color: #1e293b !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+  border-bottom-color: #334155 !important;
 }
 
 [data-theme="dark"] .hrms-modal-footer {
-  border-top-color: #1e293b !important;
+  background: #0f172a !important;
+  border-top: 1px solid #334155 !important;
+  border-top-color: #334155 !important;
+}
+
+[data-theme="dark"] .hrms-modal-card .hrms-input,
+[data-theme="dark"] .hrms-modal-card input.hrms-input,
+[data-theme="dark"] .hrms-modal-card select.hrms-input,
+[data-theme="dark"] .hrms-modal-card textarea.hrms-input {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  border: 1.5px solid #334155 !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
 }
 
 /* ── Dark Theme Rules for Student Attendance ── */

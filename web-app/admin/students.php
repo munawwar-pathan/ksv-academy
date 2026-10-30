@@ -1262,10 +1262,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .roaster-toolbar-card {
   background: #1e293b !important;
   border-color: #334155 !important;
+  border-radius: 12px !important;
 }
 [data-theme="dark"] .roaster-search-box {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
 }
 [data-theme="dark"] .roaster-search-box:focus-within {
   background: #0f172a !important;
@@ -1276,6 +1279,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #94a3b8 !important;
 }
 [data-theme="dark"] .roaster-search-box input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  -webkit-border-radius: 0 !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .roaster-search-box input::placeholder {
@@ -1284,6 +1293,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .roaster-search-box .clear-search-btn {
   background: #334155 !important;
   color: #94a3b8 !important;
+  border-radius: 50% !important;
 }
 [data-theme="dark"] .roaster-search-box .clear-search-btn:hover {
   background: #475569 !important;
@@ -1295,8 +1305,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .roaster-select-box select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
   color: #f8fafc !important;
+  color-scheme: dark !important;
 }
 [data-theme="dark"] .roaster-select-box select:focus {
   background: #0f172a !important;
@@ -1311,6 +1324,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #334155 !important;
   color: #f1f5f9 !important;
   border-color: #475569 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
 }
 [data-theme="dark"] .roaster-btn.secondary:hover {
   background: #475569 !important;
@@ -1318,6 +1333,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .roaster-btn.ghost {
   color: #94a3b8 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .roaster-btn.ghost:hover {
   background: rgba(239, 68, 68, 0.15) !important;
@@ -1326,6 +1343,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .scholars-count-badge {
   background: #0f172a !important;
   border-color: #334155 !important;
+  border-radius: 10px !important;
+  -webkit-border-radius: 10px !important;
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .scholars-count-badge strong {
@@ -1335,9 +1354,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* 3. Main Roster Card & Table Header */
 [data-theme="dark"] .hrms-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .hrms-card-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
   border-bottom-color: #334155 !important;
 }
 [data-theme="dark"] .hrms-card-header h3.card-title {
@@ -1346,7 +1369,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .hrms-card-header h3.card-title span {
   background: #0f172a !important;
   color: #cbd5e1 !important;
+  border: 1px solid #334155 !important;
   border-color: #334155 !important;
+  border-radius: 6px !important;
 }
 [data-theme="dark"] .hrms-card-header p {
   color: #94a3b8 !important;
@@ -1372,6 +1397,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .student-id-table tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
+[data-theme="dark"] .table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+[data-theme="dark"] .table-responsive::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+[data-theme="dark"] .table-responsive::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
 
 /* Table Empty State */
 [data-theme="dark"] .student-id-table tbody td div[style*="background: #f1f5f9"],
@@ -1382,6 +1417,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .student-id-table tbody td h4 {
   color: #f8fafc !important;
+}
+[data-theme="dark"] .student-id-table tbody td p {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .student-id-table tbody td p strong {
   color: #f8fafc !important;
@@ -1397,8 +1435,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .student-id-table tbody td .user-cell > div > div:last-child {
   color: #94a3b8 !important;
 }
-[data-theme="dark"] .student-id-table tbody td .user-cell > div:first-child[style*="background: #f1f5f9"],
-[data-theme="dark"] .student-id-table tbody td .user-cell > div:first-child[style*="background:#f1f5f9"] {
+[data-theme="dark"] .student-id-table tbody td .user-cell div[style*="background: #f1f5f9"],
+[data-theme="dark"] .student-id-table tbody td .user-cell div[style*="background:#f1f5f9"] {
   background: #334155 !important;
   color: #f8fafc !important;
   border-color: #475569 !important;
@@ -1407,6 +1445,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(225, 29, 72, 0.15) !important;
   border-color: rgba(225, 29, 72, 0.3) !important;
   color: #fb7185 !important;
+  border-radius: 4px !important;
 }
 
 /* Roll & Standard Pills */
@@ -1414,11 +1453,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(2, 132, 199, 0.15) !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
   color: #38bdf8 !important;
+  border-radius: 5px !important;
 }
 [data-theme="dark"] .sid-std-pill {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+  border-radius: 5px !important;
 }
 [data-theme="dark"] .sid-std-pill i {
   color: #94a3b8 !important;
@@ -1454,11 +1495,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(239, 68, 68, 0.15) !important;
   border-color: rgba(239, 68, 68, 0.3) !important;
   color: #f87171 !important;
+  border-radius: 4px !important;
 }
 [data-theme="dark"] .sid-fee-paid {
   background: rgba(16, 185, 129, 0.15) !important;
   border-color: rgba(16, 185, 129, 0.3) !important;
   color: #34d399 !important;
+  border-radius: 4px !important;
 }
 
 /* Attendance Chips */
@@ -1478,11 +1521,29 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f87171 !important;
 }
 
+/* Attendance Status Badges (Universal in view details & attendance) */
+[data-theme="dark"] .badge-present {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .badge-leave {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .badge-absent {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
+}
+
 /* Docs Chip */
 [data-theme="dark"] .sid-docs-chip {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+  border-radius: 5px !important;
 }
 [data-theme="dark"] .sid-docs-chip:hover {
   background: #334155 !important;
@@ -1495,6 +1556,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(21, 128, 61, 0.15) !important;
   border-color: rgba(21, 128, 61, 0.35) !important;
   color: #4ade80 !important;
+  border-radius: 6px !important;
 }
 [data-theme="dark"] .btn-student-login:hover {
   background: rgba(21, 128, 61, 0.28) !important;
@@ -1505,6 +1567,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(202, 138, 4, 0.15) !important;
   border-color: rgba(202, 138, 4, 0.35) !important;
   color: #facc15 !important;
+  border-radius: 6px !important;
 }
 [data-theme="dark"] .btn-student-pwd:hover {
   background: rgba(202, 138, 4, 0.28) !important;
@@ -1512,11 +1575,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #fde047 !important;
 }
 
-/* Action Buttons (View / Edit / Delete) */
+/* Action Buttons (View / Edit / Delete / IdCard) */
 [data-theme="dark"] .sid-action-btn {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+  border-radius: 6px !important;
 }
 [data-theme="dark"] .sid-action-btn.view {
   background: rgba(2, 132, 199, 0.15) !important;
@@ -1527,6 +1591,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #0284c7 !important;
   color: #ffffff !important;
   border-color: #0284c7 !important;
+}
+[data-theme="dark"] .sid-action-btn.idcard {
+  background: rgba(8, 145, 178, 0.15) !important;
+  border-color: rgba(8, 145, 178, 0.3) !important;
+  color: #22d3ee !important;
+}
+[data-theme="dark"] .sid-action-btn.idcard:hover {
+  background: #0891b2 !important;
+  color: #ffffff !important;
+  border-color: #0891b2 !important;
 }
 [data-theme="dark"] .sid-action-btn.edit {
   background: rgba(99, 102, 241, 0.15) !important;
@@ -1565,13 +1639,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .pagination-limit-select {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+[data-theme="dark"] .pagination-limit-select option {
+  background: #0f172a !important;
   color: #f8fafc !important;
 }
 [data-theme="dark"] .pagination-btn {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #cbd5e1 !important;
+  border-radius: 6px !important;
 }
 [data-theme="dark"] .pagination-btn:hover:not(.disabled) {
   background: #334155 !important;
@@ -1604,9 +1686,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* 6. Universal Modals Adaptations */
+[data-theme="dark"] .hrms-modal {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
 [data-theme="dark"] .hrms-modal-card {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
+  border-radius: 16px !important;
   box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7) !important;
 }
 [data-theme="dark"] .hrms-modal-header {
@@ -1630,6 +1716,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border: 1px solid #334155 !important;
   color: #cbd5e1 !important;
   border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   width: 32px !important;
   height: 32px !important;
   display: flex !important;
@@ -1664,13 +1751,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-top: 1px solid #334155 !important;
 }
 
-/* Modal Form Inputs & Selects */
-[data-theme="dark"] .hrms-input {
-  background: #0f172a !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
+/* Modal Form Inputs & Selects - Precise Radius & Padding Refinements */
+.hrms-modal-card input.hrms-input:not([style*="padding"]),
+.hrms-modal-card select.hrms-input,
+.hrms-modal-card textarea.hrms-input {
+  padding-left: 14px !important;
+  border-radius: 8px !important;
 }
-[data-theme="dark"] .hrms-input:focus {
+[data-theme="dark"] .hrms-input,
+[data-theme="dark"] input.hrms-input,
+[data-theme="dark"] select.hrms-input,
+[data-theme="dark"] textarea.hrms-input {
+  background: #0f172a !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color: #f8fafc !important;
+  padding: 10px 14px !important;
+}
+[data-theme="dark"] .hrms-input:focus,
+[data-theme="dark"] input.hrms-input:focus,
+[data-theme="dark"] select.hrms-input:focus,
+[data-theme="dark"] textarea.hrms-input:focus {
   background: #18263e !important;
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
@@ -1679,10 +1781,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .hrms-input::placeholder {
   color: #64748b !important;
 }
+[data-theme="dark"] select.hrms-input {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color-scheme: dark !important;
+}
 [data-theme="dark"] select.hrms-input option,
 [data-theme="dark"] .hrms-input option {
   background: #0f172a !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] input[type="date"].hrms-input {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color-scheme: dark !important;
+}
+[data-theme="dark"] input[type="number"].hrms-input {
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color-scheme: dark !important;
 }
 [data-theme="dark"] .hrms-modal-body label,
 [data-theme="dark"] .hrms-modal-body .form-label {
@@ -1690,8 +1807,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] textarea.hrms-input {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #f8fafc !important;
+  padding: 10px 14px !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal .hrms-input {
+  padding-right: 40px !important;
+  padding-left: 14px !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
 }
 [data-theme="dark"] .hrms-input:-webkit-autofill,
 [data-theme="dark"] .hrms-input:-webkit-autofill:hover, 
@@ -1705,7 +1831,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* Upload Cards in Add & Edit Modals */
 [data-theme="dark"] .upload-field-card {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1.5px dashed #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+}
+[data-theme="dark"] .upload-field-card:hover {
+  background: #1e293b !important;
+  border-color: #0284c7 !important;
 }
 [data-theme="dark"] .upload-field-card small,
 [data-theme="dark"] .upload-field-card span {
@@ -1714,16 +1846,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .upload-field-card label {
   color: #cbd5e1 !important;
 }
-[data-theme="dark"] .upload-field-card input[type="file"] {
+[data-theme="dark"] .upload-field-card input[type="file"],
+[data-theme="dark"] input[type="file"].hrms-input {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
   color: #cbd5e1 !important;
+  padding: 6px !important;
 }
 [data-theme="dark"] .upload-field-card input[type="file"]::file-selector-button {
   background: #334155 !important;
   color: #f1f5f9 !important;
   border: 1px solid #475569 !important;
   border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
   padding: 4px 10px !important;
   font-size: 0.75rem !important;
   font-weight: 600 !important;
@@ -1747,6 +1884,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .hrms-modal-body div[style*="background:#f8fafc"] {
   background: #0f172a !important;
   border-color: #334155 !important;
+  border-radius: 10px !important;
 }
 [data-theme="dark"] .hrms-modal-body div[style*="background: #f8fafc"] strong,
 [data-theme="dark"] .hrms-modal-body div[style*="background:#f8fafc"] strong {
@@ -1924,8 +2062,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #docModalStudentName {
   color: #38bdf8 !important;
 }
+[data-theme="dark"] #studentDocsModal .hrms-modal-body p {
+  color: #94a3b8 !important;
+}
 
 /* 10. Modal 5: #changeStudentPasswordModal */
+[data-theme="dark"] #changeStudentPasswordModal .hrms-modal-header {
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal .hrms-modal-header h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #changeStudentPasswordModal .hrms-modal-header p {
+  color: #94a3b8 !important;
+}
 [data-theme="dark"] #changeStudentPasswordModal .hrms-modal-header > div > div:first-child {
   background: rgba(202, 138, 4, 0.15) !important;
   border: 1px solid rgba(202, 138, 4, 0.35) !important;
@@ -1935,6 +2085,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #changeStudentPasswordModal div[style*="background:#f8fafc"] {
   background: #0f172a !important;
   border-color: #334155 !important;
+  border-radius: 10px !important;
 }
 [data-theme="dark"] #changeStudentPasswordModal div[style*="color: #64748b"],
 [data-theme="dark"] #changeStudentPasswordModal div[style*="color:#64748b"] {
