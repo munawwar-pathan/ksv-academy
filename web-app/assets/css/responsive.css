@@ -7671,6 +7671,61 @@
   color: #475569 !important;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   STAFF ID CARD DARK MODE ADAPTATIONS (staff/staff-id)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .staff-id-toolbar-inner {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .staff-id-faculty-title {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .staff-id-faculty-title span[style*="background: #f0f9ff"],
+[data-theme="dark"] .staff-id-faculty-title span[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .staff-id-faculty-title span[style*="background: #f8fafc"],
+[data-theme="dark"] .staff-id-faculty-title span[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-select-form label {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .staff-id-select-input {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .staff-id-select-input option {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .staff-id-btn-front,
+[data-theme="dark"] .staff-id-btn-back {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .staff-id-btn-front:hover,
+[data-theme="dark"] .staff-id-btn-back:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+
 
 
 

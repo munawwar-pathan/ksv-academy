@@ -734,21 +734,88 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 /* ── Dark Mode Adaptations ── */
 [data-theme="dark"] .roaster-toolbar-card {
-  background: #1e293b;
-  border-color: #334155;
+  background: #1e293b !important;
+  border-color: #334155 !important;
 }
+
 [data-theme="dark"] .staff-id-faculty-title {
-  color: #f1f5f9;
+  color: #f1f5f9 !important;
 }
+
+[data-theme="dark"] .staff-id-faculty-title span[style*="background: #f0f9ff"],
+[data-theme="dark"] .staff-id-faculty-title span[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .staff-id-faculty-title span[style*="background: #f8fafc"],
+[data-theme="dark"] .staff-id-faculty-title span[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .staff-id-select-form label {
+  color: #94a3b8 !important;
+}
+
 [data-theme="dark"] .staff-id-select-input {
-  background: #0f172a;
-  border-color: #334155;
-  color: #f1f5f9;
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
 }
+
+[data-theme="dark"] .staff-id-select-input option {
+  background: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .roaster-btn.secondary:hover {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .lanyard-clip {
+  background: linear-gradient(180deg, #475569 0%, #334155 100%) !important;
+}
+
+[data-theme="dark"] .lanyard-clip::after {
+  background: #0f172a !important;
+}
+
+[data-theme="dark"] .pvc-card {
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px #334155 !important;
+}
+
+[data-theme="dark"] .pvc-card:hover {
+  box-shadow: 0 28px 55px -12px rgba(0, 146, 223, 0.4), 0 0 0 1px #0284c7 !important;
+}
+
 [data-theme="dark"] .card-label-badge {
   background: #1e293b !important;
   color: #94a3b8 !important;
-  border: 1px solid #334155;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .hrms-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .hrms-card h3 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .hrms-card p {
+  color: #94a3b8 !important;
 }
 </style>
 
