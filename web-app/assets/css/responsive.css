@@ -5614,6 +5614,81 @@
   color: #cbd5e1 !important;
 }
 
+/* ── Dark Theme Overrides for Faculty & Staff Settings ── */
+[data-theme="dark"] .staff-profile-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="dark"] .staff-status-badge,
+[data-theme="dark"] .staff-profile-card .hrms-card-header > span {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .profile-info-box,
+[data-theme="dark"] .staff-profile-card div[style*="background: var(--hrms-bg)"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 10px !important;
+}
+
+[data-theme="dark"] .profile-card-footer {
+  border-top: 1px solid #334155 !important;
+}
+
+[data-theme="dark"] .profile-card-note {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .security-profile-badge,
+[data-theme="dark"] .academy-preview-card span[style*="background: #ede9fe"] {
+  background: rgba(124, 58, 237, 0.15) !important;
+  border: 1px solid rgba(124, 58, 237, 0.35) !important;
+  color: #c084fc !important;
+}
+
+[data-theme="dark"] .user-avatar-circle,
+[data-theme="dark"] .academy-preview-card div[style*="border: 3px solid #ffffff"] {
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .user-role-badge,
+[data-theme="dark"] .academy-preview-card span[style*="background: #f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .security-guidelines-box,
+[data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border: 1px dashed rgba(245, 158, 11, 0.3) !important;
+  border-radius: 10px !important;
+}
+
+[data-theme="dark"] .security-guidelines-box h4 {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .security-guidelines-box ul li {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .theme-tips-box,
+[data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] {
+  background: rgba(2, 132, 199, 0.1) !important;
+  border: 1px solid rgba(2, 132, 199, 0.25) !important;
+  border-radius: 12px !important;
+}
+
+[data-theme="dark"] .theme-tips-box p {
+  color: #94a3b8 !important;
+}
+
 /* ==========================================================================
    MEDIA GALLERY ENHANCEMENTS, RESPONSIVE & DARK THEME
    ========================================================================== */

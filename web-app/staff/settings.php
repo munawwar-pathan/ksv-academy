@@ -460,9 +460,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 /* ══════════════════════════════════════════════════════════════════════
    DARK THEME COMPREHENSIVE ADAPTATIONS FOR STAFF SETTINGS
    ══════════════════════════════════════════════════════════════════════ */
+
+/* 1. Top Settings Tabs Navigation */
 [data-theme="dark"] .settings-nav-bar {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .settings-tab-pill {
   color: #94a3b8 !important;
@@ -474,82 +478,272 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .settings-tab-pill.active {
   color: #ffffff !important;
   background: linear-gradient(135deg, #0092df 0%, #0066aa 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 146, 223, 0.35) !important;
 }
 
+/* 2. Appearance & General Group Cards */
 [data-theme="dark"] .settings-group-card,
 [data-theme="dark"] .appearance-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .form-section-header {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] .form-section-icon {
+  background: rgba(2, 132, 199, 0.18) !important;
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .form-section-header h4 {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .form-section-header p {
+  color: #94a3b8 !important;
+}
+
+/* Theme Option Cards */
 [data-theme="dark"] .theme-option-box {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 2px solid #334155 !important;
+  border-radius: 12px !important;
   color: #f8fafc !important;
+}
+[data-theme="dark"] .theme-option-box:hover {
+  border-color: #0284c7 !important;
+  background: #1e293b !important;
 }
 [data-theme="dark"] .theme-option-box.active {
   border-color: #0284c7 !important;
   background: rgba(2, 132, 199, 0.12) !important;
+  box-shadow: 0 0 0 1px #0284c7, 0 4px 14px rgba(2, 132, 199, 0.25) !important;
+}
+[data-theme="dark"] .theme-option-box.active .theme-check-icon {
+  color: #0284c7 !important;
+}
+[data-theme="dark"] .theme-option-box:not(.active) .theme-check-icon {
+  color: #475569 !important;
 }
 [data-theme="dark"] .theme-name {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .theme-status-footer span:last-child {
+  color: #94a3b8 !important;
+}
+
+/* Wireframe Previews */
+[data-theme="dark"] .light-wireframe {
+  border: 1px solid #334155 !important;
+}
 [data-theme="dark"] .dark-wireframe {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] .dark-wireframe .wireframe-header {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 [data-theme="dark"] .dark-wireframe .wireframe-sidebar {
   background: #1e293b !important;
 }
 [data-theme="dark"] .dark-wireframe .wireframe-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
 }
 
+/* Theme Tips Box */
+[data-theme="dark"] .theme-tips-box,
+[data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] {
+  background: rgba(2, 132, 199, 0.1) !important;
+  border: 1px solid rgba(2, 132, 199, 0.25) !important;
+  border-radius: 12px !important;
+}
+[data-theme="dark"] .theme-tips-box > div:first-child,
+[data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] > div:first-child {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .theme-tips-box p,
+[data-theme="dark"] div[style*="background: rgba(0, 146, 223, 0.05)"] p {
+  color: #94a3b8 !important;
+}
+
+/* 3. Faculty Profile Summary Card */
 [data-theme="dark"] .staff-profile-card,
-[data-theme="dark"] .change-password-card {
+[data-theme="dark"] .change-password-card,
+[data-theme="dark"] .hrms-card {
   background: #1e293b !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
 }
-[data-theme="dark"] .profile-info-box,
-[data-theme="dark"] .profile-details-grid > div {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+[data-theme="dark"] .hrms-card-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] .hrms-card-header .card-title,
+[data-theme="dark"] .hrms-card-header .card-title span {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-card-header p {
+  color: #94a3b8 !important;
 }
 
+/* Active Faculty Status Badge */
+[data-theme="dark"] .staff-status-badge,
+[data-theme="dark"] .hrms-card-header > span[style*="#f0fdf4"],
+[data-theme="dark"] .staff-profile-card .hrms-card-header > span {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+/* Profile Info Grid */
+[data-theme="dark"] .profile-info-box,
+[data-theme="dark"] .profile-details-grid > div,
+[data-theme="dark"] .staff-profile-card div[style*="background: var(--hrms-bg)"] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 10px !important;
+}
+[data-theme="dark"] .profile-info-box > div:first-child,
+[data-theme="dark"] .profile-details-grid > div > div:first-child {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .profile-info-box > div:last-child,
+[data-theme="dark"] .profile-details-grid > div > div:last-child {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .profile-details-grid div[style*="color: #0284c7"],
+[data-theme="dark"] .profile-info-box div[style*="color: #0284c7"] {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .profile-card-footer,
+[data-theme="dark"] .profile-card-body > div[style*="border-top"] {
+  border-top: 1px solid #334155 !important;
+}
+[data-theme="dark"] .profile-card-note,
+[data-theme="dark"] .profile-card-body > div[style*="border-top"] > div {
+  color: #94a3b8 !important;
+}
+
+/* 4. Tab 2: Security Profile Preview Card */
 [data-theme="dark"] .academy-preview-card {
   background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .security-profile-badge,
+[data-theme="dark"] .academy-preview-card span[style*="background: #ede9fe"] {
+  background: rgba(124, 58, 237, 0.15) !important;
+  border: 1px solid rgba(124, 58, 237, 0.35) !important;
+  color: #c084fc !important;
+}
+[data-theme="dark"] .academy-preview-card span[style*="color: #10b981"] {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .user-avatar-circle,
+[data-theme="dark"] .academy-preview-card div[style*="border: 3px solid #ffffff"] {
   border-color: #334155 !important;
 }
-[data-theme="dark"] .security-meta-box {
+[data-theme="dark"] .academy-preview-card h3 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .academy-preview-card p[style*="font-family: monospace"] {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .user-role-badge,
+[data-theme="dark"] .academy-preview-card span[style*="background: #f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+/* Security Meta Box */
+[data-theme="dark"] .security-meta-box,
+[data-theme="dark"] .academy-preview-card div[style*="background: var(--hrms-bg)"] {
   background: #0f172a !important;
-  border-color: #334155 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 10px !important;
 }
 [data-theme="dark"] .academy-meta-row {
-  border-bottom-color: #334155 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] .academy-meta-label {
+  color: #94a3b8 !important;
 }
 [data-theme="dark"] .academy-meta-val {
   color: #f8fafc !important;
 }
 
-[data-theme="dark"] .settings-input {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+/* Meta Icons Dark Tints */
+[data-theme="dark"] .academy-meta-icon[style*="#e0f2fe"],
+[data-theme="dark"] .academy-meta-icon[style*="#0284c7"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+}
+[data-theme="dark"] .academy-meta-icon[style*="#ecfdf5"],
+[data-theme="dark"] .academy-meta-icon[style*="#059669"] {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+[data-theme="dark"] .academy-meta-icon[style*="#fef2f2"],
+[data-theme="dark"] .academy-meta-icon[style*="#dc2626"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+[data-theme="dark"] .academy-meta-val[style*="color: #059669"],
+[data-theme="dark"] .academy-meta-val span[style*="color: #059669"] {
+  color: #34d399 !important;
+}
+
+/* Security Guidelines Box */
+[data-theme="dark"] .security-guidelines-box,
+[data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border: 1px dashed rgba(245, 158, 11, 0.3) !important;
+  border-radius: 10px !important;
+}
+[data-theme="dark"] .security-guidelines-box h4,
+[data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] h4 {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .security-guidelines-box ul li,
+[data-theme="dark"] .academy-preview-card div[style*="background: rgba(245, 158, 11, 0.05)"] ul li {
+  color: #cbd5e1 !important;
+}
+
+/* 5. Change Password Form */
+[data-theme="dark"] .input-field-label {
   color: #f8fafc !important;
 }
+[data-theme="dark"] .settings-input {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .settings-input::placeholder {
+  color: #64748b !important;
+}
 [data-theme="dark"] .settings-input:focus {
-  border-color: #0092df !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
 }
 [data-theme="dark"] .password-toggle-btn {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .password-toggle-btn:hover {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .strength-meter-bar {
+  background: #334155 !important;
+}
+[data-theme="dark"] #strengthLabel {
   color: #94a3b8 !important;
 }
 </style>
@@ -651,7 +845,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
 
       <!-- Quick Tips Card -->
-      <div style="background: rgba(0, 146, 223, 0.05); border: 1px solid rgba(0, 146, 223, 0.18); border-radius: 12px; padding: 14px 16px;">
+      <div class="theme-tips-box" style="background: rgba(0, 146, 223, 0.05); border: 1px solid rgba(0, 146, 223, 0.18); border-radius: 12px; padding: 14px 16px;">
         <div style="display: flex; align-items: center; gap: 8px; font-size: 0.80rem; font-weight: 700; color: #0284c7; margin-bottom: 6px;">
           <i class="fa-solid fa-circle-info"></i>
           <span>Theme Tips</span>
@@ -675,7 +869,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               Your official institutional credentials and employment record.
             </p>
           </div>
-          <span style="font-size: 0.74rem; font-weight: 800; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 10px; border-radius: 20px;">
+          <span class="staff-status-badge" style="font-size: 0.74rem; font-weight: 800; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 10px; border-radius: 20px;">
             <i class="fa-solid fa-circle-check"></i> Active Faculty
           </span>
         </div>
@@ -727,8 +921,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
           </div>
 
-          <div style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--hrms-border);">
-            <div style="font-size: 0.78rem; color: #64748b;">
+          <div class="profile-card-footer" style="margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--hrms-border);">
+            <div class="profile-card-note" style="font-size: 0.78rem; color: #64748b;">
               To request changes to official academic records or designations, please contact the administrative office.
             </div>
           </div>
@@ -751,7 +945,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div>
       <div class="academy-preview-card" style="margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 0.72rem; font-weight: 800; background: #ede9fe; color: #6d28d9; padding: 2px 10px; border-radius: 12px; border: 1px solid #ddd6fe;">
+          <span class="security-profile-badge" style="font-size: 0.72rem; font-weight: 800; background: #ede9fe; color: #6d28d9; padding: 2px 10px; border-radius: 12px; border: 1px solid #ddd6fe;">
             <i class="fa-solid fa-user-shield"></i> Security Profile
           </span>
           <span style="font-size: 0.72rem; color: #10b981; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
@@ -760,7 +954,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <div style="text-align: center; margin: 18px 0 14px;">
-          <div style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #0092df, #005a9c); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.85rem; font-weight: 800; margin: 0 auto 12px; box-shadow: 0 8px 20px rgba(0, 146, 223, 0.25); border: 3px solid #ffffff;">
+          <div class="user-avatar-circle" style="width: 76px; height: 76px; border-radius: 50%; background: linear-gradient(135deg, #0092df, #005a9c); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.85rem; font-weight: 800; margin: 0 auto 12px; box-shadow: 0 8px 20px rgba(0, 146, 223, 0.25); border: 3px solid #ffffff;">
             <?php 
               $initials = 'F';
               if (!empty($current_user['full_name'])) {
@@ -776,7 +970,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <p style="margin: 3px 0 8px; font-size: 0.8rem; color: #64748b; font-family: monospace;">
             @<?php echo htmlspecialchars($current_user['username']); ?>
           </p>
-          <span style="font-size: 0.72rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 3px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">
+          <span class="user-role-badge" style="font-size: 0.72rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 3px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">
             <i class="fa-solid fa-chalkboard-user" style="margin-right: 4px;"></i> Faculty &amp; Staff
           </span>
         </div>
@@ -807,7 +1001,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Guidelines -->
-        <div style="background: rgba(245, 158, 11, 0.05); border-radius: 10px; padding: 14px; border: 1px dashed rgba(245, 158, 11, 0.35);">
+        <div class="security-guidelines-box" style="background: rgba(245, 158, 11, 0.05); border-radius: 10px; padding: 14px; border: 1px dashed rgba(245, 158, 11, 0.35);">
           <h4 style="margin: 0 0 8px 0; font-size: 0.78rem; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-shield"></i> Security Guidelines
           </h4>
