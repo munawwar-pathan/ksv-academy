@@ -7872,6 +7872,34 @@
   color: #ffffff !important;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   STAFF ANNOUNCEMENTS DARK MODE ADAPTATIONS (staff/announcements)
+   ══════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .announcements-count-badge {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .notice-target-badge.role-all {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+}
+
+[data-theme="dark"] .notice-target-badge.role-staff {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .notice-target-badge.role-parent {
+  background: rgba(168, 85, 247, 0.15) !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
+  color: #c084fc !important;
+}
+
+
 
 
 

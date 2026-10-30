@@ -280,36 +280,61 @@ require_once __DIR__ . '/../includes/layout-header.php';
    DARK MODE REFINEMENTS
    ══════════════════════════════════════════════════════ */
 [data-theme="dark"] .announcements-count-badge {
-  background: #1e293b;
-  border-color: #334155;
-  color: #94a3b8;
-}
-[data-theme="dark"] .announcements-count-badge strong {
-  color: #38bdf8;
-}
-[data-theme="dark"] .notice-item {
   background: #1e293b !important;
   border-color: #334155 !important;
-  border-left-color: #0284c7 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .announcements-count-badge strong {
+  color: #38bdf8 !important;
+}
+
+/* 1. Main Noticeboard Card Shell */
+[data-theme="dark"] .hrms-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme="dark"] .hrms-card-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-card-header h2,
+[data-theme="dark"] .hrms-card-header .card-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .hrms-card-body p[style*="text-align: center"] {
+  color: #94a3b8 !important;
+}
+
+/* 2. Notice Items */
+[data-theme="dark"] .notice-item {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-left: 4px solid #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
 }
 [data-theme="dark"] .notice-item:hover {
-  background: #24344d !important;
+  background: #1e293b !important;
   border-color: #475569 !important;
   border-left-color: #38bdf8 !important;
 }
 [data-theme="dark"] .notice-header h3 {
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
 }
 [data-theme="dark"] .notice-time {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
   color: #94a3b8 !important;
+}
+[data-theme="dark"] .notice-time i {
+  color: #38bdf8 !important;
 }
 [data-theme="dark"] .notice-desc {
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] .notice-footer {
+  border-top: 1px dashed #334155 !important;
   border-top-color: #334155 !important;
 }
 [data-theme="dark"] .notice-poster {
@@ -320,39 +345,66 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] .notice-target-badge.role-all {
   background: rgba(16, 185, 129, 0.15) !important;
-  border-color: rgba(16, 185, 129, 0.35) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
   color: #34d399 !important;
 }
 [data-theme="dark"] .notice-target-badge.role-staff {
   background: rgba(2, 132, 199, 0.15) !important;
-  border-color: rgba(2, 132, 199, 0.35) !important;
+  border: 1px solid rgba(2, 132, 199, 0.35) !important;
   color: #38bdf8 !important;
 }
 [data-theme="dark"] .notice-target-badge.role-parent {
   background: rgba(168, 85, 247, 0.15) !important;
-  border-color: rgba(168, 85, 247, 0.35) !important;
+  border: 1px solid rgba(168, 85, 247, 0.35) !important;
   color: #c084fc !important;
 }
-[data-theme="dark"] .hrms-modal-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+/* 3. Modal: Broadcast Notice */
+[data-theme="dark"] #announcementModal {
+  background: rgba(0, 0, 0, 0.75) !important;
 }
-[data-theme="dark"] .hrms-modal-header {
+[data-theme="dark"] #announcementModal .hrms-modal-card {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+}
+[data-theme="dark"] #announcementModal .hrms-modal-header {
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
   border-bottom-color: #334155 !important;
 }
-[data-theme="dark"] .hrms-modal-header h3 {
-  color: #f1f5f9 !important;
+[data-theme="dark"] #announcementModal .hrms-modal-header h3 {
+  color: #f8fafc !important;
 }
-[data-theme="dark"] .hrms-modal-card .form-label {
+[data-theme="dark"] #announcementModal .modal-close-btn {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] #announcementModal .modal-close-btn:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #announcementModal .hrms-modal-body {
+  background: #1e293b !important;
+}
+[data-theme="dark"] #announcementModal .form-label {
   color: #cbd5e1 !important;
 }
-[data-theme="dark"] .hrms-modal-card input.hrms-input,
-[data-theme="dark"] .hrms-modal-card select.hrms-input,
-[data-theme="dark"] .hrms-modal-card textarea.hrms-input {
+[data-theme="dark"] #announcementModal input.hrms-input,
+[data-theme="dark"] #announcementModal select.hrms-input,
+[data-theme="dark"] #announcementModal textarea.hrms-input {
   background: #0f172a !important;
   border-color: #334155 !important;
-  color: #f1f5f9 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #announcementModal select.hrms-input option {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #announcementModal textarea.hrms-input::placeholder,
+[data-theme="dark"] #announcementModal input.hrms-input::placeholder {
+  color: #64748b !important;
 }
 </style>
 
