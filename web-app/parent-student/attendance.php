@@ -709,9 +709,32 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #192339 !important;
 }
 
+.staff-id-table .today-row {
+  background: #f0f9ff;
+}
+
+[data-theme="dark"] .staff-id-table tr.today-row,
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"],
+[data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"] {
+  background: rgba(2, 132, 199, 0.15) !important;
+}
+
+[data-theme="dark"] .staff-id-table tr.today-row td,
 [data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td,
 [data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"] td {
-  background: rgba(2, 132, 199, 0.12) !important;
+  background: transparent !important;
+}
+
+[data-theme="dark"] .staff-id-table tbody tr.today-row:hover td,
+[data-theme="dark"] .staff-id-table tbody tr[style*="background: #f0f9ff"]:hover td,
+[data-theme="dark"] .staff-id-table tbody tr[style*="background:#f0f9ff"]:hover td {
+  background: rgba(2, 132, 199, 0.22) !important;
+}
+
+[data-theme="dark"] .staff-id-table tr.today-row td:first-child,
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td:first-child,
+[data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"] td:first-child {
+  color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .staff-id-table tbody td:first-child,
@@ -760,42 +783,54 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 [data-theme="dark"] .sid-status-active[style*="color: #166534"],
-[data-theme="dark"] .sid-status-active[style*="color:#166534"] {
+[data-theme="dark"] .sid-status-active[style*="color:#166534"],
+[data-theme="dark"] .sid-status-active[style*="background: #f0fdf4"],
+[data-theme="dark"] .sid-status-active[style*="background:#f0fdf4"] {
   background: rgba(22, 101, 52, 0.25) !important;
   border-color: rgba(74, 222, 128, 0.3) !important;
   color: #4ade80 !important;
 }
 
 [data-theme="dark"] .sid-status-active[style*="color: #b45309"],
-[data-theme="dark"] .sid-status-active[style*="color:#b45309"] {
+[data-theme="dark"] .sid-status-active[style*="color:#b45309"],
+[data-theme="dark"] .sid-status-active[style*="background: #fffbeb"],
+[data-theme="dark"] .sid-status-active[style*="background:#fffbeb"] {
   background: rgba(217, 119, 6, 0.2) !important;
   border-color: rgba(251, 191, 36, 0.3) !important;
   color: #fbbf24 !important;
 }
 
 [data-theme="dark"] .sid-status-active[style*="color: #b91c1c"],
-[data-theme="dark"] .sid-status-active[style*="color:#b91c1c"] {
+[data-theme="dark"] .sid-status-active[style*="color:#b91c1c"],
+[data-theme="dark"] .sid-status-active[style*="background: #fef2f2"],
+[data-theme="dark"] .sid-status-active[style*="background:#fef2f2"] {
   background: rgba(220, 38, 38, 0.2) !important;
   border-color: rgba(248, 113, 113, 0.3) !important;
   color: #f87171 !important;
 }
 
 [data-theme="dark"] .sid-status-active[style*="color: #1d4ed8"],
-[data-theme="dark"] .sid-status-active[style*="color:#1d4ed8"] {
+[data-theme="dark"] .sid-status-active[style*="color:#1d4ed8"],
+[data-theme="dark"] .sid-status-active[style*="background: #eff6ff"],
+[data-theme="dark"] .sid-status-active[style*="background:#eff6ff"] {
   background: rgba(37, 99, 235, 0.2) !important;
   border-color: rgba(96, 165, 250, 0.3) !important;
   color: #60a5fa !important;
 }
 
 [data-theme="dark"] .sid-status-active[style*="color: #64748b"],
-[data-theme="dark"] .sid-status-active[style*="color:#64748b"] {
+[data-theme="dark"] .sid-status-active[style*="color:#64748b"],
+[data-theme="dark"] .sid-status-active[style*="background: #f8fafc"],
+[data-theme="dark"] .sid-status-active[style*="background:#f8fafc"] {
   background: #0f172a !important;
   border-color: #334155 !important;
   color: #94a3b8 !important;
 }
 
 [data-theme="dark"] .sid-status-active[style*="color: #c2410c"],
-[data-theme="dark"] .sid-status-active[style*="color:#c2410c"] {
+[data-theme="dark"] .sid-status-active[style*="color:#c2410c"],
+[data-theme="dark"] .sid-status-active[style*="background: #fff7ed"],
+[data-theme="dark"] .sid-status-active[style*="background:#fff7ed"] {
   background: rgba(234, 88, 12, 0.2) !important;
   border-color: rgba(251, 146, 60, 0.3) !important;
   color: #fb923c !important;
@@ -1040,7 +1075,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             $is_active_today = $row['is_today'];
             $row_bg = $is_active_today ? 'background: #f0f9ff;' : '';
           ?>
-          <tr style="<?php echo $row_bg; ?>">
+          <tr class="<?php echo $is_active_today ? 'today-row' : ''; ?>" style="<?php echo $row_bg; ?>">
             
             <!-- Day Number -->
             <td style="text-align: center; font-weight: 700; color: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">

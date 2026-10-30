@@ -8713,11 +8713,25 @@
 
 [data-theme="dark"] .attendance-table .today-row,
 [data-theme="dark"] .attendance-table tr[style*="background: #f0f9ff"],
-[data-theme="dark"] .attendance-table tr[style*="background:#f0f9ff"] {
+[data-theme="dark"] .attendance-table tr[style*="background:#f0f9ff"],
+[data-theme="dark"] .staff-id-table .today-row,
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"],
+[data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"],
+[data-theme="dark"] tr.today-row,
+[data-theme="dark"] tr[style*="background: #f0f9ff"],
+[data-theme="dark"] tr[style*="background:#f0f9ff"] {
   background: rgba(2, 132, 199, 0.15) !important;
 }
 
-[data-theme="dark"] .attendance-table .today-row td {
+[data-theme="dark"] .attendance-table .today-row td,
+[data-theme="dark"] .attendance-table tr[style*="background: #f0f9ff"] td,
+[data-theme="dark"] .attendance-table tr[style*="background:#f0f9ff"] td,
+[data-theme="dark"] .staff-id-table .today-row td,
+[data-theme="dark"] .staff-id-table tr[style*="background: #f0f9ff"] td,
+[data-theme="dark"] .staff-id-table tr[style*="background:#f0f9ff"] td,
+[data-theme="dark"] tr.today-row td,
+[data-theme="dark"] tr[style*="background: #f0f9ff"] td,
+[data-theme="dark"] tr[style*="background:#f0f9ff"] td {
   background: transparent !important;
 }
 
