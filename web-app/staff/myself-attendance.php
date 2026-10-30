@@ -966,25 +966,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </a>
         <?php endif; ?>
       </div>
-
-      <!-- Today's Punch In/Out button (Shifted here) -->
-      <form method="POST" class="today-punch-form">
-        <?php if (!$current_punch || empty($current_punch['check_in_time'])): ?>
-          <input type="hidden" name="action" value="punch_in">
-          <button type="submit" class="btn-hrms btn-hrms-primary btn-hrms-sm" style="padding: 6px 14px; font-size: 0.8rem; background: #0284c7; border-color: #0284c7; gap: 6px;">
-            <i class="fa-solid fa-fingerprint"></i> Biometric Punch In
-          </button>
-        <?php elseif (empty($current_punch['check_out_time'])): ?>
-          <input type="hidden" name="action" value="punch_out">
-          <button type="submit" class="btn-hrms btn-hrms-sm" style="padding: 6px 14px; font-size: 0.8rem; background: #d97706; color: #ffffff; border: 1px solid #b45309; gap: 6px;">
-            <i class="fa-solid fa-right-from-bracket"></i> Punch Out (<?php echo date('h:i A', strtotime($current_punch['check_in_time'])); ?>)
-          </button>
-        <?php else: ?>
-          <span style="font-size: 0.76rem; font-weight: 700; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 5px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px;">
-            <i class="fa-solid fa-circle-check"></i> Duty Completed
-          </span>
-        <?php endif; ?>
-      </form>
     </div>
   </div>
 
