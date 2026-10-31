@@ -198,6 +198,23 @@ button, input, select, textarea {
   color: inherit;
 }
 
+/* Font Awesome Free Fallbacks for Pro-only Icons */
+.fa-sparkles::before {
+  content: "\e2ca" !important; /* fa-wand-magic-sparkles */
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900 !important;
+}
+.fa-shield-check::before {
+  content: "\f058" !important; /* fa-circle-check */
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900 !important;
+}
+.fa-chart-line-up::before {
+  content: "\f201" !important; /* fa-chart-line */
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900 !important;
+}
+
 /* Container */
 .container {
   width: 100%;

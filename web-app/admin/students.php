@@ -174,8 +174,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_new = $db->prepare("SELECT * FROM students WHERE id = ?");
                 $stmt_new->execute([$new_student_id]);
                 $new_stu = $stmt_new->fetch();
+                $portal_user = null;
+                $student_password = trim($_POST['student_password'] ?? '') ?: 'student';
                 if ($new_stu) {
-                    get_or_create_student_user($new_stu, $db);
+                    $portal_user = get_or_create_student_user($new_stu, $db, $student_password);
                 }
 
                 // If initial fee was paid, record fee payment
@@ -188,13 +190,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt_fee->execute([$session_id, $new_student_id, $rcpt, $paid_fees]);
                 }
 
-                set_flash('success', "Student {$student_name} (Roll: {$roll_no}) added to Student Roaster successfully!");
+                // If student email is provided, dispatch portal login credentials & welcome email
+                $email_dispatched = false;
+                $email_diag = [];
+                if (!empty($student_email) && filter_var($student_email, FILTER_VALIDATE_EMAIL) && $new_stu) {
+                    $login_username = $portal_user['username'] ?? $roll_no;
+                    $email_dispatched = send_student_welcome_email($new_stu, $login_username, $student_password, $email_diag);
+                }
+
+                if ($email_dispatched) {
+                    set_flash('success', "Student {$student_name} (Roll: {$roll_no}) registered successfully! Welcome credentials email delivered to {$student_email}.");
+                } elseif (!empty($student_email)) {
+                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP not configured';
+                    set_flash('error', "Student {$student_name} registered! Note: Email could not reach {$student_email}. Reason: {$err_text}. Configure SMTP in School Settings, or click 'View Mail' on their roster row to preview the saved email.");
+                } else {
+                    set_flash('success', "Student {$student_name} (Roll: {$roll_no}) added to Student Roaster successfully!");
+                }
                 header('Location: ' . ADMIN_URL . '/students');
                 exit;
             } catch (Exception $e) {
                 set_flash('error', 'Registration error: ' . $e->getMessage());
             }
         }
+    }
+
+    // 1B. Send / Resend Welcome & Credentials Email
+    if ($action === 'send_credentials') {
+        $student_id = intval($_POST['student_id'] ?? 0);
+        $stmt_s = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+        $stmt_s->execute([$student_id]);
+        $stu = $stmt_s->fetch();
+        if ($stu) {
+            $s_email = trim($stu['student_email'] ?? '');
+            if (empty($s_email) || !filter_var($s_email, FILTER_VALIDATE_EMAIL)) {
+                set_flash('error', "Cannot send credentials: " . htmlspecialchars($stu['student_name']) . " does not have a valid email on file. Please edit their profile first.");
+            } else {
+                $custom_pwd = trim($_POST['custom_password'] ?? '') ?: 'student';
+                $puser = get_or_create_student_user($stu, $db, $custom_pwd);
+                $uname = $puser['username'] ?? $stu['roll_no'];
+                $email_diag = [];
+                $sent = send_student_welcome_email($stu, $uname, $custom_pwd, $email_diag);
+                if ($sent) {
+                    set_flash('success', "Welcome email and portal credentials dispatched to {$s_email} via SMTP.");
+                } else {
+                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP dispatch failed';
+                    set_flash('error', "Could not dispatch email to {$s_email}. Reason: {$err_text}. Configure SMTP in School Settings, or click 'View Mail' to preview the generated email.");
+                }
+            }
+        }
+        header('Location: ' . ADMIN_URL . '/students');
+        exit;
     }
 
     // 2. Update Student Profile
@@ -2444,6 +2489,27 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid fa-key" style="font-size: 0.7rem;"></i>
                     <span>Change Password</span>
                   </button>
+
+                  <?php if (!empty($stu['student_email'])): ?>
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/students" style="display:inline; margin:0;" onsubmit="return confirm('Send portal login credentials &amp; welcome email to <?php echo htmlspecialchars(addslashes($stu['student_email'])); ?>?');">
+                      <input type="hidden" name="action" value="send_credentials">
+                      <input type="hidden" name="student_id" value="<?php echo $stu['id']; ?>">
+                      <button type="submit" class="btn-student-pwd" style="color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Send Welcome &amp; Login Details to <?php echo htmlspecialchars($stu['student_email']); ?>">
+                        <i class="fa-solid fa-paper-plane" style="font-size: 0.7rem;"></i>
+                        <span>Send Mail</span>
+                      </button>
+                    </form>
+
+                    <?php 
+                      $preview_file = __DIR__ . '/../uploads/sent_emails/welcome_student_' . $stu['id'] . '.html';
+                      if (file_exists($preview_file)): 
+                    ?>
+                      <a href="<?php echo HRMS_URL; ?>/uploads/sent_emails/welcome_student_<?php echo $stu['id']; ?>.html" target="_blank" rel="noopener noreferrer" class="btn-student-pwd" style="color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;" title="Preview Saved Welcome Email HTML in new tab">
+                        <i class="fa-solid fa-envelope-open-text" style="font-size: 0.7rem;"></i>
+                        <span>View Mail</span>
+                      </a>
+                    <?php endif; ?>
+                  <?php endif; ?>
                 </div>
               </td>
 
@@ -2591,8 +2657,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
         </div>
 
-        <!-- Row 2: Student Contact Phone & Student Email Id (Directly below Name & Standard) -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+        <!-- Row 2: Student Contact Phone, Email Id & Initial Portal Password -->
+        <div style="display: grid; grid-template-columns: 1fr 1.15fr 0.85fr; gap: 14px; margin-bottom: 14px;">
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Student Contact Phone</label>
             <input type="text" name="student_phone" class="hrms-input" placeholder="e.g. +91 98765 43210">
@@ -2600,6 +2666,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Student Email Id</label>
             <input type="email" name="student_email" class="hrms-input" placeholder="e.g. student@ksvacademy.net">
+            <small style="display: flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 0.72rem; color: #0284c7; font-weight: 600;">
+              <i class="fa-solid fa-paper-plane"></i> If filled, welcome &amp; login email is dispatched automatically
+            </small>
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label">Initial Password</label>
+            <input type="text" name="student_password" class="hrms-input" value="student" placeholder="Default: student">
+            <small style="display: block; margin-top: 5px; font-size: 0.71rem; color: #64748b;">Included in welcome email</small>
           </div>
         </div>
 

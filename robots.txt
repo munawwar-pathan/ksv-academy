@@ -38,5 +38,10 @@ User-agent: Applebot-Extended
 Allow: /
 Disallow: /web-app/
 
-# Canonical Sitemap Location
+# Canonical Sitemap & AI Manifest Location
 Sitemap: https://ksvacademy.org/sitemap.xml
+
+# LLMs.txt specification for AI Agents, LLMs & Neural Search (SearchGPT, Perplexity, Gemini, Claude)
+# Spec: https://llmstxt.org/
+LLMs-Text: https://ksvacademy.org/llms.txt
+LLMs-FullText: https://ksvacademy.org/llms-full.txt

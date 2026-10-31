@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
@@ -14,7 +15,7 @@
   <!-- Courses & Batches -->
   <url>
     <loc>https://ksvacademy.org/courses</loc>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -22,7 +23,7 @@
   <!-- Admissions & Scholarships -->
   <url>
     <loc>https://ksvacademy.org/admissions</loc>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -30,32 +31,60 @@
   <!-- About Us -->
   <url>
     <loc>https://ksvacademy.org/about</loc>
-    <lastmod>2026-10-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
   </url>
 
   <!-- Faculty -->
   <url>
     <loc>https://ksvacademy.org/faculty</loc>
-    <lastmod>2026-10-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
   </url>
 
   <!-- Contact & Student Helpdesk -->
   <url>
     <loc>https://ksvacademy.org/contact</loc>
-    <lastmod>2026-10-24</lastmod>
-    <changefreq>monthly</changefreq>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Campus Gallery -->
   <url>
     <loc>https://ksvacademy.org/gallery</loc>
-    <lastmod>2026-10-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://ksvacademy.org/assets/imgs/gallers/gallery-1.png</image:loc>
+      <image:title>KSV Academy Modern Smart Classrooms in Ulwe</image:title>
+      <image:caption>Air-conditioned interactive coaching classrooms at KSV Academy Ulwe Sector 19</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://ksvacademy.org/assets/imgs/gallers/gallery-2.png</image:loc>
+      <image:title>Interactive Concept Teaching Boards at KSV Academy</image:title>
+      <image:caption>Visual demonstration tools for Physics, Chemistry, and Mathematics</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://ksvacademy.org/assets/imgs/gallers/gallery-3.png</image:loc>
+      <image:title>1-on-1 Faculty Doubt Solving Desks</image:title>
+      <image:caption>Personalized mentoring and individual doubt resolution sessions</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://ksvacademy.org/assets/imgs/gallers/gallery-4.png</image:loc>
+      <image:title>Comprehensive Study Library and Reading Room</image:title>
+      <image:caption>Reference books, previous 10-year question banks, and competitive entrance modules</image:caption>
+    </image:image>
+  </url>
+
+  <!-- LLMs.txt for AI Search Engines & LLM Crawlers -->
+  <url>
+    <loc>https://ksvacademy.org/llms.txt</loc>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

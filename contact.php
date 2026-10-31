@@ -2,9 +2,37 @@
 require_once __DIR__ . '/config.php';
 
 $active_page = 'contact';
-$page_title = 'Contact & Student Helpdesk | KSV Academy Ulwe Navi Mumbai';
-$page_description = 'Get in touch with KSV Academy Ulwe. Address: MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19, Ulwe, Navi Mumbai. Phone: +91 79059 00350 / +91 99840 58406.';
-$page_keywords = 'KSV Academy contact, KSV Academy phone number, KSV Academy address Ulwe, tuition near Om Sai hospital Ulwe, coaching in sector 19 Ulwe';
+$page_title = 'Contact Us & Admissions Helpdesk | KSV Academy Ulwe Navi Mumbai';
+$page_description = 'Contact KSV Academy Ulwe Sector 19. Get in touch for admissions, 3-Days Free Demo Class, merit scholarships, and batch counseling. Call +91 79059 00350 or visit MGM Residency.';
+$page_keywords = 'KSV Academy contact, KSV Academy phone number, KSV Academy address Ulwe, coaching classes in Ulwe contact, admissions helpline Ulwe sector 19, tuition near Om Sai hospital Ulwe, coaching center Navi Mumbai contact, Salam Khan physics contact, coaching WhatsApp Ulwe';
+$canonical_url = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/contact';
+$page_image = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/' . SITE_LOGO;
+
+// Whitelist and sanitize pre-selected query type (?query_type=... or ?type=...)
+$allowed_query_types = [
+    'Admission Enquiry' => 'Admission Enquiry',
+    'Book Free 3-Days Demo Class' => 'Book Free 3-Days Demo Class',
+    'Fees & Scholarship Assessment' => 'Fees & Scholarship Assessment',
+    'Course Syllabus & Batches' => 'Course Syllabus & Batches',
+    'Academic Counseling' => 'Academic Counseling',
+    'General Support' => 'General Support'
+];
+
+$selected_query_type = '';
+$raw_query_param = trim((string)($_GET['query_type'] ?? ($_GET['type'] ?? ($_GET['subject'] ?? ''))));
+if (!empty($raw_query_param)) {
+    foreach ($allowed_query_types as $val => $label) {
+        if (strcasecmp($val, $raw_query_param) === 0 || stripos($val, $raw_query_param) !== false) {
+            $selected_query_type = $val;
+            break;
+        }
+    }
+}
+
+// Safe check for form submission status redirect (?form_status=success or ?form_status=error)
+$form_status = trim((string)($_GET['form_status'] ?? ''));
+$is_success_redirect = ($form_status === 'success');
+$is_error_redirect = ($form_status === 'error');
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -17,7 +45,7 @@ require_once __DIR__ . '/includes/header.php';
       <div class="hero-eyebrows-wrap" style="justify-content: center; margin-bottom: 16px;">
         <div class="hero-eyebrow">
           <span class="hero-live-dot"></span>
-          <span>Student Support &amp; Helpdesk • Session <?php echo CURRENT_SESSION; ?></span>
+          <span>Student Support &amp; Helpdesk • Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <div class="hero-trust-badge">
           <i class="fa-solid fa-headset"></i>
@@ -94,50 +122,65 @@ require_once __DIR__ . '/includes/header.php';
           Fill out the details below and our academic counseling desk will connect with you promptly.
         </p>
 
-        <div id="contactSuccessAlert" class="form-success-message" style="display: none; padding: 26px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 16px; text-align: center; margin-bottom: 20px;">
+        <div id="contactSuccessAlert" class="form-success-message" style="<?php echo $is_success_redirect ? 'display: block;' : 'display: none;'; ?> padding: 26px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 16px; text-align: center; margin-bottom: 20px;">
           <div class="success-icon" style="font-size: 2.2rem; color: #10b981; margin-bottom: 10px;"><i class="fa-solid fa-circle-check"></i></div>
           <h3 style="color: var(--text-main); font-size: 1.25rem; font-weight: 800; margin-bottom: 6px;">Message Received!</h3>
           <p style="color: var(--text-muted); font-size: 0.90rem; margin: 0 0 16px;">Thank you for reaching out to KSV Academy. We will respond to your inquiry via phone/WhatsApp shortly.</p>
-          <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-whatsapp btn-sm" target="_blank" rel="noopener noreferrer" style="background: #25d366; color: #ffffff; font-weight: 700;">
+          <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-whatsapp btn-sm" target="_blank" rel="noopener noreferrer" style="background: #25d366; color: #ffffff; font-weight: 700;">
             <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp Now
           </a>
         </div>
 
-        <form id="contactForm" class="interactive-form" method="POST" action="/submit-form" onsubmit="handleContactSubmit(event)">
+        <div id="contactErrorAlert" class="form-error-message" style="<?php echo $is_error_redirect ? 'display: block;' : 'display: none;'; ?> padding: 22px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 16px; text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 2rem; color: #ef4444; margin-bottom: 8px;"><i class="fa-solid fa-circle-exclamation"></i></div>
+          <h4 style="color: var(--text-main); font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Submission Unsuccessful</h4>
+          <p style="color: var(--text-muted); font-size: 0.90rem; margin: 0 0 14px;">We could not process your submission. Please check that your mobile number and required fields are complete, or reach out to us directly on WhatsApp.</p>
+          <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-whatsapp btn-sm" target="_blank" rel="noopener noreferrer" style="background: #25d366; color: #ffffff; font-weight: 700;">
+            <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp Now
+          </a>
+        </div>
+
+        <form id="contactForm" class="interactive-form" method="POST" action="<?php echo htmlspecialchars(url('submit-form'), ENT_QUOTES, 'UTF-8'); ?>" onsubmit="handleContactSubmit(event)">
           <input type="hidden" name="form_type" value="inquiry">
+          <input type="hidden" name="source_page" value="<?php echo htmlspecialchars($canonical_url, ENT_QUOTES, 'UTF-8'); ?>">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+          <!-- Anti-bot honeypot field -->
+          <div style="display:none !important;" aria-hidden="true">
+            <label for="contact_hp_check">Leave blank</label>
+            <input type="text" id="contact_hp_check" name="website_hp" tabindex="-1" autocomplete="off">
+          </div>
           <div class="form-row">
             <div class="form-group col-half">
               <label for="contactName"><i class="fa-solid fa-user"></i> Full Name <span class="required">*</span></label>
-              <input type="text" id="contactName" name="full_name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+              <input type="text" id="contactName" name="full_name" class="form-control" placeholder="e.g. Rahul Sharma" required maxlength="150">
             </div>
             <div class="form-group col-half">
               <label for="contactPhone"><i class="fa-solid fa-phone"></i> Phone Number <span class="required">*</span></label>
-              <input type="tel" id="contactPhone" name="phone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
+              <input type="tel" id="contactPhone" name="phone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" required maxlength="15">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group col-half">
               <label for="contactEmail"><i class="fa-solid fa-envelope"></i> Email Address <span class="required">*</span></label>
-              <input type="email" id="contactEmail" name="email" class="form-control" placeholder="name@example.com" required>
+              <input type="email" id="contactEmail" name="email" class="form-control" placeholder="name@example.com" required maxlength="150">
             </div>
             <div class="form-group col-half">
               <label for="contactQueryType"><i class="fa-solid fa-list-check"></i> Query Type <span class="required">*</span></label>
               <select id="contactQueryType" name="query_type" class="form-control" required>
                 <option value="">-- Please Select --</option>
-                <option value="Admission Enquiry">Admission Enquiry</option>
-                <option value="Book Free 3-Days Demo Class">Book Free 3-Days Demo Class</option>
-                <option value="Fees & Scholarship Assessment">Fees &amp; Scholarship Assessment</option>
-                <option value="Course Syllabus & Batches">Course Syllabus &amp; Batches</option>
-                <option value="Academic Counseling">Academic Counseling</option>
-                <option value="General Support">General Support</option>
+                <?php foreach ($allowed_query_types as $val => $label): ?>
+                  <option value="<?php echo htmlspecialchars($val, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($selected_query_type === $val) ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
           </div>
 
           <div class="form-group">
             <label for="contactMessage"><i class="fa-solid fa-comment-dots"></i> Message / Details</label>
-            <textarea id="contactMessage" name="message" class="form-control" placeholder="Write your question, student standard, or any specific requirements here..."></textarea>
+            <textarea id="contactMessage" name="message" class="form-control" placeholder="Write your question, student standard, or any specific requirements here..." maxlength="1000"></textarea>
           </div>
 
           <button type="submit" id="contactSubmitBtn" class="btn btn-primary btn-block btn-lg" style="box-shadow: 0 6px 20px rgba(0, 146, 223, 0.35);">
@@ -154,9 +197,9 @@ require_once __DIR__ . '/includes/header.php';
           <div style="flex-grow: 1;">
             <h4 style="font-size: 1.12rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Academy <span class="hero-highlight">Location</span></h4>
             <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 8px 0;">
-              <?php echo ADDRESS_STREET; ?>,<br>
-              <?php echo ADDRESS_LOCALITY; ?>, <?php echo ADDRESS_PINCODE; ?>,<br>
-              <?php echo ADDRESS_STATE; ?>
+              <?php echo htmlspecialchars(ADDRESS_STREET, ENT_QUOTES, 'UTF-8'); ?>,<br>
+              <?php echo htmlspecialchars(ADDRESS_LOCALITY, ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(ADDRESS_PINCODE, ENT_QUOTES, 'UTF-8'); ?>,<br>
+              <?php echo htmlspecialchars(ADDRESS_STATE, ENT_QUOTES, 'UTF-8'); ?>
             </p>
             <span class="faculty-spec-tag" style="font-size: 0.74rem;">
               <i class="fa-solid fa-landmark"></i> Opposite Om Sai Hospital
@@ -185,8 +228,8 @@ require_once __DIR__ . '/includes/header.php';
           <div style="flex-grow: 1;">
             <h4 style="font-size: 1.12rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Call Us <span class="hero-highlight">Directly</span></h4>
             <p style="font-size: 0.90rem; font-weight: 700; color: var(--text-main); line-height: 1.6; margin: 0 0 6px 0;">
-              <a href="tel:<?php echo PHONE_RAW_1; ?>" style="color: var(--primary-700);"><i class="fa-solid fa-phone"></i> <?php echo PHONE_PRIMARY; ?></a><br>
-              <a href="tel:<?php echo PHONE_RAW_2; ?>" style="color: var(--primary-700);"><i class="fa-solid fa-phone"></i> <?php echo PHONE_SECONDARY; ?></a>
+              <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_1, ENT_QUOTES, 'UTF-8'); ?>" style="color: var(--primary-700);"><i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars(PHONE_PRIMARY, ENT_QUOTES, 'UTF-8'); ?></a><br>
+              <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_2, ENT_QUOTES, 'UTF-8'); ?>" style="color: var(--primary-700);"><i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars(PHONE_SECONDARY, ENT_QUOTES, 'UTF-8'); ?></a>
             </p>
             <small style="color: var(--text-muted); font-size: 0.78rem;">Available 7 days a week for admissions guidance</small>
           </div>
@@ -198,8 +241,8 @@ require_once __DIR__ . '/includes/header.php';
           <div style="flex-grow: 1;">
             <h4 style="font-size: 1.12rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Email &amp; <span class="hero-highlight">WhatsApp</span></h4>
             <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 6px 0;">
-              <strong>Email:</strong> <a href="mailto:<?php echo EMAIL_PRIMARY; ?>" style="color: var(--primary-700);"><?php echo EMAIL_PRIMARY; ?></a><br>
-              <strong>WhatsApp:</strong> <a href="<?php echo WHATSAPP_LINK; ?>" target="_blank" rel="noopener noreferrer" style="color: var(--primary-700);">+91 79059 00350</a>
+              <strong>Email:</strong> <a href="mailto:<?php echo htmlspecialchars(EMAIL_PRIMARY, ENT_QUOTES, 'UTF-8'); ?>" style="color: var(--primary-700);"><?php echo htmlspecialchars(EMAIL_PRIMARY, ENT_QUOTES, 'UTF-8'); ?></a><br>
+              <strong>WhatsApp:</strong> <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" style="color: var(--primary-700);">+91 79059 00350</a>
             </p>
           </div>
         </div>
@@ -211,13 +254,13 @@ require_once __DIR__ . '/includes/header.php';
             <p style="font-size: 0.80rem; color: rgba(255, 255, 255, 0.85); margin: 0;">Lectures, updates &amp; student results</p>
           </div>
           <div style="display: flex; gap: 10px;">
-            <a href="<?php echo URL_YOUTUBE; ?>" target="_blank" rel="noopener noreferrer" class="social-circle yt" aria-label="YouTube">
+            <a href="<?php echo htmlspecialchars(URL_YOUTUBE, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="social-circle yt" aria-label="YouTube">
               <i class="fa-brands fa-youtube"></i>
             </a>
-            <a href="<?php echo URL_INSTAGRAM; ?>" target="_blank" rel="noopener noreferrer" class="social-circle ig" aria-label="Instagram">
+            <a href="<?php echo htmlspecialchars(URL_INSTAGRAM, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="social-circle ig" aria-label="Instagram">
               <i class="fa-brands fa-instagram"></i>
             </a>
-            <a href="<?php echo WHATSAPP_LINK; ?>" target="_blank" rel="noopener noreferrer" class="social-circle wa" aria-label="WhatsApp">
+            <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="social-circle wa" aria-label="WhatsApp">
               <i class="fa-brands fa-whatsapp"></i>
             </a>
           </div>

@@ -1929,44 +1929,6 @@ button {
   font-size: 0.8rem;
 }
 
-.login-back-home-wrap {
-  margin-top: 14px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.login-back-home-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--hrms-text-muted);
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  padding: 7px 16px;
-  border-radius: 20px;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.login-back-home-link i {
-  font-size: 0.76rem;
-  transition: transform 0.2s ease;
-}
-
-.login-back-home-link:hover {
-  color: var(--hrms-primary);
-  background: var(--hrms-primary-soft);
-  border-color: var(--hrms-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 146, 223, 0.15);
-}
-
-.login-back-home-link:hover i {
-  transform: translateX(-3px);
-}
 
 /* Responsive Breakpoints */
 @media (max-width: 960px) {

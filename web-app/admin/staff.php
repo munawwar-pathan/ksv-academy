@@ -151,15 +151,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                     $salary, $phone, $email, $address, $blood_group, $qr_code,
                     $photo, $specialization, $experience, $bio, $highlight, $sort_order
                 ]);
+                $new_staff_id = $db->lastInsertId();
+
+                $stmt_stf = $db->prepare("SELECT sp.*, u.username, u.email as user_email FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
+                $stmt_stf->execute([$new_staff_id]);
+                $new_staff_row = $stmt_stf->fetch();
+
+                // If faculty email is provided, dispatch portal login credentials & welcome email
+                $email_dispatched = false;
+                $email_diag = [];
+                if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL) && $new_staff_row) {
+                    $email_dispatched = send_staff_welcome_email($new_staff_row, $username, $password, $email_diag);
+                }
 
                 $live_note = ($user_status === 'active') ? 'Live on website faculty list' : 'Inactive in draft';
-                set_flash('success', "Faculty member {$full_name} ({$emp_code}) registered successfully! ({$live_note})");
+                if ($email_dispatched) {
+                    set_flash('success', "Faculty member {$full_name} ({$emp_code}) registered successfully! Welcome credentials email delivered to {$email}. ({$live_note})");
+                } elseif (!empty($email)) {
+                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP not configured';
+                    set_flash('error', "Faculty member {$full_name} ({$emp_code}) registered! Note: Email could not reach {$email}. Reason: {$err_text}. Configure SMTP in School Settings, or view the saved email via 'View Mail' button on their roster row.");
+                } else {
+                    set_flash('success', "Faculty member {$full_name} ({$emp_code}) registered successfully! ({$live_note})");
+                }
                 header('Location: ' . ADMIN_URL . '/staff');
                 exit;
             } catch (Exception $e) {
                 set_flash('error', 'Error adding staff: ' . $e->getMessage());
             }
         }
+    }
+
+    // Send / Resend Welcome & Credentials Email to Faculty
+    if ($action === 'send_credentials') {
+        $staff_id = intval($_POST['staff_id'] ?? 0);
+        $stmt_s = $db->prepare("
+            SELECT sp.*, u.username, u.email as user_email 
+            FROM staff_profiles sp 
+            JOIN users u ON sp.user_id = u.id 
+            WHERE sp.id = ? LIMIT 1
+        ");
+        $stmt_s->execute([$staff_id]);
+        $sm = $stmt_s->fetch();
+        if ($sm) {
+            $s_email = trim($sm['email'] ?: ($sm['user_email'] ?? ''));
+            if (empty($s_email) || !filter_var($s_email, FILTER_VALIDATE_EMAIL)) {
+                set_flash('error', "Cannot send credentials: " . htmlspecialchars($sm['full_name']) . " does not have a valid email on file. Please edit their profile first.");
+            } else {
+                $custom_pwd = trim($_POST['custom_password'] ?? '') ?: 'staff';
+                if ($custom_pwd !== 'staff') {
+                    $hash = password_hash($custom_pwd, PASSWORD_DEFAULT);
+                    $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hash, $sm['user_id']]);
+                }
+                $email_diag = [];
+                $sent = send_staff_welcome_email($sm, $sm['username'], $custom_pwd, $email_diag);
+                if ($sent) {
+                    set_flash('success', "Welcome email and portal credentials dispatched to {$s_email} via SMTP.");
+                } else {
+                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP dispatch failed';
+                    set_flash('error', "Could not dispatch email to {$s_email}. Reason: {$err_text}. Configure SMTP in School Settings, or click 'View Mail' to preview the generated email.");
+                }
+            }
+        }
+        header('Location: ' . ADMIN_URL . '/staff');
+        exit;
     }
 
     // Update Staff Profile
@@ -1673,6 +1727,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid fa-key" style="font-size: 0.7rem;"></i>
                     <span>Change Password</span>
                   </button>
+
+                  <?php 
+                    $f_email = trim($sm['email'] ?: ($sm['user_email'] ?? ''));
+                    if (!empty($f_email)): 
+                  ?>
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="display:inline; margin:0;" onsubmit="return confirm('Send portal login credentials &amp; welcome email to <?php echo htmlspecialchars(addslashes($f_email)); ?>?');">
+                      <input type="hidden" name="action" value="send_credentials">
+                      <input type="hidden" name="staff_id" value="<?php echo $sm['id']; ?>">
+                      <button type="submit" class="btn-student-pwd" style="color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Send Welcome &amp; Login Details to <?php echo htmlspecialchars($f_email); ?>">
+                        <i class="fa-solid fa-paper-plane" style="font-size: 0.7rem;"></i>
+                        <span>Send Mail</span>
+                      </button>
+                    </form>
+
+                    <?php 
+                      $preview_file = __DIR__ . '/../uploads/sent_emails/welcome_staff_' . $sm['id'] . '.html';
+                      if (file_exists($preview_file)): 
+                    ?>
+                      <a href="<?php echo HRMS_URL; ?>/uploads/sent_emails/welcome_staff_<?php echo $sm['id']; ?>.html" target="_blank" rel="noopener noreferrer" class="btn-student-pwd" style="color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;" title="Preview Saved Welcome Email HTML in new tab">
+                        <i class="fa-solid fa-envelope-open-text" style="font-size: 0.7rem;"></i>
+                        <span>View Mail</span>
+                      </a>
+                    <?php endif; ?>
+                  <?php endif; ?>
                 </div>
               </td>
 
@@ -1830,7 +1908,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
           <div class="form-group">
             <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Initial Portal Password *</label>
-            <input type="password" name="password" class="hrms-input" required value="staff" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+            <input type="text" name="password" class="hrms-input" required value="staff" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+            <small style="display: block; margin-top: 4px; font-size: 11px; color: #64748b;">Included in faculty welcome email</small>
           </div>
           <div class="form-group">
             <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Department *</label>
@@ -1907,8 +1986,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <input type="text" name="phone" placeholder="+91 98765 43210" class="hrms-input" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
           </div>
           <div class="form-group">
-            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Email Address</label>
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Faculty Email Address</label>
             <input type="email" name="email" placeholder="faculty@ksvacademy.com" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+            <small style="display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 11px; color: #0284c7; font-weight: 600;">
+              <i class="fa-solid fa-paper-plane"></i> If filled, portal username &amp; password welcome mail is sent automatically
+            </small>
           </div>
         </div>
 

@@ -82,6 +82,24 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
   <meta property="og:image:type" content="image/jpeg">
   <meta property="og:image:alt" content="<?php echo htmlspecialchars($page_title); ?>">
   <meta property="og:locale" content="en_IN">
+  <?php if ($active_page_name === 'gallery'): ?>
+  <meta property="article:section" content="Campus Life &amp; Infrastructure">
+  <meta property="article:tag" content="KSV Academy Campus Gallery">
+  <meta property="article:tag" content="Smart Classrooms Ulwe">
+  <meta property="article:tag" content="Coaching Infrastructure Ulwe">
+  <meta property="article:tag" content="Ulwe Sector 19 Coaching Photos">
+  <meta property="article:tag" content="AC Classrooms &amp; Study Library">
+  <meta property="article:publisher" content="<?php echo htmlspecialchars(rtrim($base_domain_url, '/')); ?>">
+  <?php endif; ?>
+  <?php if ($active_page_name === 'contact'): ?>
+  <meta property="article:section" content="Student Support &amp; Admissions Counseling">
+  <meta property="article:tag" content="KSV Academy Contact">
+  <meta property="article:tag" content="Coaching Helpdesk Ulwe">
+  <meta property="article:tag" content="Ulwe Sector 19 Coaching Phone">
+  <meta property="article:tag" content="Admissions Guidance">
+  <meta property="article:tag" content="Free Demo Class Booking">
+  <meta property="article:publisher" content="<?php echo htmlspecialchars(rtrim($base_domain_url, '/')); ?>">
+  <?php endif; ?>
 
   <!-- ══════════════════════════════════════════════════════
        3. TWITTER / X CARDS
@@ -352,6 +370,95 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
             }
           }
         ]
+      }
+      <?php endif; ?>
+      <?php if ($active_page_name === 'gallery'): 
+        $schema_gallery = !empty($all_active_gallery) ? $all_active_gallery : (function_exists('get_active_gallery_items') ? get_active_gallery_items() : []);
+      ?>
+      ,{
+        "@type": "ImageGallery",
+        "@id": "<?php echo htmlspecialchars($current_canonical); ?>#imagegallery",
+        "name": "KSV Academy Campus Gallery & Learning Spaces",
+        "description": "Visual tour of KSV Academy modern air-conditioned classrooms, interactive concept boards, doubt-solving counters, and study reference library in Ulwe Sector 19.",
+        "url": "<?php echo htmlspecialchars($current_canonical); ?>",
+        "provider": {
+          "@id": "https://ksvacademy.org/#organization"
+        },
+        "itemListElement": [
+          <?php 
+          $gal_elements = [];
+          $g_pos = 1;
+          foreach ($schema_gallery as $g_item): 
+            $raw_g_img = !empty($g_item['image']) ? $g_item['image'] : 'assets/imgs/gallers/gallery-1.png';
+            if (!preg_match('#^https?://#i', $raw_g_img)) {
+              $raw_g_img = rtrim($base_domain_url, '/') . '/' . ltrim($raw_g_img, '/');
+            }
+            $g_cap = !empty($g_item['caption']) ? $g_item['caption'] : (!empty($g_item['title']) ? $g_item['title'] : 'Campus Life');
+            $g_node = [
+              "@type" => "ImageObject",
+              "position" => $g_pos,
+              "name" => $g_cap,
+              "caption" => $g_cap,
+              "contentUrl" => $raw_g_img,
+              "url" => $raw_g_img,
+              "encodingFormat" => "image/jpeg"
+            ];
+            $gal_elements[] = json_encode($g_node, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
+            $g_pos++;
+          endforeach;
+          echo implode(",\n          ", $gal_elements);
+          ?>
+        ]
+      }
+      <?php endif; ?>
+      <?php if ($active_page_name === 'contact'): ?>
+      ,{
+        "@type": "ContactPage",
+        "@id": "<?php echo htmlspecialchars($current_canonical); ?>#webpage",
+        "url": "<?php echo htmlspecialchars($current_canonical); ?>",
+        "name": <?php echo json_encode($page_title, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>,
+        "description": <?php echo json_encode($page_description, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>,
+        "inLanguage": "en-IN",
+        "isPartOf": {
+          "@id": "https://ksvacademy.org/#website"
+        },
+        "breadcrumb": {
+          "@id": "<?php echo htmlspecialchars($current_canonical); ?>#breadcrumb"
+        },
+        "about": {
+          "@id": "https://ksvacademy.org/#organization"
+        },
+        "mainEntity": {
+          "@type": "EducationalOrganization",
+          "@id": "https://ksvacademy.org/#organization",
+          "name": "<?php echo SITE_NAME; ?>",
+          "telephone": "<?php echo PHONE_RAW_1; ?>",
+          "email": "<?php echo EMAIL_PRIMARY; ?>",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "<?php echo ADDRESS_STREET; ?>",
+            "addressLocality": "<?php echo ADDRESS_LOCALITY; ?>",
+            "addressRegion": "<?php echo ADDRESS_STATE; ?>",
+            "postalCode": "<?php echo ADDRESS_PINCODE; ?>",
+            "addressCountry": "IN"
+          },
+          "contactPoint": [
+            {
+              "@type": "ContactPoint",
+              "telephone": "<?php echo PHONE_RAW_1; ?>",
+              "contactType": "admissions counseling",
+              "areaServed": "IN",
+              "availableLanguage": ["English", "Hindi", "Marathi"]
+            },
+            {
+              "@type": "ContactPoint",
+              "telephone": "<?php echo PHONE_RAW_2; ?>",
+              "contactType": "student helpdesk",
+              "areaServed": "IN",
+              "availableLanguage": ["English", "Hindi", "Marathi"]
+            }
+          ]
+        }
       }
       <?php endif; ?>
     ]

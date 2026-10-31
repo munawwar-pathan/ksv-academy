@@ -2,9 +2,33 @@
 require_once __DIR__ . '/config.php';
 
 $active_page = 'admissions';
-$page_title = 'Admissions & Scholarships ' . CURRENT_SESSION . ' | KSV Academy Ulwe';
-$page_description = 'Enroll at KSV Academy Ulwe for Academic Session ' . CURRENT_SESSION . '. Avail up to 60% merit scholarships, 3-Days Free Demo Classes, and flexible installment plans.';
-$page_keywords = 'KSV Academy admission, tuition admission Ulwe, scholarship coaching Ulwe, coaching fees Ulwe, 10th 12th coaching admission';
+$page_title = 'Admissions Open ' . CURRENT_SESSION . ' | KSV Academy Ulwe | 60% Scholarship & 3-Days Free Demo';
+$page_description = 'Enroll at KSV Academy Ulwe for Academic Session ' . CURRENT_SESSION . '. Avail up to 60% merit scholarships, 3-Days Free Demo Classes, zero-stress EMI installment plans, and personal mentoring for Classes 5th-12th, IIT-JEE, NEET & Degree.';
+$page_keywords = 'KSV Academy admissions, coaching admission Ulwe 2026-27, scholarship test Ulwe, tuition admission sector 19 Ulwe, IIT JEE admission Navi Mumbai, NEET coaching enrollment, 10th CBSE tuition admission, 12th science commerce coaching admission, free demo class Ulwe, education loan EMI tuition Ulwe, Salam Khan Physics admission, Rameshwar Mishra Chemistry';
+$canonical_url = 'https://ksvacademy.org/admissions';
+$page_image = 'assets/imgs/students/classroom-learning.jpg';
+
+// Strict input validation & allowlist mapping for optional ?course= query parameter
+// Defends against SQL injection, XSS, and parameter pollution
+$raw_course_param = isset($_GET['course']) ? strtolower(trim((string)$_GET['course'])) : '';
+$course_param_clean = preg_replace('/[^a-z0-9_-]/', '', $raw_course_param);
+
+$course_whitelist = [
+    'foundation'   => 'Class 5th - 8th Foundation',
+    'boards'       => 'Class 9th & 10th Boards (CBSE/ICSE/State)',
+    'school'       => 'Class 9th & 10th Boards (CBSE/ICSE/State)',
+    'iit-jee'      => 'IIT-JEE Main + Advanced',
+    'jee'          => 'IIT-JEE Main + Advanced',
+    'neet'         => 'NEET-UG Medical',
+    'medical'      => 'NEET-UG Medical',
+    'cet'          => 'MH-CET (Engineering / Pharmacy)',
+    'mh-cet'       => 'MH-CET (Engineering / Pharmacy)',
+    'science'      => '11th & 12th Science (HSC/CBSE)',
+    'commerce'     => '11th & 12th Commerce Section',
+    'degree'       => 'Degree: B.Com / BAF / BMS / BCA',
+    'postgraduate' => 'Postgraduate: M.Com / MBA'
+];
+$selected_course = $course_whitelist[$course_param_clean] ?? '';
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -17,7 +41,7 @@ require_once __DIR__ . '/includes/header.php';
       <div class="hero-eyebrows-wrap" style="justify-content: center; margin-bottom: 16px;">
         <div class="hero-eyebrow">
           <span class="hero-live-dot"></span>
-          <span>Admissions Open • Academic Session <?php echo CURRENT_SESSION; ?></span>
+          <span>Admissions Open • Academic Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <div class="hero-trust-badge">
           <i class="fa-solid fa-award"></i>
@@ -158,7 +182,7 @@ require_once __DIR__ . '/includes/header.php';
   <div class="container">
     <div class="section-header">
       <span class="section-eyebrow"><i class="fa-solid fa-file-signature"></i> Quick Application</span>
-      <h2 class="section-title">Apply Online for <span class="hero-highlight">Academic Session <?php echo CURRENT_SESSION; ?></span></h2>
+      <h2 class="section-title">Apply Online for <span class="hero-highlight">Academic Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?></span></h2>
       <p class="section-subtitle">Submit your registration below to secure early-bird batch allotment and scholarship eligibility.</p>
     </div>
 
@@ -176,39 +200,45 @@ require_once __DIR__ . '/includes/header.php';
           </span>
         </div>
         <p style="color: var(--text-muted); font-size: 0.90rem; margin-bottom: 24px; line-height: 1.55;">
-          Fill out this form to reserve your free demo seat and lock your scholarship eligibility for Session <?php echo CURRENT_SESSION; ?>.
+          Fill out this form to reserve your free demo seat and lock your scholarship eligibility for Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?>.
         </p>
 
         <div id="admissionSuccessState" class="form-success-message" style="display: none; padding: 28px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 16px; text-align: center; margin-bottom: 20px;">
           <div class="success-icon" style="font-size: 2.4rem; color: #10b981; margin-bottom: 12px;"><i class="fa-solid fa-circle-check"></i></div>
           <h3 style="color: var(--text-main); font-size: 1.3rem; font-weight: 800; margin-bottom: 8px;">Application Submitted Successfully!</h3>
           <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; margin-bottom: 18px;">Thank you for choosing KSV Academy. Our admission desk will call you within 24 hours to confirm your registration and diagnostic test date.</p>
-          <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer" style="background: #25d366; color: #ffffff; font-weight: 700;">
+          <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-whatsapp" target="_blank" rel="noopener noreferrer" style="background: #25d366; color: #ffffff; font-weight: 700;">
             <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp Now
           </a>
         </div>
 
-        <form id="onlineAdmissionForm" class="interactive-form" method="POST" action="/submit-form" onsubmit="handleAdmissionSubmit(event)">
+        <form id="onlineAdmissionForm" class="interactive-form" method="POST" action="<?php echo htmlspecialchars(url('submit-form')); ?>" onsubmit="handleAdmissionSubmit(event)">
           <input type="hidden" name="form_type" value="admission">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token()); ?>">
+          <!-- Anti-bot honeypot field -->
+          <div style="display:none !important;" aria-hidden="true">
+            <label for="adm_hp_check">Leave blank</label>
+            <input type="text" id="adm_hp_check" name="website_hp" tabindex="-1" autocomplete="off">
+          </div>
           <div class="form-row">
             <div class="form-group col-half">
               <label for="admStudentName"><i class="fa-solid fa-user"></i> Student Full Name <span class="required">*</span></label>
-              <input type="text" id="admStudentName" name="student_name" class="form-control" placeholder="e.g. Aryan Sharma" required>
+              <input type="text" id="admStudentName" name="student_name" class="form-control" placeholder="e.g. Aryan Sharma" maxlength="100" autocomplete="name" required>
             </div>
             <div class="form-group col-half">
               <label for="admParentName"><i class="fa-solid fa-user-tie"></i> Parent / Guardian Name</label>
-              <input type="text" id="admParentName" name="parent_name" class="form-control" placeholder="e.g. Rajesh Sharma">
+              <input type="text" id="admParentName" name="parent_name" class="form-control" placeholder="e.g. Rajesh Sharma" maxlength="100" autocomplete="name">
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group col-half">
               <label for="admPhone"><i class="fa-solid fa-phone"></i> Mobile / WhatsApp <span class="required">*</span></label>
-              <input type="tel" id="admPhone" name="phone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
+              <input type="tel" id="admPhone" name="phone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="15" autocomplete="tel" required>
             </div>
             <div class="form-group col-half">
               <label for="admEmail"><i class="fa-solid fa-envelope"></i> Email Address</label>
-              <input type="email" id="admEmail" name="email" class="form-control" placeholder="name@example.com">
+              <input type="email" id="admEmail" name="email" class="form-control" placeholder="name@example.com" maxlength="100" autocomplete="email">
             </div>
           </div>
 
@@ -217,15 +247,15 @@ require_once __DIR__ . '/includes/header.php';
               <label for="admCourse"><i class="fa-solid fa-book-open"></i> Course Applying For <span class="required">*</span></label>
               <select id="admCourse" name="course" class="form-control" required>
                 <option value="">-- Select Course --</option>
-                <option value="Class 5th - 8th Foundation">Class 5th - 8th Foundation</option>
-                <option value="Class 9th & 10th Boards (CBSE/ICSE/State)">Class 9th & 10th Boards (CBSE/ICSE/State)</option>
-                <option value="IIT-JEE Main + Advanced">IIT-JEE Main + Advanced</option>
-                <option value="NEET-UG Medical">NEET-UG Medical</option>
-                <option value="MH-CET (Engineering / Pharmacy)">MH-CET (Engineering / Pharmacy)</option>
-                <option value="11th & 12th Science (HSC/CBSE)">11th & 12th Science (HSC/CBSE)</option>
-                <option value="11th & 12th Commerce Section">11th & 12th Commerce Section</option>
-                <option value="Degree: B.Com / BAF / BMS / BCA">Degree: B.Com / BAF / BMS / BCA</option>
-                <option value="Postgraduate: M.Com / MBA">Postgraduate: M.Com / MBA</option>
+                <option value="Class 5th - 8th Foundation" <?php echo ($selected_course === 'Class 5th - 8th Foundation') ? 'selected' : ''; ?>>Class 5th - 8th Foundation</option>
+                <option value="Class 9th & 10th Boards (CBSE/ICSE/State)" <?php echo ($selected_course === 'Class 9th & 10th Boards (CBSE/ICSE/State)') ? 'selected' : ''; ?>>Class 9th & 10th Boards (CBSE/ICSE/State)</option>
+                <option value="IIT-JEE Main + Advanced" <?php echo ($selected_course === 'IIT-JEE Main + Advanced') ? 'selected' : ''; ?>>IIT-JEE Main + Advanced</option>
+                <option value="NEET-UG Medical" <?php echo ($selected_course === 'NEET-UG Medical') ? 'selected' : ''; ?>>NEET-UG Medical</option>
+                <option value="MH-CET (Engineering / Pharmacy)" <?php echo ($selected_course === 'MH-CET (Engineering / Pharmacy)') ? 'selected' : ''; ?>>MH-CET (Engineering / Pharmacy)</option>
+                <option value="11th & 12th Science (HSC/CBSE)" <?php echo ($selected_course === '11th & 12th Science (HSC/CBSE)') ? 'selected' : ''; ?>>11th & 12th Science (HSC/CBSE)</option>
+                <option value="11th & 12th Commerce Section" <?php echo ($selected_course === '11th & 12th Commerce Section') ? 'selected' : ''; ?>>11th & 12th Commerce Section</option>
+                <option value="Degree: B.Com / BAF / BMS / BCA" <?php echo ($selected_course === 'Degree: B.Com / BAF / BMS / BCA') ? 'selected' : ''; ?>>Degree: B.Com / BAF / BMS / BCA</option>
+                <option value="Postgraduate: M.Com / MBA" <?php echo ($selected_course === 'Postgraduate: M.Com / MBA') ? 'selected' : ''; ?>>Postgraduate: M.Com / MBA</option>
               </select>
             </div>
 
@@ -241,12 +271,12 @@ require_once __DIR__ . '/includes/header.php';
 
           <div class="form-group">
             <label for="admSchool"><i class="fa-solid fa-school"></i> Current School / Junior College</label>
-            <input type="text" id="admSchool" name="school_name" class="form-control" placeholder="e.g. DPS Nerul / Ramsheth Thakur / College in Ulwe">
+            <input type="text" id="admSchool" name="school_name" class="form-control" placeholder="e.g. DPS Nerul / Ramsheth Thakur / College in Ulwe" maxlength="150">
           </div>
 
           <div class="form-group">
             <label for="admQuery"><i class="fa-solid fa-message"></i> Remarks or Questions</label>
-            <textarea id="admQuery" name="message" class="form-control" placeholder="Any specific requirements or questions for our academic team..."></textarea>
+            <textarea id="admQuery" name="message" class="form-control" placeholder="Any specific requirements or questions for our academic team..." maxlength="1000"></textarea>
           </div>
 
           <button type="submit" id="admSubmitBtn" class="btn btn-primary btn-block btn-lg" style="box-shadow: 0 6px 20px rgba(0, 146, 223, 0.35);">
@@ -318,10 +348,10 @@ require_once __DIR__ . '/includes/header.php';
             Need help selecting the best batch or subjects? Talk directly to our academic desk.
           </p>
           <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-primary btn-sm" style="flex: 1; min-width: 140px; font-weight: 700;">
-              <i class="fa-solid fa-phone"></i> <?php echo PHONE_PRIMARY; ?>
+            <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_1, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-primary btn-sm" style="flex: 1; min-width: 140px; font-weight: 700;">
+              <i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars(PHONE_PRIMARY, ENT_QUOTES, 'UTF-8'); ?>
             </a>
-            <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 140px; font-weight: 700;">
+            <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 140px; font-weight: 700;">
               <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </a>
           </div>
@@ -348,7 +378,7 @@ require_once __DIR__ . '/includes/header.php';
         </button>
         <div class="faq-body">
           <p>
-            You can register through our online form above, call us at <strong><?php echo PHONE_PRIMARY; ?></strong>, or visit our Sector 19 Ulwe center. You will receive an immediate pass to attend 3 actual classroom lectures before making any financial commitment.
+            You can register through our online form above, call us at <strong><?php echo htmlspecialchars(PHONE_PRIMARY, ENT_QUOTES, 'UTF-8'); ?></strong>, or visit our Sector 19 Ulwe center. You will receive an immediate pass to attend 3 actual classroom lectures before making any financial commitment.
           </p>
         </div>
       </div>
@@ -424,7 +454,7 @@ require_once __DIR__ . '/includes/header.php';
           <button type="button" class="btn btn-warning btn-lg" data-modal="demoModal" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
             <i class="fa-regular fa-calendar-check"></i> Claim 3-Days Free Demo Pass
           </button>
-          <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-outline-white btn-lg" target="_blank" rel="noopener noreferrer" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
+          <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-white btn-lg" target="_blank" rel="noopener noreferrer" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
             <i class="fa-brands fa-whatsapp"></i> Chat with Counselor
           </a>
         </div>
@@ -435,8 +465,8 @@ require_once __DIR__ . '/includes/header.php';
         <div style="color: #fbbf24; font-size: 1.1rem; margin: 8px 0;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
         <div style="font-size: 0.9rem; font-weight: 700; color: #ffffff;">Top-Rated Coaching in Ulwe</div>
         <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.8); margin: 6px 0 16px;">150+ Verified Google &amp; Parent Reviews</p>
-        <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
-          <i class="fa-solid fa-phone"></i> Call: <?php echo PHONE_PRIMARY; ?>
+        <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_1, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
+          <i class="fa-solid fa-phone"></i> Call: <?php echo htmlspecialchars(PHONE_PRIMARY, ENT_QUOTES, 'UTF-8'); ?>
         </a>
       </div>
     </div>
@@ -460,6 +490,13 @@ function handleAdmissionSubmit(e) {
     return;
   }
 
+  // Validate phone format: 10 digits
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  if (cleanPhone.length < 10) {
+    alert('Please enter a valid 10-digit mobile number.');
+    return;
+  }
+
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting Application...';
@@ -468,7 +505,9 @@ function handleAdmissionSubmit(e) {
   const formData = new FormData(form);
   formData.append('ajax', '1');
 
-  fetch('/submit-form', {
+  const submitUrl = form.getAttribute('action') || '/submit-form';
+
+  fetch(submitUrl, {
     method: 'POST',
     body: formData,
     headers: {
@@ -476,7 +515,12 @@ function handleAdmissionSubmit(e) {
       'X-Requested-With': 'XMLHttpRequest'
     }
   })
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) {
+      throw new Error('Server returned HTTP ' + res.status);
+    }
+    return res.json();
+  })
   .then(data => {
     if (data.success) {
       if (form) form.style.display = 'none';
@@ -495,8 +539,11 @@ function handleAdmissionSubmit(e) {
   })
   .catch(err => {
     console.error('Submission error:', err);
-    // Graceful fallback to native submit if fetch fails
-    form.submit();
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = origBtnHtml;
+    }
+    alert('Unable to submit the application right now. Please check your internet connection or reach out to us directly on WhatsApp.');
   });
 }
 </script>

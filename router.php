@@ -15,6 +15,13 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
 
 $raw_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = urldecode($raw_path);
+
+// Security: Disallow directory traversal sequences and null bytes
+if (strpos($path, '..') !== false || strpos($path, "\0") !== false) {
+    http_response_code(400);
+    exit('Bad Request');
+}
+
 $file = __DIR__ . $path;
 
 // Redirect external requests ending with .php to clean URL (e.g. /web-app/login.php -> /web-app/login)
@@ -23,6 +30,15 @@ if (preg_match('#^(/web-app/.*?)\.php$#i', $path, $matches)) {
     $qs = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
     header("Location: {$clean_url}{$qs}", true, 301);
     exit;
+}
+
+// Security: Block direct execution of internal configuration, includes, and private assets
+$normalized_clean_path = strtolower(rtrim($path, '/'));
+$blocked_internal_clean = ['/config', '/router', '/index', '/404', '/web-app/config'];
+if (in_array($normalized_clean_path, $blocked_internal_clean, true) || strpos($normalized_clean_path, '/includes/') === 0 || strpos($normalized_clean_path, '/database/') === 0) {
+    http_response_code(404);
+    require __DIR__ . '/404.php';
+    return true;
 }
 
 // If it's a real file that exists, serve it with correct mime type
@@ -67,8 +83,9 @@ if (is_dir($file) && file_exists($dir_index)) {
 
 // Clean URL rewrite to .php file (e.g. /about -> /about.php)
 $php_file = __DIR__ . rtrim($path, '/') . '.php';
-if ($path !== '/' && file_exists($php_file)) {
-    require $php_file;
+$real_php_file = realpath($php_file);
+if ($path !== '/' && $real_php_file && file_exists($real_php_file) && strpos($real_php_file, __DIR__) === 0) {
+    require $real_php_file;
     return true;
 }
 

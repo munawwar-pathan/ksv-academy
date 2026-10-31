@@ -9,6 +9,7 @@
  * Stores all submissions into table: form_data
  */
 
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/web-app/config.php';
 
 // Check if request is JSON
@@ -66,15 +67,40 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     send_response(false, 'Invalid request method. Only POST allowed.');
 }
 
+// 1. Anti-Bot Honeypot Validation: silent exit if bot filled out honeypot field
+if (!empty($input['website_hp'])) {
+    send_response(true, 'Thank you! Your submission has been received.');
+}
+
+// 2. CSRF Token Validation
+$client_csrf = $input['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+if (!verify_csrf_token($client_csrf)) {
+    send_response(false, 'Security validation expired. Please refresh the page and submit again.');
+}
+
+// 3. Rate Limiting Protection (Max 5 submissions per 5 minutes per session)
+$now = time();
+if (!isset($_SESSION['form_submissions']) || !is_array($_SESSION['form_submissions'])) {
+    $_SESSION['form_submissions'] = [];
+}
+$_SESSION['form_submissions'] = array_filter($_SESSION['form_submissions'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 300;
+});
+if (count($_SESSION['form_submissions']) >= 5) {
+    send_response(false, 'Too many requests. Please wait a few minutes before submitting another form.');
+}
+$_SESSION['form_submissions'][] = $now;
+
 // Ensure DB connection and table exist
 try {
     $db = get_db_connection();
     ensure_form_data_table($db);
 } catch (Exception $e) {
-    send_response(false, 'Database connection error: ' . $e->getMessage());
+    error_log('Database connection error in submit-form.php: ' . $e->getMessage());
+    send_response(false, 'Service is temporarily unavailable. Please try again or message us on WhatsApp.');
 }
 
-// 1. Determine form type
+// 4. Determine form type
 $raw_type = strtolower(trim($input['form_type'] ?? ''));
 $form_type = 'demo_class'; // default
 if (in_array($raw_type, ['demo', 'demo_class', 'free_demo'])) {
@@ -85,26 +111,27 @@ if (in_array($raw_type, ['demo', 'demo_class', 'free_demo'])) {
     $form_type = 'inquiry';
 }
 
-// 2. Extract and sanitize fields
-$full_name = trim($input['student_name'] ?? ($input['full_name'] ?? ($input['name'] ?? '')));
-$phone = trim($input['phone'] ?? ($input['mobile'] ?? ($input['contact'] ?? '')));
-$email = trim($input['email'] ?? '');
-$parent_name = trim($input['parent_name'] ?? ($input['guardian_name'] ?? ''));
-$course = trim($input['course_standard'] ?? ($input['course'] ?? ($input['course_applying'] ?? '')));
-$batch_timing = trim($input['batch_timing'] ?? ($input['batch'] ?? ($input['preferred_shift'] ?? '')));
-$school_name = trim($input['school_name'] ?? ($input['school'] ?? ($input['college_name'] ?? '')));
-$query_type = trim($input['query_type'] ?? ($input['subject'] ?? ''));
-$message = trim($input['message'] ?? ($input['remarks'] ?? ($input['query'] ?? '')));
+// 5. Extract, sanitize, and length-limit all fields
+$full_name = mb_substr(strip_tags(trim($input['student_name'] ?? ($input['full_name'] ?? ($input['name'] ?? '')))), 0, 150);
+$phone = mb_substr(strip_tags(trim($input['phone'] ?? ($input['mobile'] ?? ($input['contact'] ?? '')))), 0, 30);
+$email_raw = trim($input['email'] ?? '');
+$email = filter_var($email_raw, FILTER_VALIDATE_EMAIL) ? mb_substr($email_raw, 0, 150) : null;
+$parent_name = mb_substr(strip_tags(trim($input['parent_name'] ?? ($input['guardian_name'] ?? ''))), 0, 150);
+$course = mb_substr(strip_tags(trim($input['course_standard'] ?? ($input['course'] ?? ($input['course_applying'] ?? '')))), 0, 150);
+$batch_timing = mb_substr(strip_tags(trim($input['batch_timing'] ?? ($input['batch'] ?? ($input['preferred_shift'] ?? '')))), 0, 150);
+$school_name = mb_substr(strip_tags(trim($input['school_name'] ?? ($input['school'] ?? ($input['college_name'] ?? '')))), 0, 255);
+$query_type = mb_substr(strip_tags(trim($input['query_type'] ?? ($input['subject'] ?? ''))), 0, 150);
+$message = mb_substr(strip_tags(trim($input['message'] ?? ($input['remarks'] ?? ($input['query'] ?? '')))), 0, 1000);
 
 // Source tracking
-$source_page = trim($input['source_page'] ?? ($_SERVER['HTTP_REFERER'] ?? ''));
+$source_page = mb_substr(strip_tags(preg_replace('/[\r\n]/', '', trim($input['source_page'] ?? ($_SERVER['HTTP_REFERER'] ?? '')))), 0, 255);
 $ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? ($_SERVER['REMOTE_ADDR'] ?? '');
-// Clean IP if multiple forwarded IPs
 if (strpos($ip_address, ',') !== false) {
     $parts = explode(',', $ip_address);
     $ip_address = trim($parts[0]);
 }
-$user_agent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 250);
+$ip_address = filter_var($ip_address, FILTER_VALIDATE_IP) ? $ip_address : '127.0.0.1';
+$user_agent = mb_substr(strip_tags($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 250);
 
 // Validation
 if (empty($full_name)) {
@@ -117,11 +144,12 @@ if (empty($phone)) {
 
 // Clean phone digits for sanity check
 $clean_phone = preg_replace('/[^0-9+]/', '', $phone);
-if (strlen(preg_replace('/[^0-9]/', '', $clean_phone)) < 7) {
-    send_response(false, 'Please enter a valid mobile number.');
+$digit_count = strlen(preg_replace('/[^0-9]/', '', $clean_phone));
+if ($digit_count < 7 || $digit_count > 15) {
+    send_response(false, 'Please enter a valid mobile number (7 to 15 digits).');
 }
 
-// Insert into form_data table
+// Insert into form_data table using prepared statement
 try {
     $stmt = $db->prepare("INSERT INTO form_data 
         (form_type, full_name, phone, email, parent_name, course, batch_timing, school_name, query_type, message, status, source_page, ip_address, user_agent)
@@ -161,5 +189,6 @@ try {
     ]);
 
 } catch (Exception $e) {
-    send_response(false, 'An error occurred while saving your submission: ' . $e->getMessage());
+    error_log('Error saving form submission: ' . $e->getMessage());
+    send_response(false, 'An unexpected error occurred while saving your request. Please try again or reach out on WhatsApp.');
 }

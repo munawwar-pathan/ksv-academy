@@ -2,9 +2,11 @@
 require_once __DIR__ . '/config.php';
 
 $active_page = 'about';
-$page_title = 'About Us | KSV Academy Ulwe | Where Learning Meets Excellence';
-$page_description = 'Learn about KSV Academy in Ulwe, Navi Mumbai. Discover our mission, teaching philosophy, 10+ years academic legacy, and commitment to shaping future doctors, engineers, and toppers.';
-$page_keywords = 'About KSV Academy, coaching philosophy, Salam Khan physics, Ulwe coaching classes, educational institute Navi Mumbai, tuition classes Ulwe';
+$page_title = 'About Us | KSV Academy Ulwe | 10+ Years Academic Excellence & Leadership';
+$page_description = 'Learn about KSV Academy in Ulwe Sector 19, Navi Mumbai. Discover our mission, 10+ years academic legacy, concept-first teaching methodology, small batch discipline, and expert faculty mentorship led by Director Mr. Salam Khan.';
+$page_keywords = 'About KSV Academy, KSV Academy Ulwe, coaching institute Ulwe sector 19, Mr Salam Khan physics director, coaching philosophy Ulwe, best tuition classes Ulwe, IIT JEE coaching Navi Mumbai, NEET classes Ulwe, 5th to 12th coaching Ulwe';
+$page_image = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/assets/imgs/faculties/founder-director.png';
+$canonical_url = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/about';
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -17,7 +19,7 @@ require_once __DIR__ . '/includes/header.php';
       <div class="hero-eyebrows-wrap" style="justify-content: center; margin-bottom: 16px;">
         <div class="hero-eyebrow">
           <span class="hero-live-dot"></span>
-          <span>Know Our Journey • Session <?php echo CURRENT_SESSION; ?></span>
+          <span>Know Our Journey • Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <div class="hero-trust-badge">
           <i class="fa-solid fa-award"></i>
@@ -106,7 +108,7 @@ require_once __DIR__ . '/includes/header.php';
             <span>Book 3-Days Free Demo</span>
             <i class="fa-solid fa-arrow-right"></i>
           </button>
-          <a href="<?php echo url('contact'); ?>" class="btn btn-outline-primary btn-lg">
+          <a href="<?php echo htmlspecialchars(url('contact'), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-primary btn-lg">
             <i class="fa-solid fa-location-dot"></i>
             <span>Visit Campus</span>
           </a>
@@ -121,7 +123,7 @@ require_once __DIR__ . '/includes/header.php';
           <!-- Director Spotlight Header -->
           <div class="sober-card-header">
             <div class="sober-avatar-wrap">
-              <img src="<?php echo url('assets/imgs/faculties/founder-director.png'); ?>" alt="Mr. Salam Khan - Founder &amp; Director" class="sober-avatar-img">
+              <img src="<?php echo htmlspecialchars(url('assets/imgs/faculties/founder-director.png'), ENT_QUOTES, 'UTF-8'); ?>" alt="Mr. Salam Khan - Founder &amp; Director" class="sober-avatar-img">
               <span class="sober-verified-check" title="Verified Director"><i class="fa-solid fa-circle-check"></i></span>
             </div>
             <div class="sober-profile-info">
@@ -225,7 +227,7 @@ require_once __DIR__ . '/includes/header.php';
         </ul>
         <div class="cover-card-footer">
           <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-users"></i> Small Batches</span>
-          <a href="<?php echo url('courses?filter=school'); ?>" class="cover-card-link">Explore Courses <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="<?php echo htmlspecialchars(url('courses?filter=school'), ENT_QUOTES, 'UTF-8'); ?>" class="cover-card-link">Explore Courses <i class="fa-solid fa-arrow-right"></i></a>
         </div>
       </div>
 
@@ -249,7 +251,7 @@ require_once __DIR__ . '/includes/header.php';
         </ul>
         <div class="cover-card-footer">
           <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-user-graduate"></i> Top Mentors</span>
-          <a href="<?php echo url('courses?filter=competitive'); ?>" class="cover-card-link">Explore Courses <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="<?php echo htmlspecialchars(url('courses?filter=competitive'), ENT_QUOTES, 'UTF-8'); ?>" class="cover-card-link">Explore Courses <i class="fa-solid fa-arrow-right"></i></a>
         </div>
       </div>
 
@@ -273,7 +275,7 @@ require_once __DIR__ . '/includes/header.php';
         </ul>
         <div class="cover-card-footer">
           <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-briefcase"></i> Career Focus</span>
-          <a href="<?php echo url('courses?filter=degree'); ?>" class="cover-card-link">Explore Courses <i class="fa-solid fa-arrow-right"></i></a>
+          <a href="<?php echo htmlspecialchars(url('courses?filter=degree'), ENT_QUOTES, 'UTF-8'); ?>" class="cover-card-link">Explore Courses <i class="fa-solid fa-arrow-right"></i></a>
         </div>
       </div>
     </div>
@@ -365,7 +367,7 @@ require_once __DIR__ . '/includes/header.php';
           <button type="button" class="btn btn-warning btn-lg" data-modal="demoModal" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
             <i class="fa-regular fa-calendar-check"></i> Book 3-Days Free Demo
           </button>
-          <a href="<?php echo url('contact'); ?>" class="btn btn-outline-white btn-lg" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
+          <a href="<?php echo htmlspecialchars(url('contact'), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-white btn-lg" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
             <i class="fa-solid fa-location-dot"></i> Visit Our Ulwe Campus
           </a>
         </div>
@@ -376,8 +378,8 @@ require_once __DIR__ . '/includes/header.php';
         <div style="color: #fbbf24; font-size: 1.1rem; margin: 8px 0;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
         <div style="font-size: 0.9rem; font-weight: 700; color: #ffffff;">Top-Rated Coaching in Ulwe</div>
         <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.8); margin: 6px 0 16px;">150+ Verified Google &amp; Parent Reviews</p>
-        <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
-          <i class="fa-solid fa-phone"></i> Call: <?php echo PHONE_PRIMARY; ?>
+        <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_1, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
+          <i class="fa-solid fa-phone"></i> Call: <?php echo htmlspecialchars(PHONE_PRIMARY, ENT_QUOTES, 'UTF-8'); ?>
         </a>
       </div>
     </div>

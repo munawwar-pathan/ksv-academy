@@ -3,8 +3,14 @@ require_once __DIR__ . '/config.php';
 
 $active_page = 'faculty';
 $page_title = 'Our Expert Faculty | KSV Academy Ulwe | Dedicated Mentors & Subject Specialists';
-$page_description = 'Meet the distinguished faculty team at KSV Academy Ulwe. Learn with Mr. Salam Khan (Physics, 10 Yrs), Mr. Rameshwar Mishra (Chemistry, 15 Yrs), Mr. Aman Kumar Soni, Hafiza Palikar, Rafeek Khan & Mrs. Lubna Khan.';
-$page_keywords = 'KSV Academy faculty, Salam Khan Physics Ulwe, Rameshwar Mishra Chemistry, Aman Kumar Soni, Hafiza Palikar Mumbai University math, Rafeek Khan CS, Lubna Khan English SST, Ulwe tuition teachers';
+$page_description = 'Meet the distinguished faculty team at KSV Academy Ulwe Sector 19. Learn with Mr. Salam Khan (Physics, 10+ Yrs), Mr. Rameshwar Mishra (Chemistry, 15+ Yrs), Mr. Aman Kumar Soni, Mrs. Hafiza Palikar, Rafeek Khan & Mrs. Lubna Khan. Book a 3-Days Free Demo today!';
+$page_keywords = 'KSV Academy faculty, best coaching teachers Ulwe, Salam Khan physics teacher Ulwe, Rameshwar Mishra chemistry Navi Mumbai, Aman Kumar Soni, Hafiza Palikar math tuition, Rafeek Khan computer science, Lubna Khan English SST, IIT JEE teachers Ulwe, NEET mentors Ulwe sector 19, best coaching faculty Navi Mumbai';
+$page_image = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/assets/imgs/faculties/founder-director.png';
+$canonical_url = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/faculty';
+
+// Dynamic faculty list from database with graceful fallback
+$all_faculties = get_active_faculties();
+$total_faculties = count($all_faculties);
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -17,7 +23,7 @@ require_once __DIR__ . '/includes/header.php';
       <div class="hero-eyebrows-wrap" style="justify-content: center; margin-bottom: 16px;">
         <div class="hero-eyebrow">
           <span class="hero-live-dot"></span>
-          <span>Distinguished Academic Mentors • Session <?php echo CURRENT_SESSION; ?></span>
+          <span>Distinguished Academic Mentors • Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <div class="hero-trust-badge">
           <i class="fa-solid fa-award"></i>
@@ -50,7 +56,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <span class="stat-number" data-target="6" data-suffix="">6</span>
+          <span class="stat-number" data-target="<?php echo (int)$total_faculties; ?>" data-suffix=""><?php echo (int)$total_faculties; ?></span>
           <span class="stat-label">Senior Specialists</span>
         </div>
         <div class="stat-divider"></div>
@@ -79,23 +85,33 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="faculty-grid">
       <?php
-      $all_faculties = get_active_faculties();
       foreach ($all_faculties as $idx => $fac): 
         $theme_meta = get_faculty_theme_info($fac, $idx);
         $themeClass = $theme_meta['theme'];
         $subj_icon = $theme_meta['icon'];
         $subj_label = $theme_meta['label'];
+
+        $faculty_photo = !empty($fac['image']) ? $fac['image'] : 'assets/imgs/ksv-logo.jpg';
+        $photo_src = preg_match('#^https?://#i', $faculty_photo) ? $faculty_photo : url($faculty_photo);
+
+        $name_parts = explode(' ', trim($fac['name'] ?? ''));
+        $first_word = $name_parts[0] ?? '';
+        if (in_array($first_word, ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'], true) && isset($name_parts[1])) {
+            $demo_name = $first_word . ' ' . $name_parts[1];
+        } else {
+            $demo_name = $first_word ?: 'Faculty';
+        }
       ?>
-      <div class="faculty-card <?php echo $themeClass; ?>" id="<?php echo htmlspecialchars($fac['id']); ?>">
+      <div class="faculty-card <?php echo htmlspecialchars($themeClass, ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($fac['id'], ENT_QUOTES, 'UTF-8'); ?>">
         <div class="faculty-card-topbar"></div>
         
         <div class="faculty-photo-wrapper">
           <div class="faculty-ambient-glow"></div>
-          <img src="<?php echo url($fac['image']); ?>" alt="<?php echo htmlspecialchars($fac['name']); ?>" class="faculty-photo" loading="lazy">
+          <img src="<?php echo htmlspecialchars($photo_src, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($fac['name']); ?>" class="faculty-photo" loading="lazy">
           
           <div class="faculty-photo-badges">
             <span class="faculty-subj-badge">
-              <i class="fa-solid <?php echo $subj_icon; ?>"></i>
+              <i class="fa-solid <?php echo htmlspecialchars($subj_icon, ENT_QUOTES, 'UTF-8'); ?>"></i>
               <span><?php echo htmlspecialchars($subj_label); ?></span>
             </span>
             <span class="faculty-exp-badge">
@@ -129,7 +145,7 @@ require_once __DIR__ . '/includes/header.php';
 
           <div class="faculty-actions-row">
             <button type="button" class="btn-faculty-action" data-modal="demoModal">
-              <span>Book Demo with <?php echo htmlspecialchars(explode(' ', $fac['name'])[0] === 'Mr.' || explode(' ', $fac['name'])[0] === 'Mrs.' ? $fac['name'] : explode(' ', $fac['name'])[0]); ?></span>
+              <span>Book Demo with <?php echo htmlspecialchars($demo_name, ENT_QUOTES, 'UTF-8'); ?></span>
               <i class="fa-solid fa-arrow-right"></i>
             </button>
           </div>
@@ -212,7 +228,7 @@ require_once __DIR__ . '/includes/header.php';
           <button type="button" class="btn btn-warning btn-lg" data-modal="demoModal" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
             <i class="fa-regular fa-calendar-check"></i> Claim 3-Days Free Demo Pass
           </button>
-          <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-outline-white btn-lg" target="_blank" rel="noopener noreferrer" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
+          <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-white btn-lg" target="_blank" rel="noopener noreferrer" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
             <i class="fa-brands fa-whatsapp"></i> Inquire via WhatsApp
           </a>
         </div>
@@ -223,8 +239,8 @@ require_once __DIR__ . '/includes/header.php';
         <div style="color: #fbbf24; font-size: 1.1rem; margin: 8px 0;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
         <div style="font-size: 0.9rem; font-weight: 700; color: #ffffff;">Top-Rated Mentors in Ulwe</div>
         <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.8); margin: 6px 0 16px;">150+ Verified Google &amp; Parent Reviews</p>
-        <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
-          <i class="fa-solid fa-phone"></i> Call: <?php echo PHONE_PRIMARY; ?>
+        <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_1, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
+          <i class="fa-solid fa-phone"></i> Call: <?php echo htmlspecialchars(PHONE_PRIMARY, ENT_QUOTES, 'UTF-8'); ?>
         </a>
       </div>
     </div>

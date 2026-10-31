@@ -2,9 +2,21 @@
 require_once __DIR__ . '/config.php';
 
 $active_page = 'courses';
-$page_title = 'Courses & Batches | KSV Academy Ulwe | School, College, JEE, NEET, CET, Degree';
-$page_description = 'Explore full course programs at KSV Academy Ulwe. Classes 5th-10th (CBSE/ICSE/State), IIT-JEE Main & Adv, NEET, MH-CET, 11th-12th Science & Commerce, B.Com, BMS, BCA & M.Com.';
-$page_keywords = 'KSV Academy courses, IIT JEE coaching Ulwe, NEET tuition Ulwe, 10th CBSE classes, 12th science commerce coaching, BCom BMS BCA coaching Ulwe';
+$page_title = 'Courses & Batches | KSV Academy Ulwe | Classes 5th-12th, IIT-JEE, NEET, CET & Degree';
+$page_description = 'Explore academic programs at KSV Academy Ulwe Sector 19. Classes 5th to 10th (CBSE/ICSE/State), IIT-JEE (Main & Adv), NEET-UG, MH-CET, 11th-12th Science & Commerce, B.Com, BMS, BCA & M.Com with small batches & up to 60% scholarship.';
+$page_keywords = 'KSV Academy courses, coaching classes Ulwe, IIT JEE coaching Ulwe, NEET classes Ulwe, 10th board tuition Ulwe, 11th 12th science commerce coaching, BCom BMS BCA tuition Navi Mumbai, MH-CET coaching Sector 19 Ulwe, best coaching center Ulwe';
+$page_image = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/assets/imgs/students/classroom-learning.jpg';
+$canonical_url = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/courses';
+
+// Security & Filter Whitelist: Strictly sanitize and validate incoming filter parameter
+$valid_filters = ['all', 'school', 'competitive', 'college', 'degree', 'postgraduate'];
+$selected_filter = 'all';
+if (isset($_GET['filter']) && is_string($_GET['filter'])) {
+    $raw_filter = strtolower(trim($_GET['filter']));
+    if (in_array($raw_filter, $valid_filters, true)) {
+        $selected_filter = $raw_filter;
+    }
+}
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -17,7 +29,7 @@ require_once __DIR__ . '/includes/header.php';
       <div class="hero-eyebrows-wrap" style="justify-content: center; margin-bottom: 16px;">
         <div class="hero-eyebrow">
           <span class="hero-live-dot"></span>
-          <span>Admissions Open • Session <?php echo CURRENT_SESSION; ?></span>
+          <span>Admissions Open • Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <div class="hero-trust-badge">
           <i class="fa-solid fa-graduation-cap"></i>
@@ -79,22 +91,22 @@ require_once __DIR__ . '/includes/header.php';
 
     <!-- Filter Tabs with Icons -->
     <div class="courses-tab-nav">
-      <button type="button" class="course-tab-btn active" data-filter="all">
+      <button type="button" class="course-tab-btn <?php echo ($selected_filter === 'all') ? 'active' : ''; ?>" data-filter="all">
         <i class="fa-solid fa-border-all"></i> All Programs
       </button>
-      <button type="button" class="course-tab-btn" data-filter="school">
+      <button type="button" class="course-tab-btn <?php echo ($selected_filter === 'school') ? 'active' : ''; ?>" data-filter="school">
         <i class="fa-solid fa-school"></i> School (5th - 10th)
       </button>
-      <button type="button" class="course-tab-btn" data-filter="competitive">
+      <button type="button" class="course-tab-btn <?php echo ($selected_filter === 'competitive') ? 'active' : ''; ?>" data-filter="competitive">
         <i class="fa-solid fa-atom"></i> IIT-JEE / NEET / MH-CET
       </button>
-      <button type="button" class="course-tab-btn" data-filter="college">
+      <button type="button" class="course-tab-btn <?php echo ($selected_filter === 'college') ? 'active' : ''; ?>" data-filter="college">
         <i class="fa-solid fa-graduation-cap"></i> Junior College (11th &amp; 12th)
       </button>
-      <button type="button" class="course-tab-btn" data-filter="degree">
+      <button type="button" class="course-tab-btn <?php echo ($selected_filter === 'degree') ? 'active' : ''; ?>" data-filter="degree">
         <i class="fa-solid fa-briefcase"></i> Undergraduate Degree
       </button>
-      <button type="button" class="course-tab-btn" data-filter="postgraduate">
+      <button type="button" class="course-tab-btn <?php echo ($selected_filter === 'postgraduate') ? 'active' : ''; ?>" data-filter="postgraduate">
         <i class="fa-solid fa-award"></i> Postgraduate
       </button>
     </div>
@@ -103,7 +115,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="courses-grid">
       <?php foreach ($courses as $c): 
         $cat = $c['category'];
-        $themeClass = 'course-theme-' . htmlspecialchars($c['category']);
+        $themeClass = 'course-theme-' . $cat;
         $cat_icon = 'fa-school';
         $course_img = 'assets/imgs/students/classroom-learning.jpg';
 
@@ -123,16 +135,18 @@ require_once __DIR__ . '/includes/header.php';
           $cat_icon = 'fa-trophy';
           $course_img = 'assets/imgs/gallers/gallery-3.png';
         }
+
+        $is_card_visible = ($selected_filter === 'all' || $selected_filter === $cat);
       ?>
-      <div class="course-card <?php echo $themeClass; ?>" data-category="<?php echo htmlspecialchars($c['category']); ?>" id="<?php echo htmlspecialchars($c['id']); ?>">
+      <div class="course-card <?php echo htmlspecialchars($themeClass, ENT_QUOTES, 'UTF-8'); ?>" data-category="<?php echo htmlspecialchars($c['category'], ENT_QUOTES, 'UTF-8'); ?>" id="<?php echo htmlspecialchars($c['id'], ENT_QUOTES, 'UTF-8'); ?>" style="<?php echo $is_card_visible ? '' : 'display: none;'; ?>">
         <div class="course-card-topbar"></div>
 
         <!-- Indian Student Batch Media Header -->
         <div class="course-card-media">
-          <img src="<?php echo url($course_img); ?>" alt="<?php echo htmlspecialchars($c['title']); ?> - Indian Students Batch at KSV Academy" class="course-card-img" loading="lazy">
+          <img src="<?php echo htmlspecialchars(url($course_img), ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($c['title']); ?> - Indian Students Batch at KSV Academy" class="course-card-img" loading="lazy">
           <div class="course-card-media-overlay"></div>
           <span class="course-cat-tag">
-            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
+            <i class="fa-solid <?php echo htmlspecialchars($cat_icon, ENT_QUOTES, 'UTF-8'); ?>"></i>
             <span><?php echo htmlspecialchars($c['category_name']); ?></span>
           </span>
           <span class="course-status-pill">
@@ -194,7 +208,7 @@ require_once __DIR__ . '/includes/header.php';
             <span>Book Free Demo</span>
             <i class="fa-solid fa-arrow-right"></i>
           </button>
-          <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn-details-action" title="Call for Details">
+          <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_1, ENT_QUOTES, 'UTF-8'); ?>" class="btn-details-action" title="Call for Details">
             <i class="fa-solid fa-phone"></i>
             <span>Inquire</span>
           </a>
@@ -320,7 +334,7 @@ require_once __DIR__ . '/includes/header.php';
     <div class="scholarship-banner-card">
       <div>
         <span class="scholarship-eyebrow">
-          <i class="fa-solid fa-award"></i> Merit Scholarship Opportunity • Session <?php echo CURRENT_SESSION; ?>
+          <i class="fa-solid fa-award"></i> Merit Scholarship Opportunity • Session <?php echo htmlspecialchars(CURRENT_SESSION, ENT_QUOTES, 'UTF-8'); ?>
         </span>
         <h2 style="font-size: 2.3rem; font-weight: 800; margin-bottom: 14px; color: #ffffff; line-height: 1.25;">
           Merit Scholarship Up to <span style="color: #38bdf8;">60% Concession</span>
@@ -345,10 +359,10 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-          <a href="<?php echo url('admissions'); ?>" class="btn btn-warning btn-lg" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
+          <a href="<?php echo htmlspecialchars(url('admissions'), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-warning btn-lg" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
             <i class="fa-solid fa-award"></i> Apply for Scholarship
           </a>
-          <a href="<?php echo WHATSAPP_LINK; ?>" class="btn btn-outline-white btn-lg" target="_blank" rel="noopener noreferrer" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
+          <a href="<?php echo htmlspecialchars(WHATSAPP_LINK, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-outline-white btn-lg" target="_blank" rel="noopener noreferrer" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
             <i class="fa-brands fa-whatsapp"></i> Inquire via WhatsApp
           </a>
         </div>

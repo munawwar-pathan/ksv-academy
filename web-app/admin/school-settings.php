@@ -23,7 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields = [
             'school_name', 'tagline', 'affiliation', 'phone', 'email',
             'address', 'website', 'currency_symbol', 'principal_name',
-            'logo_url', 'stamp_text', 'sms_alerts', 'theme_mode'
+            'logo_url', 'stamp_text', 'sms_alerts', 'theme_mode',
+            'smtp_enabled', 'smtp_host', 'smtp_port', 'smtp_encryption',
+            'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name'
         ];
 
         $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
@@ -36,11 +38,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         set_flash('success', 'General settings and academy profile updated successfully!');
-        header('Location: ' . ADMIN_URL . '/school-settings?tab=general');
+        header('Location: ' . ADMIN_URL . '/school-settings?tab=general#smtp-settings');
         exit;
     }
 
-    // 1b. Save Theme Setting (Instant AJAX/Fetch)
+    // 1b. Test SMTP Configuration
+    if ($action === 'test_smtp') {
+        $test_to = trim($_POST['test_recipient'] ?? '') ?: ($school_settings['email'] ?? 'munawwar.pathan.official@gmail.com');
+        $diag_err = '';
+        $test_cfg = [
+            'host' => trim($_POST['smtp_host'] ?? 'smtp.gmail.com'),
+            'port' => (int)($_POST['smtp_port'] ?? 587),
+            'encryption' => trim($_POST['smtp_encryption'] ?? 'tls'),
+            'user' => trim($_POST['smtp_user'] ?? ''),
+            'pass' => trim($_POST['smtp_pass'] ?? ''),
+            'from_email' => trim($_POST['smtp_from_email'] ?? ''),
+            'from_name' => trim($_POST['smtp_from_name'] ?? 'KSV Academy')
+        ];
+
+        // Also save submitted values to DB so user does not lose them
+        $stmt_save = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+        foreach ($test_cfg as $k => $v) {
+            $stmt_save->execute(['smtp_' . $k, (string)$v]);
+        }
+        $stmt_save->execute(['smtp_enabled', 'yes']);
+
+        $test_subject = "KSV Academy SMTP Connection Test";
+        $test_body = "<div style='font-family:-apple-system,BlinkMacSystemFont,sans-serif; padding:24px; background:#f0f9ff; border:2px solid #0284c7; border-radius:12px; color:#0f172a;'><h2 style='color:#0a2540; margin-top:0;'>🎓 KSV Academy - SMTP Test Succeeded!</h2><p>Your SMTP mail server configuration is active and communicating properly. Outbound emails (including student portal credentials and welcome emails) will now reach recipients\' inboxes.</p><p style='font-size:0.8rem; color:#64748b;'>Delivered to: <strong>" . htmlspecialchars($test_to) . "</strong> at " . date('Y-m-d H:i:s') . "</p></div>";
+
+        $test_ok = ksv_send_smtp_mail($test_to, $test_subject, $test_body, $diag_err, $test_cfg);
+        if ($test_ok) {
+            set_flash('success', "SMTP test passed! Test email was successfully delivered to {$test_to}.");
+        } else {
+            set_flash('error', "SMTP test failed: {$diag_err}");
+        }
+        header('Location: ' . ADMIN_URL . '/school-settings?tab=general#smtp-settings');
+        exit;
+    }
+
+    // 1c. Save Theme Setting (Instant AJAX/Fetch)
     if ($action === 'save_theme') {
         $theme = in_array($_POST['theme'] ?? '', ['light', 'dark']) ? $_POST['theme'] : 'light';
         $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES ('theme_mode', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
@@ -1529,6 +1565,80 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
         </div>
 
+        <!-- Group 4: SMTP Email Dispatch Configuration -->
+        <div class="settings-group-card" id="smtp-settings">
+          <div class="form-section-header">
+            <div class="form-section-icon" style="background: rgba(2, 132, 199, 0.1); color: #0284c7;">
+              <i class="fa-solid fa-envelope-circle-check"></i>
+            </div>
+            <div>
+              <h4 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+                SMTP Email Dispatch &amp; Notification Server
+              </h4>
+              <p style="margin: 2px 0 0; font-size: 0.76rem; color: #64748b;">
+                Deliver student registration credentials, welcome emails, and password resets directly to external mailboxes (Gmail, Yahoo, Outlook).
+              </p>
+            </div>
+          </div>
+
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.8rem; color: #1e40af; line-height: 1.5;">
+            <strong><i class="fa-solid fa-circle-info"></i> Gmail Quick Setup:</strong>
+            Use SMTP Host: <code>smtp.gmail.com</code> &bull; Port: <code>587</code> &bull; Encryption: <code>TLS</code> &bull; For password, generate a 16-character <strong>Google App Password</strong> at <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Google Account &rarr; App Passwords</a> (requires 2-Step Verification enabled).
+          </div>
+
+          <div class="settings-form-row four-col" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 14px;">
+            <div class="form-group">
+              <label class="input-field-label">SMTP Delivery</label>
+              <select name="smtp_enabled" class="settings-input" style="height: 42px;">
+                <option value="yes" <?php echo ($school_settings['smtp_enabled'] ?? '') === 'yes' ? 'selected' : ''; ?>>Enabled (Send via SMTP)</option>
+                <option value="no" <?php echo ($school_settings['smtp_enabled'] ?? 'no') !== 'yes' ? 'selected' : ''; ?>>Disabled / Local Preview</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="input-field-label">SMTP Host</label>
+              <input type="text" name="smtp_host" value="<?php echo htmlspecialchars($school_settings['smtp_host'] ?? 'smtp.gmail.com'); ?>" class="settings-input" placeholder="smtp.gmail.com">
+            </div>
+
+            <div class="form-group">
+              <label class="input-field-label">SMTP Port</label>
+              <input type="number" name="smtp_port" value="<?php echo htmlspecialchars($school_settings['smtp_port'] ?? '587'); ?>" class="settings-input" placeholder="587">
+            </div>
+
+            <div class="form-group">
+              <label class="input-field-label">Encryption Protocol</label>
+              <select name="smtp_encryption" class="settings-input" style="height: 42px;">
+                <option value="tls" <?php echo ($school_settings['smtp_encryption'] ?? 'tls') === 'tls' ? 'selected' : ''; ?>>TLS (Port 587 - Recommended)</option>
+                <option value="ssl" <?php echo ($school_settings['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : ''; ?>>SSL (Port 465)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-form-row two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group">
+              <label class="input-field-label">SMTP Username / Email</label>
+              <input type="email" name="smtp_user" value="<?php echo htmlspecialchars($school_settings['smtp_user'] ?? ''); ?>" class="settings-input" placeholder="e.g. ksvacademy2024@gmail.com">
+            </div>
+
+            <div class="form-group">
+              <label class="input-field-label">SMTP Password / App Password</label>
+              <input type="password" name="smtp_pass" value="<?php echo htmlspecialchars($school_settings['smtp_pass'] ?? ''); ?>" class="settings-input" placeholder="16-character Google App Password" autocomplete="new-password">
+            </div>
+          </div>
+
+          <div class="settings-form-row two-col" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group">
+              <label class="input-field-label">Sender From Email</label>
+              <input type="email" name="smtp_from_email" value="<?php echo htmlspecialchars($school_settings['smtp_from_email'] ?? ($school_settings['email'] ?? 'admissions@ksvacademy.com')); ?>" class="settings-input" placeholder="admissions@ksvacademy.com">
+            </div>
+
+            <div class="form-group">
+              <label class="input-field-label">Sender From Name</label>
+              <input type="text" name="smtp_from_name" value="<?php echo htmlspecialchars($school_settings['smtp_from_name'] ?? ($school_settings['school_name'] ?? 'KSV Academy')); ?>" class="settings-input" placeholder="KSV Academy">
+            </div>
+          </div>
+        </div>
+
         <!-- Submit Button Footer -->
         <div class="settings-form-footer" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
           <button type="submit" class="roaster-add-btn settings-save-btn" style="padding: 10px 24px; font-size: 0.88rem;">
@@ -1538,6 +1648,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
       </form>
+
+      <!-- Instant SMTP Test Card -->
+      <div class="settings-group-card" style="margin-top: 18px; border: 1px dashed #93c5fd; background: #f8fafc;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <div>
+            <h5 style="margin: 0; font-size: 0.9rem; font-weight: 800; color: #0f172a;">
+              <i class="fa-solid fa-paper-plane" style="color: #0284c7;"></i> Test Outbound SMTP Delivery
+            </h5>
+            <p style="margin: 2px 0 0; font-size: 0.74rem; color: #64748b;">
+              Send an instant verification test email to check connection and credentials.
+            </p>
+          </div>
+          <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings" style="display: flex; gap: 8px; align-items: center; margin: 0; flex-wrap: wrap;">
+            <input type="hidden" name="action" value="test_smtp">
+            <input type="email" name="test_recipient" class="settings-input" style="width: 250px; height: 38px; font-size: 0.8rem;" required placeholder="recipient@gmail.com" value="<?php echo htmlspecialchars($current_user['email'] ?? 'munawwar.pathan.official@gmail.com'); ?>">
+            <button type="submit" class="roaster-add-btn" style="padding: 8px 18px; font-size: 0.8rem; background: #0284c7;">
+              <div class="btn-icon-circle"><i class="fa-solid fa-check"></i></div>
+              <span>Send Test Email</span>
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
 
   </div>

@@ -17,10 +17,34 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_WARNING);
 if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     ini_set('session.cookie_httponly', '1');
     ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_samesite', 'Lax');
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         ini_set('session.cookie_secure', '1');
     }
     session_start();
+}
+
+/**
+ * CSRF Protection Token Helpers
+ */
+function get_csrf_token() {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        session_start();
+    }
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function verify_csrf_token($token) {
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        session_start();
+    }
+    if (empty($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], (string)$token);
 }
 
 // Site Information
@@ -59,6 +83,15 @@ if (!defined('PHONE_RAW_2')) define('PHONE_RAW_2', '+919984058406');
 if (!defined('WHATSAPP_NUMBER')) define('WHATSAPP_NUMBER', '917905900350');
 if (!defined('WHATSAPP_LINK')) define('WHATSAPP_LINK', 'https://wa.me/917905900350?text=' . urlencode('Hello KSV Academy, I would like to inquire about admissions and the 3-day free demo classes.'));
 if (!defined('EMAIL_PRIMARY')) define('EMAIL_PRIMARY', 'KSVAcademy2024@gmail.com');
+
+// Outbound SMTP Mailer Configuration (Override here or via Web-App School Settings)
+if (!defined('SMTP_HOST')) define('SMTP_HOST', 'smtp.gmail.com');
+if (!defined('SMTP_PORT')) define('SMTP_PORT', 587);
+if (!defined('SMTP_ENCRYPTION')) define('SMTP_ENCRYPTION', 'tls');
+if (!defined('SMTP_USER')) define('SMTP_USER', '');
+if (!defined('SMTP_PASS')) define('SMTP_PASS', '');
+if (!defined('SMTP_FROM_EMAIL')) define('SMTP_FROM_EMAIL', 'admissions@ksvacademy.com');
+if (!defined('SMTP_FROM_NAME')) define('SMTP_FROM_NAME', 'KSV Academy');
 
 // Address
 if (!defined('ADDRESS_STREET')) define('ADDRESS_STREET', 'MGM Residency, Shop No.02, Plot No.161, opp. Om Sai Hospital, Sector 19');
@@ -218,12 +251,22 @@ function get_active_faculties($limit = null) {
         require_once __DIR__ . '/web-app/config.php';
         $db = get_db_connection();
         if ($db) {
+            $has_sort = false;
+            try {
+                $so_chk = $db->query("SHOW COLUMNS FROM staff_profiles LIKE 'sort_order'");
+                $has_sort = ($so_chk && $so_chk->rowCount() > 0);
+            } catch (Throwable $e) {}
+
+            $order_by = $has_sort 
+                ? "ORDER BY CASE WHEN sp.sort_order = 0 THEN 9999 ELSE sp.sort_order END ASC, sp.id ASC" 
+                : "ORDER BY sp.id ASC";
+
             $sql = "
                 SELECT sp.*, u.username, u.full_name, u.avatar, u.status as user_status
                 FROM staff_profiles sp
                 JOIN users u ON sp.user_id = u.id
                 WHERE u.status = 'active'
-                ORDER BY CASE WHEN sp.sort_order = 0 THEN 9999 ELSE sp.sort_order END ASC, sp.id ASC
+                {$order_by}
             ";
             if ($limit !== null && (int)$limit > 0) {
                 $sql .= " LIMIT " . (int)$limit;
@@ -236,7 +279,9 @@ function get_active_faculties($limit = null) {
                     foreach ($rows as $r) {
                         // Determine photo
                         $photo = '';
-                        if (!empty($r['photo']) && $r['photo'] !== '/assets/imgs/ksv-logo.jpg') {
+                        if (!empty($r['photo']) && preg_match('#^https?://#i', $r['photo'])) {
+                            $photo = $r['photo'];
+                        } elseif (!empty($r['photo']) && $r['photo'] !== '/assets/imgs/ksv-logo.jpg') {
                             $photo = ltrim($r['photo'], '/');
                         } elseif (!empty($r['avatar'])) {
                             if (file_exists(__DIR__ . '/assets/imgs/faculties/' . $r['avatar'])) {

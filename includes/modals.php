@@ -19,6 +19,12 @@ require_once __DIR__ . '/../config.php';
 
         <form id="demoClassForm" class="interactive-form" method="POST" action="/submit-form" onsubmit="handleDemoSubmit(event)">
           <input type="hidden" name="form_type" value="demo_class">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token()); ?>">
+          <!-- Anti-bot honeypot field (hidden from real users) -->
+          <div style="display:none !important;" aria-hidden="true">
+            <label for="demo_hp_check">Leave this field blank</label>
+            <input type="text" id="demo_hp_check" name="website_hp" tabindex="-1" autocomplete="off">
+          </div>
           <div class="form-group">
             <label for="demoStudentName"><i class="fa-solid fa-user"></i> Student Name <span class="required">*</span></label>
             <input type="text" id="demoStudentName" name="student_name" class="form-control" placeholder="Enter full name" required>
@@ -281,7 +287,13 @@ if (!$db_has_popup_table || $total_popup_records === 0) {
                   }
                   $raw_link = trim($ps_slide['link_url'] ?? '');
                   if (!empty($raw_link)) {
-                      $ps_link = preg_match('#^https?://#i', $raw_link) ? $raw_link : url(ltrim($raw_link, '/'));
+                      if (preg_match('#^https?://#i', $raw_link)) {
+                          $ps_link = filter_var($raw_link, FILTER_VALIDATE_URL) ? $raw_link : url('admissions');
+                      } elseif (strpos($raw_link, '/') === 0) {
+                          $ps_link = url(ltrim($raw_link, '/'));
+                      } else {
+                          $ps_link = url('admissions');
+                      }
                   } else {
                       $ps_link = url('admissions');
                   }

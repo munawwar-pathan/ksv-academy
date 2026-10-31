@@ -9,15 +9,23 @@ if (!empty($base) && strpos($req_path, $base) === 0) {
 }
 $trimmed_path = trim($req_path, '/');
 
+// Security Hardening: Restrict fallback routing to single-segment alphanumeric page slugs
 if (!empty($trimmed_path) && $trimmed_path !== 'index.php' && $trimmed_path !== 'index') {
-    // If clean PHP file exists (e.g. /about -> about.php, /courses -> courses.php)
-    $clean_php_file = __DIR__ . '/' . $trimmed_path . '.php';
-    if (file_exists($clean_php_file)) {
-        require $clean_php_file;
-        exit;
+    // Strictly disallow directory traversal characters, slashes, backslashes, or null bytes
+    if (preg_match('/^[a-zA-Z0-9_-]+$/', $trimmed_path)) {
+        $blocked_internal_files = ['config', 'router', 'index', '404'];
+        if (!in_array(strtolower($trimmed_path), $blocked_internal_files, true)) {
+            $clean_php_file = __DIR__ . '/' . $trimmed_path . '.php';
+            $real_clean_file = realpath($clean_php_file);
+            // Verify the file exists and is directly located in the project root directory
+            if ($real_clean_file && dirname($real_clean_file) === __DIR__ && file_exists($real_clean_file)) {
+                require $real_clean_file;
+                exit;
+            }
+        }
     }
 
-    // If requested route does not exist: serve 404 Not Found page
+    // If requested route does not exist or is invalid: serve 404 Not Found page
     http_response_code(404);
     require __DIR__ . '/404.php';
     exit;
@@ -624,7 +632,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <div class="faculty-photo-wrapper">
           <div class="faculty-ambient-glow"></div>
-          <img src="<?php echo url($fac['image']); ?>" alt="<?php echo htmlspecialchars($fac['name']); ?>" class="faculty-photo" loading="lazy">
+          <img src="<?php echo htmlspecialchars(url($fac['image'])); ?>" alt="<?php echo htmlspecialchars($fac['name']); ?>" class="faculty-photo" loading="lazy">
           
           <div class="faculty-photo-badges">
             <span class="faculty-subj-badge">
@@ -849,7 +857,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <!-- Floating Badge 2 (Top Right) -->
         <div class="culture-floating-chip top-right">
-          <div class="culture-chip-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;"><i class="fa-solid fa-shield-check"></i></div>
+          <div class="culture-chip-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;"><i class="fa-solid fa-lightbulb"></i></div>
           <div class="culture-chip-text">
             <strong>Concept-First Approach</strong>
             <span>Zero Rote Learning</span>
@@ -977,7 +985,7 @@ require_once __DIR__ . '/includes/header.php';
 
             <div class="demo-benefit-card">
               <div class="benefit-icon-box em-purple">
-                <i class="fa-solid fa-chart-line-up"></i>
+                <i class="fa-solid fa-chart-line"></i>
               </div>
               <div class="benefit-info">
                 <strong class="benefit-title">1-on-1 Academic &amp; Scholarship Evaluation</strong>
@@ -1001,7 +1009,7 @@ require_once __DIR__ . '/includes/header.php';
 
           <!-- Trust Badges -->
           <div class="demo-guarantee-row">
-            <span class="guarantee-tag"><i class="fa-solid fa-shield-check"></i> 100% Free Trial</span>
+            <span class="guarantee-tag"><i class="fa-solid fa-circle-check"></i> 100% Free Trial</span>
             <span class="guarantee-dot">•</span>
             <span class="guarantee-tag"><i class="fa-solid fa-ban"></i> Zero Credit Card / Fees Required</span>
             <span class="guarantee-dot">•</span>

@@ -2,18 +2,37 @@
 require_once __DIR__ . '/config.php';
 
 $active_page = 'gallery';
-$page_title = 'Campus Gallery & Student Life | KSV Academy Ulwe';
-$page_description = 'Explore life at KSV Academy Ulwe. Take a photo tour of our modern classrooms, interactive physics & chemistry sessions, test series, and celebratory milestones.';
-$page_keywords = 'KSV Academy gallery, coaching photos Ulwe, classroom photos Ulwe, student life KSV Academy, Salam Khan physics classroom';
+$page_title = 'Campus Gallery & Infrastructure | KSV Academy Ulwe | Smart Classrooms & Student Life';
+$page_description = 'Take a photo tour of KSV Academy in Ulwe Sector 19, Navi Mumbai. Explore our air-conditioned smart classrooms, interactive concept teaching boards, 1:1 doubt-clearing counters, study library, and celebratory milestones.';
+$page_keywords = 'KSV Academy gallery, coaching classes in Ulwe photos, Ulwe sector 19 tuition gallery, smart classrooms Ulwe, campus photos KSV Academy, coaching infrastructure Navi Mumbai, Salam Khan physics classroom, reference study library Ulwe, IIT JEE NEET batch photos';
+$canonical_url = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/gallery';
+$page_image = rtrim(IS_LIVE ? LIVE_URL : SITE_URL, '/') . '/assets/imgs/gallers/gallery-1.png';
 
 $all_active_gallery = get_active_gallery_items();
 $gallery_count = count($all_active_gallery);
 
-// Extract distinct categories
+// Extract distinct categories dynamically
 $gallery_categories = ['All'];
 foreach ($all_active_gallery as $g_item) {
     if (!empty($g_item['category']) && !in_array($g_item['category'], $gallery_categories)) {
         $gallery_categories[] = $g_item['category'];
+    }
+}
+
+// Safe URL category pre-filter (?category=... or ?cat=...) with whitelist sanitization
+$raw_req_cat = '';
+if (isset($_GET['category'])) {
+    $raw_req_cat = trim((string)$_GET['category']);
+} elseif (isset($_GET['cat'])) {
+    $raw_req_cat = trim((string)$_GET['cat']);
+}
+$active_filter_cat = 'All';
+if (!empty($raw_req_cat)) {
+    foreach ($gallery_categories as $c) {
+        if (strcasecmp($c, $raw_req_cat) === 0) {
+            $active_filter_cat = $c;
+            break;
+        }
     }
 }
 
@@ -91,50 +110,88 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Category Filter Tabs -->
     <?php if (count($gallery_categories) > 1): ?>
     <div class="gallery-client-filter-bar" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 30px;">
-      <?php foreach ($gallery_categories as $idx => $cat_name): 
+      <?php foreach ($gallery_categories as $cat_name): 
         $cat_icon = ($cat_name === 'All') ? 'fa-layer-group' : get_gallery_category_icon($cat_name);
+        $is_active_tab = ($cat_name === $active_filter_cat);
       ?>
       <button type="button" 
-              class="gallery-filter-pill-btn <?php echo $idx === 0 ? 'active' : ''; ?>" 
-              data-cat="<?php echo htmlspecialchars($cat_name); ?>"
-              onclick="filterPublicGallery(this, '<?php echo htmlspecialchars(addslashes($cat_name)); ?>')">
-        <i class="fa-solid <?php echo $cat_icon; ?>"></i>
-        <span><?php echo htmlspecialchars($cat_name); ?></span>
+              class="gallery-filter-pill-btn <?php echo $is_active_tab ? 'active' : ''; ?>" 
+              data-cat="<?php echo htmlspecialchars($cat_name, ENT_QUOTES, 'UTF-8'); ?>"
+              onclick="filterPublicGallery(this)">
+        <i class="fa-solid <?php echo htmlspecialchars($cat_icon, ENT_QUOTES, 'UTF-8'); ?>"></i>
+        <span><?php echo htmlspecialchars($cat_name, ENT_QUOTES, 'UTF-8'); ?></span>
       </button>
       <?php endforeach; ?>
     </div>
     <?php endif; ?>
 
-    <div class="gallery-grid" id="publicGalleryGrid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
-      <?php foreach ($all_active_gallery as $img): 
-        $cat = !empty($img['category']) ? $img['category'] : 'Campus Life';
-        $cat_icon = get_gallery_category_icon($cat);
-        $caption_text = !empty($img['caption']) ? $img['caption'] : $img['title'];
-      ?>
-      <div class="gallery-card" data-src="<?php echo htmlspecialchars($img['image']); ?>" data-caption="<?php echo htmlspecialchars($caption_text); ?>" data-category="<?php echo htmlspecialchars($cat); ?>">
-        <div class="gallery-thumb-wrapper">
-          <img src="<?php echo htmlspecialchars($img['image']); ?>" alt="<?php echo htmlspecialchars($caption_text); ?>" class="gallery-thumb" loading="lazy">
-        </div>
-        
-        <div class="gallery-top-badges">
-          <span class="gallery-category-pill">
-            <i class="fa-solid <?php echo $cat_icon; ?>"></i>
-            <span><?php echo htmlspecialchars($cat); ?></span>
-          </span>
-          <span class="gallery-zoom-icon" title="View Fullscreen">
-            <i class="fa-solid fa-expand"></i>
-          </span>
-        </div>
+    <?php if (empty($all_active_gallery)): ?>
+      <div class="gallery-empty-state" style="text-align: center; padding: 60px 20px; background: #ffffff; border-radius: 20px; border: 1px dashed #cbd5e1; margin: 20px auto; max-width: 600px;">
+        <div style="font-size: 3rem; color: #94a3b8; margin-bottom: 16px;"><i class="fa-solid fa-images"></i></div>
+        <h3 style="font-size: 1.35rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">No Campus Photos Found</h3>
+        <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 20px;">Photos are currently being updated. Please check back soon or visit our Ulwe campus in person!</p>
+        <a href="<?php echo htmlspecialchars(url('contact'), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-primary btn-sm">
+          <i class="fa-solid fa-phone"></i> Contact Admissions
+        </a>
+      </div>
+    <?php else: ?>
+      <div class="gallery-grid" id="publicGalleryGrid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+        <?php foreach ($all_active_gallery as $img): 
+          $cat = !empty($img['category']) ? $img['category'] : 'Campus Life';
+          $cat_icon = get_gallery_category_icon($cat);
+          $caption_text = !empty($img['caption']) ? $img['caption'] : ($img['title'] ?? 'Campus Life');
 
-        <div class="gallery-overlay">
-          <div class="gallery-overlay-inner">
-            <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">KSV Academy • Ulwe Sector 19</span>
-            <p class="gallery-overlay-caption"><?php echo htmlspecialchars($caption_text); ?></p>
+          // Strict image URL validation: sanitize against malicious schemes (javascript:, data:, etc.)
+          $safe_img_url = trim((string)($img['image'] ?? ''));
+          if (preg_match('#^\s*(javascript|vbscript|data):#i', $safe_img_url)) {
+              $safe_img_url = url('assets/imgs/gallers/gallery-1.png');
+          }
+          if (empty($safe_img_url)) {
+              $safe_img_url = url('assets/imgs/gallers/gallery-1.png');
+          }
+
+          // Initial card visibility according to active category filter
+          $is_visible = ($active_filter_cat === 'All' || strcasecmp($cat, $active_filter_cat) === 0);
+        ?>
+        <div class="gallery-card" 
+             style="<?php echo $is_visible ? 'display: flex;' : 'display: none;'; ?>"
+             data-src="<?php echo htmlspecialchars($safe_img_url, ENT_QUOTES, 'UTF-8'); ?>" 
+             data-caption="<?php echo htmlspecialchars($caption_text, ENT_QUOTES, 'UTF-8'); ?>" 
+             data-category="<?php echo htmlspecialchars($cat, ENT_QUOTES, 'UTF-8'); ?>">
+          <div class="gallery-thumb-wrapper">
+            <img src="<?php echo htmlspecialchars($safe_img_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($caption_text, ENT_QUOTES, 'UTF-8'); ?>" class="gallery-thumb" loading="lazy">
+          </div>
+          
+          <div class="gallery-top-badges">
+            <span class="gallery-category-pill">
+              <i class="fa-solid <?php echo htmlspecialchars($cat_icon, ENT_QUOTES, 'UTF-8'); ?>"></i>
+              <span><?php echo htmlspecialchars($cat, ENT_QUOTES, 'UTF-8'); ?></span>
+            </span>
+            <span class="gallery-zoom-icon" title="View Fullscreen">
+              <i class="fa-solid fa-expand"></i>
+            </span>
+          </div>
+
+          <div class="gallery-overlay">
+            <div class="gallery-overlay-inner">
+              <span style="font-size: 0.72rem; color: #38bdf8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">KSV Academy • Ulwe Sector 19</span>
+              <p class="gallery-overlay-caption"><?php echo htmlspecialchars($caption_text, ENT_QUOTES, 'UTF-8'); ?></p>
+            </div>
           </div>
         </div>
+        <?php endforeach; ?>
       </div>
-      <?php endforeach; ?>
-    </div>
+
+      <!-- No items found for selected filter state -->
+      <div id="galleryNoResults" style="display: none; text-align: center; padding: 48px 20px; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; margin-top: 24px;">
+        <i class="fa-solid fa-filter-circle-xmark" style="font-size: 2.5rem; color: #94a3b8; margin-bottom: 12px; display: block;"></i>
+        <h4 style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">No photos found in this category</h4>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 16px;">Try selecting another category or view all campus photos.</p>
+        <button type="button" class="btn btn-primary btn-sm" onclick="filterPublicGallery(document.querySelector('.gallery-filter-pill-btn[data-cat=\'All\']'))">
+          <i class="fa-solid fa-layer-group"></i> Show All Photos
+        </button>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
 
@@ -183,22 +240,48 @@ require_once __DIR__ . '/includes/header.php';
 </style>
 
 <script>
-function filterPublicGallery(btn, targetCat) {
+function filterPublicGallery(btn) {
+  if (!btn) return;
+  var targetCat = (btn.getAttribute('data-cat') || 'All').trim();
   var btns = document.querySelectorAll('.gallery-filter-pill-btn');
   btns.forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
 
   var cards = document.querySelectorAll('#publicGalleryGrid .gallery-card');
+  var visibleCount = 0;
   cards.forEach(function(card) {
-    var cardCat = card.getAttribute('data-category') || '';
-    if (targetCat === 'All' || cardCat.toLowerCase() === targetCat.toLowerCase()) {
+    var cardCat = (card.getAttribute('data-category') || '').trim();
+    if (targetCat.toLowerCase() === 'all' || cardCat.toLowerCase() === targetCat.toLowerCase()) {
       card.style.display = 'flex';
       card.style.opacity = '1';
+      visibleCount++;
     } else {
       card.style.display = 'none';
     }
   });
+
+  var noResultEl = document.getElementById('galleryNoResults');
+  if (noResultEl) {
+    noResultEl.style.display = (visibleCount === 0) ? 'block' : 'none';
+  }
+
+  // Update URL history without reloading page
+  if (window.history && window.history.replaceState) {
+    var newUrl = window.location.pathname;
+    if (targetCat.toLowerCase() !== 'all') {
+      newUrl += '?category=' + encodeURIComponent(targetCat);
+    }
+    window.history.replaceState({ cat: targetCat }, '', newUrl);
+  }
 }
+
+// On page load, if active category was set, ensure view is filtered
+document.addEventListener('DOMContentLoaded', function() {
+  var activeBtn = document.querySelector('.gallery-filter-pill-btn.active');
+  if (activeBtn && (activeBtn.getAttribute('data-cat') || 'All').toLowerCase() !== 'all') {
+    filterPublicGallery(activeBtn);
+  }
+});
 </script>
 
 <!-- 3. Classroom Infrastructure Features -->
@@ -270,7 +353,7 @@ function filterPublicGallery(btn, targetCat) {
           Walk in with your parents to see the classrooms, meet Director Mr. Salam Khan and our faculty team, and tour our facilities at MGM Residency, Sector 19, Ulwe.
         </p>
         <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-          <a href="<?php echo url('contact'); ?>" class="btn btn-warning btn-lg" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
+          <a href="<?php echo htmlspecialchars(url('contact'), ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-warning btn-lg" style="background: #f59e0b; color: #08212e; border: none; font-weight: 800; box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
             <i class="fa-solid fa-map-location-dot"></i> Get Directions &amp; Contact
           </a>
           <button type="button" class="btn btn-outline-white btn-lg" data-modal="demoModal" style="border: 2px solid rgba(255,255,255,0.6); color: #ffffff;">
@@ -284,8 +367,8 @@ function filterPublicGallery(btn, targetCat) {
         <div style="color: #fbbf24; font-size: 1.1rem; margin: 8px 0;"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
         <div style="font-size: 0.9rem; font-weight: 700; color: #ffffff;">Top-Rated Campus in Ulwe</div>
         <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.8); margin: 6px 0 16px;">150+ Verified Google &amp; Parent Reviews</p>
-        <a href="tel:<?php echo PHONE_RAW_1; ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
-          <i class="fa-solid fa-phone"></i> Call: <?php echo PHONE_PRIMARY; ?>
+        <a href="tel:<?php echo htmlspecialchars(PHONE_RAW_1, ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-sm" style="background: #ffffff; color: var(--primary-700); font-weight: 700; width: 100%;">
+          <i class="fa-solid fa-phone"></i> Call: <?php echo htmlspecialchars(PHONE_PRIMARY, ENT_QUOTES, 'UTF-8'); ?>
         </a>
       </div>
     </div>

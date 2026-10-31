@@ -336,7 +336,7 @@ function initGalleryLightbox() {
   let currentIndex = 0;
 
   function refreshItems() {
-    currentItems = Array.from(document.querySelectorAll('.gallery-card[data-src]'));
+    currentItems = Array.from(document.querySelectorAll('.gallery-card[data-src]')).filter(c => c.style.display !== 'none');
   }
 
   function showImage(index) {
@@ -553,6 +553,7 @@ function handleContactSubmit(e) {
   e.preventDefault();
   const form = document.getElementById('contactForm');
   const alertBox = document.getElementById('contactSuccessAlert');
+  const errorBox = document.getElementById('contactErrorAlert');
   const submitBtn = document.getElementById('contactSubmitBtn');
   const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
 
@@ -572,7 +573,9 @@ function handleContactSubmit(e) {
   const formData = new FormData(form);
   formData.append('ajax', '1');
 
-  fetch('/submit-form', {
+  const actionUrl = form.getAttribute('action') || '/submit-form';
+
+  fetch(actionUrl, {
     method: 'POST',
     body: formData,
     headers: {
@@ -591,9 +594,17 @@ function handleContactSubmit(e) {
         alertBox.style.display = 'block';
         alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
+      if (errorBox) {
+        errorBox.style.display = 'none';
+      }
       form.reset();
     } else {
-      alert(data.message || 'Error submitting your inquiry. Please try again.');
+      if (errorBox) {
+        errorBox.style.display = 'block';
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        alert(data.message || 'Error submitting your inquiry. Please try again.');
+      }
     }
   })
   .catch(err => {
