@@ -2,10 +2,34 @@
 /**
  * Faculty & Staff Portal - Settings (General Appearance & Security)
  */
+
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 // Requires logged in staff or super admin
 $current_user = require_login(['staff', 'super_admin']);
+
+// Session-based request rate limiting (Max 120 page requests per minute)
+$now = time();
+if (!isset($_SESSION['staff_settings_req_attempts']) || !is_array($_SESSION['staff_settings_req_attempts'])) {
+    $_SESSION['staff_settings_req_attempts'] = [];
+}
+$_SESSION['staff_settings_req_attempts'] = array_filter($_SESSION['staff_settings_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['staff_settings_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['staff_settings_req_attempts'][] = $now;
 
 $page_title = 'Settings | Faculty Portal';
 $page_heading = 'Faculty Settings';
@@ -14,6 +38,7 @@ $active_menu = 'settings';
 
 $db = get_db_connection();
 $active_session = get_active_session();
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
 // Get Staff Profile Info if exists
@@ -22,7 +47,7 @@ $stmt->execute([$current_user['id']]);
 $staff_profile = $stmt->fetch();
 
 $current_tab = $_GET['tab'] ?? 'general';
-if (!in_array($current_tab, ['general', 'security'])) {
+if (!in_array($current_tab, ['general', 'security'], true)) {
     $current_tab = 'general';
 }
 
@@ -32,27 +57,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 1. Change Password
     if ($action === 'change_password') {
-        $current_pass = trim($_POST['current_password'] ?? '');
-        $new_pass = trim($_POST['new_password'] ?? '');
-        $confirm_pass = trim($_POST['confirm_password'] ?? '');
+        // CSRF Token Verification
+        if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+            set_flash('error', 'Security token expired or invalid request. Please refresh the page and try again.');
+            header('Location: ' . STAFF_URL . '/settings?tab=security');
+            exit;
+        }
+
+        // Brute-force throttling on password attempts: max 5 failed attempts per 10 minutes
+        if (!isset($_SESSION['staff_pwd_fail_timestamps']) || !is_array($_SESSION['staff_pwd_fail_timestamps'])) {
+            $_SESSION['staff_pwd_fail_timestamps'] = [];
+        }
+        $_SESSION['staff_pwd_fail_timestamps'] = array_filter($_SESSION['staff_pwd_fail_timestamps'], function($t) use ($now) {
+            return ($now - (int)$t) < 600;
+        });
+        if (count($_SESSION['staff_pwd_fail_timestamps']) >= 5) {
+            set_flash('error', 'Too many incorrect password attempts. Please wait 10 minutes before trying again.');
+            header('Location: ' . STAFF_URL . '/settings?tab=security');
+            exit;
+        }
+
+        $current_pass = (string)($_POST['current_password'] ?? '');
+        $new_pass = (string)($_POST['new_password'] ?? '');
+        $confirm_pass = (string)($_POST['confirm_password'] ?? '');
 
         // Fetch fresh user record
         $u_stmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
         $u_stmt->execute([$current_user['id']]);
         $u_fresh = $u_stmt->fetch();
 
+        $is_current_valid = false;
+        if ($u_fresh && !empty($current_pass)) {
+            if (password_verify($current_pass, (string)$u_fresh['password'])) {
+                $is_current_valid = true;
+            } elseif (hash_equals((string)$u_fresh['password'], $current_pass)) {
+                // Support legacy plaintext password match safely with constant-time comparison
+                $is_current_valid = true;
+            }
+        }
+
         if (empty($current_pass) || empty($new_pass) || empty($confirm_pass)) {
             set_flash('error', 'All password fields are required.');
-        } elseif (!$u_fresh || ($current_pass !== $u_fresh['password'] && !password_verify($current_pass, $u_fresh['password']))) {
-            set_flash('error', 'Your current password is incorrect. Please check and try again.');
+        } elseif (!$is_current_valid) {
+            $_SESSION['staff_pwd_fail_timestamps'][] = time();
+            $attempts_left = max(0, 5 - count($_SESSION['staff_pwd_fail_timestamps']));
+            set_flash('error', 'Your current password is incorrect. (' . $attempts_left . ' attempts remaining before temporary lockout).');
         } elseif ($new_pass !== $confirm_pass) {
             set_flash('error', 'New password and confirm password do not match.');
         } elseif (strlen($new_pass) < 6) {
             set_flash('error', 'New password must be at least 6 characters long.');
+        } elseif (strlen($new_pass) > 128) {
+            set_flash('error', 'New password must not exceed 128 characters.');
         } else {
             $hashed = password_hash($new_pass, PASSWORD_DEFAULT);
             $update_stmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
             $update_stmt->execute([$hashed, $current_user['id']]);
+            
+            // Clear failed attempts upon successful password change
+            $_SESSION['staff_pwd_fail_timestamps'] = [];
+            
+            // Regenerate session to prevent session fixation attacks
+            session_regenerate_id(true);
+
             set_flash('success', 'Your password has been changed successfully! Your account credentials have been updated.');
         }
 
@@ -62,12 +128,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 2. Save Theme Preference (Instant AJAX)
     if ($action === 'save_theme') {
-        $theme = in_array($_POST['theme'] ?? '', ['light', 'dark']) ? $_POST['theme'] : 'light';
+        // CSRF Token Verification for AJAX
+        if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Invalid or expired CSRF token.']);
+            exit;
+        }
+
+        $theme = in_array($_POST['theme'] ?? '', ['light', 'dark'], true) ? $_POST['theme'] : 'light';
         // Update school settings table or persist
         try {
             $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES ('theme_mode', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
             $stmt->execute([$theme]);
-        } catch (Exception $e) {}
+            $_SESSION['theme'] = $theme;
+        } catch (Throwable $e) {}
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'theme' => $theme]);
@@ -880,42 +955,42 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Faculty Name</div>
               <div style="font-size: 0.95rem; font-weight: 800; color: var(--hrms-text); font-family: 'Outfit', sans-serif;">
-                <?php echo htmlspecialchars($current_user['full_name']); ?>
+                <?php echo htmlspecialchars($current_user['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Employee Code</div>
               <div style="font-size: 0.95rem; font-weight: 800; color: #0284c7; font-family: monospace;">
-                <?php echo htmlspecialchars($staff_profile['employee_code'] ?? 'KSV-FAC-0' . $current_user['id']); ?>
+                <?php echo htmlspecialchars($staff_profile['employee_code'] ?? ('KSV-FAC-0' . intval($current_user['id'])), ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Department</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
-                <?php echo htmlspecialchars($staff_profile['department'] ?? 'Academics'); ?>
+                <?php echo htmlspecialchars($staff_profile['department'] ?? 'Academics', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Designation</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
-                <?php echo htmlspecialchars($staff_profile['designation'] ?? 'Faculty Member'); ?>
+                <?php echo htmlspecialchars($staff_profile['designation'] ?? 'Faculty Member', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Username / Login ID</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text); font-family: monospace;">
-                @<?php echo htmlspecialchars($current_user['username']); ?>
+                @<?php echo htmlspecialchars($current_user['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Email Address</div>
               <div style="font-size: 0.88rem; font-weight: 600; color: var(--hrms-text);">
-                <?php echo htmlspecialchars($current_user['email'] ?? '—'); ?>
+                <?php echo htmlspecialchars($current_user['email'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
@@ -961,14 +1036,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 $words = explode(' ', trim($current_user['full_name']));
                 $initials = strtoupper(substr($words[0], 0, 1));
               }
-              echo $initials;
+              echo htmlspecialchars($initials, ENT_QUOTES, 'UTF-8');
             ?>
           </div>
           <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--hrms-text); font-family: 'Outfit', sans-serif;">
-            <?php echo htmlspecialchars($current_user['full_name']); ?>
+            <?php echo htmlspecialchars($current_user['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </h3>
           <p style="margin: 3px 0 8px; font-size: 0.8rem; color: #64748b; font-family: monospace;">
-            @<?php echo htmlspecialchars($current_user['username']); ?>
+            @<?php echo htmlspecialchars($current_user['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </p>
           <span class="user-role-badge" style="font-size: 0.72rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 3px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">
             <i class="fa-solid fa-chalkboard-user" style="margin-right: 4px;"></i> Faculty &amp; Staff
@@ -981,14 +1056,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="academy-meta-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-envelope"></i></div>
             <div style="min-width: 0; flex: 1;">
               <span class="academy-meta-label">Registered Email</span>
-              <span class="academy-meta-val" style="word-break: break-all;"><?php echo htmlspecialchars($current_user['email'] ?? 'faculty@ksvacademy.com'); ?></span>
+              <span class="academy-meta-val" style="word-break: break-all;"><?php echo htmlspecialchars($current_user['email'] ?? 'faculty@ksvacademy.com', ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
           </div>
           <div class="academy-meta-row">
             <div class="academy-meta-icon" style="background: #ecfdf5; color: #059669;"><i class="fa-solid fa-fingerprint"></i></div>
             <div>
               <span class="academy-meta-label">Account ID</span>
-              <span class="academy-meta-val">#USR-<?php echo str_pad($current_user['id'], 4, '0', STR_PAD_LEFT); ?></span>
+              <span class="academy-meta-val">#USR-<?php echo str_pad(intval($current_user['id']), 4, '0', STR_PAD_LEFT); ?></span>
             </div>
           </div>
           <div class="academy-meta-row" style="border-bottom: none; padding-bottom: 0;">
@@ -1029,8 +1104,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
         </div>
 
-        <form method="POST" action="<?php echo STAFF_URL; ?>/settings?tab=security" class="change-password-form" style="padding: 24px;">
+        <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL . '/settings?tab=security', ENT_QUOTES, 'UTF-8'); ?>" class="change-password-form" style="padding: 24px;">
           <input type="hidden" name="action" value="change_password">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
 
           <div class="password-form-inner" style="max-width: 520px; display: flex; flex-direction: column; gap: 18px;">
             
@@ -1038,7 +1114,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="form-group">
               <label class="input-field-label">Current Password <span class="req">*</span></label>
               <div class="password-input-wrap">
-                <input type="password" name="current_password" id="current_pass" required class="settings-input" placeholder="Enter current login password">
+                <input type="password" name="current_password" id="current_pass" required class="settings-input" placeholder="Enter current login password" autocomplete="current-password">
                 <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('current_pass', this)">
                   <i class="fa-regular fa-eye"></i>
                 </button>
@@ -1049,7 +1125,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="form-group">
               <label class="input-field-label">New Password <span class="req">*</span></label>
               <div class="password-input-wrap">
-                <input type="password" name="new_password" id="new_pass" required class="settings-input" placeholder="Minimum 6 characters" oninput="checkStaffPasswordStrength(this.value)">
+                <input type="password" name="new_password" id="new_pass" required class="settings-input" placeholder="Minimum 6 characters" autocomplete="new-password" oninput="checkStaffPasswordStrength(this.value)">
                 <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('new_pass', this)">
                   <i class="fa-regular fa-eye"></i>
                 </button>
@@ -1066,7 +1142,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="form-group">
               <label class="input-field-label">Confirm New Password <span class="req">*</span></label>
               <div class="password-input-wrap">
-                <input type="password" name="confirm_password" id="confirm_pass" required class="settings-input" placeholder="Re-type new password" oninput="checkStaffPasswordMatch()">
+                <input type="password" name="confirm_password" id="confirm_pass" required class="settings-input" placeholder="Re-type new password" autocomplete="new-password" oninput="checkStaffPasswordMatch()">
                 <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirm_pass', this)">
                   <i class="fa-regular fa-eye"></i>
                 </button>
@@ -1094,6 +1170,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <script>
 // Tab Switching
 function switchStaffTab(tabId) {
+  if (tabId !== 'general' && tabId !== 'security') {
+    tabId = 'general';
+  }
   document.querySelectorAll('.settings-tab-pill').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.settings-tab-pane').forEach(pane => pane.classList.remove('active'));
 
@@ -1130,10 +1209,10 @@ function selectStaffTheme(theme) {
     try { localStorage.setItem('hrms_theme', theme); } catch(e) {}
   }
 
-  fetch('<?php echo STAFF_URL; ?>/settings', {
+  fetch('<?php echo htmlspecialchars(STAFF_URL . '/settings', ENT_QUOTES, 'UTF-8'); ?>', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'action=save_theme&theme=' + encodeURIComponent(theme)
+    body: 'action=save_theme&theme=' + encodeURIComponent(theme) + '&csrf_token=' + encodeURIComponent('<?php echo get_csrf_token(); ?>')
   }).then(function(res) { return res.json(); })
     .then(function(data) {
       var msg = document.getElementById('themeSavedMessage');

@@ -1,10 +1,34 @@
 <?php
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'parent', 'student']);
-if (in_array($current_user['role'], ['student', 'parent'])) {
+if (in_array($current_user['role'], ['student', 'parent'], true)) {
     require_menu_permission('fees');
 }
+
+// Session-based request rate limiting (Max 120 page requests per minute)
+$now = time();
+if (!isset($_SESSION['parent_fees_req_attempts']) || !is_array($_SESSION['parent_fees_req_attempts'])) {
+    $_SESSION['parent_fees_req_attempts'] = [];
+}
+$_SESSION['parent_fees_req_attempts'] = array_filter($_SESSION['parent_fees_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['parent_fees_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['parent_fees_req_attempts'][] = $now;
+
 $page_title = 'Fee Receipts & Dues';
 $page_heading = 'Tuition Fee Receipts & Accounts Ledger';
 $page_subheading = 'Payment History, Installment Slips & Outstanding Due Breakdown';
@@ -16,37 +40,61 @@ $active_session = get_active_session();
 
 // ── Handle Collect Fee Payment (Super Admin) ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token expired or invalid. Please try again.');
+        header('Location: ' . PARENT_URL . '/fees');
+        exit;
+    }
     $action = $_POST['action'] ?? '';
     if ($action === 'collect_fee') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $amount = floatval($_POST['amount'] ?? 0);
+        $amount = round(floatval($_POST['amount'] ?? 0), 2);
         $method = trim($_POST['payment_method'] ?? 'Online UPI');
         $remarks = trim($_POST['remarks'] ?? 'Tuition Installment');
 
-        if ($student_id > 0 && $amount > 0) {
-            $rec_no = 'REC-2026-0' . rand(200, 999);
-            $stmt = $db->prepare("INSERT INTO fee_payments (student_id, receipt_no, amount, payment_method, payment_date, remarks) VALUES (?, ?, ?, ?, CURDATE(), ?)");
-            $stmt->execute([$student_id, $rec_no, $amount, $method, $remarks]);
-
-            // Update student paid_fees
-            $db->prepare("UPDATE students SET paid_fees = paid_fees + ? WHERE id = ?")->execute([$amount, $student_id]);
-
-            set_flash('success', "Payment of ₹" . number_format($amount, 2) . " recorded! Receipt Generated: {$rec_no}");
-            header('Location: ' . PARENT_URL . '/fees' . ($student_id ? '?student_id=' . $student_id : ''));
-            exit;
+        $allowed_methods = [
+            'Online UPI (GPay/PhonePe)',
+            'Net Banking / NEFT',
+            'Credit / Debit Card',
+            'Cheque',
+            'Cash Deposit'
+        ];
+        if (!in_array($method, $allowed_methods, true)) {
+            $method = 'Online UPI (GPay/PhonePe)';
         }
+
+        if ($student_id > 0 && $amount > 0 && $amount <= 10000000) {
+            // Verify student exists
+            $check_stu = $db->prepare("SELECT id FROM students WHERE id = ? LIMIT 1");
+            $check_stu->execute([$student_id]);
+            if ($check_stu->fetch()) {
+                $rec_no = 'REC-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(4)));
+                $stmt = $db->prepare("INSERT INTO fee_payments (student_id, receipt_no, amount, payment_method, payment_date, remarks) VALUES (?, ?, ?, ?, CURDATE(), ?)");
+                $stmt->execute([$student_id, $rec_no, $amount, $method, $remarks]);
+
+                // Update student paid_fees
+                $db->prepare("UPDATE students SET paid_fees = paid_fees + ? WHERE id = ?")->execute([$amount, $student_id]);
+
+                set_flash('success', "Payment of ₹" . number_format($amount, 2) . " recorded! Receipt Generated: {$rec_no}");
+                header('Location: ' . PARENT_URL . '/fees' . ($student_id ? '?student_id=' . $student_id : ''));
+                exit;
+            }
+        }
+        set_flash('error', 'Invalid payment details or student selection.');
+        header('Location: ' . PARENT_URL . '/fees');
+        exit;
     }
 }
 
 // ── Resolve Active Student Record ──
 $student = null;
 
-// Check for Impersonation Session
-if (!empty($_SESSION['impersonated_student'])) {
+// Check for Impersonation Session (Super Admin only)
+if (!empty($_SESSION['impersonated_student']) && $current_user['role'] === 'super_admin') {
     $s_id = intval($_SESSION['impersonated_student']['id']);
     $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
     $stmt->execute([$s_id]);
-    $student = $stmt->fetch();
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // 1. Direct query parameter override (?student_id=X)
@@ -55,13 +103,13 @@ if ($target_sid > 0) {
     if ($current_user['role'] === 'super_admin') {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
         $stmt->execute([$target_sid]);
-        $student = $stmt->fetch();
-        if ($student) $_SESSION['active_student_id'] = $student['id'];
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($student) $_SESSION['active_student_id'] = intval($student['id']);
     } elseif ($current_user['role'] === 'parent') {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
         $stmt->execute([$target_sid, $current_user['id']]);
-        $student = $stmt->fetch();
-        if ($student) $_SESSION['active_student_id'] = $student['id'];
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($student) $_SESSION['active_student_id'] = intval($student['id']);
     }
 }
 
@@ -71,14 +119,14 @@ if ($current_user['role'] === 'student') {
     // A student always views their own record
     $stmt = $db->prepare("SELECT * FROM students WHERE user_id = ? LIMIT 1");
     $stmt->execute([$current_user['id']]);
-    $student = $stmt->fetch();
-    if (!$student) {
-        $stmt = $db->prepare("SELECT * FROM students WHERE student_name LIKE ? OR roll_no = ? LIMIT 1");
-        $stmt->execute(['%' . $current_user['full_name'] . '%', $current_user['username']]);
-        $student = $stmt->fetch();
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$student && (!empty($current_user['username']) || !empty($current_user['full_name']))) {
+        $stmt = $db->prepare("SELECT * FROM students WHERE (roll_no = ? AND roll_no != '') OR (user_id IS NULL AND student_name = ?) LIMIT 1");
+        $stmt->execute([$current_user['username'], $current_user['full_name']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if ($student) {
-        $_SESSION['active_student_id'] = $student['id'];
+        $_SESSION['active_student_id'] = intval($student['id']);
     }
 } elseif ($current_user['role'] === 'parent') {
     // Fetch all children linked to this parent
@@ -88,48 +136,67 @@ if ($current_user['role'] === 'student') {
 
     if (empty($student) && !empty($_SESSION['active_student_id'])) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
-        $stmt->execute([$_SESSION['active_student_id'], $current_user['id']]);
-        $student = $stmt->fetch();
+        $stmt->execute([intval($_SESSION['active_student_id']), $current_user['id']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if (empty($student) && !empty($parent_children)) {
-        $student = $db->query("SELECT * FROM students WHERE id = {$parent_children[0]['id']}")->fetch();
-        if ($student) $_SESSION['active_student_id'] = $student['id'];
+        $first_child_id = intval($parent_children[0]['id']);
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
+        $stmt->execute([$first_child_id, $current_user['id']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($student) $_SESSION['active_student_id'] = intval($student['id']);
     }
 } else {
     // Super admin
     if (empty($student) && !empty($_SESSION['active_student_id'])) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-        $stmt->execute([$_SESSION['active_student_id']]);
-        $student = $stmt->fetch();
+        $stmt->execute([intval($_SESSION['active_student_id'])]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    // Final Fallback for Super Admin ONLY
+    if (!$student) {
+        $session_id = $active_session ? intval($active_session['id']) : 0;
+        if ($session_id > 0) {
+            $stmt = $db->prepare("SELECT * FROM students WHERE session_id = ? ORDER BY id ASC LIMIT 1");
+            $stmt->execute([$session_id]);
+            $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        if (!$student) {
+            $stmt = $db->prepare("SELECT * FROM students ORDER BY id ASC LIMIT 1");
+            $stmt->execute();
+            $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        if ($student) $_SESSION['active_student_id'] = intval($student['id']);
     }
 }
 
-// Final Fallback if no student resolved
-if (!$student) {
-    $student = $db->query("SELECT * FROM students ORDER BY id ASC LIMIT 1")->fetch();
-    if ($student) $_SESSION['active_student_id'] = $student['id'];
-}
-
-$student_id = intval($student['id'] ?? 1);
+$student_id = $student ? intval($student['id']) : 0;
 
 // ── Financial Metric Calculations for Active Student ──
-$course_total_fee = floatval($student['total_fees'] ?? 0);
+$course_total_fee = $student ? floatval($student['total_fees'] ?? 0) : 0;
+$total_paid = 0;
+$outstanding_due = 0;
+$paid_pct = 100;
+$due_pct = 0;
+$total_vouchers_all = 0;
 
-$sum_stmt = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE student_id = ?");
-$sum_stmt->execute([$student_id]);
-$total_paid = floatval($sum_stmt->fetchColumn() ?: 0);
-$outstanding_due = max(0, $course_total_fee - $total_paid);
-$paid_pct = $course_total_fee > 0 ? min(100, round(($total_paid / $course_total_fee) * 100)) : 100;
-$due_pct = max(0, 100 - $paid_pct);
+if ($student_id > 0) {
+    $sum_stmt = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE student_id = ?");
+    $sum_stmt->execute([$student_id]);
+    $total_paid = floatval($sum_stmt->fetchColumn() ?: 0);
+    $outstanding_due = max(0, $course_total_fee - $total_paid);
+    $paid_pct = $course_total_fee > 0 ? min(100, round(($total_paid / $course_total_fee) * 100)) : 100;
+    $due_pct = max(0, 100 - $paid_pct);
 
-$count_vouchers_stmt = $db->prepare("SELECT COUNT(*) FROM fee_payments WHERE student_id = ?");
-$count_vouchers_stmt->execute([$student_id]);
-$total_vouchers_all = intval($count_vouchers_stmt->fetchColumn() ?: 0);
+    $count_vouchers_stmt = $db->prepare("SELECT COUNT(*) FROM fee_payments WHERE student_id = ?");
+    $count_vouchers_stmt->execute([$student_id]);
+    $total_vouchers_all = intval($count_vouchers_stmt->fetchColumn() ?: 0);
+}
 
 // Super Admin options for recording payment
 $student_options = [];
 if ($current_user['role'] === 'super_admin') {
-    $student_options = $db->query("SELECT id, student_name, roll_no, standard, (total_fees - paid_fees) as due FROM students WHERE (total_fees - paid_fees) > 0 ORDER BY student_name ASC")->fetchAll();
+    $student_options = $db->query("SELECT id, student_name, roll_no, standard, (total_fees - paid_fees) as due FROM students WHERE (total_fees - paid_fees) > 0 ORDER BY student_name ASC")->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // ── Search & Filter Parameters ──
@@ -139,7 +206,7 @@ $filter_year = trim($_GET['year'] ?? '');
 
 $allowed_limits = [5, 10, 20, 30, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -150,7 +217,7 @@ $params = [$student_id];
 
 if (!empty($search)) {
     $where[] = "(fp.receipt_no LIKE ? OR fp.payment_method LIKE ? OR fp.remarks LIKE ? OR fp.payment_date LIKE ?)";
-    $like = "%{$search}%";
+    $like = "%" . addcslashes($search, '%_\\') . "%";
     $params[] = $like;
     $params[] = $like;
     $params[] = $like;
@@ -158,53 +225,61 @@ if (!empty($search)) {
 }
 if (!empty($filter_method)) {
     $where[] = "fp.payment_method LIKE ?";
-    $params[] = "%{$filter_method}%";
+    $params[] = "%" . addcslashes($filter_method, '%_\\') . "%";
 }
-if (!empty($filter_year)) {
+if (!empty($filter_year) && is_numeric($filter_year) && intval($filter_year) >= 2000 && intval($filter_year) <= 2100) {
     $where[] = "YEAR(fp.payment_date) = ?";
-    $params[] = $filter_year;
+    $params[] = intval($filter_year);
 }
 
 $where_sql = implode(' AND ', $where);
 
 // Count Total Matching Records
-$count_query = "
-    SELECT COUNT(*) 
-    FROM fee_payments fp
-    JOIN students s ON fp.student_id = s.id
-    WHERE {$where_sql}
-";
-$count_stmt = $db->prepare($count_query);
-$count_stmt->execute($params);
-$total_records = intval($count_stmt->fetchColumn() ?: 0);
+$total_records = 0;
+$payments = [];
+$total_pages = 1;
+$start_record = 0;
+$end_record = 0;
 
-// Calculate Pagination Bounds
-$total_pages = max(1, (int)ceil($total_records / $limit));
-if ($page > $total_pages) {
-    $page = $total_pages;
-}
-$offset = ($page - 1) * $limit;
-$start_record = $total_records > 0 ? $offset + 1 : 0;
-$end_record = min($offset + $limit, $total_records);
+if ($student_id > 0) {
+    $count_query = "
+        SELECT COUNT(*) 
+        FROM fee_payments fp
+        JOIN students s ON fp.student_id = s.id
+        WHERE {$where_sql}
+    ";
+    $count_stmt = $db->prepare($count_query);
+    $count_stmt->execute($params);
+    $total_records = intval($count_stmt->fetchColumn() ?: 0);
 
-// Fetch Paginated Payments
-$query = "
-    SELECT fp.*, s.student_name, s.roll_no, s.standard, s.parent_name, s.parent_phone, s.total_fees
-    FROM fee_payments fp
-    JOIN students s ON fp.student_id = s.id
-    WHERE {$where_sql}
-    ORDER BY fp.id DESC
-    LIMIT ? OFFSET ?
-";
-$stmt = $db->prepare($query);
-$b_idx = 1;
-foreach ($params as $p) {
-    $stmt->bindValue($b_idx++, $p);
+    // Calculate Pagination Bounds
+    $total_pages = max(1, (int)ceil($total_records / $limit));
+    if ($page > $total_pages) {
+        $page = $total_pages;
+    }
+    $offset = ($page - 1) * $limit;
+    $start_record = $total_records > 0 ? $offset + 1 : 0;
+    $end_record = min($offset + $limit, $total_records);
+
+    // Fetch Paginated Payments
+    $query = "
+        SELECT fp.*, s.student_name, s.roll_no, s.standard, s.parent_name, s.parent_phone, s.total_fees
+        FROM fee_payments fp
+        JOIN students s ON fp.student_id = s.id
+        WHERE {$where_sql}
+        ORDER BY fp.id DESC
+        LIMIT ? OFFSET ?
+    ";
+    $stmt = $db->prepare($query);
+    $b_idx = 1;
+    foreach ($params as $p) {
+        $stmt->bindValue($b_idx++, $p);
+    }
+    $stmt->bindValue($b_idx++, (int)$limit, PDO::PARAM_INT);
+    $stmt->bindValue($b_idx++, (int)$offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-$stmt->bindValue($b_idx++, (int)$limit, PDO::PARAM_INT);
-$stmt->bindValue($b_idx++, (int)$offset, PDO::PARAM_INT);
-$stmt->execute();
-$payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Calculate sum of filtered records
 $filtered_sum = 0;
@@ -215,12 +290,12 @@ foreach ($payments as $p_item) {
 // Helper for Pagination URL Generation
 function get_parent_fees_pagination_url($target_page, $search, $filter_method, $filter_year, $limit, $student_id = 0) {
     $params = [];
-    if (!empty($student_id)) $params['student_id'] = $student_id;
+    if (!empty($student_id)) $params['student_id'] = intval($student_id);
     if (!empty($search)) $params['search'] = $search;
     if (!empty($filter_method)) $params['method'] = $filter_method;
     if (!empty($filter_year)) $params['year'] = $filter_year;
-    if ($limit != 10) $params['limit'] = $limit;
-    if ($target_page > 1) $params['page'] = $target_page;
+    if ($limit != 10) $params['limit'] = intval($limit);
+    if ($target_page > 1) $params['page'] = intval($target_page);
     return PARENT_URL . '/fees' . (!empty($params) ? '?' . http_build_query($params) : '');
 }
 
@@ -1072,13 +1147,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      ADMIN IMPERSONATION OR MULTI-CHILD SELECTOR
      ══════════════════════════════════════════════════════ -->
-<?php if (!empty($_SESSION['impersonated_student'])): ?>
+<?php if (!empty($_SESSION['impersonated_student']) && $current_user['role'] === 'super_admin' && $student): ?>
   <div class="impersonation-notice-bar no-print">
     <div style="display: flex; align-items: center; gap: 8px;">
       <i class="fa-solid fa-user-secret" style="color: #ca8a04;"></i>
-      <span>Viewing Fee Ledger via Admin Impersonation: <strong><?php echo htmlspecialchars($student['student_name']); ?></strong> (Roll: <?php echo htmlspecialchars($student['roll_no']); ?>)</span>
+      <span>Viewing Fee Ledger via Admin Impersonation: <strong><?php echo htmlspecialchars($student['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></strong> (Roll: <?php echo htmlspecialchars($student['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>)</span>
     </div>
-    <a href="<?php echo ADMIN_URL; ?>/fees" class="roaster-btn secondary" style="font-size: 0.76rem; padding: 4px 10px; text-decoration: none; border-radius: 6px;">
+    <a href="<?php echo htmlspecialchars(ADMIN_URL . '/fees', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="font-size: 0.76rem; padding: 4px 10px; text-decoration: none; border-radius: 6px;">
       Return to Admin Fees
     </a>
   </div>
@@ -1091,15 +1166,29 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </span>
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
       <?php foreach ($parent_children as $pc): ?>
-        <a href="<?php echo PARENT_URL; ?>/fees?student_id=<?php echo $pc['id']; ?>" 
-           class="roaster-btn <?php echo $pc['id'] == $student_id ? 'primary' : 'secondary'; ?>" 
+        <a href="<?php echo htmlspecialchars(PARENT_URL . '/fees?student_id=' . intval($pc['id']), ENT_QUOTES, 'UTF-8'); ?>" 
+           class="roaster-btn <?php echo intval($pc['id']) === $student_id ? 'primary' : 'secondary'; ?>" 
            style="font-size: 0.76rem; padding: 5px 12px; border-radius: 6px; text-decoration: none;">
-          <?php echo htmlspecialchars($pc['student_name']); ?> (<?php echo htmlspecialchars($pc['standard']); ?>)
+          <?php echo htmlspecialchars($pc['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($pc['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?>)
         </a>
       <?php endforeach; ?>
     </div>
   </div>
 <?php endif; ?>
+
+<?php if (!$student): ?>
+  <div class="periods-card" style="padding: 48px 24px; text-align: center; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);">
+    <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 14px;">
+      <i class="fa-solid fa-user-xmark"></i>
+    </div>
+    <h3 style="margin: 0 0 6px; font-size: 1.15rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+      No Student Profile Linked
+    </h3>
+    <p style="margin: 0 auto; max-width: 480px; font-size: 0.84rem; color: #64748b; line-height: 1.5;">
+      Your account is not currently linked to any enrolled student record in the academy database. Please contact school administration to associate your registration with your student profile.
+    </p>
+  </div>
+<?php else: ?>
 
 <!-- ══════════════════════════════════════════════════════
      4 SOBER ACADEMIC KPI METRIC CARDS (Exact replica of staff/payroll.php)
@@ -1123,7 +1212,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
     </div>
     <div class="stat-card-footer">
-      <span><?php echo htmlspecialchars($student['student_name']); ?> &bull; <?php echo htmlspecialchars($student['standard']); ?></span>
+      <span><?php echo htmlspecialchars($student['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> &bull; <?php echo htmlspecialchars($student['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
       <span style="color: #0284c7; font-weight: 700;">Scale</span>
     </div>
   </div>
@@ -1207,20 +1296,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Search & Filter Form -->
-    <form method="GET" action="<?php echo PARENT_URL; ?>/fees" class="roaster-filter-form">
+    <form method="GET" action="<?php echo htmlspecialchars(PARENT_URL . '/fees', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-filter-form">
       <?php if ($student_id): ?>
-        <input type="hidden" name="student_id" value="<?php echo $student_id; ?>">
+        <input type="hidden" name="student_id" value="<?php echo intval($student_id); ?>">
       <?php endif; ?>
       <?php if ($limit !== 10): ?>
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       <?php endif; ?>
 
       <!-- Search Input -->
       <div class="roaster-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search receipt #, remarks..." autocomplete="off">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search receipt #, remarks..." autocomplete="off">
         <?php if (!empty($search)): ?>
-          <a href="<?php echo htmlspecialchars(get_parent_fees_pagination_url(1, '', $filter_method, $filter_year, $limit, $student_id)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <a href="<?php echo htmlspecialchars(get_parent_fees_pagination_url(1, '', $filter_method, $filter_year, $limit, $student_id), ENT_QUOTES, 'UTF-8'); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
 
@@ -1241,15 +1330,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <select name="year" onchange="this.form.submit()">
           <option value="">All Years</option>
           <?php foreach ($years_list as $y): ?>
-            <option value="<?php echo $y; ?>" <?php echo strval($filter_year) === strval($y) ? 'selected' : ''; ?>>
-              <?php echo $y; ?>
+            <option value="<?php echo intval($y); ?>" <?php echo strval($filter_year) === strval($y) ? 'selected' : ''; ?>>
+              <?php echo intval($y); ?>
             </option>
           <?php endforeach; ?>
         </select>
       </div>
 
       <?php if (!empty($search) || !empty($filter_method) || !empty($filter_year)): ?>
-        <a href="<?php echo PARENT_URL; ?>/fees?student_id=<?php echo $student_id; ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" class="roaster-btn secondary" style="gap: 5px; font-size: 0.80rem; text-decoration: none; padding: 7px 12px; border-radius: 8px;">
+        <a href="<?php echo htmlspecialchars(PARENT_URL . '/fees?student_id=' . intval($student_id) . ($limit !== 10 ? '&limit=' . intval($limit) : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="gap: 5px; font-size: 0.80rem; text-decoration: none; padding: 7px 12px; border-radius: 8px;">
           <i class="fa-solid fa-rotate-left"></i> Reset Filters
         </a>
       <?php endif; ?>
@@ -1293,15 +1382,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </span>
         </div>
         <p style="font-size: 0.74rem; color: #64748b; margin: 2px 0 0;">
-          Payment vouchers, installment receipts &amp; cleared dues for <?php echo htmlspecialchars($student['student_name']); ?>.
+          Payment vouchers, installment receipts &amp; cleared dues for <?php echo htmlspecialchars($student['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>.
         </p>
       </div>
     </div>
 
     <div style="font-size: 0.76rem; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px;">
-      <span>Roll: <strong style="color: #0f172a;"><?php echo htmlspecialchars($student['roll_no']); ?></strong></span>
+      <span>Roll: <strong style="color: #0f172a;"><?php echo htmlspecialchars($student['roll_no'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></strong></span>
       <span style="color: #cbd5e1; margin: 0 6px;">•</span>
-      <span>Class: <strong style="color: #0f172a;"><?php echo htmlspecialchars($student['standard']); ?></strong></span>
+      <span>Class: <strong style="color: #0f172a;"><?php echo htmlspecialchars($student['standard'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></strong></span>
     </div>
   </div>
 
@@ -1379,24 +1468,24 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td>
                 <span class="sid-code-pill">
                   <i class="fa-solid fa-receipt" style="font-size: 0.62rem;"></i>
-                  <?php echo htmlspecialchars($p['receipt_no']); ?>
+                  <?php echo htmlspecialchars($p['receipt_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               </td>
 
               <!-- Student Details -->
               <td>
                 <div style="font-weight: 700; color: #0f172a; font-size: 0.82rem;">
-                  <?php echo htmlspecialchars($p['student_name']); ?>
+                  <?php echo htmlspecialchars($p['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </div>
                 <div style="font-size: 0.72rem; color: #64748b; margin-top: 1px;">
-                  Roll: <span style="font-family: monospace; font-weight: 600; color: #334155;"><?php echo htmlspecialchars($p['roll_no']); ?></span>
+                  Roll: <span style="font-family: monospace; font-weight: 600; color: #334155;"><?php echo htmlspecialchars($p['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
               </td>
 
               <!-- Class -->
               <td>
                 <span style="font-size: 0.78rem; font-weight: 600; color: #334155;">
-                  <?php echo htmlspecialchars($p['standard']); ?>
+                  <?php echo htmlspecialchars($p['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               </td>
 
@@ -1412,7 +1501,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td>
                 <span class="sid-mode-badge">
                   <i class="<?php echo $method_icon; ?>" style="color: #0284c7; font-size: 0.66rem;"></i>
-                  <?php echo htmlspecialchars(str_replace([' (GPay/PhonePe)', ' / Cash', ' at Desk'], '', $p['payment_method'] ?: 'Online UPI')); ?>
+                  <?php echo htmlspecialchars(str_replace([' (GPay/PhonePe)', ' / Cash', ' at Desk'], '', $p['payment_method'] ?? 'Online UPI'), ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               </td>
 
@@ -1426,7 +1515,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- Particulars / Remarks -->
               <td>
                 <span style="font-size: 0.76rem; color: #64748b;">
-                  <?php echo htmlspecialchars($p['remarks'] ?: 'Term Installment Fee'); ?>
+                  <?php echo htmlspecialchars($p['remarks'] ?: 'Term Installment Fee', ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               </td>
 
@@ -1529,6 +1618,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
 </div>
+<?php endif; ?>
 
 <!-- ══════════════════════════════════════════════════════
      MODAL: COLLECT FEE PAYMENT (FOR SUPER ADMIN USE)
@@ -1543,15 +1633,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </h3>
       <button type="button" class="modal-close-btn" onclick="closeModal('collectFeeModal')" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="POST" action="<?php echo PARENT_URL; ?>/fees">
+    <form method="POST" action="<?php echo htmlspecialchars(PARENT_URL . '/fees', ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="collect_fee">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <div class="hrms-modal-body" style="padding: 20px;">
         <div class="form-group" style="margin-bottom: 16px;">
           <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Select Student</label>
           <select name="student_id" class="hrms-input" required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; background: #fff;">
             <?php foreach ($student_options as $so): ?>
-              <option value="<?php echo $so['id']; ?>" <?php echo $so['id'] == $student_id ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($so['student_name']); ?> (<?php echo $so['roll_no']; ?>) &bull; Due: ₹<?php echo number_format($so['due'], 0); ?>
+              <option value="<?php echo intval($so['id']); ?>" <?php echo intval($so['id']) === $student_id ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($so['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($so['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>) &bull; Due: ₹<?php echo number_format(floatval($so['due']), 0); ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -1559,7 +1650,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
           <div class="form-group">
             <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Payment Amount (₹)</label>
-            <input type="number" name="amount" class="hrms-input" placeholder="Amount" value="15000" required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;">
+            <input type="number" name="amount" class="hrms-input" placeholder="Amount" value="15000" min="1" max="10000000" step="any" required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;">
           </div>
           <div class="form-group">
             <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Payment Method</label>
@@ -1574,7 +1665,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
         <div class="form-group" style="margin-bottom: 20px;">
           <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Payment Remarks / Particulars</label>
-          <input type="text" name="remarks" class="hrms-input" value="Term Installment Fee" style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;">
+          <input type="text" name="remarks" class="hrms-input" value="Term Installment Fee" maxlength="255" style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem;">
         </div>
         <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
           <button type="button" class="roaster-btn secondary" onclick="closeModal('collectFeeModal')" style="padding: 9px 16px; border-radius: 8px; font-size: 0.84rem; cursor: pointer;">Cancel</button>

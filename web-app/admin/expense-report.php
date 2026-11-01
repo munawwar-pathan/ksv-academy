@@ -1,10 +1,34 @@
 <?php
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
 if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_expense_report');
 }
+
+// Session-based request rate limiting (Max 120 page requests per minute)
+$now = time();
+if (!isset($_SESSION['expense_report_req_attempts']) || !is_array($_SESSION['expense_report_req_attempts'])) {
+    $_SESSION['expense_report_req_attempts'] = [];
+}
+$_SESSION['expense_report_req_attempts'] = array_filter($_SESSION['expense_report_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['expense_report_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['expense_report_req_attempts'][] = $now;
+
 $page_title = 'Financial & Expense Audit Report | KSV Academy HRMS';
 $page_heading = 'Expense Report';
 $page_subheading = 'Category Breakdown, Revenue vs Expenditure Balance, and Monthly Audit Summary';
@@ -13,6 +37,7 @@ $active_menu = 'expense-report';
 $db = get_db_connection();
 $active_session = get_active_session();
 $session_id = $active_session ? intval($active_session['id']) : 1;
+$current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
 // Summary calculations for the active session (Prepared Statements)
@@ -31,11 +56,15 @@ $total_payroll = floatval($stmt_tp->fetchColumn());
 $net_operating_balance = $total_fees - ($total_expenses + $total_payroll);
 $total_disbursed = $total_expenses + $total_payroll;
 
-// Category-wise Breakdown
+// Category-wise Breakdown (Comprehensive accounting including uncategorized or reallocated heads)
 $stmt_cat = $db->prepare("
-    SELECT c.id, c.category_name, COALESCE(SUM(e.amount), 0) as total_amount, COUNT(e.id) as vouchers_count
-    FROM expense_categories c
-    LEFT JOIN expenses e ON c.id = e.category_id AND e.session_id = ?
+    SELECT COALESCE(c.id, 0) as id,
+           COALESCE(c.category_name, 'Uncategorized') as category_name,
+           SUM(e.amount) as total_amount,
+           COUNT(e.id) as vouchers_count
+    FROM expenses e
+    LEFT JOIN expense_categories c ON e.category_id = c.id
+    WHERE e.session_id = ?
     GROUP BY c.id, c.category_name
     HAVING total_amount > 0
     ORDER BY total_amount DESC
@@ -896,7 +925,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
     <div class="stat-card-footer">
       <span style="color: #059669; font-weight: 700;"><i class="fa-solid fa-arrow-trend-up"></i> Inflow Verified</span>
-      <span class="text-muted">Session <?php echo htmlspecialchars($active_session['session_name']); ?></span>
+      <span class="text-muted">Session <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></span>
     </div>
   </div>
 
@@ -981,17 +1010,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
     
     <!-- Left: Subnavigation Links -->
     <div class="exp-rep-nav-links" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-      <a href="<?php echo ADMIN_URL; ?>/expenses" class="roaster-btn secondary exp-rep-nav-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+      <a href="<?php echo htmlspecialchars(ADMIN_URL . '/expenses', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary exp-rep-nav-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
         <i class="fa-solid fa-file-invoice-dollar" style="color: #0092df;"></i>
         <span>Expenses &amp; Vouchers</span>
       </a>
 
-      <a href="<?php echo ADMIN_URL; ?>/expense-categories" class="roaster-btn secondary exp-rep-nav-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+      <a href="<?php echo htmlspecialchars(ADMIN_URL . '/expense-categories', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary exp-rep-nav-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
         <i class="fa-solid fa-sitemap" style="color: #059669;"></i>
         <span>Expense Heads</span>
       </a>
 
-      <a href="<?php echo ADMIN_URL; ?>/fee-collection" class="roaster-btn secondary exp-rep-nav-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+      <a href="<?php echo htmlspecialchars(ADMIN_URL . '/fee-collection', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary exp-rep-nav-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
         <i class="fa-solid fa-hand-holding-dollar" style="color: #7c3aed;"></i>
         <span>Fee Collections</span>
       </a>
@@ -1001,7 +1030,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-actions exp-rep-toolbar-actions">
       <div class="scholars-count-badge exp-rep-session-badge">
         <span class="count-dot" style="background: #10b981;"></span>
-        <span>Session <strong><?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?></strong></span>
+        <span>Session <strong><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong></span>
       </div>
     </div>
 
@@ -1018,15 +1047,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <div>
         <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-          <?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy'); ?>
+          <?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy', ENT_QUOTES, 'UTF-8'); ?>
         </h1>
         <p style="margin: 3px 0 0; font-size: 13px; color: #475569;">
-          <?php echo htmlspecialchars($school_settings['address'] ?? 'Official Financial Audit & Expenditure Ledger Report'); ?>
+          <?php echo htmlspecialchars($school_settings['address'] ?? 'Official Financial Audit & Expenditure Ledger Report', ENT_QUOTES, 'UTF-8'); ?>
         </p>
       </div>
       <div style="text-align: right;">
         <div style="font-size: 12px; font-weight: 700; color: #0284c7;">ACADEMIC AUDIT SESSION</div>
-        <div style="font-size: 18px; font-weight: 800; color: #0f172a;"><?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?></div>
+        <div style="font-size: 18px; font-weight: 800; color: #0f172a;"><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></div>
         <div style="font-size: 11px; color: #64748b;">Generated: <?php echo date('d M Y, h:i A'); ?></div>
       </div>
     </div>
@@ -1063,12 +1092,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <div class="report-cat-item exp-rep-cat-item">
                 <div class="exp-rep-cat-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                   <div class="exp-rep-cat-left" style="display: flex; align-items: center; gap: 9px; min-width: 0;">
-                    <div class="exp-rep-cat-icon" style="width: 28px; height: 28px; border-radius: 7px; background: <?php echo $cat_style['bg']; ?>; color: <?php echo $cat_style['color']; ?>; border: 1px solid <?php echo $cat_style['border']; ?>; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">
-                      <i class="fa-solid <?php echo $cat_style['icon']; ?>"></i>
+                    <div class="exp-rep-cat-icon" style="width: 28px; height: 28px; border-radius: 7px; background: <?php echo htmlspecialchars($cat_style['bg'], ENT_QUOTES, 'UTF-8'); ?>; color: <?php echo htmlspecialchars($cat_style['color'], ENT_QUOTES, 'UTF-8'); ?>; border: 1px solid <?php echo htmlspecialchars($cat_style['border'], ENT_QUOTES, 'UTF-8'); ?>; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0;">
+                      <i class="fa-solid <?php echo htmlspecialchars($cat_style['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
                     </div>
                     <div style="min-width: 0;">
                       <span class="exp-rep-cat-name" style="font-weight: 700; font-size: 0.88rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
-                        <?php echo htmlspecialchars($cb['category_name']); ?>
+                        <?php echo htmlspecialchars($cb['category_name'], ENT_QUOTES, 'UTF-8'); ?>
                       </span>
                       <span class="exp-rep-cat-sub" style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">
                         &bull; <?php echo intval($cb['vouchers_count']); ?> vouchers
@@ -1136,7 +1165,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <td>
                     <div class="exp-rep-month-cell" style="font-weight: 700; font-size: 0.86rem; color: #0f172a; display: flex; align-items: center; gap: 7px;">
                       <i class="fa-regular fa-calendar" style="color: #0284c7; font-size: 0.72rem;"></i>
-                      <span class="exp-rep-month-label"><?php echo htmlspecialchars($me['month_label']); ?></span>
+                      <span class="exp-rep-month-label"><?php echo htmlspecialchars($me['month_label'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </div>
                   </td>
                   <td style="text-align: center;">
@@ -1192,12 +1221,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
               $mb_pct = $total_expenses > 0 ? round(($mb['total_amount'] / $total_expenses) * 100, 1) : 0;
             ?>
             <div class="method-card exp-rep-method-card">
-              <div class="method-icon-box exp-rep-method-icon" style="background: <?php echo $m_info['bg']; ?>; color: <?php echo $m_info['color']; ?>; border: 1px solid <?php echo $m_info['border']; ?>;">
-                <i class="fa-solid <?php echo $m_info['icon']; ?>"></i>
+              <div class="method-icon-box exp-rep-method-icon" style="background: <?php echo htmlspecialchars($m_info['bg'], ENT_QUOTES, 'UTF-8'); ?>; color: <?php echo htmlspecialchars($m_info['color'], ENT_QUOTES, 'UTF-8'); ?>; border: 1px solid <?php echo htmlspecialchars($m_info['border'], ENT_QUOTES, 'UTF-8'); ?>;">
+                <i class="fa-solid <?php echo htmlspecialchars($m_info['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
               </div>
               <div style="flex: 1; min-width: 0;">
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                  <span class="exp-rep-method-name" style="font-size: 0.84rem; font-weight: 700; color: #0f172a;"><?php echo htmlspecialchars($mb['payment_method']); ?></span>
+                  <span class="exp-rep-method-name" style="font-size: 0.84rem; font-weight: 700; color: #0f172a;"><?php echo htmlspecialchars($mb['payment_method'], ENT_QUOTES, 'UTF-8'); ?></span>
                   <span class="exp-rep-method-pct" style="font-size: 0.72rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 5px; border-radius: 4px;"><?php echo $mb_pct; ?>%</span>
                 </div>
                 <div class="exp-rep-method-amount" style="font-size: 0.90rem; font-weight: 700; color: #dc2626; font-family: 'Outfit', sans-serif; margin-top: 2px;">
@@ -1221,7 +1250,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span>Institutional Ledger Reconcilement</span>
         </h4>
         <span class="exp-rep-header-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?>
+          Session <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </div>
 

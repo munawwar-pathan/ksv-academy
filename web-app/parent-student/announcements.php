@@ -1,10 +1,34 @@
 <?php
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
-if (in_array($current_user['role'], ['student', 'parent'])) {
+if (in_array($current_user['role'], ['student', 'parent'], true)) {
     require_menu_permission('announcements');
 }
+
+// Session-based request rate limiting (Max 120 page views per minute)
+$now = time();
+if (!isset($_SESSION['parent_announcements_req_attempts']) || !is_array($_SESSION['parent_announcements_req_attempts'])) {
+    $_SESSION['parent_announcements_req_attempts'] = [];
+}
+$_SESSION['parent_announcements_req_attempts'] = array_filter($_SESSION['parent_announcements_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['parent_announcements_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['parent_announcements_req_attempts'][] = $now;
+
 $page_title = 'Academy Noticeboard & Circulars | KSV Academy HRMS';
 $page_heading = 'Academy Noticeboard & Circulars';
 $page_subheading = 'Official Academic Notifications, Examination Schedules & Important Academy Alerts';
@@ -12,28 +36,92 @@ $active_menu = 'announcements';
 
 $db = get_db_connection();
 $active_session = get_active_session();
+$session_id = $active_session ? intval($active_session['id']) : 1;
 
-// Handle Post Notice (Super Admin)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
-    $title = trim($_POST['title'] ?? '');
-    $content = trim($_POST['content'] ?? '');
-    $target = trim($_POST['target_role'] ?? 'all');
-    if (!empty($title) && !empty($content)) {
-        $stmt = $db->prepare("INSERT INTO announcements (title, content, target_role, posted_by) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$title, $content, $target, $current_user['full_name']]);
-        set_flash('success', 'Notice published successfully on the academy board!');
+// Handle Actions (Broadcast Notice - Super Admin Only)
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    // 1. Authorization check
+    if ($current_user['role'] !== 'super_admin') {
+        http_response_code(403);
+        set_flash('danger', 'Unauthorized action. Only administrators can publish circulars.');
         header('Location: ' . PARENT_URL . '/announcements');
         exit;
     }
+
+    // 2. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('danger', 'Security token invalid or expired. Please refresh the page and try again.');
+        header('Location: ' . PARENT_URL . '/announcements');
+        exit;
+    }
+
+    // 3. Rate limiting for POST actions (Max 15 notices per 5 minutes)
+    if (!isset($_SESSION['announcement_post_attempts']) || !is_array($_SESSION['announcement_post_attempts'])) {
+        $_SESSION['announcement_post_attempts'] = [];
+    }
+    $_SESSION['announcement_post_attempts'] = array_filter($_SESSION['announcement_post_attempts'], function($t) use ($now) {
+        return ($now - (int)$t) < 300;
+    });
+    if (count($_SESSION['announcement_post_attempts']) >= 15) {
+        set_flash('danger', 'Notice publishing rate limit reached. Please wait a few minutes before trying again.');
+        header('Location: ' . PARENT_URL . '/announcements');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? 'create'));
+
+    if ($action === 'delete') {
+        $notice_id = intval($_POST['id'] ?? 0);
+        if ($notice_id > 0) {
+            $stmt = $db->prepare("DELETE FROM announcements WHERE id = ?");
+            $stmt->execute([$notice_id]);
+            set_flash('success', 'Notice deleted successfully from the academy board.');
+        } else {
+            set_flash('danger', 'Invalid notice specified.');
+        }
+        header('Location: ' . PARENT_URL . '/announcements');
+        exit;
+    }
+
+    // Create Notice
+    $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 255);
+    $content = mb_substr(trim((string)($_POST['content'] ?? '')), 0, 10000);
+    $raw_target = trim((string)($_POST['target_role'] ?? 'all'));
+    $allowed_targets = ['all', 'parent', 'student', 'staff'];
+    $target = in_array($raw_target, $allowed_targets, true) ? $raw_target : 'all';
+
+    if (mb_strlen($title) === 0 || mb_strlen($content) === 0) {
+        set_flash('danger', 'Please provide both notice headline and details.');
+        header('Location: ' . PARENT_URL . '/announcements');
+        exit;
+    }
+
+    $posted_by = !empty($current_user['full_name']) 
+        ? mb_substr(trim((string)$current_user['full_name']), 0, 100) 
+        : (!empty($current_user['username']) ? mb_substr(trim((string)$current_user['username']), 0, 100) : 'Directorate');
+
+    $stmt = $db->prepare("INSERT INTO announcements (title, content, target_role, posted_by) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$title, $content, $target, $posted_by]);
+    $_SESSION['announcement_post_attempts'][] = $now;
+
+    set_flash('success', 'Notice published successfully on the academy board!');
+    header('Location: ' . PARENT_URL . '/announcements');
+    exit;
 }
 
-// Fetch Announcements based on role
+// Fetch Announcements based on role using prepared statements
 if ($current_user['role'] === 'super_admin') {
-    $notices = $db->query("SELECT * FROM announcements ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare("SELECT * FROM announcements ORDER BY id DESC");
+    $stmt->execute();
+    $notices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } elseif ($current_user['role'] === 'staff') {
-    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'staff') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare("SELECT * FROM announcements WHERE target_role IN ('all', 'staff') ORDER BY id DESC");
+    $stmt->execute();
+    $notices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'parent', 'student') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $db->prepare("SELECT * FROM announcements WHERE target_role IN ('all', 'parent', 'student') ORDER BY id DESC");
+    $stmt->execute();
+    $notices = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 $total_notices = count($notices);
@@ -624,20 +712,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <?php foreach ($notices as $ann): ?>
           <div class="notice-item">
             <div class="notice-header">
-              <span class="notice-title"><?php echo htmlspecialchars($ann['title']); ?></span>
+              <span class="notice-title"><?php echo htmlspecialchars($ann['title'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
               <span class="notice-time">
                 <i class="fa-regular fa-calendar" style="color: #94a3b8; margin-right: 4px;"></i>
-                <?php echo format_date($ann['created_at'], 'd M Y, h:i A'); ?>
+                <?php echo !empty($ann['created_at']) ? htmlspecialchars(format_date($ann['created_at'], 'd M Y, h:i A'), ENT_QUOTES, 'UTF-8') : '—'; ?>
               </span>
             </div>
-            <p class="notice-desc"><?php echo nl2br(htmlspecialchars($ann['content'])); ?></p>
+            <p class="notice-desc"><?php echo nl2br(htmlspecialchars($ann['content'] ?? '', ENT_QUOTES, 'UTF-8')); ?></p>
             <div class="notice-footer-meta">
               <span>
                 <i class="fa-regular fa-user" style="color: #0284c7; margin-right: 4px;"></i>
-                Posted by: <strong><?php echo htmlspecialchars($ann['posted_by'] ?: 'Directorate'); ?></strong>
+                Posted by: <strong><?php echo htmlspecialchars(!empty($ann['posted_by']) ? $ann['posted_by'] : 'Directorate', ENT_QUOTES, 'UTF-8'); ?></strong>
               </span>
-              <span class="notice-badge-target target-<?php echo htmlspecialchars($ann['target_role']); ?>">
-                Audience: <?php echo htmlspecialchars($ann['target_role'] === 'parent' ? 'Parents & Students' : ($ann['target_role'] === 'staff' ? 'Faculty & Staff' : 'All')); ?>
+              <span class="notice-badge-target target-<?php echo htmlspecialchars($ann['target_role'] ?? 'all', ENT_QUOTES, 'UTF-8'); ?>">
+                Audience: <?php echo htmlspecialchars(($ann['target_role'] ?? '') === 'parent' ? 'Parents & Students' : ((($ann['target_role'] ?? '') === 'staff') ? 'Faculty & Staff' : 'All'), ENT_QUOTES, 'UTF-8'); ?>
               </span>
             </div>
           </div>
@@ -648,7 +736,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
   <div class="periods-card-footer">
     <span>Official institute notices for students &amp; guardians</span>
-    <span><strong><?php echo $total_notices; ?></strong> Recent Alerts</span>
+    <span><strong><?php echo intval($total_notices); ?></strong> Recent Alerts</span>
   </div>
 
 </div>
@@ -663,11 +751,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </h3>
       <button type="button" class="modal-close-btn" style="background: none; border: none; cursor: pointer; color: #64748b; font-size: 1rem;" onclick="closeModal('announcementModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="POST" action="<?php echo PARENT_URL; ?>/announcements">
+    <form method="POST" action="<?php echo htmlspecialchars(PARENT_URL . '/announcements', ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="action" value="create">
       <div class="hrms-modal-body" style="padding: 18px;">
         <div class="form-group" style="margin-bottom: 12px;">
           <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Notice Headline</label>
-          <input type="text" name="title" class="hrms-input" style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 6px;" placeholder="e.g. Mid-Term Examination Timing" required>
+          <input type="text" name="title" maxlength="255" class="hrms-input" style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 6px;" placeholder="e.g. Mid-Term Examination Timing" required>
         </div>
         <div class="form-group" style="margin-bottom: 12px;">
           <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Target Audience</label>
@@ -679,7 +769,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
         <div class="form-group" style="margin-bottom: 16px;">
           <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 4px; display: block;">Notice Details</label>
-          <textarea name="content" class="hrms-input" rows="4" style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical;" placeholder="Enter notice message details..." required></textarea>
+          <textarea name="content" maxlength="10000" class="hrms-input" rows="4" style="width: 100%; padding: 8px 12px; font-size: 0.82rem; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical;" placeholder="Enter notice message details..." required></textarea>
         </div>
         <button type="submit" class="roaster-btn primary" style="width: 100%; padding: 9px; font-size: 0.84rem; justify-content: center;">
           <i class="fa-solid fa-paper-plane"></i> Publish Notice

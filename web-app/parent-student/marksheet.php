@@ -1,10 +1,34 @@
 <?php
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
-if (in_array($current_user['role'], ['student', 'parent'])) {
+if (in_array($current_user['role'], ['student', 'parent'], true)) {
     require_menu_permission('marksheet');
 }
+
+// Session-based request rate limiting (Max 120 page requests per minute)
+$now = time();
+if (!isset($_SESSION['parent_marksheet_req_attempts']) || !is_array($_SESSION['parent_marksheet_req_attempts'])) {
+    $_SESSION['parent_marksheet_req_attempts'] = [];
+}
+$_SESSION['parent_marksheet_req_attempts'] = array_filter($_SESSION['parent_marksheet_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['parent_marksheet_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['parent_marksheet_req_attempts'][] = $now;
+
 $page_title = 'Student Marksheet & Report Card | KSV Academy HRMS';
 $page_heading = 'Student Academic Marksheet';
 $page_subheading = 'Official Academic Statement of Marks, Examination Evaluations & Printable Report Cards';
@@ -12,7 +36,7 @@ $active_menu = 'marksheet';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
 // ── Student Resolution ──
@@ -20,13 +44,13 @@ $student = null;
 $selected_student_id = intval($_GET['student_id'] ?? ($_GET['id'] ?? 0));
 $selected_marksheet_id = intval($_GET['marksheet_id'] ?? 0);
 
-// Check for Impersonation Session
-if (!empty($_SESSION['impersonated_student'])) {
+// Check for Impersonation Session (Super Admin only)
+if (!empty($_SESSION['impersonated_student']) && $current_user['role'] === 'super_admin') {
     $s_id = intval($_SESSION['impersonated_student']['id']);
     $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
     $stmt->execute([$s_id]);
-    $student = $stmt->fetch();
-    if ($student) $selected_student_id = $student['id'];
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($student) $selected_student_id = intval($student['id']);
 }
 
 // 1. Direct query parameter override (?student_id=X)
@@ -34,30 +58,31 @@ if ($selected_student_id > 0 && !$student) {
     if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff') {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
         $stmt->execute([$selected_student_id]);
-        $student = $stmt->fetch();
-        if ($student) $_SESSION['active_student_id'] = $student['id'];
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($student) $_SESSION['active_student_id'] = intval($student['id']);
     } elseif ($current_user['role'] === 'parent') {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
         $stmt->execute([$selected_student_id, $current_user['id']]);
-        $student = $stmt->fetch();
-        if ($student) $_SESSION['active_student_id'] = $student['id'];
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($student) $_SESSION['active_student_id'] = intval($student['id']);
     }
 }
 
 // 2. Role Specific Resolution
 $parent_children = [];
+$students_list = [];
 if ($current_user['role'] === 'student') {
     $stmt = $db->prepare("SELECT * FROM students WHERE user_id = ? LIMIT 1");
     $stmt->execute([$current_user['id']]);
-    $student = $stmt->fetch();
-    if (!$student) {
-        $stmt = $db->prepare("SELECT * FROM students WHERE student_name LIKE ? OR roll_no = ? LIMIT 1");
-        $stmt->execute(['%' . $current_user['full_name'] . '%', $current_user['username']]);
-        $student = $stmt->fetch();
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$student && (!empty($current_user['username']) || !empty($current_user['full_name']))) {
+        $stmt = $db->prepare("SELECT * FROM students WHERE (roll_no = ? AND roll_no != '') OR (user_id IS NULL AND student_name = ?) LIMIT 1");
+        $stmt->execute([$current_user['username'], $current_user['full_name']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if ($student) {
-        $_SESSION['active_student_id'] = $student['id'];
-        $selected_student_id = $student['id'];
+        $_SESSION['active_student_id'] = intval($student['id']);
+        $selected_student_id = intval($student['id']);
     }
 } elseif ($current_user['role'] === 'parent') {
     $c_stmt = $db->prepare("SELECT id, student_name, roll_no, standard, photo, section FROM students WHERE parent_user_id = ? ORDER BY id ASC");
@@ -66,52 +91,68 @@ if ($current_user['role'] === 'student') {
 
     if (empty($student) && !empty($_SESSION['active_student_id'])) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
-        $stmt->execute([$_SESSION['active_student_id'], $current_user['id']]);
-        $student = $stmt->fetch();
+        $stmt->execute([intval($_SESSION['active_student_id']), $current_user['id']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if (empty($student) && !empty($parent_children)) {
-        $student = $db->query("SELECT * FROM students WHERE id = {$parent_children[0]['id']}")->fetch();
-        if ($student) $_SESSION['active_student_id'] = $student['id'];
+        $first_child_id = intval($parent_children[0]['id']);
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
+        $stmt->execute([$first_child_id, $current_user['id']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($student) $_SESSION['active_student_id'] = intval($student['id']);
     }
-    if ($student) $selected_student_id = $student['id'];
+    if ($student) $selected_student_id = intval($student['id']);
 } else {
     // Super admin / Staff selector list
     $all_students_stmt = $db->prepare("SELECT id, student_name, roll_no, standard FROM students WHERE session_id = ? ORDER BY standard ASC, student_name ASC");
     $all_students_stmt->execute([$session_id]);
-    $students_list = $all_students_stmt->fetchAll();
+    $students_list = $all_students_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($selected_student_id === 0 && !empty($students_list)) {
-        $selected_student_id = $students_list[0]['id'];
+        $selected_student_id = intval($students_list[0]['id']);
     }
     if ($selected_student_id > 0 && !$student) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
         $stmt->execute([$selected_student_id]);
-        $student = $stmt->fetch();
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Fallback if no student resolved (Super Admin / Staff only)
+    if (!$student) {
+        $stmt = $db->prepare("SELECT * FROM students WHERE session_id = ? ORDER BY id ASC LIMIT 1");
+        $stmt->execute([$session_id]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$student) {
+            $stmt = $db->prepare("SELECT * FROM students ORDER BY id ASC LIMIT 1");
+            $stmt->execute();
+            $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        if ($student) {
+            $_SESSION['active_student_id'] = intval($student['id']);
+            $selected_student_id = intval($student['id']);
+        }
     }
 }
 
-// Fallback if no student resolved
 if (!$student) {
-    $student = $db->query("SELECT * FROM students ORDER BY id ASC LIMIT 1")->fetch();
-    if ($student) {
-        $_SESSION['active_student_id'] = $student['id'];
-        $selected_student_id = $student['id'];
-    }
+    $selected_student_id = 0;
 }
 
 $student_profile = $student;
-$selected_student_id = intval($student['id'] ?? 1);
 
 // ── Fetch Marksheets for this Student ──
-$marksheets_stmt = $db->prepare("SELECT * FROM marksheets WHERE student_id = ? AND session_id = ? ORDER BY exam_date DESC, id DESC");
-$marksheets_stmt->execute([$selected_student_id, $session_id]);
-$student_marksheets = $marksheets_stmt->fetchAll();
+$student_marksheets = [];
+if ($selected_student_id > 0) {
+    $marksheets_stmt = $db->prepare("SELECT * FROM marksheets WHERE student_id = ? AND session_id = ? ORDER BY exam_date DESC, id DESC");
+    $marksheets_stmt->execute([$selected_student_id, $session_id]);
+    $student_marksheets = $marksheets_stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Select active marksheet to display
 $active_marksheet = null;
 if ($selected_marksheet_id > 0) {
     foreach ($student_marksheets as $ms) {
-        if ($ms['id'] == $selected_marksheet_id) {
+        if (intval($ms['id']) === $selected_marksheet_id) {
             $active_marksheet = $ms;
             break;
         }
@@ -121,26 +162,28 @@ if (!$active_marksheet && !empty($student_marksheets)) {
     $active_marksheet = $student_marksheets[0];
 }
 
-// Student photo detection
+// Student photo detection (with Path Traversal protection)
 $has_student_photo = false;
 $student_photo_url = '';
 if ($student_profile && !empty($student_profile['photo']) && $student_profile['photo'] !== '/assets/imgs/ksv-logo.jpg') {
-    $photo_file = __DIR__ . '/../..' . $student_profile['photo'];
-    if (file_exists($photo_file)) {
+    $clean_photo = str_replace(['../', '..\\'], '', $student_profile['photo']);
+    $photo_file = realpath(__DIR__ . '/../../' . ltrim($clean_photo, '/'));
+    $base_dir = realpath(__DIR__ . '/../..');
+    if ($photo_file && $base_dir && strpos($photo_file, $base_dir) === 0 && file_exists($photo_file)) {
         $has_student_photo = true;
-        $student_photo_url = $student_profile['photo'];
+        $student_photo_url = $clean_photo;
     }
 }
 
 // Verification QR code for marksheet
 $verification_qr_url = '';
 if ($student_profile && $active_marksheet) {
-    $qr_payload = 'KSV-EVAL-ID:' . $active_marksheet['id'] . '|ROLL:' . $student_profile['roll_no'] . '|SCORE:' . $active_marksheet['percentage'] . '%|' . $active_marksheet['overall_grade'];
+    $qr_payload = 'KSV-EVAL-ID:' . intval($active_marksheet['id']) . '|ROLL:' . ($student_profile['roll_no'] ?? '') . '|SCORE:' . ($active_marksheet['percentage'] ?? 0) . '%|' . ($active_marksheet['overall_grade'] ?? '');
     $verification_qr_url = get_qr_code_url($qr_payload, '120x120');
 }
 
 // Avatar gradient fallback
-$first_letter = $student_profile ? strtoupper(substr($student_profile['student_name'], 0, 1)) : 'S';
+$first_letter = ($student_profile && !empty($student_profile['student_name'])) ? strtoupper(substr($student_profile['student_name'], 0, 1)) : 'S';
 $grad_palette = [
     'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
     'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
@@ -159,7 +202,7 @@ foreach ($student_marksheets as $m) {
     $pct = floatval($m['percentage']);
     if ($pct > $max_score) $max_score = $pct;
     $score_sum += $pct;
-    if ($m['result_status'] === 'PASS') $passed_count++;
+    if (($m['result_status'] ?? '') === 'PASS') $passed_count++;
 }
 $avg_score = $total_evals > 0 ? round($score_sum / $total_evals, 1) : 0;
 $pass_rate = $total_evals > 0 ? round(($passed_count / $total_evals) * 100) : 100;
@@ -168,7 +211,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <!-- html2canvas for High-Resolution Marksheet Export -->
-<script src="<?php echo HRMS_URL; ?>/assets/js/html2canvas.min.js"></script>
+<script src="<?php echo htmlspecialchars(HRMS_URL, ENT_QUOTES, 'UTF-8'); ?>/assets/js/html2canvas.min.js"></script>
 
 <style>
 /* ── Strict A4 Single-Page Print Setup (Identical to admin/marksheet.php) ── */
@@ -1454,17 +1497,29 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </span>
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
       <?php foreach ($parent_children as $pc): ?>
-        <a href="<?php echo PARENT_URL; ?>/marksheet?student_id=<?php echo $pc['id']; ?>" 
-           class="roaster-btn <?php echo $pc['id'] == $selected_student_id ? 'primary' : 'secondary'; ?>" 
+        <a href="<?php echo htmlspecialchars(PARENT_URL . '/marksheet?student_id=' . intval($pc['id']), ENT_QUOTES, 'UTF-8'); ?>" 
+           class="roaster-btn <?php echo intval($pc['id']) === $selected_student_id ? 'primary' : 'secondary'; ?>" 
            style="font-size: 0.76rem; padding: 5px 12px; border-radius: 6px; text-decoration: none;">
-          <?php echo htmlspecialchars($pc['student_name']); ?> (<?php echo htmlspecialchars($pc['standard']); ?>)
+          <?php echo htmlspecialchars($pc['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($pc['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?>)
         </a>
       <?php endforeach; ?>
     </div>
   </div>
 <?php endif; ?>
 
-
+<?php if (!$student_profile): ?>
+  <div class="periods-card no-print" style="padding: 48px 24px; text-align: center; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);">
+    <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 14px;">
+      <i class="fa-solid fa-user-xmark"></i>
+    </div>
+    <h3 style="margin: 0 0 6px; font-size: 1.15rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+      No Student Profile Linked
+    </h3>
+    <p style="margin: 0 auto; max-width: 480px; font-size: 0.84rem; color: #64748b; line-height: 1.5;">
+      Your account is not currently linked to any enrolled student record in the academy database. Please contact school administration to associate your registration with your student profile.
+    </p>
+  </div>
+<?php else: ?>
 
 <!-- ══════════════════════════════════════════════════════
      TOP SCHOLAR CONTROL & EXAM SELECTION BAR (Exact match to admin/marksheet.php)
@@ -1474,25 +1529,25 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <!-- Current Scholar Info Pill -->
   <div class="current-scholar-pill">
     <?php if ($has_student_photo): ?>
-      <img src="<?php echo htmlspecialchars($student_photo_url); ?>" alt="" class="scholar-mini-avatar">
+      <img src="<?php echo htmlspecialchars($student_photo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="" class="scholar-mini-avatar">
     <?php else: ?>
       <div class="scholar-mini-init" style="background: <?php echo $avatar_bg; ?>;">
-        <?php echo $first_letter; ?>
+        <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
       </div>
     <?php endif; ?>
 
     <div class="current-scholar-meta">
       <h4>
-        <span><?php echo htmlspecialchars($student_profile['student_name'] ?? 'Select Scholar'); ?></span>
+        <span><?php echo htmlspecialchars($student_profile['student_name'] ?? 'Select Scholar', ENT_QUOTES, 'UTF-8'); ?></span>
         <?php if ($student_profile): ?>
           <span class="roll-badge-pill">
-            <?php echo htmlspecialchars($student_profile['roll_no']); ?>
+            <?php echo htmlspecialchars($student_profile['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </span>
         <?php endif; ?>
       </h4>
       <div class="meta-pills">
         <span style="color: #64748b;">
-          <?php echo htmlspecialchars($student_profile['standard'] ?? 'Standard'); ?> &bull; Section <?php echo htmlspecialchars($student_profile['section'] ?? 'A'); ?>
+          <?php echo htmlspecialchars($student_profile['standard'] ?? 'Standard', ENT_QUOTES, 'UTF-8'); ?> &bull; Section <?php echo htmlspecialchars($student_profile['section'] ?? 'A', ENT_QUOTES, 'UTF-8'); ?>
         </span>
         <span style="color: #cbd5e1;">&bull;</span>
         <a href="#examHistoryTable" style="color: var(--hrms-primary); text-decoration: none; font-weight: 700;">
@@ -1506,15 +1561,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="marksheet-top-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
     
     <?php if (!empty($student_marksheets)): ?>
-      <form method="GET" action="<?php echo PARENT_URL; ?>/marksheet" class="marksheet-exam-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
-        <input type="hidden" name="student_id" value="<?php echo $selected_student_id; ?>">
+      <form method="GET" action="<?php echo htmlspecialchars(PARENT_URL . '/marksheet', ENT_QUOTES, 'UTF-8'); ?>" class="marksheet-exam-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;">
+        <input type="hidden" name="student_id" value="<?php echo intval($selected_student_id); ?>">
         <label style="font-size: 13px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex-shrink: 0;">
           <i class="fa-solid fa-book-bookmark" style="color: #0092df;"></i> <span>Exam:</span>
         </label>
         <select name="marksheet_id" onchange="this.form.submit()" class="hrms-input marksheet-exam-select" style="padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; border: 1.5px solid #cbd5e1; background: #f8fafc;">
           <?php foreach ($student_marksheets as $m_item): ?>
-            <option value="<?php echo $m_item['id']; ?>" <?php echo ($active_marksheet && $m_item['id'] == $active_marksheet['id']) ? 'selected' : ''; ?>>
-              <?php echo htmlspecialchars($m_item['exam_name']); ?> (<?php echo $m_item['percentage']; ?>% • <?php echo $m_item['overall_grade']; ?>)
+            <option value="<?php echo intval($m_item['id']); ?>" <?php echo ($active_marksheet && intval($m_item['id']) === intval($active_marksheet['id'])) ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($m_item['exam_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($m_item['percentage'] ?? '', ENT_QUOTES, 'UTF-8'); ?>% • <?php echo htmlspecialchars($m_item['overall_grade'] ?? '', ENT_QUOTES, 'UTF-8'); ?>)
             </option>
           <?php endforeach; ?>
         </select>
@@ -1559,11 +1614,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
         $tier_class = 'tier-dense';
     }
   ?>
-  <div id="report-card-view" class="marksheet-print-canvas report-card-container <?php echo $tier_class; ?>" data-sub-count="<?php echo $sub_count; ?>">
+  <div id="report-card-view" class="marksheet-print-canvas report-card-container <?php echo htmlspecialchars($tier_class, ENT_QUOTES, 'UTF-8'); ?>" data-sub-count="<?php echo intval($sub_count); ?>">
     
     <!-- Watermark Logo -->
     <div style="position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; pointer-events: none; z-index: 0;">
-      <img src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="" style="width: 360px; height: 360px;">
+      <img src="<?php echo htmlspecialchars($school_settings['logo_url'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width: 360px; height: 360px;">
     </div>
 
     <!-- Official Header Section -->
@@ -1572,19 +1627,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
         
         <!-- Left: Academy Crest -->
         <div style="width: 80px; text-align: left;">
-          <img class="school-logo-img" src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="KSV Logo" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid #0092df; padding: 2px; background: #ffffff;">
+          <img class="school-logo-img" src="<?php echo htmlspecialchars($school_settings['logo_url'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" alt="KSV Logo" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid #0092df; padding: 2px; background: #ffffff;">
         </div>
 
         <!-- Center: Institutional Identity -->
         <div style="flex: 1; text-align: center;">
           <h1 class="report-school-title">
-            <?php echo htmlspecialchars($school_settings['school_name']); ?>
+            <?php echo htmlspecialchars($school_settings['school_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </h1>
           <div class="report-school-tagline">
-            <?php echo htmlspecialchars($school_settings['tagline']); ?>
+            <?php echo htmlspecialchars($school_settings['tagline'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </div>
           <div class="report-school-subinfo" style="font-size: 11px; color: #64748b; margin-top: 4px;">
-            <?php echo htmlspecialchars($school_settings['address']); ?> &bull; Helpline: <?php echo htmlspecialchars($school_settings['phone']); ?>
+            <?php echo htmlspecialchars($school_settings['address'] ?? '', ENT_QUOTES, 'UTF-8'); ?> &bull; Helpline: <?php echo htmlspecialchars($school_settings['phone'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </div>
         </div>
 
@@ -1592,7 +1647,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="verification-qr-wrap" style="width: 80px; text-align: right;">
           <?php if (!empty($verification_qr_url)): ?>
             <div style="display: inline-block; padding: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);" title="Biometric QR Verification Pass">
-              <img src="<?php echo $verification_qr_url; ?>" alt="Verification QR" style="width: 58px; height: 58px; display: block;">
+              <img src="<?php echo htmlspecialchars($verification_qr_url, ENT_QUOTES, 'UTF-8'); ?>" alt="Verification QR" style="width: 58px; height: 58px; display: block;">
               <span class="qr-verify-badge" style="font-size: 7.5px; font-weight: 800; color: #0284c7; text-transform: uppercase; display: block; text-align: center; margin-top: 2px;">VERIFIED</span>
             </div>
           <?php endif; ?>
@@ -1603,7 +1658,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <!-- Academic Session Ribbon -->
       <div class="report-session-ribbon">
         <i class="fa-solid fa-award"></i>
-        <span>STATEMENT OF ACADEMIC MARKS &bull; SESSION <?php echo htmlspecialchars($active_session['session_name']); ?></span>
+        <span>STATEMENT OF ACADEMIC MARKS &bull; SESSION <?php echo htmlspecialchars($active_session['session_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
       </div>
     </div>
 
@@ -1612,40 +1667,40 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="detail-item">
         <strong>Scholar Name:</strong>
         <span style="font-size: 14.5px; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-          <?php echo htmlspecialchars($student_profile['student_name']); ?>
+          <?php echo htmlspecialchars($student_profile['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </div>
       <div class="detail-item">
         <strong>Class &amp; Section:</strong>
         <span style="font-weight: 800; color: #007cbd;">
-          <?php echo htmlspecialchars($student_profile['standard']); ?> &bull; Section <?php echo htmlspecialchars($student_profile['section'] ?? 'A'); ?>
+          <?php echo htmlspecialchars($student_profile['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?> &bull; Section <?php echo htmlspecialchars($student_profile['section'] ?? 'A', ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </div>
 
       <div class="detail-item">
         <strong>Roll Number:</strong>
         <span style="font-family: monospace; font-weight: 800; font-size: 13.5px; color: #0284c7; background: #e0f2fe; padding: 1px 8px; border-radius: 4px;">
-          <?php echo htmlspecialchars($student_profile['roll_no']); ?>
+          <?php echo htmlspecialchars($student_profile['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </div>
       <div class="detail-item">
         <strong>Father's Name:</strong>
         <span style="font-weight: 700;">
-          <?php echo htmlspecialchars($student_profile['parent_name'] ?? '—'); ?>
+          <?php echo htmlspecialchars($student_profile['parent_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </div>
 
       <div class="detail-item">
         <strong>Admission No:</strong>
         <span style="font-family: monospace; color: #475569; font-weight: 600;">
-          <?php echo htmlspecialchars($student_profile['admission_no'] ?? ('ADM-' . $student_profile['id'])); ?>
+          <?php echo htmlspecialchars($student_profile['admission_no'] ?? ('ADM-' . ($student_profile['id'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </div>
       <div class="detail-item">
         <strong>Examination:</strong>
         <span style="color: #0f172a; font-weight: 800;">
-          <?php echo htmlspecialchars($active_marksheet['exam_name']); ?>
-          <span style="font-weight: 600; color: #64748b; font-size: 11.5px;">(<?php echo date('M Y', strtotime($active_marksheet['exam_date'])); ?>)</span>
+          <?php echo htmlspecialchars($active_marksheet['exam_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+          <span style="font-weight: 600; color: #64748b; font-size: 11.5px;">(<?php echo !empty($active_marksheet['exam_date']) ? date('M Y', strtotime($active_marksheet['exam_date'])) : '—'; ?>)</span>
         </span>
       </div>
     </div>
@@ -1668,15 +1723,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php foreach ($subjects as $sub): ?>
             <tr>
               <td style="text-align: center; color: #94a3b8; font-weight: 700;"><?php echo $idx_sub++; ?></td>
-              <td style="font-weight: 700; color: #1e293b;"><?php echo htmlspecialchars($sub['name']); ?></td>
-              <td style="text-align: center; color: #64748b; font-weight: 600;"><?php echo $sub['max']; ?></td>
-              <td style="text-align: center; color: #64748b; font-weight: 600;"><?php echo $sub['pass']; ?></td>
-              <td style="text-align: center; font-weight: 900; font-size: 14px; font-family: 'Outfit', sans-serif; color: <?php echo $sub['obtained'] >= $sub['pass'] ? '#059669' : '#dc2626'; ?>;">
-                <?php echo $sub['obtained']; ?>
+              <td style="font-weight: 700; color: #1e293b;"><?php echo htmlspecialchars($sub['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+              <td style="text-align: center; color: #64748b; font-weight: 600;"><?php echo htmlspecialchars($sub['max'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+              <td style="text-align: center; color: #64748b; font-weight: 600;"><?php echo htmlspecialchars($sub['pass'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+              <td style="text-align: center; font-weight: 900; font-size: 14px; font-family: 'Outfit', sans-serif; color: <?php echo (floatval($sub['obtained'] ?? 0) >= floatval($sub['pass'] ?? 0)) ? '#059669' : '#dc2626'; ?>;">
+                <?php echo htmlspecialchars($sub['obtained'] ?? '0', ENT_QUOTES, 'UTF-8'); ?>
               </td>
               <td style="text-align: center; font-weight: 800; color: #0284c7;">
-                <span class="grade-pill-badge <?php echo $sub['obtained'] >= $sub['pass'] ? 'pass' : 'fail'; ?>">
-                  <?php echo $sub['grade']; ?>
+                <span class="grade-pill-badge <?php echo (floatval($sub['obtained'] ?? 0) >= floatval($sub['pass'] ?? 0)) ? 'pass' : 'fail'; ?>">
+                  <?php echo htmlspecialchars($sub['grade'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               </td>
             </tr>
@@ -1686,10 +1741,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <td colspan="2" style="text-align: left; font-weight: 900; color: #0f172a; letter-spacing: 0.04em;">
               GRAND TOTAL MARKS
             </td>
-            <td style="text-align: center; color: #334155;"><?php echo $active_marksheet['total_max']; ?></td>
+            <td style="text-align: center; color: #334155;"><?php echo htmlspecialchars($active_marksheet['total_max'] ?? '0', ENT_QUOTES, 'UTF-8'); ?></td>
             <td style="text-align: center; color: #94a3b8;">—</td>
-            <td style="text-align: center; color: #007cbd; font-size: 16px; font-family: 'Outfit', sans-serif;"><?php echo $active_marksheet['total_obtained']; ?></td>
-            <td style="text-align: center; color: #007cbd;"><?php echo $active_marksheet['overall_grade']; ?></td>
+            <td style="text-align: center; color: #007cbd; font-size: 16px; font-family: 'Outfit', sans-serif;"><?php echo htmlspecialchars($active_marksheet['total_obtained'] ?? '0', ENT_QUOTES, 'UTF-8'); ?></td>
+            <td style="text-align: center; color: #007cbd;"><?php echo htmlspecialchars($active_marksheet['overall_grade'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></td>
           </tr>
         </tbody>
       </table>
@@ -1699,17 +1754,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="report-summary-kpi-row">
       <div class="summary-kpi-card percentage">
         <div class="kpi-title" style="color: #15803d;">OVERALL PERCENTAGE</div>
-        <div class="kpi-val" style="color: #166534;"><?php echo $active_marksheet['percentage']; ?>%</div>
+        <div class="kpi-val" style="color: #166534;"><?php echo htmlspecialchars($active_marksheet['percentage'] ?? '0', ENT_QUOTES, 'UTF-8'); ?>%</div>
       </div>
       <div class="summary-kpi-card grade">
         <div class="kpi-title" style="color: #1d4ed8;">ACADEMIC GRADE</div>
-        <div class="kpi-val" style="color: #1e40af;"><?php echo $active_marksheet['overall_grade']; ?></div>
+        <div class="kpi-val" style="color: #1e40af;"><?php echo htmlspecialchars($active_marksheet['overall_grade'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></div>
       </div>
       <div class="summary-kpi-card <?php echo $is_overall_pass ? 'pass' : 'fail'; ?>">
         <div class="kpi-title" style="color: <?php echo $is_overall_pass ? '#15803d' : '#991b1b'; ?>;">EXAMINATION RESULT</div>
         <div class="kpi-val" style="color: <?php echo $is_overall_pass ? '#166534' : '#b91c1c'; ?>; display: flex; align-items: center; justify-content: center; gap: 6px;">
           <i class="fa-solid <?php echo $is_overall_pass ? 'fa-circle-check' : 'fa-circle-xmark'; ?>" style="font-size: 1.1rem;"></i>
-          <span><?php echo $active_marksheet['result_status']; ?></span>
+          <span><?php echo htmlspecialchars($active_marksheet['result_status'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
       </div>
     </div>
@@ -1720,7 +1775,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div>
         <strong>Faculty Evaluation &amp; Discipline Remarks:</strong>
         <div style="margin-top: 3px; font-style: italic; color: #475569;">
-          "<?php echo htmlspecialchars(!empty(trim($active_marksheet['remarks'] ?? '')) ? $active_marksheet['remarks'] : 'Consistent academic effort, good participation and disciplined conduct throughout the examination period.'); ?>"
+          "<?php echo htmlspecialchars(!empty(trim($active_marksheet['remarks'] ?? '')) ? $active_marksheet['remarks'] : 'Consistent academic effort, good participation and disciplined conduct throughout the examination period.', ENT_QUOTES, 'UTF-8'); ?>"
         </div>
       </div>
     </div>
@@ -1756,7 +1811,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       No Marksheet Record Generated Yet
     </h3>
     <p style="margin: 0; color: #64748b; font-size: 0.9rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-      Scholar <strong><?php echo htmlspecialchars($student_profile['student_name'] ?? 'Selected Scholar'); ?></strong> does not have an evaluation for Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
+      Scholar <strong><?php echo htmlspecialchars($student_profile['student_name'] ?? 'Selected Scholar', ENT_QUOTES, 'UTF-8'); ?></strong> does not have an evaluation for Session <strong><?php echo htmlspecialchars($active_session['session_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></strong>.
     </p>
   </div>
 <?php endif; ?>
@@ -1776,7 +1831,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           Academic Evaluation History
         </h3>
         <p style="font-size: 0.74rem; color: #64748b; margin: 2px 0 0;">
-          All term assessments, unit tests &amp; examination report cards for <?php echo htmlspecialchars($student_profile['student_name']); ?>.
+          All term assessments, unit tests &amp; examination report cards for <?php echo htmlspecialchars($student_profile['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>.
         </p>
       </div>
     </div>
@@ -1802,44 +1857,44 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </thead>
       <tbody>
         <?php foreach ($student_marksheets as $idx => $ms_row): ?>
-          <tr style="<?php echo ($active_marksheet && $ms_row['id'] == $active_marksheet['id']) ? 'background: #f0f9ff;' : ''; ?>">
+          <tr style="<?php echo ($active_marksheet && intval($ms_row['id']) === intval($active_marksheet['id'])) ? 'background: #f0f9ff;' : ''; ?>">
             <td style="text-align: center; color: #64748b; font-weight: 600; font-size: 0.76rem;">
               <?php echo sprintf('%02d', $idx + 1); ?>
             </td>
             <td>
               <strong style="color: #0f172a; font-size: 0.84rem;">
-                <?php echo htmlspecialchars($ms_row['exam_name']); ?>
+                <?php echo htmlspecialchars($ms_row['exam_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
               </strong>
-              <?php if ($active_marksheet && $ms_row['id'] == $active_marksheet['id']): ?>
+              <?php if ($active_marksheet && intval($ms_row['id']) === intval($active_marksheet['id'])): ?>
                 <span style="font-size: 0.65rem; background: #0284c7; color: #fff; padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: 700;">ACTIVE</span>
               <?php endif; ?>
             </td>
             <td>
               <span style="color: #475569; font-size: 0.80rem; display: flex; align-items: center; gap: 5px;">
                 <i class="fa-regular fa-calendar" style="color: #64748b; font-size: 0.70rem;"></i>
-                <?php echo format_date($ms_row['exam_date'], 'd M Y'); ?>
+                <?php echo htmlspecialchars(!empty($ms_row['exam_date']) ? format_date($ms_row['exam_date'], 'd M Y') : '—', ENT_QUOTES, 'UTF-8'); ?>
               </span>
             </td>
             <td style="text-align: center; font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
-              <?php echo $ms_row['total_obtained']; ?> / <?php echo $ms_row['total_max']; ?>
+              <?php echo htmlspecialchars($ms_row['total_obtained'] ?? '0', ENT_QUOTES, 'UTF-8'); ?> / <?php echo htmlspecialchars($ms_row['total_max'] ?? '0', ENT_QUOTES, 'UTF-8'); ?>
             </td>
             <td style="text-align: center; font-weight: 800; color: #0284c7; font-family: 'Outfit', sans-serif;">
-              <?php echo $ms_row['percentage']; ?>%
+              <?php echo htmlspecialchars($ms_row['percentage'] ?? '0', ENT_QUOTES, 'UTF-8'); ?>%
             </td>
             <td style="text-align: center;">
-              <span class="grade-pill-badge <?php echo $ms_row['result_status'] === 'PASS' ? 'pass' : 'fail'; ?>">
-                <?php echo $ms_row['overall_grade']; ?>
+              <span class="grade-pill-badge <?php echo ($ms_row['result_status'] ?? '') === 'PASS' ? 'pass' : 'fail'; ?>">
+                <?php echo htmlspecialchars($ms_row['overall_grade'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
               </span>
             </td>
             <td style="text-align: center;">
-              <span class="sid-status-verified" style="<?php echo $ms_row['result_status'] !== 'PASS' ? 'background: #fef2f2; color: #991b1b; border-color: #fca5a5;' : ''; ?>">
-                <i class="fa-solid <?php echo $ms_row['result_status'] === 'PASS' ? 'fa-circle-check' : 'fa-circle-xmark'; ?>"></i>
-                <?php echo $ms_row['result_status']; ?>
+              <span class="sid-status-verified" style="<?php echo ($ms_row['result_status'] ?? '') !== 'PASS' ? 'background: #fef2f2; color: #991b1b; border-color: #fca5a5;' : ''; ?>">
+                <i class="fa-solid <?php echo ($ms_row['result_status'] ?? '') === 'PASS' ? 'fa-circle-check' : 'fa-circle-xmark'; ?>"></i>
+                <?php echo htmlspecialchars($ms_row['result_status'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
               </span>
             </td>
             <td style="text-align: right;">
-              <a href="<?php echo PARENT_URL; ?>/marksheet?student_id=<?php echo $selected_student_id; ?>&marksheet_id=<?php echo $ms_row['id']; ?>" 
-                 class="roaster-btn <?php echo ($active_marksheet && $ms_row['id'] == $active_marksheet['id']) ? 'primary' : 'secondary'; ?>" 
+              <a href="<?php echo htmlspecialchars(PARENT_URL . '/marksheet?student_id=' . intval($selected_student_id) . '&marksheet_id=' . intval($ms_row['id']), ENT_QUOTES, 'UTF-8'); ?>" 
+                 class="roaster-btn <?php echo ($active_marksheet && intval($ms_row['id']) === intval($active_marksheet['id'])) ? 'primary' : 'secondary'; ?>" 
                  style="padding: 3px 9px; font-size: 0.74rem; text-decoration: none; border-radius: 6px; gap: 4px; display: inline-flex; align-items: center;">
                 <i class="fa-solid fa-eye"></i> View Report
               </a>
@@ -1850,6 +1905,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </table>
   </div>
 </div>
+<?php endif; ?>
 <?php endif; ?>
 
 <!-- ══════════════════════════════════════════════════════

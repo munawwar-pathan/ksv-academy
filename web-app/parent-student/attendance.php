@@ -1,10 +1,34 @@
 <?php
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
-if (in_array($current_user['role'], ['student', 'parent'])) {
+if (in_array($current_user['role'], ['student', 'parent'], true)) {
     require_menu_permission('attendance');
 }
+
+// Session-based request rate limiting (Max 120 page requests per minute)
+$now = time();
+if (!isset($_SESSION['parent_attendance_req_attempts']) || !is_array($_SESSION['parent_attendance_req_attempts'])) {
+    $_SESSION['parent_attendance_req_attempts'] = [];
+}
+$_SESSION['parent_attendance_req_attempts'] = array_filter($_SESSION['parent_attendance_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['parent_attendance_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['parent_attendance_req_attempts'][] = $now;
+
 $page_title = 'Student Attendance Register';
 $page_heading = 'Student Attendance Register';
 $page_subheading = 'Monthly Presence Ledger, Daily Biometric In/Out Timings & Punch History';
@@ -12,7 +36,7 @@ $active_menu = 'attendance';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'] ?? 1;
+$session_id = $active_session ? intval($active_session['id']) : 1;
 
 // ── Student / Scholar Resolution ──
 $student = null;
@@ -23,14 +47,14 @@ if ($current_user['role'] === 'student') {
     $stmt = $db->prepare("SELECT * FROM students WHERE user_id = ? LIMIT 1");
     $stmt->execute([$current_user['id']]);
     $student = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$student) {
-        $stmt = $db->prepare("SELECT * FROM students WHERE student_name LIKE ? OR roll_no = ? LIMIT 1");
-        $stmt->execute(['%' . $current_user['full_name'] . '%', $current_user['username']]);
+    if (!$student && (!empty($current_user['username']) || !empty($current_user['full_name']))) {
+        $stmt = $db->prepare("SELECT * FROM students WHERE (roll_no = ? AND roll_no != '') OR (user_id IS NULL AND student_name = ?) LIMIT 1");
+        $stmt->execute([$current_user['username'], $current_user['full_name']]);
         $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if ($student) {
-        $selected_student_id = $student['id'];
-        $_SESSION['active_student_id'] = $student['id'];
+        $selected_student_id = intval($student['id']);
+        $_SESSION['active_student_id'] = intval($student['id']);
     }
 } elseif ($current_user['role'] === 'parent') {
     $c_stmt = $db->prepare("SELECT id, student_name, roll_no, standard, section, photo, attendance_percentage FROM students WHERE parent_user_id = ? ORDER BY id ASC");
@@ -42,20 +66,25 @@ if ($current_user['role'] === 'student') {
         $stmt->execute([$selected_student_id, $current_user['id']]);
         $student = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($student) {
-            $_SESSION['active_student_id'] = $student['id'];
+            $_SESSION['active_student_id'] = intval($student['id']);
         }
     }
 
     if (!$student && !empty($_SESSION['active_student_id'])) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
-        $stmt->execute([$_SESSION['active_student_id'], $current_user['id']]);
+        $stmt->execute([intval($_SESSION['active_student_id']), $current_user['id']]);
         $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     if (!$student && !empty($parent_children)) {
-        $student = $parent_children[0];
-        $selected_student_id = $student['id'];
-        $_SESSION['active_student_id'] = $student['id'];
+        $first_child_id = intval($parent_children[0]['id']);
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
+        $stmt->execute([$first_child_id, $current_user['id']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($student) {
+            $selected_student_id = intval($student['id']);
+            $_SESSION['active_student_id'] = intval($student['id']);
+        }
     }
 } else {
     // Super Admin or Staff
@@ -66,15 +95,22 @@ if ($current_user['role'] === 'student') {
     }
     if (!$student && !empty($_SESSION['active_student_id'])) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-        $stmt->execute([$_SESSION['active_student_id']]);
+        $stmt->execute([intval($_SESSION['active_student_id'])]);
         $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if (!$student) {
-        $student = $db->query("SELECT * FROM students WHERE session_id = {$session_id} ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+        $stmt = $db->prepare("SELECT * FROM students WHERE session_id = ? ORDER BY id ASC LIMIT 1");
+        $stmt->execute([$session_id]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$student) {
+            $stmt = $db->prepare("SELECT * FROM students ORDER BY id ASC LIMIT 1");
+            $stmt->execute();
+            $student = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
     }
 }
 
-$student_id = $student['id'] ?? 0;
+$student_id = $student ? intval($student['id']) : 0;
 
 // Selected Month setup (defaults to current month YYYY-MM)
 $selected_month = $_GET['month'] ?? date('Y-m');
@@ -103,13 +139,16 @@ function get_student_month_url($m, $sid) {
 }
 
 // Fetch all attendance logs for this student in the month
-$log_stmt = $db->prepare("
-    SELECT * FROM attendance_logs 
-    WHERE type = 'student' AND reference_id = ? AND log_date BETWEEN ? AND ?
-    ORDER BY log_date ASC
-");
-$log_stmt->execute([$student_id, $start_date, $end_date]);
-$month_logs = $log_stmt->fetchAll(PDO::FETCH_ASSOC);
+$month_logs = [];
+if ($student_id > 0) {
+    $log_stmt = $db->prepare("
+        SELECT * FROM attendance_logs 
+        WHERE type = 'student' AND reference_id = ? AND log_date BETWEEN ? AND ?
+        ORDER BY log_date ASC
+    ");
+    $log_stmt->execute([$student_id, $start_date, $end_date]);
+    $month_logs = $log_stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 $logs_by_date = [];
 foreach ($month_logs as $l) {
@@ -125,84 +164,86 @@ $total_leave = 0;
 $total_weekly_off = 0;
 $total_working_days_passed = 0;
 
-for ($d = 1; $d <= $days_in_month; $d++) {
-    $cur_date = sprintf("%s-%02d", $selected_month, $d);
-    $cur_time = strtotime($cur_date);
-    $day_name = date('l', $cur_time);
-    $is_sunday = (date('w', $cur_time) == 0);
-    $is_past = ($cur_date < $today_str);
-    $is_today = ($cur_date === $today_str);
-    $is_future = ($cur_date > $today_str);
+if ($student_id > 0) {
+    for ($d = 1; $d <= $days_in_month; $d++) {
+        $cur_date = sprintf("%s-%02d", $selected_month, $d);
+        $cur_time = strtotime($cur_date);
+        $day_name = date('l', $cur_time);
+        $is_sunday = (date('w', $cur_time) == 0);
+        $is_past = ($cur_date < $today_str);
+        $is_today = ($cur_date === $today_str);
+        $is_future = ($cur_date > $today_str);
 
-    $log = $logs_by_date[$cur_date] ?? null;
+        $log = $logs_by_date[$cur_date] ?? null;
 
-    $status = 'Upcoming';
-    $check_in = '—';
-    $check_out = '—';
-    $duration = '—';
-    $remarks = '';
-
-    if ($log) {
-        $status = $log['status'];
-        $check_in = !empty($log['check_in_time']) ? date('h:i A', strtotime($log['check_in_time'])) : '—';
-        $check_out = !empty($log['check_out_time']) ? date('h:i A', strtotime($log['check_out_time'])) : '—';
-        $remarks = $log['remarks'] ?? '';
-
-        if (!empty($log['check_in_time']) && !empty($log['check_out_time'])) {
-            $diff = strtotime($log['check_out_time']) - strtotime($log['check_in_time']);
-            if ($diff > 0) {
-                $hours = floor($diff / 3600);
-                $mins = floor(($diff % 3600) / 60);
-                $duration = "{$hours}h {$mins}m";
-            }
-        } elseif (!empty($log['check_in_time']) && $is_today) {
-            $duration = 'In Academy';
-        }
-
-        if ($status === 'Present') {
-            $total_present++;
-        } elseif ($status === 'Late') {
-            $total_late++;
-        } elseif ($status === 'Absent') {
-            $total_absent++;
-        } elseif ($status === 'Leave') {
-            $total_leave++;
-        }
-        if (!$is_sunday && ($is_past || $is_today)) {
-            $total_working_days_passed++;
-        }
-    } elseif ($is_sunday) {
-        $status = 'Weekly Off';
-        $remarks = 'Sunday Holiday';
-        $total_weekly_off++;
-    } elseif ($is_past) {
-        $status = 'Absent';
-        $remarks = 'Auto Absent (Unpunched)';
-        $total_absent++;
-        $total_working_days_passed++;
-    } elseif ($is_today) {
-        $status = 'Not Checked In';
-        $remarks = 'Pending punch for today';
-        $total_working_days_passed++;
-    } else {
         $status = 'Upcoming';
-        $remarks = 'Scheduled academic working day';
-    }
+        $check_in = '—';
+        $check_out = '—';
+        $duration = '—';
+        $remarks = '';
 
-    $attendance_calendar[] = [
-        'day' => $d,
-        'date' => $cur_date,
-        'day_name' => $day_name,
-        'is_sunday' => $is_sunday,
-        'is_today' => $is_today,
-        'is_past' => $is_past,
-        'is_future' => $is_future,
-        'status' => $status,
-        'check_in' => $check_in,
-        'check_out' => $check_out,
-        'duration' => $duration,
-        'remarks' => $remarks
-    ];
+        if ($log) {
+            $status = $log['status'];
+            $check_in = !empty($log['check_in_time']) ? date('h:i A', strtotime($log['check_in_time'])) : '—';
+            $check_out = !empty($log['check_out_time']) ? date('h:i A', strtotime($log['check_out_time'])) : '—';
+            $remarks = $log['remarks'] ?? '';
+
+            if (!empty($log['check_in_time']) && !empty($log['check_out_time'])) {
+                $diff = strtotime($log['check_out_time']) - strtotime($log['check_in_time']);
+                if ($diff > 0) {
+                    $hours = floor($diff / 3600);
+                    $mins = floor(($diff % 3600) / 60);
+                    $duration = "{$hours}h {$mins}m";
+                }
+            } elseif (!empty($log['check_in_time']) && $is_today) {
+                $duration = 'In Academy';
+            }
+
+            if ($status === 'Present') {
+                $total_present++;
+            } elseif ($status === 'Late') {
+                $total_late++;
+            } elseif ($status === 'Absent') {
+                $total_absent++;
+            } elseif ($status === 'Leave') {
+                $total_leave++;
+            }
+            if (!$is_sunday && ($is_past || $is_today)) {
+                $total_working_days_passed++;
+            }
+        } elseif ($is_sunday) {
+            $status = 'Weekly Off';
+            $remarks = 'Sunday Holiday';
+            $total_weekly_off++;
+        } elseif ($is_past) {
+            $status = 'Absent';
+            $remarks = 'Auto Absent (Unpunched)';
+            $total_absent++;
+            $total_working_days_passed++;
+        } elseif ($is_today) {
+            $status = 'Not Checked In';
+            $remarks = 'Pending punch for today';
+            $total_working_days_passed++;
+        } else {
+            $status = 'Upcoming';
+            $remarks = 'Scheduled academic working day';
+        }
+
+        $attendance_calendar[] = [
+            'day' => $d,
+            'date' => $cur_date,
+            'day_name' => $day_name,
+            'is_sunday' => $is_sunday,
+            'is_today' => $is_today,
+            'is_past' => $is_past,
+            'is_future' => $is_future,
+            'status' => $status,
+            'check_in' => $check_in,
+            'check_out' => $check_out,
+            'duration' => $duration,
+            'remarks' => $remarks
+        ];
+    }
 }
 
 // Attendance Rate calculation
@@ -210,9 +251,12 @@ $attended_days = $total_present + $total_late;
 $attendance_rate = $total_working_days_passed > 0 ? round(($attended_days / $total_working_days_passed) * 100, 1) : 0;
 
 // Today's log for duty / presence indicator
-$today_log = $db->prepare("SELECT * FROM attendance_logs WHERE type = 'student' AND reference_id = ? AND log_date = CURDATE() LIMIT 1");
-$today_log->execute([$student_id]);
-$current_punch = $today_log->fetch(PDO::FETCH_ASSOC);
+$current_punch = null;
+if ($student_id > 0) {
+    $today_log = $db->prepare("SELECT * FROM attendance_logs WHERE type = 'student' AND reference_id = ? AND log_date = CURDATE() LIMIT 1");
+    $today_log->execute([$student_id]);
+    $current_punch = $today_log->fetch(PDO::FETCH_ASSOC);
+}
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
@@ -872,6 +916,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 </style>
 
+<?php if (!$student): ?>
+  <div class="hrms-card" style="padding: 48px 24px; text-align: center; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);">
+    <div style="width: 56px; height: 56px; border-radius: 50%; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 14px;">
+      <i class="fa-solid fa-user-xmark"></i>
+    </div>
+    <h3 style="margin: 0 0 6px; font-size: 1.15rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+      No Student Profile Linked
+    </h3>
+    <p style="margin: 0 auto; max-width: 480px; font-size: 0.84rem; color: #64748b; line-height: 1.5;">
+      Your account is not currently linked to any enrolled student record in the academy database. Please contact school administration to associate your registration with your student profile.
+    </p>
+  </div>
+<?php else: ?>
+
 <!-- 4 Sober Monthly KPI Summary Cards (Exact replica of myself-attendance.php) -->
 <div class="stat-grid-4">
 
@@ -979,7 +1037,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </span>
         <?php if (!empty($student['student_name'])): ?>
           <span class="student-name-badge" style="font-size: 0.74rem; font-weight: 700; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 6px;">
-            <?php echo htmlspecialchars($student['student_name']); ?> (<?php echo htmlspecialchars($student['roll_no'] ?? '—'); ?>)
+            <?php echo htmlspecialchars($student['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($student['roll_no'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>)
           </span>
         <?php endif; ?>
       </h3>
@@ -993,12 +1051,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       
       <!-- Parent Children Switcher (if multiple children exist) -->
       <?php if (!empty($parent_children) && count($parent_children) > 1): ?>
-        <form method="GET" action="<?php echo PARENT_URL; ?>/attendance" class="child-select-form" style="margin: 0; display: inline-flex;">
-          <input type="hidden" name="month" value="<?php echo htmlspecialchars($selected_month); ?>">
+        <form method="GET" action="<?php echo htmlspecialchars(PARENT_URL . '/attendance', ENT_QUOTES, 'UTF-8'); ?>" class="child-select-form" style="margin: 0; display: inline-flex;">
+          <input type="hidden" name="month" value="<?php echo htmlspecialchars($selected_month, ENT_QUOTES, 'UTF-8'); ?>">
           <select name="student_id" onchange="this.form.submit()" class="hrms-input child-select-dropdown" style="width: auto; padding: 5px 10px; font-size: 0.8rem; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 600;">
             <?php foreach ($parent_children as $pc): ?>
-              <option value="<?php echo $pc['id']; ?>" <?php echo $selected_student_id === intval($pc['id']) ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($pc['student_name']); ?> (<?php echo htmlspecialchars($pc['roll_no']); ?>)
+              <option value="<?php echo intval($pc['id']); ?>" <?php echo $selected_student_id === intval($pc['id']) ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($pc['student_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($pc['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>)
               </option>
             <?php endforeach; ?>
           </select>
@@ -1007,26 +1065,26 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       <!-- Month Navigation Controls -->
       <div class="month-nav-box" style="display: inline-flex; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 3px;">
-        <a href="<?php echo htmlspecialchars(get_student_month_url($prev_month, $selected_student_id)); ?>" 
+        <a href="<?php echo htmlspecialchars(get_student_month_url($prev_month, $selected_student_id), ENT_QUOTES, 'UTF-8'); ?>" 
            class="btn-hrms btn-hrms-sm month-nav-prev" 
            style="background: transparent; color: #475569; border: none; padding: 5px 10px; font-size: 0.78rem;" 
            title="Previous Month">
           <i class="fa-solid fa-chevron-left"></i>
         </a>
         
-        <form method="GET" action="<?php echo PARENT_URL; ?>/attendance" class="month-input-form" style="margin: 0; display: inline-flex; align-items: center;">
+        <form method="GET" action="<?php echo htmlspecialchars(PARENT_URL . '/attendance', ENT_QUOTES, 'UTF-8'); ?>" class="month-input-form" style="margin: 0; display: inline-flex; align-items: center;">
           <?php if ($selected_student_id > 0): ?>
-            <input type="hidden" name="student_id" value="<?php echo $selected_student_id; ?>">
+            <input type="hidden" name="student_id" value="<?php echo intval($selected_student_id); ?>">
           <?php endif; ?>
           <input type="month" 
                  name="month" 
-                 value="<?php echo htmlspecialchars($selected_month); ?>" 
+                 value="<?php echo htmlspecialchars($selected_month, ENT_QUOTES, 'UTF-8'); ?>" 
                  onchange="this.form.submit()" 
                  class="month-picker-input"
                  style="border: none; background: transparent; font-weight: 700; font-size: 0.85rem; color: #0f172a; padding: 4px 8px; cursor: pointer; outline: none; font-family: inherit;">
         </form>
 
-        <a href="<?php echo htmlspecialchars(get_student_month_url($next_month, $selected_student_id)); ?>" 
+        <a href="<?php echo htmlspecialchars(get_student_month_url($next_month, $selected_student_id), ENT_QUOTES, 'UTF-8'); ?>" 
            class="btn-hrms btn-hrms-sm month-nav-next" 
            style="background: transparent; color: #475569; border: none; padding: 5px 10px; font-size: 0.78rem;" 
            title="Next Month">
@@ -1036,7 +1094,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       <!-- Reset to Current Month Button -->
       <?php if ($selected_month !== date('Y-m')): ?>
-        <a href="<?php echo PARENT_URL; ?>/attendance<?php echo $selected_student_id ? '?student_id=' . $selected_student_id : ''; ?>" class="btn-hrms btn-hrms-outline btn-hrms-sm current-month-btn" style="font-size: 0.78rem; padding: 6px 12px;">
+        <a href="<?php echo htmlspecialchars(PARENT_URL . '/attendance' . ($selected_student_id ? '?student_id=' . intval($selected_student_id) : ''), ENT_QUOTES, 'UTF-8'); ?>" class="btn-hrms btn-hrms-outline btn-hrms-sm current-month-btn" style="font-size: 0.78rem; padding: 6px 12px;">
           Current Month
         </a>
       <?php endif; ?>
@@ -1091,7 +1149,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <?php endif; ?>
               </div>
               <div style="font-size: 0.74rem; color: <?php echo $row['is_sunday'] ? '#dc2626; font-weight: 600;' : '#64748b;'; ?>">
-                <?php echo $row['day_name']; ?>
+                <?php echo htmlspecialchars($row['day_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </td>
 
@@ -1100,7 +1158,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <?php if ($row['check_in'] !== '—'): ?>
                 <span class="sid-dept-pill" style="color: #0f172a; gap: 5px;">
                   <i class="fa-solid fa-arrow-right-to-bracket" style="color: #059669; font-size: 0.7rem;"></i>
-                  <?php echo $row['check_in']; ?>
+                  <?php echo htmlspecialchars($row['check_in'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               <?php else: ?>
                 <span style="color: #94a3b8; font-size: 0.82rem;">—</span>
@@ -1112,7 +1170,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <?php if ($row['check_out'] !== '—'): ?>
                 <span class="sid-dept-pill" style="color: #0f172a; gap: 5px;">
                   <i class="fa-solid fa-arrow-right-from-bracket" style="color: #d97706; font-size: 0.7rem;"></i>
-                  <?php echo $row['check_out']; ?>
+                  <?php echo htmlspecialchars($row['check_out'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               <?php else: ?>
                 <span style="color: #94a3b8; font-size: 0.82rem;">—</span>
@@ -1124,7 +1182,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <?php if ($row['duration'] !== '—'): ?>
                 <span class="sid-code-pill" style="background: #f8fafc; border-color: #e2e8f0; color: #334155;">
                   <i class="fa-regular fa-clock" style="font-size: 0.7rem; color: #64748b;"></i>
-                  <?php echo $row['duration']; ?>
+                  <?php echo htmlspecialchars($row['duration'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </span>
               <?php else: ?>
                 <span style="color: #94a3b8; font-size: 0.82rem;">—</span>
@@ -1173,7 +1231,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <!-- Remarks -->
             <td>
               <span style="font-size: 0.78rem; color: #475569;">
-                <?php echo htmlspecialchars($row['remarks'] ?? '—'); ?>
+                <?php echo htmlspecialchars($row['remarks'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
               </span>
             </td>
 
@@ -1200,5 +1258,6 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 
 </div>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/layout-footer.php'; ?>

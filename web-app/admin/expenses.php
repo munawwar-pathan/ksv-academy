@@ -1,10 +1,44 @@
 <?php
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
 if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_expenses');
 }
+
+// Session-based request rate limiting (Max 120 page requests per minute)
+$now = time();
+if (!isset($_SESSION['expenses_req_attempts']) || !is_array($_SESSION['expenses_req_attempts'])) {
+    $_SESSION['expenses_req_attempts'] = [];
+}
+$_SESSION['expenses_req_attempts'] = array_filter($_SESSION['expenses_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['expenses_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['expenses_req_attempts'][] = $now;
+
+// Helper to strictly validate calendar dates (YYYY-MM-DD)
+if (!function_exists('is_valid_calendar_date')) {
+    function is_valid_calendar_date(string $date_str): bool {
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date_str, $m)) {
+            return false;
+        }
+        return checkdate((int)$m[2], (int)$m[3], (int)$m[1]);
+    }
+}
+
 $page_title = 'Expenses & Vouchers | KSV Academy HRMS';
 $page_heading = 'Expenses';
 $page_subheading = 'Campus Expenditure Vouchers, Vendor Payments & Ledger Tracking';
@@ -13,37 +47,69 @@ $active_menu = 'expenses';
 $db = get_db_connection();
 $active_session = get_active_session();
 $session_id = $active_session ? intval($active_session['id']) : 1;
+$current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
 // Filter inputs bounded and whitelisted
 $filter_cat_id = max(0, intval($_GET['category_id'] ?? 0));
 $allowed_methods = ['Cash', 'UPI', 'Bank Transfer', 'Cheque'];
 $filter_method = in_array($_GET['method'] ?? '', $allowed_methods, true) ? $_GET['method'] : '';
-$filter_start_date = isset($_GET['start_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_GET['start_date']) && strtotime((string)$_GET['start_date']) !== false ? (string)$_GET['start_date'] : '';
-$filter_end_date = isset($_GET['end_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_GET['end_date']) && strtotime((string)$_GET['end_date']) !== false ? (string)$_GET['end_date'] : '';
-$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$filter_start_date = isset($_GET['start_date']) && is_valid_calendar_date((string)$_GET['start_date']) ? (string)$_GET['start_date'] : '';
+$filter_end_date = isset($_GET['end_date']) && is_valid_calendar_date((string)$_GET['end_date']) ? (string)$_GET['end_date'] : '';
+$search = mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]/u', '', (string)($_GET['search'] ?? ''))), 0, 100);
 
 // Handle POST Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 1. CSRF Token Verification
+    // 0. Enforce strict role authorization on POST mutations
+    if ($current_user['role'] !== 'super_admin' && $current_user['role'] !== 'staff') {
+        http_response_code(403);
+        exit('Forbidden');
+    }
+    if ($current_user['role'] === 'staff' && !has_menu_permission('admin_expenses')) {
+        http_response_code(403);
+        exit('Forbidden');
+    }
+
+    // 1. Anti-bot Honeypot check
+    if (!empty($_POST['expenses_hp'])) {
+        set_flash('error', 'Spam detection triggered.');
+        header('Location: ' . ADMIN_URL . '/expenses');
+        exit;
+    }
+
+    // 2. CSRF Token Verification
     if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
         set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
         header('Location: ' . ADMIN_URL . '/expenses');
         exit;
     }
 
+    // 3. POST submission rate limiting (Max 30 submissions per 5 minutes per session)
+    if (!isset($_SESSION['expenses_post_attempts']) || !is_array($_SESSION['expenses_post_attempts'])) {
+        $_SESSION['expenses_post_attempts'] = [];
+    }
+    $_SESSION['expenses_post_attempts'] = array_filter($_SESSION['expenses_post_attempts'], function($timestamp) use ($now) {
+        return ($now - (int)$timestamp) < 300;
+    });
+    if (count($_SESSION['expenses_post_attempts']) >= 30) {
+        set_flash('error', 'Rate limit exceeded. Please wait before submitting more expense actions.');
+        header('Location: ' . ADMIN_URL . '/expenses');
+        exit;
+    }
+    $_SESSION['expenses_post_attempts'][] = $now;
+
     $action = trim((string)($_POST['action'] ?? ''));
 
     // Handle Add Expense
     if ($action === 'add_expense') {
         $category_id = intval($_POST['category_id'] ?? 0);
-        $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 200);
-        $amount = max(0.01, round(floatval($_POST['amount'] ?? 0), 2));
-        $expense_date = isset($_POST['expense_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['expense_date']) && strtotime((string)$_POST['expense_date']) !== false ? (string)$_POST['expense_date'] : date('Y-m-d');
+        $title = mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]/u', '', (string)($_POST['title'] ?? ''))), 0, 200);
+        $amount = min(99999999.99, max(0.01, round(floatval($_POST['amount'] ?? 0), 2)));
+        $expense_date = isset($_POST['expense_date']) && is_valid_calendar_date((string)$_POST['expense_date']) ? (string)$_POST['expense_date'] : date('Y-m-d');
         $payment_method = in_array($_POST['payment_method'] ?? '', $allowed_methods, true) ? $_POST['payment_method'] : 'Cash';
-        $invoice_ref = mb_substr(trim((string)($_POST['invoice_ref'] ?? '')), 0, 100);
-        $vendor_name = mb_substr(trim((string)($_POST['vendor_name'] ?? '')), 0, 150);
-        $notes = mb_substr(trim((string)($_POST['notes'] ?? '')), 0, 1000);
+        $invoice_ref = mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]/u', '', (string)($_POST['invoice_ref'] ?? ''))), 0, 100);
+        $vendor_name = mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]/u', '', (string)($_POST['vendor_name'] ?? ''))), 0, 150);
+        $notes = mb_substr(trim(preg_replace('/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/u', '', (string)($_POST['notes'] ?? ''))), 0, 1000);
 
         // Verify category exists
         $cat_chk = $db->prepare("SELECT id FROM expense_categories WHERE id = ? LIMIT 1");
@@ -80,10 +146,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 set_flash('error', 'Expense voucher record not found in the active session.');
             }
-            header('Location: ' . ADMIN_URL . '/expenses');
-            exit;
+        } else {
+            set_flash('error', 'Invalid expense voucher specified for deletion.');
         }
+        header('Location: ' . ADMIN_URL . '/expenses');
+        exit;
     }
+
+    set_flash('error', 'Invalid action requested.');
+    header('Location: ' . ADMIN_URL . '/expenses');
+    exit;
 }
 
 // Fetch all categories for filter and form
@@ -119,10 +191,11 @@ if (!empty($filter_end_date)) {
 }
 if (!empty($search)) {
     $where_clauses[] = "(e.title LIKE ? OR e.invoice_ref LIKE ? OR e.vendor_name LIKE ? OR e.notes LIKE ?)";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
+    $search_like = addcslashes($search, '%_\\');
+    $where_params[] = "%$search_like%";
+    $where_params[] = "%$search_like%";
+    $where_params[] = "%$search_like%";
+    $where_params[] = "%$search_like%";
 }
 
 $where_sql = implode(' AND ', $where_clauses);
@@ -132,7 +205,7 @@ $agg_stmt = $db->prepare("
     SELECT COUNT(*) as total_vouchers,
            COALESCE(SUM(e.amount), 0) as total_amount
     FROM expenses e
-    JOIN expense_categories c ON e.category_id = c.id
+    LEFT JOIN expense_categories c ON e.category_id = c.id
     WHERE {$where_sql}
 ");
 $agg_stmt->execute($where_params);
@@ -151,9 +224,9 @@ $end_record = min($offset + $limit, $total_records);
 
 // Fetch Paginated Expense Records
 $query = "
-    SELECT e.*, c.category_name
+    SELECT e.*, COALESCE(c.category_name, 'Uncategorized') as category_name
     FROM expenses e
-    JOIN expense_categories c ON e.category_id = c.id
+    LEFT JOIN expense_categories c ON e.category_id = c.id
     WHERE {$where_sql}
     ORDER BY e.expense_date DESC, e.id DESC
     LIMIT ? OFFSET ?
@@ -1370,7 +1443,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="stat-card-top">
         <div class="stat-info">
           <span class="stat-label">Active Academic Session</span>
-          <span class="stat-number" style="font-size: 1.35rem;"><?php echo htmlspecialchars($active_session['session_name']); ?></span>
+          <span class="stat-number" style="font-size: 1.35rem;"><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <div class="stat-icon-wrapper">
           <i class="fa-solid fa-calendar-check"></i>
@@ -1391,22 +1464,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      FILTER & SEARCH ROASTER TOOLBAR
      ══════════════════════════════════════════════════════ -->
-<!-- ══════════════════════════════════════════════════════
-     FILTER & SEARCH ROASTER TOOLBAR
-     ══════════════════════════════════════════════════════ -->
 <div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
   <div class="roaster-toolbar-inner">
     
     <!-- Left: Filter Form -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/expenses" class="roaster-filter-form expenses-filter-form">
-      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+    <form method="GET" action="<?php echo htmlspecialchars(ADMIN_URL . '/expenses', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-filter-form expenses-filter-form">
+      <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       
       <!-- Search Input -->
       <div class="roaster-search-box expenses-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search title, invoice, vendor..." autocomplete="off">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search title, invoice, vendor..." autocomplete="off">
         <?php if (!empty($search)): ?>
-          <a href="<?php echo htmlspecialchars(get_expenses_pagination_url(1, '', $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <a href="<?php echo htmlspecialchars(get_expenses_pagination_url(1, '', $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date), ENT_QUOTES, 'UTF-8'); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
 
@@ -1418,8 +1488,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <select name="category_id" onchange="this.form.submit()">
             <option value="">All Categories</option>
             <?php foreach ($categories as $c): ?>
-              <option value="<?php echo $c['id']; ?>" <?php echo $filter_cat_id == $c['id'] ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($c['category_name']); ?>
+              <option value="<?php echo intval($c['id']); ?>" <?php echo $filter_cat_id == $c['id'] ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($c['category_name'], ENT_QUOTES, 'UTF-8'); ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -1482,7 +1552,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span class="expenses-title-text">Campus Operational Expenses &amp; Voucher Ledger</span>
         </span>
         <span class="expenses-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          Session <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </h3>
       <p class="expenses-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -1520,9 +1590,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </div>
               <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Expense Records Found</h4>
               <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
-                No vouchers match your current filters in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
+                No vouchers match your current filters in Session <strong><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong>.
               </p>
-              <a href="<?php echo ADMIN_URL; ?>/expenses" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+              <a href="<?php echo htmlspecialchars(ADMIN_URL . '/expenses', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
                 <i class="fa-solid fa-rotate-left"></i> Reset All Filters
               </a>
             </td>
@@ -1564,19 +1634,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <?php echo format_date($exp['expense_date']); ?>
                 </div>
                 <div style="margin-top: 2px;">
-                  <span class="voucher-id-pill">#<?php echo $exp['id']; ?></span>
+                  <span class="voucher-id-pill">#<?php echo intval($exp['id']); ?></span>
                 </div>
               </td>
 
               <!-- 2. Expense Title & Details -->
               <td>
                 <div class="cell-name exp-title-text" style="font-weight: 700; font-size: 0.90rem; color: #0f172a; font-family: 'Outfit', sans-serif; line-height: 1.25;">
-                  <?php echo htmlspecialchars($exp['title']); ?>
+                  <?php echo htmlspecialchars($exp['title'], ENT_QUOTES, 'UTF-8'); ?>
                 </div>
                 <?php if (!empty($exp['notes'])): ?>
                   <div class="cell-sub exp-notes-text" style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px;">
                     <i class="fa-solid fa-circle-info" style="color: #94a3b8; font-size: 0.65rem;"></i>
-                    <span><?php echo htmlspecialchars($exp['notes']); ?></span>
+                    <span><?php echo htmlspecialchars($exp['notes'], ENT_QUOTES, 'UTF-8'); ?></span>
                   </div>
                 <?php endif; ?>
               </td>
@@ -1585,7 +1655,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td>
                 <span class="exp-cat-badge">
                   <i class="fa-solid <?php echo $cat_icon; ?>" style="color: #64748b; font-size: 0.68rem;"></i>
-                  <span><?php echo htmlspecialchars($exp['category_name']); ?></span>
+                  <span><?php echo htmlspecialchars($exp['category_name'], ENT_QUOTES, 'UTF-8'); ?></span>
                 </span>
               </td>
 
@@ -1593,7 +1663,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td>
                 <div class="cell-sub exp-vendor-text" style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #334155; font-size: 0.82rem;">
                   <i class="fa-solid fa-store" style="color: #94a3b8; font-size: 0.70rem;"></i>
-                  <span><?php echo htmlspecialchars($exp['vendor_name'] ?: 'Official Vendor'); ?></span>
+                  <span><?php echo htmlspecialchars($exp['vendor_name'] ?: 'Official Vendor', ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
               </td>
 
@@ -1602,7 +1672,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <?php if (!empty($exp['invoice_ref']) && $exp['invoice_ref'] !== '—'): ?>
                   <span class="ref-code-pill">
                     <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
-                    <span><?php echo htmlspecialchars($exp['invoice_ref']); ?></span>
+                    <span><?php echo htmlspecialchars($exp['invoice_ref'], ENT_QUOTES, 'UTF-8'); ?></span>
                   </span>
                 <?php else: ?>
                   <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 600;">—</span>
@@ -1620,7 +1690,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td>
                 <span class="mode-pill-chip">
                   <i class="fa-solid <?php echo $mode_icon; ?>" style="color: #0284c7; font-size: 0.68rem;"></i>
-                  <span><?php echo htmlspecialchars($exp['payment_method']); ?></span>
+                  <span><?php echo htmlspecialchars($exp['payment_method'], ENT_QUOTES, 'UTF-8'); ?></span>
                 </span>
               </td>
 
@@ -1628,16 +1698,30 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td style="text-align: right; white-space: nowrap;">
                 <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
+                  <?php 
+                    $exp_modal_payload = [
+                      'id' => (int)$exp['id'],
+                      'title' => (string)$exp['title'],
+                      'amount' => (float)$exp['amount'],
+                      'expense_date' => (string)$exp['expense_date'],
+                      'category_name' => (string)($exp['category_name'] ?? 'General'),
+                      'vendor_name' => (string)($exp['vendor_name'] ?? ''),
+                      'payment_method' => (string)$exp['payment_method'],
+                      'invoice_ref' => (string)($exp['invoice_ref'] ?? ''),
+                      'notes' => (string)($exp['notes'] ?? ''),
+                    ];
+                  ?>
                   <!-- View Details Button -->
-                  <button type="button" onclick="openVoucherModal(<?php echo htmlspecialchars(json_encode($exp), ENT_QUOTES, 'UTF-8'); ?>);" class="sid-action-btn view" title="View Voucher Details">
+                  <button type="button" onclick="openVoucherModal(<?php echo htmlspecialchars(json_encode($exp_modal_payload, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>);" class="sid-action-btn view" title="View Voucher Details">
                     <i class="fa-solid fa-eye"></i>
                   </button>
 
                   <!-- Delete Voucher -->
-                  <form method="POST" action="<?php echo ADMIN_URL; ?>/expenses" style="display: inline; margin: 0;" onsubmit="return confirm('Permanently remove this expense voucher record?');">
-                    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
+                  <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/expenses', ENT_QUOTES, 'UTF-8'); ?>" style="display: inline; margin: 0;" onsubmit="return confirm('Permanently remove this expense voucher record?');">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <input type="hidden" name="action" value="delete_expense">
                     <input type="hidden" name="expense_id" value="<?php echo intval($exp['id']); ?>">
+                    <div style="display:none;" aria-hidden="true"><input type="text" name="expenses_hp" tabindex="-1" autocomplete="off"></div>
                     <button type="submit" class="sid-action-btn delete" title="Delete Voucher">
                       <i class="fa-solid fa-trash-can"></i>
                     </button>
@@ -1670,7 +1754,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
         <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
           <?php foreach ($allowed_limits as $l): ?>
-            <option value="<?php echo htmlspecialchars(get_expenses_pagination_url(1, $search, $filter_cat_id, $filter_method, $l, $filter_start_date, $filter_end_date)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+            <option value="<?php echo htmlspecialchars(get_expenses_pagination_url(1, $search, $filter_cat_id, $filter_method, $l, $filter_start_date, $filter_end_date), ENT_QUOTES, 'UTF-8'); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
               <?php echo $l; ?>
             </option>
           <?php endforeach; ?>
@@ -1682,7 +1766,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php if ($total_pages > 1): ?>
       <nav class="pagination-nav" aria-label="Expenses Ledger Pagination">
         <!-- Prev Page -->
-        <a href="<?php echo $page > 1 ? htmlspecialchars(get_expenses_pagination_url($page - 1, $search, $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date)) : '#'; ?>" 
+        <a href="<?php echo $page > 1 ? htmlspecialchars(get_expenses_pagination_url($page - 1, $search, $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date), ENT_QUOTES, 'UTF-8') : '#'; ?>" 
            class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
            aria-label="Previous Page"
            title="Previous Page">
@@ -1695,7 +1779,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           for ($p = 1; $p <= $total_pages; $p++):
             if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
         ?>
-          <a href="<?php echo htmlspecialchars(get_expenses_pagination_url($p, $search, $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date)); ?>" 
+          <a href="<?php echo htmlspecialchars(get_expenses_pagination_url($p, $search, $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date), ENT_QUOTES, 'UTF-8'); ?>" 
              class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
             <?php echo $p; ?>
           </a>
@@ -1709,7 +1793,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         ?>
 
         <!-- Next Page -->
-        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_expenses_pagination_url($page + 1, $search, $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date)) : '#'; ?>" 
+        <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_expenses_pagination_url($page + 1, $search, $filter_cat_id, $filter_method, $limit, $filter_start_date, $filter_end_date), ENT_QUOTES, 'UTF-8') : '#'; ?>" 
            class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
            aria-label="Next Page"
            title="Next Page">
@@ -1725,7 +1809,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         Verified Ledger
       </span>
       <span class="expenses-meta-divider" style="color: #cbd5e1;">|</span>
-      <span class="pagination-legend-text">Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      <span class="pagination-legend-text">Session: <strong style="color: #334155;"><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong></span>
     </div>
 
   </div>
@@ -1745,9 +1829,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" onclick="closeAddExpenseModal();" class="expenses-modal-close" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
 
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/expenses" id="addExpenseForm">
-      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/expenses', ENT_QUOTES, 'UTF-8'); ?>" id="addExpenseForm">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="add_expense">
+      <div style="display:none;" aria-hidden="true"><input type="text" name="expenses_hp" tabindex="-1" autocomplete="off"></div>
 
       <!-- Expense Title -->
       <div style="margin-bottom: 16px;">
@@ -1762,7 +1847,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <select name="category_id" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600;">
             <option value="">-- Select Category --</option>
             <?php foreach ($categories as $c): ?>
-              <option value="<?php echo intval($c['id']); ?>"><?php echo htmlspecialchars($c['category_name']); ?></option>
+              <option value="<?php echo intval($c['id']); ?>"><?php echo htmlspecialchars($c['category_name'], ENT_QUOTES, 'UTF-8'); ?></option>
             <?php endforeach; ?>
           </select>
         </div>

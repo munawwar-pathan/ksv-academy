@@ -2,13 +2,37 @@
 /**
  * Student & Parent Portal - Settings (Appearance & Security)
  */
+
+// Defense-in-depth HTTP security headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 // Requires logged in parent, student, or super admin
 $current_user = require_login(['parent', 'student', 'super_admin']);
-if (in_array($current_user['role'], ['student', 'parent'])) {
+if (in_array($current_user['role'], ['student', 'parent'], true)) {
     require_menu_permission('settings');
 }
+
+// Session-based request rate limiting (Max 120 page views per minute)
+$now = time();
+if (!isset($_SESSION['parent_settings_req_attempts']) || !is_array($_SESSION['parent_settings_req_attempts'])) {
+    $_SESSION['parent_settings_req_attempts'] = [];
+}
+$_SESSION['parent_settings_req_attempts'] = array_filter($_SESSION['parent_settings_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['parent_settings_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['parent_settings_req_attempts'][] = $now;
 
 $page_title = 'Settings | Student & Parent Portal';
 $page_heading = 'Student & Parent Settings';
@@ -17,6 +41,7 @@ $active_menu = 'settings';
 
 $db = get_db_connection();
 $active_session = get_active_session();
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
 // ── Student Resolution Logic ──
@@ -24,23 +49,23 @@ $student = null;
 if ($current_user['role'] === 'student') {
     $stmt = $db->prepare("SELECT * FROM students WHERE user_id = ? LIMIT 1");
     $stmt->execute([$current_user['id']]);
-    $student = $stmt->fetch();
-    if (!$student) {
-        $stmt = $db->prepare("SELECT * FROM students WHERE student_name LIKE ? OR roll_no = ? LIMIT 1");
-        $stmt->execute(['%' . $current_user['full_name'] . '%', $current_user['username']]);
-        $student = $stmt->fetch();
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$student && (!empty($current_user['username']) || !empty($current_user['full_name']))) {
+        $stmt = $db->prepare("SELECT * FROM students WHERE (roll_no = ? AND roll_no != '') OR (user_id IS NULL AND student_name = ?) LIMIT 1");
+        $stmt->execute([$current_user['username'], $current_user['full_name']]);
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 } elseif ($current_user['role'] === 'parent') {
     $target_sid = !empty($_SESSION['active_student_id']) ? intval($_SESSION['active_student_id']) : 0;
     if ($target_sid > 0) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND parent_user_id = ? LIMIT 1");
         $stmt->execute([$target_sid, $current_user['id']]);
-        $student = $stmt->fetch();
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if (!$student) {
         $stmt = $db->prepare("SELECT * FROM students WHERE parent_user_id = ? LIMIT 1");
         $stmt->execute([$current_user['id']]);
-        $student = $stmt->fetch();
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 } else {
     // Super admin viewing parent/student portal
@@ -48,24 +73,46 @@ if ($current_user['role'] === 'student') {
     if ($target_sid > 0) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
         $stmt->execute([$target_sid]);
-        $student = $stmt->fetch();
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     if (!$student) {
-        $student = $db->query("SELECT * FROM students ORDER BY id ASC LIMIT 1")->fetch();
+        $stmt = $db->prepare("SELECT * FROM students ORDER BY id ASC LIMIT 1");
+        $stmt->execute();
+        $student = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
 
 $current_tab = $_GET['tab'] ?? 'general';
-if (!in_array($current_tab, ['general', 'security'])) {
+if (!in_array($current_tab, ['general', 'security'], true)) {
     $current_tab = 'general';
 }
 
 // ── Handle Actions ──────────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $action = $_POST['action'] ?? '';
 
     // 1. Change Password
     if ($action === 'change_password') {
+        // CSRF Verification
+        if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+            set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+            header('Location: ' . PARENT_URL . '/settings?tab=security');
+            exit;
+        }
+
+        // Rate limiting for password changes (Max 5 attempts per 5 minutes)
+        if (!isset($_SESSION['pwd_change_attempts']) || !is_array($_SESSION['pwd_change_attempts'])) {
+            $_SESSION['pwd_change_attempts'] = [];
+        }
+        $_SESSION['pwd_change_attempts'] = array_filter($_SESSION['pwd_change_attempts'], function($t) use ($now) {
+            return ($now - (int)$t) < 300;
+        });
+        if (count($_SESSION['pwd_change_attempts']) >= 5) {
+            set_flash('error', 'Too many password change attempts. Please wait 5 minutes before trying again.');
+            header('Location: ' . PARENT_URL . '/settings?tab=security');
+            exit;
+        }
+
         $current_pass = trim($_POST['current_password'] ?? '');
         $new_pass = trim($_POST['new_password'] ?? '');
         $confirm_pass = trim($_POST['confirm_password'] ?? '');
@@ -73,11 +120,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Fetch fresh user record
         $u_stmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
         $u_stmt->execute([$current_user['id']]);
-        $u_fresh = $u_stmt->fetch();
+        $u_fresh = $u_stmt->fetch(PDO::FETCH_ASSOC);
+
+        $is_verified = false;
+        if ($u_fresh) {
+            if (password_verify($current_pass, $u_fresh['password'])) {
+                $is_verified = true;
+            } elseif ($current_pass === $u_fresh['password']) {
+                $is_verified = true;
+            }
+        }
 
         if (empty($current_pass) || empty($new_pass) || empty($confirm_pass)) {
             set_flash('error', 'All password fields are required.');
-        } elseif (!$u_fresh || ($current_pass !== $u_fresh['password'] && !password_verify($current_pass, $u_fresh['password']))) {
+        } elseif (!$is_verified) {
+            $_SESSION['pwd_change_attempts'][] = $now;
             set_flash('error', 'Your current password is incorrect. Please check and try again.');
         } elseif ($new_pass !== $confirm_pass) {
             set_flash('error', 'New password and confirm password do not match.');
@@ -87,6 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashed = password_hash($new_pass, PASSWORD_DEFAULT);
             $update_stmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
             $update_stmt->execute([$hashed, $current_user['id']]);
+            
+            $_SESSION['pwd_change_attempts'] = [];
+            session_regenerate_id(true);
+
             set_flash('success', 'Your password has been changed successfully! Your account credentials have been updated.');
         }
 
@@ -96,11 +157,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 2. Save Theme Preference (Instant AJAX)
     if ($action === 'save_theme') {
-        $theme = in_array($_POST['theme'] ?? '', ['light', 'dark']) ? $_POST['theme'] : 'light';
+        // CSRF Token Verification for AJAX
+        if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Invalid or expired CSRF token.']);
+            exit;
+        }
+
+        $theme = in_array($_POST['theme'] ?? '', ['light', 'dark'], true) ? $_POST['theme'] : 'light';
         try {
             $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES ('theme_mode', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
             $stmt->execute([$theme]);
-        } catch (Exception $e) {}
+            $_SESSION['theme'] = $theme;
+        } catch (Throwable $e) {}
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'theme' => $theme]);
@@ -941,7 +1011,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </p>
           </div>
           <span style="font-size: 0.74rem; font-weight: 800; color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 10px; border-radius: 20px;">
-            <i class="fa-solid fa-circle-check"></i> <?php echo ucfirst($current_user['role']); ?> Active
+            <i class="fa-solid fa-circle-check"></i> <?php echo htmlspecialchars(ucfirst($current_user['role'] ?? 'User'), ENT_QUOTES, 'UTF-8'); ?> Active
           </span>
         </div>
 
@@ -951,56 +1021,56 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Student Name</div>
               <div style="font-size: 0.95rem; font-weight: 800; color: var(--hrms-text); font-family: 'Outfit', sans-serif;">
-                <?php echo htmlspecialchars($student['student_name'] ?? $current_user['full_name']); ?>
+                <?php echo htmlspecialchars($student['student_name'] ?? ($current_user['full_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Roll / Student ID</div>
               <div style="font-size: 0.95rem; font-weight: 800; color: #0284c7; font-family: monospace;">
-                <?php echo htmlspecialchars($student['roll_no'] ?? $current_user['username']); ?>
+                <?php echo htmlspecialchars($student['roll_no'] ?? ($current_user['username'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Standard / Class</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
-                <?php echo htmlspecialchars($student['standard'] ?? '10th Standard'); ?>
+                <?php echo htmlspecialchars($student['standard'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Section</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
-                Section <?php echo htmlspecialchars($student['section'] ?? 'A'); ?>
+                Section <?php echo htmlspecialchars($student['section'] ?? 'A', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Parent / Guardian</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text);">
-                <?php echo htmlspecialchars($student['parent_name'] ?? 'Guardian'); ?>
+                <?php echo htmlspecialchars($student['parent_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Parent Mobile</div>
               <div style="font-size: 0.88rem; font-weight: 600; color: var(--hrms-text);">
-                <?php echo htmlspecialchars($student['parent_mobile'] ?? '—'); ?>
+                <?php echo htmlspecialchars($student['parent_mobile'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Account Username</div>
               <div style="font-size: 0.90rem; font-weight: 700; color: var(--hrms-text); font-family: monospace;">
-                @<?php echo htmlspecialchars($current_user['username']); ?>
+                @<?php echo htmlspecialchars($current_user['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
             <div class="profile-info-box" style="background: var(--hrms-bg); border: 1px solid var(--hrms-border); border-radius: 10px; padding: 14px;">
               <div style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Registered Email</div>
               <div style="font-size: 0.88rem; font-weight: 600; color: var(--hrms-text);">
-                <?php echo htmlspecialchars($current_user['email'] ?? ($student['email'] ?? '—')); ?>
+                <?php echo htmlspecialchars($current_user['email'] ?? ($student['email'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?>
               </div>
             </div>
 
@@ -1046,17 +1116,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 $words = explode(' ', trim($current_user['full_name']));
                 $initials = strtoupper(substr($words[0], 0, 1));
               }
-              echo $initials;
+              echo htmlspecialchars($initials, ENT_QUOTES, 'UTF-8');
             ?>
           </div>
           <h3 class="user-profile-name" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--hrms-text); font-family: 'Outfit', sans-serif;">
-            <?php echo htmlspecialchars($current_user['full_name']); ?>
+            <?php echo htmlspecialchars($current_user['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </h3>
           <p style="margin: 3px 0 8px; font-size: 0.8rem; color: #64748b; font-family: monospace;">
-            @<?php echo htmlspecialchars($current_user['username']); ?>
+            @<?php echo htmlspecialchars($current_user['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
           </p>
           <span style="font-size: 0.72rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 3px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block;">
-            <i class="fa-solid fa-user-graduate" style="margin-right: 4px;"></i> <?php echo ucfirst($current_user['role']); ?> Portal
+            <i class="fa-solid fa-user-graduate" style="margin-right: 4px;"></i> <?php echo htmlspecialchars(ucfirst($current_user['role'] ?? 'User'), ENT_QUOTES, 'UTF-8'); ?> Portal
           </span>
         </div>
 
@@ -1066,14 +1136,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="academy-meta-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-user"></i></div>
             <div style="min-width: 0; flex: 1;">
               <span class="academy-meta-label">Username</span>
-              <span class="academy-meta-val" style="word-break: break-all;">@<?php echo htmlspecialchars($current_user['username']); ?></span>
+              <span class="academy-meta-val" style="word-break: break-all;">@<?php echo htmlspecialchars($current_user['username'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
           </div>
           <div class="academy-meta-row">
             <div class="academy-meta-icon" style="background: #ecfdf5; color: #059669;"><i class="fa-solid fa-fingerprint"></i></div>
             <div>
               <span class="academy-meta-label">Account ID</span>
-              <span class="academy-meta-val">#USR-<?php echo str_pad($current_user['id'], 4, '0', STR_PAD_LEFT); ?></span>
+              <span class="academy-meta-val">#USR-<?php echo str_pad(intval($current_user['id'] ?? 0), 4, '0', STR_PAD_LEFT); ?></span>
             </div>
           </div>
           <div class="academy-meta-row" style="border-bottom: none; padding-bottom: 0;">
@@ -1087,7 +1157,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
         <!-- Guidelines -->
         <div class="security-guidelines-box" style="background: rgba(245, 158, 11, 0.05); border-radius: 10px; padding: 14px; border: 1px dashed rgba(245, 158, 11, 0.35);">
-          <h4 style="margin: 0 0 8px 0; font-size: 0.78rem; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+          <h4 style="margin: 0 0 8px 0; font-size: 0.78rem; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: gap 6px;">
             <i class="fa-solid fa-shield"></i> Security Guidelines
           </h4>
           <ul style="margin: 0; padding-left: 18px; font-size: 0.76rem; color: #64748b; line-height: 1.6;">
@@ -1114,7 +1184,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
         </div>
 
-        <form class="change-password-form" method="POST" action="<?php echo PARENT_URL; ?>/settings?tab=security" style="padding: 24px;">
+        <form class="change-password-form" method="POST" action="<?php echo htmlspecialchars(PARENT_URL . '/settings?tab=security', ENT_QUOTES, 'UTF-8'); ?>" style="padding: 24px;">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
           <input type="hidden" name="action" value="change_password">
 
           <div class="password-form-inner" style="max-width: 520px; display: flex; flex-direction: column; gap: 18px;">
@@ -1214,10 +1285,10 @@ function selectParentTheme(theme) {
     try { localStorage.setItem('hrms_theme', theme); } catch(e) {}
   }
 
-  fetch('<?php echo PARENT_URL; ?>/settings', {
+  fetch('<?php echo htmlspecialchars(PARENT_URL . '/settings', ENT_QUOTES, 'UTF-8'); ?>', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'action=save_theme&theme=' + encodeURIComponent(theme)
+    body: 'action=save_theme&theme=' + encodeURIComponent(theme) + '&csrf_token=' + encodeURIComponent('<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>')
   }).then(function(res) { return res.json(); })
     .then(function(data) {
       var msg = document.getElementById('themeSavedMessage');
