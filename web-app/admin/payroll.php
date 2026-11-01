@@ -9,13 +9,18 @@ $active_menu = 'payroll';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
+$months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 // Filters: default to all months so existing records are immediately visible
-$search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$filter_month = isset($_GET['month']) ? trim($_GET['month']) : '';
+$search = isset($_GET['search']) ? mb_substr(trim((string)$_GET['search']), 0, 100) : '';
+$filter_month = isset($_GET['month']) && in_array(trim($_GET['month']), $months, true) ? trim($_GET['month']) : '';
 $filter_year = isset($_GET['year']) ? intval($_GET['year']) : intval(date('Y'));
+if ($filter_year < 2000 || $filter_year > 2100) {
+    $filter_year = intval(date('Y'));
+}
 $filter_staff_id = intval($_GET['staff_id'] ?? 0);
 
 // Pagination Settings (10, 20, 30, 40, 50)
@@ -26,60 +31,110 @@ if (!in_array($limit, $allowed_limits)) {
 }
 $page = max(1, intval($_GET['page'] ?? 1));
 
-// If staff role, restrict to own profile
+// If staff role, enforce permission and restrict strictly to own profile
 if ($current_user['role'] === 'staff') {
-    $stmt_mprof = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1");
-    $stmt_mprof->execute([$current_user['id']]);
+    require_menu_permission('admin_payroll');
+    $stmt_mprof = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? AND session_id = ? LIMIT 1");
+    $stmt_mprof->execute([$current_user['id'], $session_id]);
     $my_prof = $stmt_mprof->fetch();
     if ($my_prof) {
-        $filter_staff_id = $my_prof['id'];
+        $filter_staff_id = intval($my_prof['id']);
+    } else {
+        $filter_staff_id = -1; // Unprofiled staff in active session sees 0 records
     }
 }
 
-// Handle Pay Salary / Generate Payroll Record (Super Admin)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
-    $action = $_POST['action'] ?? '';
+// Handle Pay Salary / Generate Payroll Record (Super Admin Only with CSRF protection)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. Role Authorization
+    if ($current_user['role'] !== 'super_admin') {
+        set_flash('error', 'Unauthorized action: Only super administrators can manage payroll disbursements.');
+        header('Location: ' . ADMIN_URL . '/payroll');
+        exit;
+    }
+
+    // 2. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/payroll');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     if ($action === 'generate_payroll' || $action === 'pay_salary') {
+        $payroll_id = intval($_POST['payroll_id'] ?? 0);
         $staff_id = intval($_POST['staff_id'] ?? 0);
-        $month = trim($_POST['month'] ?? date('F'));
+        $month = in_array(trim((string)($_POST['month'] ?? '')), $months, true) ? trim((string)$_POST['month']) : date('F');
         $year = intval($_POST['year'] ?? date('Y'));
-        $basic_salary = floatval($_POST['basic_salary'] ?? 50000);
-        $allowances = floatval($_POST['allowances'] ?? 5000);
-        $deductions = floatval($_POST['deductions'] ?? 2000);
-        $payment_status = $_POST['payment_status'] ?? 'Paid';
-        $payment_method = $_POST['payment_method'] ?? 'Bank Transfer (NEFT)';
-        $payment_date = $_POST['payment_date'] ?? date('Y-m-d');
+        if ($year < 2000 || $year > 2100) {
+            $year = intval(date('Y'));
+        }
+        $basic_salary = max(0, floatval($_POST['basic_salary'] ?? 0));
+        $allowances = max(0, floatval($_POST['allowances'] ?? 0));
+        $deductions = max(0, floatval($_POST['deductions'] ?? 0));
+
+        $allowed_status = ['Paid', 'Pending', 'Unpaid', 'Processing', 'Cancelled'];
+        $payment_status = in_array($_POST['payment_status'] ?? '', $allowed_status, true) ? $_POST['payment_status'] : 'Paid';
+
+        $allowed_methods = ['Bank Transfer (NEFT)', 'Direct Deposit', 'UPI / Online', 'Cheque', 'Cash'];
+        $payment_method = in_array($_POST['payment_method'] ?? '', $allowed_methods, true) ? $_POST['payment_method'] : 'Bank Transfer (NEFT)';
+
+        $payment_date = isset($_POST['payment_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['payment_date']) && strtotime((string)$_POST['payment_date']) !== false ? (string)$_POST['payment_date'] : date('Y-m-d');
 
         $net_salary = max(0, ($basic_salary + $allowances) - $deductions);
 
         if ($staff_id > 0) {
-            // Check if payroll already exists for this staff/month/year/session
-            $chk = $db->prepare("SELECT id FROM payroll WHERE staff_id = ? AND month = ? AND year = ? AND session_id = ? LIMIT 1");
-            $chk->execute([$staff_id, $month, $year, $session_id]);
-            $exist_id = $chk->fetchColumn();
+            // Verify staff exists in current session
+            $chk_staff = $db->prepare("SELECT sp.id, u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ? AND sp.session_id = ? LIMIT 1");
+            $chk_staff->execute([$staff_id, $session_id]);
+            $staff_row = $chk_staff->fetch(PDO::FETCH_ASSOC);
 
-            if ($exist_id) {
-                $stmt = $db->prepare("
-                    UPDATE payroll SET basic_salary = ?, allowances = ?, deductions = ?, net_salary = ?, payment_status = ?, payment_method = ?, payment_date = ?
-                    WHERE id = ?
-                ");
-                $stmt->execute([$basic_salary, $allowances, $deductions, $net_salary, $payment_status, $payment_method, $payment_date, $exist_id]);
-            } else {
-                $stmt = $db->prepare("
-                    INSERT INTO payroll (session_id, staff_id, month, year, basic_salary, allowances, deductions, net_salary, payment_status, payment_date, payment_method)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([$session_id, $staff_id, $month, $year, $basic_salary, $allowances, $deductions, $net_salary, $payment_status, $payment_date, $payment_method]);
+            if (!$staff_row) {
+                set_flash('error', 'Selected faculty member not found in the active session.');
+                header('Location: ' . ADMIN_URL . '/payroll');
+                exit;
             }
 
-            // Fetch faculty name for friendly confirmation (Prepared Statement)
-            $stmt_fn = $db->prepare("SELECT u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
-            $stmt_fn->execute([$staff_id]);
-            $fac_name = $stmt_fn->fetchColumn() ?: "Faculty Member";
+            $fac_name = $staff_row['full_name'] ?: 'Faculty Member';
 
-            set_flash('success', "Salary payment of " . format_inr($net_salary) . " for {$fac_name} ({$month} {$year}) processed successfully!");
-            header("Location: " . ADMIN_URL . "/payroll?month={$month}&year={$year}");
+            if ($payroll_id > 0) {
+                // Update specific payroll record by ID scoped to active session
+                $stmt = $db->prepare("
+                    UPDATE payroll SET staff_id = ?, month = ?, year = ?, basic_salary = ?, allowances = ?, deductions = ?, net_salary = ?, payment_status = ?, payment_method = ?, payment_date = ?
+                    WHERE id = ? AND session_id = ?
+                ");
+                $stmt->execute([$staff_id, $month, $year, $basic_salary, $allowances, $deductions, $net_salary, $payment_status, $payment_method, $payment_date, $payroll_id, $session_id]);
+                $msg_action = "updated";
+            } else {
+                // Check if payroll already exists for this staff/month/year/session
+                $chk = $db->prepare("SELECT id FROM payroll WHERE staff_id = ? AND month = ? AND year = ? AND session_id = ? LIMIT 1");
+                $chk->execute([$staff_id, $month, $year, $session_id]);
+                $exist_id = $chk->fetchColumn();
+
+                if ($exist_id) {
+                    $stmt = $db->prepare("
+                        UPDATE payroll SET basic_salary = ?, allowances = ?, deductions = ?, net_salary = ?, payment_status = ?, payment_method = ?, payment_date = ?
+                        WHERE id = ? AND session_id = ?
+                    ");
+                    $stmt->execute([$basic_salary, $allowances, $deductions, $net_salary, $payment_status, $payment_method, $payment_date, $exist_id, $session_id]);
+                    $msg_action = "updated";
+                } else {
+                    $stmt = $db->prepare("
+                        INSERT INTO payroll (session_id, staff_id, month, year, basic_salary, allowances, deductions, net_salary, payment_status, payment_date, payment_method)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([$session_id, $staff_id, $month, $year, $basic_salary, $allowances, $deductions, $net_salary, $payment_status, $payment_date, $payment_method]);
+                    $msg_action = "processed";
+                }
+            }
+
+            set_flash('success', "Salary payment of " . format_inr($net_salary) . " for " . htmlspecialchars($fac_name, ENT_QUOTES, 'UTF-8') . " ({$month} {$year}) {$msg_action} successfully!");
+            header("Location: " . ADMIN_URL . "/payroll?month=" . urlencode($month) . "&year=" . intval($year));
+            exit;
+        } else {
+            set_flash('error', 'Please select a valid faculty member.');
+            header('Location: ' . ADMIN_URL . '/payroll');
             exit;
         }
     }
@@ -127,6 +182,8 @@ if ($filter_year > 0) {
 if ($filter_staff_id > 0) {
     $where_clauses[] = "p.staff_id = ?";
     $where_params[] = $filter_staff_id;
+} elseif ($filter_staff_id === -1) {
+    $where_clauses[] = "p.staff_id = -1";
 }
 
 $where_sql = implode(' AND ', $where_clauses);
@@ -187,15 +244,17 @@ function get_payroll_pagination_url($target_page, $search, $filter_month, $filte
     return ADMIN_URL . '/payroll' . $query_str;
 }
 
-$months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
 // Helper for staff avatar detection
 function get_staff_photo_url($sm) {
     $photo_field = $sm['staff_photo'] ?? ($sm['photo'] ?? '');
-    if (!empty($photo_field) && $photo_field !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $photo_field)) {
-        return $photo_field;
+    if (!empty($photo_field) && $photo_field !== '/assets/imgs/ksv-logo.jpg' && strpos($photo_field, '..') === false) {
+        $real_path = realpath(__DIR__ . '/../..' . $photo_field);
+        $base_dir = realpath(__DIR__ . '/../../assets/imgs');
+        if ($real_path && $base_dir && strpos($real_path, $base_dir) === 0 && file_exists($real_path)) {
+            return $photo_field;
+        }
     }
-    if (!empty($sm['avatar'])) {
+    if (!empty($sm['avatar']) && strpos($sm['avatar'], '..') === false) {
         if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $sm['avatar'])) {
             return '/assets/imgs/faculties/' . $sm['avatar'];
         }
@@ -1553,26 +1612,23 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      PAYROLL FILTER TOOLBAR (Exact match to HRMS Roaster Theme)
      ══════════════════════════════════════════════════════ -->
-<!-- ══════════════════════════════════════════════════════
-     PAYROLL FILTER TOOLBAR (Exact match to HRMS Roaster Theme)
-     ══════════════════════════════════════════════════════ -->
 <div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
   <div class="roaster-toolbar-inner">
     
     <!-- Filter form -->
     <form method="GET" action="<?php echo ADMIN_URL; ?>/payroll" class="roaster-filter-form">
-      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+      <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       
       <!-- Search Input -->
       <div class="roaster-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search faculty name, ID, dept..." autocomplete="off">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search faculty name, ID, dept..." autocomplete="off">
         <?php if (!empty($search)): ?>
           <a href="<?php 
             $params = $_GET; 
             unset($params['search']); 
             unset($params['page']);
-            echo ADMIN_URL . '/payroll' . (!empty($params) ? '?' . http_build_query($params) : ''); 
+            echo htmlspecialchars(ADMIN_URL . '/payroll' . (!empty($params) ? '?' . http_build_query($params) : ''), ENT_QUOTES, 'UTF-8'); 
           ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
@@ -1583,8 +1639,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <select name="month" onchange="this.form.submit()">
           <option value="">All Months</option>
           <?php foreach ($months as $m): ?>
-            <option value="<?php echo $m; ?>" <?php echo $filter_month === $m ? 'selected' : ''; ?>>
-              <?php echo $m; ?>
+            <option value="<?php echo htmlspecialchars($m, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_month === $m ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($m, ENT_QUOTES, 'UTF-8'); ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -1596,8 +1652,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-calendar"></i>
         <select name="year" onchange="this.form.submit()">
           <?php for ($y = date('Y') - 1; $y <= date('Y') + 1; $y++): ?>
-            <option value="<?php echo $y; ?>" <?php echo $filter_year == $y ? 'selected' : ''; ?>>
-              <?php echo $y; ?>
+            <option value="<?php echo intval($y); ?>" <?php echo $filter_year === intval($y) ? 'selected' : ''; ?>>
+              <?php echo intval($y); ?>
             </option>
           <?php endfor; ?>
         </select>
@@ -1611,8 +1667,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <select name="staff_id" onchange="this.form.submit()" style="max-width: 190px;">
             <option value="">All Faculty</option>
             <?php foreach ($staff_dropdown as $st): ?>
-              <option value="<?php echo $st['id']; ?>" <?php echo $filter_staff_id == $st['id'] ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($st['full_name']); ?>
+              <option value="<?php echo intval($st['id']); ?>" <?php echo $filter_staff_id === intval($st['id']) ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($st['full_name'], ENT_QUOTES, 'UTF-8'); ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -1625,7 +1681,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <?php if (!empty($search) || !empty($filter_month) || $filter_staff_id > 0 || $filter_year != date('Y')): ?>
-        <a href="<?php echo ADMIN_URL; ?>/payroll<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+        <a href="<?php echo htmlspecialchars(ADMIN_URL . '/payroll' . ($limit !== 10 ? '?limit=' . intval($limit) : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn ghost" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -1813,12 +1869,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
                   <?php if ($current_user['role'] === 'super_admin'): ?>
-                    <button type="button" onclick="openPaySalaryModal(<?php echo (int)$pr['staff_id']; ?>, '<?php echo htmlspecialchars($pr['month'], ENT_QUOTES); ?>', <?php echo (int)$pr['year']; ?>, <?php echo (float)$pr['basic_salary']; ?>, <?php echo (float)$pr['allowances']; ?>, <?php echo (float)$pr['deductions']; ?>, '<?php echo htmlspecialchars($pr['payment_status'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($pr['payment_method'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($pr['payment_date'] ?? date('Y-m-d'), ENT_QUOTES); ?>');" class="sid-action-btn pay" title="Pay or Edit Salary">
+                    <button type="button" onclick="openPaySalaryModal(<?php echo htmlspecialchars(json_encode($pr), ENT_QUOTES, 'UTF-8'); ?>);" class="sid-action-btn pay" title="Pay or Edit Salary">
                       <i class="fa-solid fa-wallet"></i>
                     </button>
                   <?php endif; ?>
 
-                  <button type="button" onclick="previewPayslip(<?php echo htmlspecialchars(json_encode($pr)); ?>);" class="sid-action-btn slip" title="View, Print &amp; Download Payslip">
+                  <button type="button" onclick="previewPayslip(<?php echo htmlspecialchars(json_encode($pr), ENT_QUOTES, 'UTF-8'); ?>);" class="sid-action-btn slip" title="View, Print &amp; Download Payslip">
                     <i class="fa-solid fa-file-invoice"></i>
                   </button>
 
@@ -1925,10 +1981,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <i class="fa-solid fa-hand-holding-dollar"></i>
         </div>
         <div>
-          <h4 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: var(--hrms-navy); font-family: 'Outfit', sans-serif;">
+          <h4 id="paySalaryModalTitle" style="margin: 0; font-size: 0.98rem; font-weight: 800; color: var(--hrms-navy); font-family: 'Outfit', sans-serif;">
             Pay Faculty Salary
           </h4>
-          <span style="font-size: 0.72rem; color: #64748b;">Disburse monthly earnings &amp; issue slip</span>
+          <span id="paySalaryModalSubtitle" style="font-size: 0.72rem; color: #64748b;">Disburse monthly earnings &amp; issue slip</span>
         </div>
       </div>
 
@@ -1939,7 +1995,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <!-- Modal Form Body -->
     <form method="POST" action="<?php echo ADMIN_URL; ?>/payroll" id="paySalaryForm" style="display: flex; flex-direction: column; overflow-y: auto; margin: 0;">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="pay_salary">
+      <input type="hidden" name="payroll_id" id="payrollRecordId" value="">
 
       <div class="hrms-modal-body" style="padding: 22px 24px; display: flex; flex-direction: column; gap: 16px;">
         
@@ -1947,7 +2005,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Faculty Member *</label>
           <select name="staff_id" id="payrollStaffSelect" onchange="autoFillSalary(this);" class="hrms-input" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
             <?php foreach ($staff_dropdown as $st): ?>
-              <option value="<?php echo $st['id']; ?>" data-salary="<?php echo $st['monthly_salary']; ?>">
+              <option value="<?php echo intval($st['id']); ?>" data-salary="<?php echo floatval($st['monthly_salary']); ?>">
                 <?php echo htmlspecialchars($st['full_name']); ?> (<?php echo htmlspecialchars($st['employee_code']); ?> • <?php echo format_inr($st['monthly_salary']); ?>)
               </option>
             <?php endforeach; ?>
@@ -1959,13 +2017,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Salary Month</label>
             <select name="month" id="payrollMonth" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
               <?php foreach ($months as $m): ?>
-                <option value="<?php echo $m; ?>" <?php echo (date('F') === $m || $filter_month === $m) ? 'selected' : ''; ?>><?php echo $m; ?></option>
+                <option value="<?php echo htmlspecialchars($m, ENT_QUOTES, 'UTF-8'); ?>" <?php echo (date('F') === $m || $filter_month === $m) ? 'selected' : ''; ?>><?php echo htmlspecialchars($m, ENT_QUOTES, 'UTF-8'); ?></option>
               <?php endforeach; ?>
             </select>
           </div>
           <div>
             <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Financial Year</label>
-            <input type="number" name="year" id="payrollYear" value="<?php echo $filter_year; ?>" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+            <input type="number" name="year" id="payrollYear" value="<?php echo intval($filter_year); ?>" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
           </div>
         </div>
 
@@ -2020,9 +2078,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <!-- Footer Actions -->
       <div class="hrms-modal-footer" style="padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px;">
         <button type="button" onclick="closePaySalaryModal();" class="roaster-btn secondary" style="padding: 8px 16px; font-size: 0.82rem; font-weight: 600;">Cancel</button>
-        <button type="submit" class="roaster-add-btn" style="padding: 8px 20px; font-size: 0.82rem;">
+        <button type="submit" id="paySalarySubmitBtn" class="roaster-add-btn" style="padding: 8px 20px; font-size: 0.82rem;">
           <i class="fa-solid fa-check"></i>
-          <span>Confirm Payment</span>
+          <span id="paySalarySubmitBtnText">Confirm Payment</span>
         </button>
       </div>
 
@@ -2095,19 +2153,55 @@ require_once __DIR__ . '/../includes/layout-header.php';
 // ── State for Active Payroll Record in Modal ──
 let currentActivePayroll = null;
 
-function openPaySalaryModal(staffId = null, month = null, year = null, basic = null, allowances = null, deductions = null, status = 'Paid', method = 'Bank Transfer (NEFT)', paymentDate = null) {
+function openPaySalaryModal(arg1 = null, month = null, year = null, basic = null, allowances = null, deductions = null, status = 'Paid', method = 'Bank Transfer (NEFT)', paymentDate = null, payrollId = null) {
   const modal = document.getElementById('paySalaryModal');
   if (!modal) return;
   
-  if (staffId) {
-    const sel = document.getElementById('payrollStaffSelect');
-    if (sel) {
+  let staffId = null;
+  let id = null;
+
+  if (arg1 && typeof arg1 === 'object') {
+    staffId = arg1.staff_id;
+    month = arg1.month;
+    year = arg1.year;
+    basic = arg1.basic_salary;
+    allowances = arg1.allowances;
+    deductions = arg1.deductions;
+    status = arg1.payment_status || 'Paid';
+    method = arg1.payment_method || 'Bank Transfer (NEFT)';
+    paymentDate = arg1.payment_date || null;
+    id = arg1.id || null;
+  } else {
+    staffId = arg1;
+    id = payrollId;
+  }
+
+  // Update hidden payroll_id input
+  const pIdInput = document.getElementById('payrollRecordId');
+  if (pIdInput) pIdInput.value = id || '';
+
+  // Update modal titles and submit button text
+  const titleEl = document.getElementById('paySalaryModalTitle');
+  const subEl = document.getElementById('paySalaryModalSubtitle');
+  const btnText = document.getElementById('paySalarySubmitBtnText');
+  if (id) {
+    if (titleEl) titleEl.innerText = 'Update / Edit Faculty Salary';
+    if (subEl) subEl.innerText = 'Update monthly earnings, deductions & payment details';
+    if (btnText) btnText.innerText = 'Save Changes';
+  } else {
+    if (titleEl) titleEl.innerText = 'Pay Faculty Salary';
+    if (subEl) subEl.innerText = 'Disburse monthly earnings & issue slip';
+    if (btnText) btnText.innerText = 'Confirm Payment';
+  }
+
+  const sel = document.getElementById('payrollStaffSelect');
+  if (sel) {
+    if (staffId) {
       sel.value = staffId;
+    }
+    if (basic === null || basic === undefined || isNaN(basic)) {
       autoFillSalary(sel);
     }
-  } else {
-    const sel = document.getElementById('payrollStaffSelect');
-    if (sel) autoFillSalary(sel);
   }
 
   if (month) {
@@ -2144,12 +2238,32 @@ function openPaySalaryModal(staffId = null, month = null, year = null, basic = n
   }
 
   calcNetSalary();
+  modal.style.display = 'flex';
   modal.classList.add('show');
 }
 
 function closePaySalaryModal() {
   const modal = document.getElementById('paySalaryModal');
-  if (modal) modal.classList.remove('show');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
+}
+
+function openModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+  }
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
 }
 
 // Backward-compatible aliases
@@ -2161,25 +2275,36 @@ function closeGeneratePayrollModal() {
 }
 
 function autoFillSalary(selectElem) {
+  if (!selectElem) return;
   const opt = selectElem.options[selectElem.selectedIndex];
   if (opt) {
     const salary = opt.getAttribute('data-salary') || 50000;
-    document.getElementById('payrollBasic').value = salary;
+    const bInput = document.getElementById('payrollBasic');
+    if (bInput) bInput.value = salary;
     calcNetSalary();
   }
 }
 
 function calcNetSalary() {
-  const basic = parseFloat(document.getElementById('payrollBasic').value) || 0;
-  const allow = parseFloat(document.getElementById('payrollAllowances').value) || 0;
-  const ded = parseFloat(document.getElementById('payrollDeductions').value) || 0;
+  const bInput = document.getElementById('payrollBasic');
+  const aInput = document.getElementById('payrollAllowances');
+  const dInput = document.getElementById('payrollDeductions');
+  const preview = document.getElementById('calcNetPreview');
+  const basic = parseFloat(bInput ? bInput.value : 0) || 0;
+  const allow = parseFloat(aInput ? aInput.value : 0) || 0;
+  const ded = parseFloat(dInput ? dInput.value : 0) || 0;
   const net = Math.max(0, (basic + allow) - ded);
-  document.getElementById('calcNetPreview').innerText = '₹' + net.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  if (preview) {
+    preview.innerText = '₹' + net.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
 }
 
 function closePayslipModal() {
   const modal = document.getElementById('payslipViewModal');
-  if (modal) modal.classList.remove('show');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
 }
 
 // ── Number to Indian Currency Words (e.g. 50000 -> Fifty Thousand Rupees Only) ──
@@ -2238,7 +2363,7 @@ function buildPayslip(payroll) {
 
   const esc = (str) => {
     if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   };
 
   const schoolName = <?php echo json_encode($school_settings['school_name'] ?? 'KSV Academy'); ?>;
@@ -2432,7 +2557,10 @@ function previewPayslip(payroll) {
   }
 
   const modal = document.getElementById('payslipViewModal');
-  if (modal) modal.classList.add('show');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+  }
 
   // Reset scroll position to top
   const body = document.getElementById('payslipModalBody');

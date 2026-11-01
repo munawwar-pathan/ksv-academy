@@ -9,12 +9,12 @@ $active_menu = 'staff-id';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
-// Filters: search & department
-$search = trim($_GET['search'] ?? '');
-$filter_dept = trim($_GET['department'] ?? '');
+// Filters: search & department bounded
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$filter_dept = mb_substr(trim((string)($_GET['department'] ?? '')), 0, 100);
 
 // Fetch distinct departments for the filter dropdown
 $dept_stmt = $db->prepare("SELECT DISTINCT department FROM staff_profiles WHERE session_id = ? AND department IS NOT NULL AND department != '' ORDER BY department ASC");
@@ -24,25 +24,44 @@ $departments = $dept_stmt->fetchAll(PDO::FETCH_COLUMN);
 // Selected Staff ID
 $selected_id = intval($_GET['id'] ?? 0);
 
-// If staff role, restrict strictly to their own profile
-if ($current_user['role'] === 'staff') {
-    $stmt_mp = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1");
-    $stmt_mp->execute([$current_user['id']]);
+// If staff role, check admin permission or restrict strictly to their own profile
+$is_admin = ($current_user['role'] === 'super_admin' || has_menu_permission('admin_staff', $current_user));
+if (!$is_admin) {
+    $stmt_mp = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? AND session_id = ? LIMIT 1");
+    $stmt_mp->execute([$current_user['id'], $session_id]);
     $my_prof = $stmt_mp->fetch();
     if ($my_prof) {
-        $selected_id = $my_prof['id'];
+        $selected_id = intval($my_prof['id']);
+    } else {
+        $selected_id = -1;
     }
 }
 
-// Fetch all staff members in active session
-$all_staff_stmt = $db->prepare("
-    SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
-    FROM staff_profiles sp 
-    JOIN users u ON sp.user_id = u.id 
-    WHERE sp.session_id = ? 
-    ORDER BY sp.id ASC
-");
-$all_staff_stmt->execute([$session_id]);
+// Fetch staff members in active session (restricted to own profile for non-admin staff)
+if (!$is_admin) {
+    if ($selected_id > 0) {
+        $all_staff_stmt = $db->prepare("
+            SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
+            FROM staff_profiles sp 
+            JOIN users u ON sp.user_id = u.id 
+            WHERE sp.session_id = ? AND sp.id = ?
+            ORDER BY sp.id ASC
+        ");
+        $all_staff_stmt->execute([$session_id, $selected_id]);
+    } else {
+        $all_staff_stmt = $db->prepare("SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = -1");
+        $all_staff_stmt->execute([]);
+    }
+} else {
+    $all_staff_stmt = $db->prepare("
+        SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
+        FROM staff_profiles sp 
+        JOIN users u ON sp.user_id = u.id 
+        WHERE sp.session_id = ? 
+        ORDER BY sp.id ASC
+    ");
+    $all_staff_stmt->execute([$session_id]);
+}
 $all_staff_list = $all_staff_stmt->fetchAll();
 
 // Pagination & Limits Setup (10, 20, 30, 40, 50)
@@ -57,19 +76,28 @@ $page = max(1, intval($_GET['page'] ?? 1));
 $where_clauses = ["sp.session_id = ?"];
 $where_params = [$session_id];
 
-if (!empty($search)) {
-    $where_clauses[] = "(u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ? OR sp.phone LIKE ? OR u.phone LIKE ?)";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-}
+if (!$is_admin) {
+    if ($selected_id > 0) {
+        $where_clauses[] = "sp.id = ?";
+        $where_params[] = $selected_id;
+    } else {
+        $where_clauses[] = "sp.id = -1";
+    }
+} else {
+    if (!empty($search)) {
+        $where_clauses[] = "(u.full_name LIKE ? OR sp.employee_code LIKE ? OR sp.department LIKE ? OR sp.designation LIKE ? OR sp.phone LIKE ? OR u.phone LIKE ?)";
+        $where_params[] = "%$search%";
+        $where_params[] = "%$search%";
+        $where_params[] = "%$search%";
+        $where_params[] = "%$search%";
+        $where_params[] = "%$search%";
+        $where_params[] = "%$search%";
+    }
 
-if (!empty($filter_dept)) {
-    $where_clauses[] = "sp.department = ?";
-    $where_params[] = $filter_dept;
+    if (!empty($filter_dept)) {
+        $where_clauses[] = "sp.department = ?";
+        $where_params[] = $filter_dept;
+    }
 }
 
 $where_sql = implode(' AND ', $where_clauses);
@@ -111,7 +139,7 @@ $stmt_table->execute();
 $table_staff = $stmt_table->fetchAll();
 
 // Pagination indicators
-$start_record = $total_records > 0 ? $offset + 1 : 0;
+$start_record = $total_records > 0 ? ($offset + 1) : 0;
 $end_record = min($offset + $limit, $total_records);
 
 // Helper for generating staff ID directory pagination links
@@ -170,18 +198,22 @@ if ($selected_id > 0) {
         SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
         FROM staff_profiles sp
         JOIN users u ON sp.user_id = u.id
-        WHERE sp.id = ? LIMIT 1
+        WHERE sp.id = ? AND sp.session_id = ? LIMIT 1
     ");
-    $stmt->execute([$selected_id]);
+    $stmt->execute([$selected_id, $session_id]);
     $staff = $stmt->fetch();
 }
 
 // Helper for staff avatar detection
 function get_staff_photo_url($sm) {
-    if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $sm['photo'])) {
-        return $sm['photo'];
+    if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg' && strpos($sm['photo'], '..') === false) {
+        $real_path = realpath(__DIR__ . '/../..' . $sm['photo']);
+        $base_dir = realpath(__DIR__ . '/../../assets/imgs');
+        if ($real_path && $base_dir && strpos($real_path, $base_dir) === 0 && file_exists($real_path)) {
+            return $sm['photo'];
+        }
     }
-    if (!empty($sm['avatar'])) {
+    if (!empty($sm['avatar']) && strpos($sm['avatar'], '..') === false) {
         if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $sm['avatar'])) {
             return '/assets/imgs/faculties/' . $sm['avatar'];
         }
@@ -1247,13 +1279,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
           <div class="cf-photo-frame">
             <?php if ($has_staff_photo): ?>
-              <img src="<?php echo htmlspecialchars($staff_photo_url); ?>" alt="<?php echo htmlspecialchars($staff['full_name']); ?>" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <img src="<?php echo htmlspecialchars($staff_photo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($staff['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
               <div class="cf-photo-fallback" style="background: <?php echo $avatar_bg; ?>; display: none;">
-                <?php echo $first_letter; ?>
+                <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php else: ?>
               <div class="cf-photo-fallback" style="background: <?php echo $avatar_bg; ?>;">
-                <?php echo $first_letter; ?>
+                <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php endif; ?>
           </div>
@@ -1261,39 +1293,39 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
         <!-- Card Front Body Details -->
         <div class="card-front-body">
-          <div class="cf-student-name"><?php echo htmlspecialchars($staff['full_name']); ?></div>
+          <div class="cf-student-name"><?php echo htmlspecialchars($staff['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></div>
           <div class="cf-standard-badge">
             <i class="fa-solid fa-briefcase"></i>
-            <span><?php echo htmlspecialchars($staff['designation']); ?> &bull; Dept of <?php echo htmlspecialchars($staff['department']); ?></span>
+            <span><?php echo htmlspecialchars($staff['designation'] ?? '', ENT_QUOTES, 'UTF-8'); ?> &bull; Dept of <?php echo htmlspecialchars($staff['department'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
 
           <!-- Key Details List -->
           <div class="cf-info-list">
             <div class="cf-info-row">
               <span class="cf-label">Employee Code</span>
-              <span class="cf-val mono"><?php echo htmlspecialchars($staff['employee_code']); ?></span>
+              <span class="cf-val mono"><?php echo htmlspecialchars($staff['employee_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Qualification</span>
-              <span class="cf-val"><?php echo htmlspecialchars($staff['qualification']); ?></span>
+              <span class="cf-val"><?php echo htmlspecialchars($staff['qualification'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Phone Contact</span>
-              <span class="cf-val"><?php echo htmlspecialchars($staff['phone'] ?: $staff['user_phone']); ?></span>
+              <span class="cf-val"><?php echo htmlspecialchars(($staff['phone'] ?? '') ?: ($staff['user_phone'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Official Email</span>
-              <span class="cf-val" style="font-size: 10px;"><?php echo htmlspecialchars($staff['email'] ?: $staff['user_email']); ?></span>
+              <span class="cf-val" style="font-size: 10px;"><?php echo htmlspecialchars(($staff['email'] ?? '') ?: ($staff['user_email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Blood Group</span>
               <span class="cf-val">
-                <span class="cf-blood-badge"><?php echo htmlspecialchars($staff['blood_group'] ?? 'B+'); ?></span>
+                <span class="cf-blood-badge"><?php echo htmlspecialchars($staff['blood_group'] ?? 'B+', ENT_QUOTES, 'UTF-8'); ?></span>
               </span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Date of Joining</span>
-              <span class="cf-val"><?php echo format_date($staff['joining_date']); ?></span>
+              <span class="cf-val"><?php echo format_date($staff['joining_date'] ?? null); ?></span>
             </div>
           </div>
 
@@ -1340,10 +1372,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
           
           <!-- QR Frame -->
           <div class="cb-qr-frame">
-            <img src="<?php echo $qr_image_url; ?>" alt="Faculty Attendance QR Code">
+            <img src="<?php echo htmlspecialchars($qr_image_url, ENT_QUOTES, 'UTF-8'); ?>" alt="Faculty Attendance QR Code">
           </div>
           
-          <div class="cb-qr-code-text"><?php echo htmlspecialchars($qr_data); ?></div>
+          <div class="cb-qr-code-text"><?php echo htmlspecialchars($qr_data, ENT_QUOTES, 'UTF-8'); ?></div>
           <div class="cb-qr-hint">Scan at reception terminal or mobile scanner for daily attendance punch.</div>
 
           <!-- Guidelines Box -->
@@ -1358,9 +1390,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
           <!-- Institution Contact Footer -->
           <div class="cb-footer">
-            <strong><?php echo htmlspecialchars($school_settings['school_name']); ?></strong><br>
-            <?php echo htmlspecialchars($school_settings['address']); ?><br>
-            Emergency HR Desk: <?php echo htmlspecialchars($school_settings['phone']); ?> | <?php echo htmlspecialchars($school_settings['email']); ?>
+            <strong><?php echo htmlspecialchars($school_settings['school_name'] ?? ''); ?></strong><br>
+            <?php echo htmlspecialchars($school_settings['address'] ?? ''); ?><br>
+            Emergency HR Desk: <?php echo htmlspecialchars($school_settings['phone'] ?? ''); ?> | <?php echo htmlspecialchars($school_settings['email'] ?? ''); ?>
           </div>
 
         </div>
@@ -1382,15 +1414,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
       
       <!-- Left: Search & Department Filter Form -->
       <form method="GET" action="<?php echo ADMIN_URL; ?>/staff-id" class="roaster-filter-form">
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
         <?php if ($selected_id > 0): ?>
-          <input type="hidden" name="id" value="<?php echo $selected_id; ?>">
+          <input type="hidden" name="id" value="<?php echo intval($selected_id); ?>">
         <?php endif; ?>
 
         <!-- Search Input -->
         <div class="roaster-search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search faculty name, code, dept..." autocomplete="off">
+          <input type="text" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search faculty name, code, dept..." autocomplete="off">
           <?php if (!empty($search)): ?>
             <a href="<?php echo htmlspecialchars(get_staff_id_pagination_url(1, '', $filter_dept, $selected_id, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
           <?php endif; ?>
@@ -1403,8 +1435,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <select name="department" onchange="this.form.submit()">
               <option value="">All Departments</option>
               <?php foreach ($departments as $dept): ?>
-                <option value="<?php echo $dept; ?>" <?php echo $filter_dept === $dept ? 'selected' : ''; ?>>
-                  <?php echo $dept; ?>
+                <option value="<?php echo htmlspecialchars($dept, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_dept === $dept ? 'selected' : ''; ?>>
+                  <?php echo htmlspecialchars($dept, ENT_QUOTES, 'UTF-8'); ?>
                 </option>
               <?php endforeach; ?>
             </select>
@@ -1416,11 +1448,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </button>
 
           <?php if (!empty($search) || !empty($filter_dept)): ?>
-            <a href="<?php echo ADMIN_URL; ?>/staff-id<?php 
+            <a href="<?php 
               $rp = [];
               if ($selected_id > 0) $rp['id'] = $selected_id;
               if ($limit !== 10) $rp['limit'] = $limit;
-              echo !empty($rp) ? '?' . http_build_query($rp) : '';
+              echo htmlspecialchars(ADMIN_URL . '/staff-id' . (!empty($rp) ? '?' . http_build_query($rp) : ''), ENT_QUOTES, 'UTF-8');
             ?>" class="roaster-btn ghost" title="Reset all filters">
               <i class="fa-solid fa-rotate-left"></i> Reset
             </a>
@@ -1490,7 +1522,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
                   No faculty records matched your query in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
                 </p>
-                <a href="<?php echo ADMIN_URL; ?>/staff-id<?php echo $selected_id > 0 ? '?id=' . $selected_id : ''; ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+                <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff-id' . ($selected_id > 0 ? '?id=' . intval($selected_id) : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
                   <i class="fa-solid fa-rotate-left"></i> Reset All Filters
                 </a>
               </td>
@@ -1501,7 +1533,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 $is_cur_viewing = ($st['id'] == $selected_id);
                 $st_photo = get_staff_photo_url($st);
                 $has_st_photo = !empty($st_photo);
-                $f_letter = strtoupper(substr($st['full_name'], 0, 1));
+                $f_letter = strtoupper(mb_substr($st['full_name'] ?? '', 0, 1));
 
                 $row_class = $is_cur_viewing ? 'active-staff-row' : '';
 
@@ -1511,7 +1543,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 if (!empty($filter_dept)) $qp['department'] = $filter_dept;
                 if ($limit != 10) $qp['limit'] = $limit;
                 if ($page > 1) $qp['page'] = $page;
-                $qp['id'] = $st['id'];
+                $qp['id'] = intval($st['id']);
                 $switch_url = ADMIN_URL . '/staff-id?' . http_build_query($qp) . '#id-card-stage';
               ?>
               <tr class="<?php echo $row_class; ?>">
@@ -1520,22 +1552,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <div class="user-cell" style="display: flex; align-items: center; gap: 12px;">
                     <?php if ($has_st_photo): ?>
-                      <img src="<?php echo htmlspecialchars($st_photo); ?>" alt="<?php echo htmlspecialchars($st['full_name']); ?>" class="staff-avatar-img" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <img src="<?php echo htmlspecialchars($st_photo, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($st['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" class="staff-avatar-img" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                       <div class="staff-avatar-init" style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <?php echo $f_letter; ?>
+                        <?php echo htmlspecialchars($f_letter, ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                     <?php else: ?>
                       <div class="staff-avatar-init" style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <?php echo $f_letter; ?>
+                        <?php echo htmlspecialchars($f_letter, ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                     <?php endif; ?>
 
                     <div>
                       <div class="cell-name" style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
-                        <?php echo htmlspecialchars($st['full_name']); ?>
+                        <?php echo htmlspecialchars($st['full_name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                       <div class="cell-sub" style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
-                        <span><?php echo htmlspecialchars($st['email'] ?: $st['user_email']); ?></span>
+                        <span><?php echo htmlspecialchars(($st['email'] ?? '') ?: ($st['user_email'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                       </div>
                     </div>
                   </div>
@@ -1545,10 +1577,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <span class="sid-code-pill">
                     <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
-                    <span><?php echo htmlspecialchars($st['employee_code']); ?></span>
+                    <span><?php echo htmlspecialchars($st['employee_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
                   </span>
                   <div class="sid-designation" style="font-size: 0.76rem; font-weight: 600; color: #475569; margin-top: 4px;">
-                    <?php echo htmlspecialchars($st['designation']); ?>
+                    <?php echo htmlspecialchars($st['designation'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                   </div>
                 </td>
 
@@ -1556,7 +1588,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <span class="sid-dept-pill">
                     <i class="fa-solid fa-building" style="font-size: 0.65rem; color: #64748b;"></i>
-                    <span><?php echo htmlspecialchars($st['department']); ?></span>
+                    <span><?php echo htmlspecialchars($st['department'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
                   </span>
                   <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">
                     Joined: <?php echo !empty($st['joining_date']) ? date('M Y', strtotime($st['joining_date'])) : 'Active'; ?>
@@ -1567,11 +1599,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <div style="font-size: 0.78rem; font-weight: 600; color: #334155; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-phone" style="font-size: 0.68rem; color: #64748b;"></i>
-                    <span><?php echo htmlspecialchars($st['phone'] ?: $st['user_phone']); ?></span>
+                    <span><?php echo htmlspecialchars(($st['phone'] ?? '') ?: ($st['user_phone'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></span>
                   </div>
                   <div style="margin-top: 3px;">
                     <span class="sid-blood-badge">
-                      Blood: <?php echo htmlspecialchars($st['blood_group'] ?? 'B+'); ?>
+                      Blood: <?php echo htmlspecialchars($st['blood_group'] ?? 'B+', ENT_QUOTES, 'UTF-8'); ?>
                     </span>
                   </div>
                 </td>
@@ -1580,7 +1612,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <span class="sid-qr-chip" title="Biometric Terminal QR Code ID">
                     <i class="fa-solid fa-qrcode" style="color: #0284c7; font-size: 0.72rem;"></i>
-                    <span><?php echo htmlspecialchars($st['qr_code'] ?: ('STAFF-' . $st['id'])); ?></span>
+                    <span><?php echo htmlspecialchars($st['qr_code'] ?: ('STAFF-' . intval($st['id'])), ENT_QUOTES, 'UTF-8'); ?></span>
                   </span>
                 </td>
 
@@ -1610,7 +1642,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                         <span>Print</span>
                       </button>
                     <?php else: ?>
-                      <a href="<?php echo $switch_url; ?>" class="sid-btn-action sid-btn-secondary" title="Load faculty card into preview">
+                      <a href="<?php echo htmlspecialchars($switch_url, ENT_QUOTES, 'UTF-8'); ?>" class="sid-btn-action sid-btn-secondary" title="Load faculty card into preview">
                         <i class="fa-solid fa-id-card" style="color: #0284c7; font-size: 0.72rem;"></i>
                         <span>View ID Card</span>
                       </a>

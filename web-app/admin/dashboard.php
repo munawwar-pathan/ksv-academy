@@ -1,4 +1,13 @@
 <?php
+// HTTP Security Headers (Defense-in-depth across Apache, LiteSpeed, Nginx, PHP built-in server)
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 // Ensure user is super_admin
@@ -10,21 +19,58 @@ $session_id = $active_session ? intval($active_session['id']) : 1;
 
 $page_title = 'Super Admin Dashboard';
 $page_heading = 'Admin Dashboard';
-$page_subheading = 'Campus Overview • Academic Session ' . htmlspecialchars($active_session['session_name'] ?? '2025-2026');
+$page_subheading = 'Campus Overview • Academic Session ' . htmlspecialchars($active_session['session_name'] ?? '2025-2026', ENT_QUOTES, 'UTF-8');
 $active_menu = 'dashboard';
+
+// Rate Limiting Protection (Max 30 quick action submissions per 5 minutes per session)
+$now = time();
+if (!isset($_SESSION['dashboard_post_attempts']) || !is_array($_SESSION['dashboard_post_attempts'])) {
+    $_SESSION['dashboard_post_attempts'] = [];
+}
+$_SESSION['dashboard_post_attempts'] = array_filter($_SESSION['dashboard_post_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 300;
+});
+$is_rate_limited = (count($_SESSION['dashboard_post_attempts']) >= 30);
 
 // Handle Quick Action Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. Anti-bot honeypot check
+    if (!empty($_POST['dashboard_hp'])) {
+        usleep(300000);
+        set_flash('error', 'Invalid request detected.');
+        header('Location: ' . ADMIN_URL . '/dashboard');
+        exit;
+    }
+
+    // 2. Brute-force / spam flood lockout
+    if ($is_rate_limited) {
+        set_flash('error', 'Too many requests in a short period. Please wait a moment and try again.');
+        header('Location: ' . ADMIN_URL . '/dashboard');
+        exit;
+    }
+    $_SESSION['dashboard_post_attempts'][] = $now;
+
+    // 3. CSRF token validation
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/dashboard');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
     
     // 1. Approve or Reject Leave
     if ($action === 'update_leave') {
         $leave_id = intval($_POST['leave_id'] ?? 0);
-        $status = in_array($_POST['status'], ['Approved', 'Rejected']) ? $_POST['status'] : 'Pending';
-        if ($leave_id > 0) {
+        $status = trim((string)($_POST['status'] ?? ''));
+        if ($leave_id > 0 && in_array($status, ['Approved', 'Rejected'], true)) {
             $stmt = $db->prepare("UPDATE leave_requests SET status = ? WHERE id = ?");
             $stmt->execute([$status, $leave_id]);
-            set_flash('success', "Leave request #{$leave_id} marked as {$status}.");
+            set_flash('success', "Leave request #{$leave_id} marked as " . htmlspecialchars($status, ENT_QUOTES, 'UTF-8') . ".");
+            header('Location: ' . ADMIN_URL . '/dashboard');
+            exit;
+        } else {
+            set_flash('error', 'Invalid leave request or status selection.');
             header('Location: ' . ADMIN_URL . '/dashboard');
             exit;
         }
@@ -32,51 +78,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 2. Add New Staff Member
     if ($action === 'add_staff') {
-        $full_name = trim($_POST['full_name'] ?? '');
-        $username = trim($_POST['username'] ?? '');
-        $password = trim($_POST['password'] ?? 'staff');
-        $email = trim($_POST['email'] ?? '');
-        $phone = trim($_POST['phone'] ?? '');
-        $department = trim($_POST['department'] ?? '');
-        $designation = trim($_POST['designation'] ?? '');
-        $salary = floatval($_POST['salary'] ?? 50000);
+        $full_name = mb_substr(trim((string)($_POST['full_name'] ?? '')), 0, 100);
+        $username = mb_substr(trim((string)($_POST['username'] ?? '')), 0, 50);
+        $password = (string)($_POST['password'] ?? 'staff');
+        $email = filter_var(trim((string)($_POST['email'] ?? '')), FILTER_VALIDATE_EMAIL) ? mb_substr(trim((string)($_POST['email'] ?? '')), 0, 100) : '';
+        $phone = preg_replace('/[^0-9+\-\s]/', '', mb_substr(trim((string)($_POST['phone'] ?? '')), 0, 25));
+        $department = mb_substr(trim((string)($_POST['department'] ?? 'Academics')), 0, 50);
+        $designation = mb_substr(trim((string)($_POST['designation'] ?? 'Lecturer')), 0, 50);
+        $salary = max(0, floatval($_POST['salary'] ?? 50000));
 
-        if (!empty($full_name) && !empty($username)) {
-            try {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $db->prepare("INSERT INTO users (username, password, role, email, phone, full_name, status) VALUES (?, ?, 'staff', ?, ?, ?, 'active')");
-                $stmt->execute([$username, $hash, $email, $phone, $full_name]);
-                $new_user_id = $db->lastInsertId();
+        if (empty($full_name) || empty($username)) {
+            set_flash('error', 'Please provide both staff full name and username.');
+            header('Location: ' . ADMIN_URL . '/dashboard');
+            exit;
+        }
 
-                $emp_code = 'KSV-FAC-0' . rand(10, 99);
-                $stmt2 = $db->prepare("INSERT INTO staff_profiles (user_id, session_id, employee_code, department, designation, joining_date, monthly_salary, today_status) VALUES (?, ?, ?, ?, ?, CURDATE(), ?, 'Present')");
-                $stmt2->execute([$new_user_id, $session_id, $emp_code, $department, $designation, $salary]);
+        // Check for username collision
+        $stmt_check = $db->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
+        $stmt_check->execute([$username]);
+        if ($stmt_check->fetch()) {
+            set_flash('error', "The username '{$username}' is already in use. Please choose another username.");
+            header('Location: ' . ADMIN_URL . '/dashboard');
+            exit;
+        }
 
-                set_flash('success', "Faculty member {$full_name} ({$emp_code}) added successfully!");
-                header('Location: ' . ADMIN_URL . '/dashboard');
-                exit;
-            } catch (Exception $e) {
-                set_flash('error', 'Error creating staff: ' . $e->getMessage());
+        try {
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $db->prepare("INSERT INTO users (username, password, role, email, phone, full_name, status) VALUES (?, ?, 'staff', ?, ?, ?, 'active')");
+            $stmt->execute([$username, $hash, $email ?: null, $phone ?: null, $full_name]);
+            $new_user_id = $db->lastInsertId();
+
+            // Sequential employee code to avoid collisions
+            $emp_seq_stmt = $db->prepare("SELECT COUNT(*) FROM staff_profiles WHERE session_id = ?");
+            $emp_seq_stmt->execute([$session_id]);
+            $next_seq = intval($emp_seq_stmt->fetchColumn()) + 1;
+            $emp_code = 'KSV-FAC-' . str_pad((string)$next_seq, 3, '0', STR_PAD_LEFT);
+
+            $stmt2 = $db->prepare("INSERT INTO staff_profiles (user_id, session_id, employee_code, department, designation, joining_date, monthly_salary, today_status) VALUES (?, ?, ?, ?, ?, CURDATE(), ?, 'Present')");
+            $stmt2->execute([$new_user_id, $session_id, $emp_code, $department, $designation, $salary]);
+
+            // Welcome email notification dispatch
+            $email_note = '';
+            if (!empty($email) && function_exists('send_staff_welcome_email')) {
+                $new_staff_row = [
+                    'full_name' => $full_name,
+                    'email' => $email,
+                    'employee_code' => $emp_code,
+                    'department' => $department,
+                    'designation' => $designation
+                ];
+                $email_diag = [];
+                $mail_ok = send_staff_welcome_email($new_staff_row, $username, $password, $email_diag);
+                if ($mail_ok) {
+                    $email_note = ' &bull; Welcome email sent successfully to ' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+                } else {
+                    $email_note = ' &bull; Note: Welcome email could not be delivered to ' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+                }
             }
+
+            set_flash('success', "Faculty member {$full_name} ({$emp_code}) added successfully!" . $email_note);
+            header('Location: ' . ADMIN_URL . '/dashboard');
+            exit;
+        } catch (Exception $e) {
+            error_log("Super admin dashboard add_staff error: " . $e->getMessage());
+            set_flash('error', 'An error occurred while creating the faculty member. Please try again.');
+            header('Location: ' . ADMIN_URL . '/dashboard');
+            exit;
         }
     }
 
     // 3. Post Announcement
     if ($action === 'post_announcement') {
-        $title = trim($_POST['title'] ?? '');
-        $content = trim($_POST['content'] ?? '');
-        $target = trim($_POST['target_role'] ?? 'all');
-        if (!empty($title) && !empty($content)) {
+        $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 150);
+        $content = mb_substr(trim((string)($_POST['content'] ?? '')), 0, 2000);
+        $target = trim((string)($_POST['target_role'] ?? 'all'));
+        if (!in_array($target, ['all', 'staff', 'parent'], true)) {
+            $target = 'all';
+        }
+
+        if (empty($title) || empty($content)) {
+            set_flash('error', 'Please provide both announcement title and message content.');
+            header('Location: ' . ADMIN_URL . '/dashboard');
+            exit;
+        }
+
+        try {
             $stmt = $db->prepare("INSERT INTO announcements (title, content, target_role, posted_by) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$title, $content, $target, $current_user['full_name']]);
+            $stmt->execute([$title, $content, $target, $current_user['full_name'] ?? 'Super Admin']);
             set_flash('success', 'Announcement published successfully!');
+            header('Location: ' . ADMIN_URL . '/dashboard');
+            exit;
+        } catch (Exception $e) {
+            error_log("Super admin dashboard post_announcement error: " . $e->getMessage());
+            set_flash('error', 'Failed to publish announcement. Please try again.');
             header('Location: ' . ADMIN_URL . '/dashboard');
             exit;
         }
     }
 }
 
-// Fetch Key Dashboard Metrics (Prepared Statements)
+// Fetch Key Dashboard Metrics (Prepared Statements with session isolation)
 $stmt_staff = $db->prepare("SELECT COUNT(*) FROM staff_profiles WHERE session_id = ?");
 $stmt_staff->execute([$session_id]);
 $total_staff = intval($stmt_staff->fetchColumn());
@@ -94,47 +195,65 @@ $stmt_fee->execute([$session_id]);
 $fee_stats = $stmt_fee->fetch();
 $total_fees = floatval($fee_stats['total'] ?? 0);
 $paid_fees = floatval($fee_stats['paid'] ?? 0);
-$pending_leaves = intval($db->query("SELECT COUNT(*) FROM leave_requests WHERE status = 'Pending'")->fetchColumn());
 
-// Fetch Today's Staff Attendance Roster
-$staff_roster = $db->query("
+$stmt_pending_cnt = $db->prepare("
+    SELECT COUNT(*) 
+    FROM leave_requests lr
+    JOIN staff_profiles sp ON lr.staff_id = sp.id
+    WHERE lr.status = 'Pending' AND sp.session_id = ?
+");
+$stmt_pending_cnt->execute([$session_id]);
+$pending_leaves = intval($stmt_pending_cnt->fetchColumn());
+
+// Fetch Today's Staff Attendance Roster (Scoped to session)
+$stmt_roster = $db->prepare("
     SELECT sp.*, u.full_name, u.phone, u.email, al.check_in_time, al.check_out_time, al.status as punch_status
     FROM staff_profiles sp
     JOIN users u ON sp.user_id = u.id
     LEFT JOIN attendance_logs al ON al.reference_id = sp.id AND al.type = 'staff' AND al.log_date = CURDATE()
+    WHERE sp.session_id = ?
     ORDER BY sp.id ASC
-")->fetchAll();
+");
+$stmt_roster->execute([$session_id]);
+$staff_roster = $stmt_roster->fetchAll();
 
-// Fetch Pending Leaves (requiring action)
-$pending_leave_list = $db->query("
+// Fetch Pending Leaves (requiring action, scoped to session)
+$stmt_pending_list = $db->prepare("
     SELECT lr.*, u.full_name, sp.department, sp.designation
     FROM leave_requests lr
     JOIN staff_profiles sp ON lr.staff_id = sp.id
     JOIN users u ON sp.user_id = u.id
-    WHERE lr.status = 'Pending'
+    WHERE lr.status = 'Pending' AND sp.session_id = ?
     ORDER BY lr.id DESC
     LIMIT 5
-")->fetchAll();
+");
+$stmt_pending_list->execute([$session_id]);
+$pending_leave_list = $stmt_pending_list->fetchAll();
 
-// Fetch Recent Processed Leaves (history/audit trail)
-$recent_leave_history = $db->query("
+// Fetch Recent Processed Leaves (history/audit trail, scoped to session)
+$stmt_history = $db->prepare("
     SELECT lr.*, u.full_name, sp.department, sp.designation
     FROM leave_requests lr
     JOIN staff_profiles sp ON lr.staff_id = sp.id
     JOIN users u ON sp.user_id = u.id
-    WHERE lr.status != 'Pending'
+    WHERE lr.status != 'Pending' AND sp.session_id = ?
     ORDER BY lr.id DESC
     LIMIT 4
-")->fetchAll();
+");
+$stmt_history->execute([$session_id]);
+$recent_leave_history = $stmt_history->fetchAll();
 
-// Fetch Recent Fee Collections
-$recent_payments = $db->query("
+// Fetch Recent Fee Collections (Scoped to session)
+$stmt_recent_pay = $db->prepare("
     SELECT fp.*, s.student_name, s.standard, s.roll_no
     FROM fee_payments fp
     JOIN students s ON fp.student_id = s.id
+    WHERE s.session_id = ?
     ORDER BY fp.id DESC
     LIMIT 6
-")->fetchAll();
+");
+$stmt_recent_pay->execute([$session_id]);
+$recent_payments = $stmt_recent_pay->fetchAll();
 
 // Fetch Announcements
 $announcements = $db->query("SELECT * FROM announcements ORDER BY id DESC LIMIT 4")->fetchAll();
@@ -793,7 +912,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="welcome-ribbon-content">
     <div class="welcome-meta-badge">
       <i class="fa-solid fa-graduation-cap"></i>
-      <span>Session <?php echo htmlspecialchars($active_session['session_name']); ?> &bull; Active Campus</span>
+      <span>Session <?php echo htmlspecialchars($active_session['session_name'] ?? '2025-2026', ENT_QUOTES, 'UTF-8'); ?> &bull; Active Campus</span>
     </div>
     <h2 class="welcome-title"><?php echo htmlspecialchars($current_user['full_name']); ?> &mdash; Executive Workspace</h2>
     <p class="welcome-subtitle">
@@ -947,7 +1066,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <tr>
                 <td>
                   <div class="user-cell">
-                    <div class="cell-avatar"><?php echo strtoupper(substr($st['full_name'], 0, 1)); ?></div>
+                    <div class="cell-avatar"><?php echo htmlspecialchars(strtoupper(mb_substr($st['full_name'] ?? 'U', 0, 1)), ENT_QUOTES, 'UTF-8'); ?></div>
                     <div class="cell-meta">
                       <span class="cell-name"><?php echo htmlspecialchars($st['full_name']); ?></span>
                       <span class="cell-sub">
@@ -1053,17 +1172,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </td>
                   <td style="text-align: right; white-space: nowrap;">
                     <div style="display: flex; gap: 5px; justify-content: flex-end; align-items: center;">
-                      <form method="POST" style="display: inline; margin: 0;">
+                      <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/dashboard', ENT_QUOTES, 'UTF-8'); ?>" style="display: inline; margin: 0;">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="action" value="update_leave">
-                        <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
+                        <input type="hidden" name="leave_id" value="<?php echo intval($lv['id']); ?>">
                         <input type="hidden" name="status" value="Approved">
                         <button type="submit" class="btn-hrms btn-hrms-success btn-hrms-sm" title="Approve Request" style="padding: 4px 9px; font-size: 0.74rem;">
                           <i class="fa-solid fa-check"></i> Approve
                         </button>
                       </form>
-                      <form method="POST" style="display: inline; margin: 0;">
+                      <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/dashboard', ENT_QUOTES, 'UTF-8'); ?>" style="display: inline; margin: 0;">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                         <input type="hidden" name="action" value="update_leave">
-                        <input type="hidden" name="leave_id" value="<?php echo $lv['id']; ?>">
+                        <input type="hidden" name="leave_id" value="<?php echo intval($lv['id']); ?>">
                         <input type="hidden" name="status" value="Rejected">
                         <button type="submit" class="btn-hrms btn-hrms-danger btn-hrms-sm" title="Reject Request" style="padding: 4px 8px; font-size: 0.74rem;">
                           <i class="fa-solid fa-xmark"></i>
@@ -1116,7 +1237,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </td>
                   <td style="text-align: right;">
                     <span class="badge-status <?php echo $lv['status'] === 'Approved' ? 'badge-approved' : 'badge-rejected'; ?>" style="font-size: 0.72rem; padding: 2px 8px;">
-                      <?php echo $lv['status']; ?>
+                      <?php echo htmlspecialchars($lv['status'], ENT_QUOTES, 'UTF-8'); ?>
                     </span>
                   </td>
                 </tr>
@@ -1278,46 +1399,51 @@ function filterStaffTable() {
       <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; font-family:'Plus Jakarta Sans',sans-serif;"><i class="fa-solid fa-user-plus" style="color: #0284c7; margin-right:6px;"></i> Register Faculty &amp; Staff</h3>
       <button type="button" class="modal-close-btn" onclick="closeModal('addStaffModal')" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/dashboard">
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/dashboard', ENT_QUOTES, 'UTF-8'); ?>" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="add_staff">
+      <div style="display:none !important;" aria-hidden="true">
+        <label for="dashboard_hp_staff">Leave blank</label>
+        <input type="text" id="dashboard_hp_staff" name="dashboard_hp" tabindex="-1" autocomplete="off">
+      </div>
       <div class="hrms-modal-body">
         <div class="form-group">
           <label class="form-label">Full Name</label>
-          <input type="text" name="full_name" class="hrms-input" placeholder="e.g. Dr. Rajesh Kulkarni" required>
+          <input type="text" name="full_name" class="hrms-input" placeholder="e.g. Dr. Rajesh Kulkarni" maxlength="100" required>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label">Username</label>
-            <input type="text" name="username" class="hrms-input" placeholder="e.g. rajesh.k" required>
+            <input type="text" name="username" class="hrms-input" placeholder="e.g. rajesh.k" maxlength="50" required>
           </div>
           <div class="form-group">
             <label class="form-label">Password</label>
-            <input type="password" name="password" class="hrms-input" value="staff" required>
+            <input type="password" name="password" class="hrms-input" value="staff" maxlength="255" required>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label">Department</label>
-            <input type="text" name="department" class="hrms-input" placeholder="e.g. Physics / Mathematics" required>
+            <input type="text" name="department" class="hrms-input" placeholder="e.g. Physics / Mathematics" maxlength="50" required>
           </div>
           <div class="form-group">
             <label class="form-label">Designation</label>
-            <input type="text" name="designation" class="hrms-input" placeholder="e.g. Senior Faculty" required>
+            <input type="text" name="designation" class="hrms-input" placeholder="e.g. Senior Faculty" maxlength="50" required>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group">
             <label class="form-label">Phone</label>
-            <input type="text" name="phone" class="hrms-input" placeholder="+91 98200 00000">
+            <input type="text" name="phone" class="hrms-input" placeholder="+91 98200 00000" maxlength="25">
           </div>
           <div class="form-group">
             <label class="form-label">Monthly Salary (₹)</label>
-            <input type="number" name="salary" class="hrms-input" value="55000">
+            <input type="number" name="salary" class="hrms-input" value="55000" min="0" max="10000000" step="100">
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Email</label>
-          <input type="email" name="email" class="hrms-input" placeholder="faculty@ksvacademy.net">
+          <input type="email" name="email" class="hrms-input" placeholder="faculty@ksvacademy.net" maxlength="100">
         </div>
         <button type="submit" class="login-submit-btn" style="margin-top: 14px; background:#0284c7;">
           <i class="fa-solid fa-check"></i> Register Faculty Member
@@ -1334,12 +1460,17 @@ function filterStaffTable() {
       <h3 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; font-family:'Plus Jakarta Sans',sans-serif;"><i class="fa-solid fa-bullhorn" style="color: #0284c7; margin-right:6px;"></i> Broadcast Circular</h3>
       <button type="button" class="modal-close-btn" onclick="closeModal('announcementModal')" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/dashboard">
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/dashboard', ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="post_announcement">
+      <div style="display:none !important;" aria-hidden="true">
+        <label for="dashboard_hp_ann">Leave blank</label>
+        <input type="text" id="dashboard_hp_ann" name="dashboard_hp" tabindex="-1" autocomplete="off">
+      </div>
       <div class="hrms-modal-body">
         <div class="form-group">
           <label class="form-label">Notice Headline</label>
-          <input type="text" name="title" class="hrms-input" placeholder="e.g. Sunday Mock Test Timing" required>
+          <input type="text" name="title" class="hrms-input" placeholder="e.g. Sunday Mock Test Timing" maxlength="150" required>
         </div>
         <div class="form-group">
           <label class="form-label">Target Audience</label>
@@ -1351,7 +1482,7 @@ function filterStaffTable() {
         </div>
         <div class="form-group">
           <label class="form-label">Notice Message Details</label>
-          <textarea name="content" class="hrms-input" rows="4" placeholder="Enter notice content here..." required></textarea>
+          <textarea name="content" class="hrms-input" rows="4" placeholder="Enter notice content here..." maxlength="2000" required></textarea>
         </div>
         <button type="submit" class="login-submit-btn" style="background:#0284c7;">
           <i class="fa-solid fa-paper-plane"></i> Publish Circular

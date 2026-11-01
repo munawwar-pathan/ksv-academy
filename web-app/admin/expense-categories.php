@@ -12,16 +12,23 @@ $active_menu = 'expense-categories';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 
 // Handle Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. Verify CSRF Token
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/expense-categories');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     // Add Category
     if ($action === 'add_category') {
-        $cat_name = trim($_POST['category_name'] ?? '');
-        $description = trim($_POST['description'] ?? '');
+        $cat_name = mb_substr(trim((string)($_POST['category_name'] ?? '')), 0, 100);
+        $description = mb_substr(trim((string)($_POST['description'] ?? '')), 0, 500);
 
         if (!empty($cat_name)) {
             try {
@@ -29,14 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $check = $db->prepare("SELECT id FROM expense_categories WHERE LOWER(category_name) = LOWER(?)");
                 $check->execute([$cat_name]);
                 if ($check->fetch()) {
-                    set_flash('error', "Category '{$cat_name}' already exists.");
+                    set_flash('error', "Category '" . htmlspecialchars($cat_name, ENT_QUOTES, 'UTF-8') . "' already exists.");
                 } else {
                     $stmt = $db->prepare("INSERT INTO expense_categories (category_name, description) VALUES (?, ?)");
                     $stmt->execute([$cat_name, $description]);
-                    set_flash('success', "Expense category '{$cat_name}' created successfully!");
+                    set_flash('success', "Expense category '" . htmlspecialchars($cat_name, ENT_QUOTES, 'UTF-8') . "' created successfully!");
                 }
             } catch (Exception $e) {
-                set_flash('error', 'Error adding category: ' . $e->getMessage());
+                error_log('Error adding expense category: ' . $e->getMessage());
+                set_flash('error', 'Unable to create expense category. Please check input and try again.');
             }
         } else {
             set_flash('error', 'Please provide a valid category name.');
@@ -48,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Edit Category
     if ($action === 'edit_category') {
         $cat_id = intval($_POST['category_id'] ?? 0);
-        $cat_name = trim($_POST['category_name'] ?? '');
-        $description = trim($_POST['description'] ?? '');
+        $cat_name = mb_substr(trim((string)($_POST['category_name'] ?? '')), 0, 100);
+        $description = mb_substr(trim((string)($_POST['description'] ?? '')), 0, 500);
 
         if ($cat_id > 0 && !empty($cat_name)) {
             try {
@@ -57,15 +65,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $check = $db->prepare("SELECT id FROM expense_categories WHERE LOWER(category_name) = LOWER(?) AND id != ?");
                 $check->execute([$cat_name, $cat_id]);
                 if ($check->fetch()) {
-                    set_flash('error', "Another category with the name '{$cat_name}' already exists.");
+                    set_flash('error', "Another category with the name '" . htmlspecialchars($cat_name, ENT_QUOTES, 'UTF-8') . "' already exists.");
                 } else {
                     $stmt = $db->prepare("UPDATE expense_categories SET category_name = ?, description = ? WHERE id = ?");
                     $stmt->execute([$cat_name, $description, $cat_id]);
-                    set_flash('success', "Category updated successfully!");
+                    set_flash('success', "Expense category updated successfully!");
                 }
             } catch (Exception $e) {
-                set_flash('error', 'Error updating category: ' . $e->getMessage());
+                error_log('Error updating expense category: ' . $e->getMessage());
+                set_flash('error', 'Unable to update expense category. Please check input and try again.');
             }
+        } else {
+            set_flash('error', 'Invalid category data provided.');
         }
         header('Location: ' . ADMIN_URL . '/expense-categories');
         exit;
@@ -75,15 +86,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_category') {
         $cat_id = intval($_POST['category_id'] ?? 0);
         if ($cat_id > 0) {
-            $stmt_he = $db->prepare("SELECT COUNT(*) FROM expenses WHERE category_id = ?");
-            $stmt_he->execute([$cat_id]);
-            $has_exp = $stmt_he->fetchColumn();
-            if ($has_exp > 0) {
-                set_flash('error', "Cannot delete category: {$has_exp} expense entries are attached to it.");
-            } else {
-                $db->prepare("DELETE FROM expense_categories WHERE id = ?")->execute([$cat_id]);
-                set_flash('success', "Expense category removed successfully.");
+            try {
+                $stmt_he = $db->prepare("SELECT COUNT(*) FROM expenses WHERE category_id = ?");
+                $stmt_he->execute([$cat_id]);
+                $has_exp = intval($stmt_he->fetchColumn());
+                if ($has_exp > 0) {
+                    set_flash('error', "Cannot delete category: {$has_exp} expense entries are attached to it.");
+                } else {
+                    $del_stmt = $db->prepare("DELETE FROM expense_categories WHERE id = ?");
+                    $del_stmt->execute([$cat_id]);
+                    if ($del_stmt->rowCount() > 0) {
+                        set_flash('success', "Expense category removed successfully.");
+                    } else {
+                        set_flash('error', "Expense category not found.");
+                    }
+                }
+            } catch (Exception $e) {
+                error_log('Error deleting expense category: ' . $e->getMessage());
+                set_flash('error', 'Unable to delete category due to database constraints.');
             }
+        } else {
+            set_flash('error', 'Invalid category ID.');
         }
         header('Location: ' . ADMIN_URL . '/expense-categories');
         exit;
@@ -120,7 +143,7 @@ foreach ($all_categories as $c_item) {
 }
 
 // Search & Pagination Setup (10, 20, 30, 40, 50)
-$search = trim($_GET['search'] ?? '');
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
 $allowed_limits = [10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
 if (!in_array($limit, $allowed_limits)) {
@@ -142,7 +165,7 @@ $count_stmt = $db->prepare("SELECT COUNT(*) FROM expense_categories c {$where_sq
 $count_stmt->execute($where_params);
 $total_matching_categories = (int)$count_stmt->fetchColumn();
 
-$total_pages = max(1, ceil($total_matching_categories / $limit));
+$total_pages = max(1, (int)ceil($total_matching_categories / $limit));
 if ($page > $total_pages) {
     $page = $total_pages;
 }
@@ -150,11 +173,11 @@ $offset = ($page - 1) * $limit;
 $start_record = $total_matching_categories > 0 ? $offset + 1 : 0;
 $end_record = min($offset + $limit, $total_matching_categories);
 
-// Fetch paginated categories with session totals
+// Fetch paginated categories with session totals (fully parameterized)
 $cat_query = "
     SELECT c.*,
-        (SELECT COUNT(*) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as expense_count,
-        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = c.id AND session_id = {$session_id}) as total_spent,
+        (SELECT COUNT(*) FROM expenses WHERE category_id = c.id AND session_id = ?) as expense_count,
+        (SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE category_id = c.id AND session_id = ?) as total_spent,
         (SELECT COUNT(*) FROM expenses WHERE category_id = c.id) as lifetime_expense_count
     FROM expense_categories c
     {$where_sql}
@@ -163,6 +186,8 @@ $cat_query = "
 ";
 $stmt = $db->prepare($cat_query);
 $param_idx = 1;
+$stmt->bindValue($param_idx++, $session_id, PDO::PARAM_INT);
+$stmt->bindValue($param_idx++, $session_id, PDO::PARAM_INT);
 foreach ($where_params as $val) {
     $stmt->bindValue($param_idx++, $val);
 }
@@ -1156,7 +1181,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="stat-card-top">
         <div class="stat-info">
           <span class="stat-label">Active Academic Session</span>
-          <span class="stat-number" style="font-size: 1.35rem;"><?php echo htmlspecialchars($active_session['session_name']); ?></span>
+          <span class="stat-number" style="font-size: 1.35rem;"><?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?></span>
         </div>
         <div class="stat-icon-wrapper">
           <i class="fa-solid fa-calendar-check"></i>
@@ -1218,7 +1243,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-sitemap" style="color: #0284c7;"></i>
         <span>Expense Heads &amp; Accounting Classifications</span>
         <span class="exp-cat-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          Session <?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?>
         </span>
       </h3>
       <p class="exp-cat-subtitle" style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -1266,7 +1291,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               $spent_amt = floatval($cat['total_spent']);
               $pct_spent = $session_total_spent > 0 ? round(($spent_amt / $session_total_spent) * 100, 1) : 0;
             ?>
-            <tr class="category-row" data-name="<?php echo strtolower(htmlspecialchars($cat['category_name'])); ?>" data-desc="<?php echo strtolower(htmlspecialchars($cat['description'] ?? '')); ?>">
+            <tr class="category-row" data-name="<?php echo strtolower(htmlspecialchars($cat['category_name'], ENT_QUOTES, 'UTF-8')); ?>" data-desc="<?php echo strtolower(htmlspecialchars($cat['description'] ?? '', ENT_QUOTES, 'UTF-8')); ?>">
               
               <!-- Category Head with Icon -->
               <td>
@@ -1279,9 +1304,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       <?php echo htmlspecialchars($cat['category_name']); ?>
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                      <span class="cat-code-pill">HEAD-<?php echo str_pad($cat['id'], 2, '0', STR_PAD_LEFT); ?></span>
+                      <span class="cat-code-pill">HEAD-<?php echo str_pad(intval($cat['id']), 2, '0', STR_PAD_LEFT); ?></span>
                       <?php if ($cat['lifetime_expense_count'] > 0): ?>
-                        <span class="cat-lifetime-count" style="font-size: 0.72rem; color: #64748b;">(<?php echo $cat['lifetime_expense_count']; ?> all-time)</span>
+                        <span class="cat-lifetime-count" style="font-size: 0.72rem; color: #64748b;">(<?php echo intval($cat['lifetime_expense_count']); ?> all-time)</span>
                       <?php endif; ?>
                     </div>
                   </div>
@@ -1304,7 +1329,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <?php if ($cat['expense_count'] > 0): ?>
                   <span class="cat-vouchers-pill">
                     <i class="fa-solid fa-file-invoice" style="color: #0284c7; font-size: 0.68rem;"></i>
-                    <span><?php echo $cat['expense_count']; ?> vouchers</span>
+                    <span><?php echo intval($cat['expense_count']); ?> vouchers</span>
                   </span>
                 <?php else: ?>
                   <span class="cat-vouchers-zero" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.74rem; color: #94a3b8; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 7px; border-radius: 4px;">
@@ -1335,7 +1360,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <div style="display: inline-flex; gap: 5px; justify-content: flex-end; align-items: center;">
                   
                   <!-- View Ledger Link -->
-                  <a href="<?php echo ADMIN_URL; ?>/expenses?category_id=<?php echo $cat['id']; ?>" class="sid-action-btn view" title="View all expenses under this head">
+                  <a href="<?php echo ADMIN_URL; ?>/expenses?category_id=<?php echo intval($cat['id']); ?>" class="sid-action-btn view" title="View all expenses under this head">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
                   </a>
 
@@ -1349,9 +1374,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                   <!-- Delete Category Button -->
                   <?php if ($cat['expense_count'] == 0 && $cat['lifetime_expense_count'] == 0): ?>
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to permanently delete \'<?php echo addslashes($cat['category_name']); ?>\'?');">
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to permanently delete \'<?php echo htmlspecialchars(addslashes($cat['category_name']), ENT_QUOTES, 'UTF-8'); ?>\'?');">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                       <input type="hidden" name="action" value="delete_category">
-                      <input type="hidden" name="category_id" value="<?php echo $cat['id']; ?>">
+                      <input type="hidden" name="category_id" value="<?php echo intval($cat['id']); ?>">
                       <button type="submit" class="sid-action-btn delete" title="Delete category head">
                         <i class="fa-solid fa-trash-can"></i>
                       </button>
@@ -1463,6 +1489,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="add_category">
 
       <div class="form-group" style="margin-bottom: 16px;">
@@ -1514,6 +1541,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/expense-categories">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="edit_category">
       <input type="hidden" name="category_id" id="edit_category_id" value="">
 

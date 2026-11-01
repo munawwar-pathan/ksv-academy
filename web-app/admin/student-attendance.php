@@ -1,4 +1,13 @@
 <?php
+// HTTP Security Headers (Defense-in-depth across Apache, LiteSpeed, Nginx, PHP built-in server)
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
@@ -12,27 +21,74 @@ $active_menu = 'student-attendance';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 
-$filter_date = $_GET['date'] ?? date('Y-m-d');
-$filter_standard = $_GET['standard'] ?? '';
+// Standard classes whitelist
+$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+
+// Validate date and class standard
+$filter_date = isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_GET['date']) ? (string)$_GET['date'] : date('Y-m-d');
+$filter_standard = isset($_GET['standard']) && in_array($_GET['standard'], $standards, true) ? (string)$_GET['standard'] : '';
+
+// Rate Limiting Protection (Max 120 attendance punch requests per 5 minutes per session)
+$now = time();
+if (!isset($_SESSION['attendance_post_attempts']) || !is_array($_SESSION['attendance_post_attempts'])) {
+    $_SESSION['attendance_post_attempts'] = [];
+}
+$_SESSION['attendance_post_attempts'] = array_filter($_SESSION['attendance_post_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 300;
+});
+$is_rate_limited = (count($_SESSION['attendance_post_attempts']) >= 120);
 
 // Handle QR Scan / Manual Attendance Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. Anti-bot honeypot check (for non-AJAX form submissions)
+    if (!empty($_POST['attendance_hp'])) {
+        usleep(300000);
+        set_flash('error', 'Invalid request detected.');
+        header("Location: " . ADMIN_URL . "/student-attendance?date=" . urlencode($filter_date));
+        exit;
+    }
+
+    // 2. Brute-force flood lockout
+    if ($is_rate_limited) {
+        if (!empty($_POST['ajax'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Too many punch requests in a short period. Please wait a moment.']);
+            exit;
+        }
+        set_flash('error', 'Too many requests in a short period. Please wait a moment and try again.');
+        header("Location: " . ADMIN_URL . "/student-attendance?date=" . urlencode($filter_date));
+        exit;
+    }
+    $_SESSION['attendance_post_attempts'][] = $now;
+
+    // 3. CSRF token validation
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        if (!empty($_POST['ajax'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Security session expired or invalid CSRF token. Please refresh the page.']);
+            exit;
+        }
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header("Location: " . ADMIN_URL . "/student-attendance?date=" . urlencode($filter_date));
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     // Mark attendance by Student ID or QR Code String
     if ($action === 'mark_attendance') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $qr_data = trim($_POST['qr_data'] ?? '');
-        $status = in_array($_POST['status'] ?? '', ['Present', 'Late', 'Absent', 'Leave']) ? $_POST['status'] : 'Present';
-        $log_date = $_POST['log_date'] ?? date('Y-m-d');
+        $qr_data = mb_substr(trim((string)($_POST['qr_data'] ?? '')), 0, 100);
+        $status = in_array($_POST['status'] ?? '', ['Present', 'Late', 'Absent', 'Leave'], true) ? $_POST['status'] : 'Present';
+        $log_date = isset($_POST['log_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['log_date']) ? (string)$_POST['log_date'] : date('Y-m-d');
 
         // Check-in timestamp handling
         if ($status === 'Absent') {
             $check_in = null;
             $default_remarks = 'Marked Absent';
-        } elseif (!empty($_POST['check_in_time'])) {
+        } elseif (!empty($_POST['check_in_time']) && preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', (string)$_POST['check_in_time'])) {
             $check_in = date('H:i:s', strtotime($_POST['check_in_time']));
             $default_remarks = $status === 'Late' ? 'Late arrival recorded (' . date('h:i A', strtotime($check_in)) . ')' : 'Marked Present';
         } else {
@@ -40,32 +96,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $default_remarks = $status === 'Late' ? 'Late arrival recorded (' . date('h:i A') . ')' : 'Marked via Quick Punch';
         }
 
-        $remarks = trim($_POST['remarks'] ?? $default_remarks);
+        $remarks = mb_substr(trim((string)($_POST['remarks'] ?? $default_remarks)), 0, 255);
         if (empty($remarks)) {
             $remarks = $default_remarks;
         }
 
-        // If scanned via QR string, resolve student_id
+        // If scanned via QR string, resolve student_id scoped to active session
         if ($student_id === 0 && !empty($qr_data)) {
-            // Find student by qr_code, roll_no, or admission_no
-            $stmt = $db->prepare("SELECT id, student_name, roll_no FROM students WHERE qr_code = ? OR roll_no = ? OR admission_no = ? OR CONCAT('STU-', roll_no) = ? LIMIT 1");
-            $stmt->execute([$qr_data, $qr_data, $qr_data, $qr_data]);
+            // Find student by qr_code, roll_no, or admission_no in current session
+            $stmt = $db->prepare("SELECT id, student_name, roll_no FROM students WHERE (qr_code = ? OR roll_no = ? OR admission_no = ? OR CONCAT('STU-', roll_no) = ?) AND session_id = ? LIMIT 1");
+            $stmt->execute([$qr_data, $qr_data, $qr_data, $qr_data, $session_id]);
             $stu = $stmt->fetch();
             if ($stu) {
-                $student_id = $stu['id'];
+                $student_id = intval($stu['id']);
             }
         }
 
-        if ($student_id > 0) {
+        // Verify student exists in this session
+        $check_stu = $db->prepare("SELECT id, student_name, roll_no, standard FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+        $check_stu->execute([$student_id, $session_id]);
+        $stu_info = $check_stu->fetch(PDO::FETCH_ASSOC);
+
+        if ($stu_info && $student_id > 0) {
             // Check if log already exists for this student on this date
-            $chk = $db->prepare("SELECT id FROM attendance_logs WHERE type = 'student' AND reference_id = ? AND log_date = ? LIMIT 1");
-            $chk->execute([$student_id, $log_date]);
+            $chk = $db->prepare("SELECT id FROM attendance_logs WHERE type = 'student' AND reference_id = ? AND log_date = ? AND session_id = ? LIMIT 1");
+            $chk->execute([$student_id, $log_date, $session_id]);
             $existing_id = $chk->fetchColumn();
 
             if ($existing_id) {
                 // Update status
-                $stmt = $db->prepare("UPDATE attendance_logs SET status = ?, check_in_time = ?, remarks = ? WHERE id = ?");
-                $stmt->execute([$status, $check_in, $remarks, $existing_id]);
+                $stmt = $db->prepare("UPDATE attendance_logs SET status = ?, check_in_time = ?, remarks = ? WHERE id = ? AND session_id = ?");
+                $stmt->execute([$status, $check_in, $remarks, $existing_id, $session_id]);
             } else {
                 // Insert new log
                 $stmt = $db->prepare("INSERT INTO attendance_logs (session_id, type, reference_id, log_date, status, check_in_time, remarks) VALUES (?, 'student', ?, ?, ?, ?, ?)");
@@ -84,16 +145,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $calc_res = $calc_stmt->fetch(PDO::FETCH_ASSOC);
             if ($calc_res && $calc_res['total_days'] > 0) {
                 $new_pct = round(($calc_res['attended_days'] / $calc_res['total_days']) * 100, 1);
-                $upd_pct = $db->prepare("UPDATE students SET attendance_percentage = ? WHERE id = ?");
-                $upd_pct->execute([$new_pct, $student_id]);
+                $upd_pct = $db->prepare("UPDATE students SET attendance_percentage = ? WHERE id = ? AND session_id = ?");
+                $upd_pct->execute([$new_pct, $student_id, $session_id]);
             }
 
             // Return JSON if AJAX request
             if (!empty($_POST['ajax'])) {
                 header('Content-Type: application/json');
-                $stmt_sinfo = $db->prepare("SELECT student_name, roll_no, standard FROM students WHERE id = ?");
-                $stmt_sinfo->execute([$student_id]);
-                $stu_info = $stmt_sinfo->fetch(PDO::FETCH_ASSOC);
 
                 // Get updated counts for the page date
                 $stats_stmt = $db->prepare("
@@ -129,54 +187,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             set_flash('success', "Attendance marked as {$status} for student #{$student_id}.");
-            header("Location: " . ADMIN_URL . "/student-attendance?date={$log_date}");
+            header("Location: " . ADMIN_URL . "/student-attendance?date=" . urlencode($log_date));
             exit;
         } else {
             if (!empty($_POST['ajax'])) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => "No student found matching QR code '{$qr_data}'."]);
+                echo json_encode(['success' => false, 'message' => "No student found matching scanned QR code or ID."]);
                 exit;
             }
-            set_flash('error', "No student found matching scanned QR code '{$qr_data}'.");
+            set_flash('error', "No student found matching scanned QR code or ID.");
+            header("Location: " . ADMIN_URL . "/student-attendance?date=" . urlencode($log_date));
+            exit;
         }
     }
 
     // Mark all students present for the date
     if ($action === 'mark_all_present') {
-        $log_date = $_POST['log_date'] ?? date('Y-m-d');
+        $log_date = isset($_POST['log_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['log_date']) ? (string)$_POST['log_date'] : date('Y-m-d');
         $all_stus = $db->prepare("SELECT id FROM students WHERE session_id = ?");
         $all_stus->execute([$session_id]);
         $stu_ids = $all_stus->fetchAll(PDO::FETCH_COLUMN);
 
         $now_time = date('H:i:s');
         foreach ($stu_ids as $sid) {
-            $chk = $db->prepare("SELECT id FROM attendance_logs WHERE type = 'student' AND reference_id = ? AND log_date = ? LIMIT 1");
-            $chk->execute([$sid, $log_date]);
+            $chk = $db->prepare("SELECT id FROM attendance_logs WHERE type = 'student' AND reference_id = ? AND log_date = ? AND session_id = ? LIMIT 1");
+            $chk->execute([$sid, $log_date, $session_id]);
             $existing_id = $chk->fetchColumn();
             if ($existing_id) {
-                $upd = $db->prepare("UPDATE attendance_logs SET status = 'Present', check_in_time = COALESCE(check_in_time, ?) WHERE id = ?");
-                $upd->execute([$now_time, $existing_id]);
+                $upd = $db->prepare("UPDATE attendance_logs SET status = 'Present', check_in_time = COALESCE(check_in_time, ?) WHERE id = ? AND session_id = ?");
+                $upd->execute([$now_time, $existing_id, $session_id]);
             } else {
                 $ins = $db->prepare("INSERT INTO attendance_logs (session_id, type, reference_id, log_date, status, check_in_time, remarks) VALUES (?, 'student', ?, ?, 'Present', ?, 'Marked All Present')");
                 $ins->execute([$session_id, $sid, $log_date, $now_time]);
             }
         }
         set_flash('success', "All enrolled scholars marked as Present for " . date('d M Y', strtotime($log_date)) . ".");
-        header("Location: " . ADMIN_URL . "/student-attendance?date={$log_date}");
+        header("Location: " . ADMIN_URL . "/student-attendance?date=" . urlencode($log_date));
         exit;
     }
 }
 
-// Auto-mark unpunched students as Absent for previous dates:
-// 1. Any past date where attendance was already logged for some students in this session
-// 2. The currently viewed $filter_date if it is in the past (< today)
-$past_dates = $db->query("
+// Auto-mark unpunched students as Absent for previous dates (parameterized query)
+$stmt_past = $db->prepare("
     SELECT DISTINCT log_date 
     FROM attendance_logs 
-    WHERE session_id = {$session_id} AND type = 'student' AND log_date < CURDATE()
-")->fetchAll(PDO::FETCH_COLUMN);
+    WHERE session_id = ? AND type = 'student' AND log_date < CURDATE()
+");
+$stmt_past->execute([$session_id]);
+$past_dates = $stmt_past->fetchAll(PDO::FETCH_COLUMN);
 
-if ($filter_date < date('Y-m-d') && !in_array($filter_date, $past_dates)) {
+if ($filter_date < date('Y-m-d') && !in_array($filter_date, $past_dates, true)) {
     $past_dates[] = $filter_date;
 }
 
@@ -284,8 +344,6 @@ $stmt->bindValue($b_idx++, $limit, PDO::PARAM_INT);
 $stmt->bindValue($b_idx++, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $students_attendance = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
@@ -1287,16 +1345,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <!-- Date, Class Filter & Quick Actions -->
     <div class="attendance-header-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-      <form method="GET" action="<?php echo ADMIN_URL; ?>/student-attendance" class="attendance-filter-form" style="display: flex; gap: 8px; align-items: center; margin: 0;">
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+      <form method="GET" action="<?php echo htmlspecialchars(ADMIN_URL . '/student-attendance', ENT_QUOTES, 'UTF-8'); ?>" class="attendance-filter-form" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
         <div class="att-filter-date-wrap" style="position: relative;">
-          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date); ?>" onchange="this.form.submit()" class="hrms-input att-filter-date" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: 140px; border: 1px solid #cbd5e1;">
+          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date, ENT_QUOTES, 'UTF-8'); ?>" onchange="this.form.submit()" class="hrms-input att-filter-date" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: 140px; border: 1px solid #cbd5e1;">
         </div>
         
         <select name="standard" onchange="this.form.submit()" class="hrms-input att-filter-select" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; min-width: 140px; border: 1px solid #cbd5e1;">
           <option value="">All Academic Classes</option>
           <?php foreach ($standards as $std): ?>
-            <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>><?php echo $std; ?></option>
+            <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>><?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?></option>
           <?php endforeach; ?>
         </select>
       </form>
@@ -1443,7 +1501,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                   <!-- L: Late (Opens small tooltip popup for entering late time) -->
                   <button type="button" 
-                          onclick="openLateTooltip(this, <?php echo $row['id']; ?>, '<?php echo addslashes(htmlspecialchars($row['student_name'])); ?>', '<?php echo addslashes(htmlspecialchars($row['roll_no'])); ?>', '<?php echo (!empty($row['check_in_time']) && $cur_status === 'Late') ? date('H:i', strtotime($row['check_in_time'])) : ''; ?>')" 
+                          onclick="openLateTooltip(this, <?php echo intval($row['id']); ?>, '<?php echo htmlspecialchars(addslashes($row['student_name']), ENT_QUOTES, 'UTF-8'); ?>', '<?php echo htmlspecialchars(addslashes($row['roll_no']), ENT_QUOTES, 'UTF-8'); ?>', '<?php echo (!empty($row['check_in_time']) && $cur_status === 'Late') ? date('H:i', strtotime($row['check_in_time'])) : ''; ?>')" 
                           class="punch-action-btn late <?php echo $cur_status === 'Late' ? 'active' : ''; ?>" 
                           title="Mark Late &amp; Enter Time">
                     L
@@ -1802,13 +1860,14 @@ function submitManualQr() {
 
 function postAttendancePunch(qrCodeValue) {
   const formData = new FormData();
+  formData.append('csrf_token', '<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>');
   formData.append('action', 'mark_attendance');
   formData.append('qr_data', qrCodeValue);
   formData.append('status', 'Present');
-  formData.append('log_date', '<?php echo $filter_date; ?>');
+  formData.append('log_date', '<?php echo htmlspecialchars($filter_date, ENT_QUOTES, 'UTF-8'); ?>');
   formData.append('ajax', '1');
 
-  fetch('<?php echo ADMIN_URL; ?>/student-attendance', {
+  fetch('<?php echo htmlspecialchars(ADMIN_URL . '/student-attendance', ENT_QUOTES, 'UTF-8'); ?>', {
     method: 'POST',
     body: formData
   })
@@ -1932,16 +1991,17 @@ function punchStudent(studentId, status, btnElement, checkInTime) {
   if (group) group.style.opacity = '0.6';
 
   const formData = new FormData();
+  formData.append('csrf_token', '<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>');
   formData.append('action', 'mark_attendance');
   formData.append('student_id', studentId);
   formData.append('status', status);
-  formData.append('log_date', '<?php echo $filter_date; ?>');
+  formData.append('log_date', '<?php echo htmlspecialchars($filter_date, ENT_QUOTES, 'UTF-8'); ?>');
   if (checkInTime) {
     formData.append('check_in_time', checkInTime);
   }
   formData.append('ajax', '1');
 
-  fetch('<?php echo ADMIN_URL; ?>/student-attendance', {
+  fetch('<?php echo htmlspecialchars(ADMIN_URL . '/student-attendance', ENT_QUOTES, 'UTF-8'); ?>', {
     method: 'POST',
     body: formData
   })

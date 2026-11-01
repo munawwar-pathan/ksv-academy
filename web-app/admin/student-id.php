@@ -1,10 +1,38 @@
 <?php
+// Defense-in-depth HTTP security headers
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
 if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_student_id');
 }
+
+// Method restriction / HTTP verb tampering defense
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    http_response_code(405);
+    exit('Method Not Allowed');
+}
+
+// Session-based rate limiting (Max 120 requests per minute)
+$now = time();
+if (!isset($_SESSION['student_id_req_attempts']) || !is_array($_SESSION['student_id_req_attempts'])) {
+    $_SESSION['student_id_req_attempts'] = [];
+}
+$_SESSION['student_id_req_attempts'] = array_filter($_SESSION['student_id_req_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 60;
+});
+if (count($_SESSION['student_id_req_attempts']) >= 120) {
+    http_response_code(429);
+    exit('Rate limit exceeded. Please wait a moment before trying again.');
+}
+$_SESSION['student_id_req_attempts'][] = $now;
+
 $page_title = 'Student ID Card | KSV Academy HRMS';
 $page_heading = 'Student ID Card';
 $page_subheading = 'Official Academic Identification Badge with Biometric QR Code';
@@ -12,41 +40,72 @@ $active_menu = 'student-id';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = intval($active_session['id']);
 $school_settings = get_school_settings();
 
-// Filters like students.php
-$search = trim($_GET['search'] ?? '');
-$filter_standard = trim($_GET['standard'] ?? '');
+// Filters with length bounds & whitelisting
 $standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+$search = mb_substr(trim($_GET['search'] ?? ''), 0, 100);
+$filter_standard = trim($_GET['standard'] ?? '');
+if (!in_array($filter_standard, $standards, true)) {
+    $filter_standard = '';
+}
 
 // Get selected student ID
-$selected_id = intval($_GET['id'] ?? 0);
+$selected_id = max(0, intval($_GET['id'] ?? 0));
 
-// If student or parent role logged in, lock to their student profile
-if ($current_user['role'] === 'student' || $current_user['role'] === 'parent') {
-    $stmt_mstu = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? LIMIT 1");
-    $stmt_mstu->execute([$current_user['id']]);
-    $my_stu = $stmt_mstu->fetch();
-    if ($my_stu) {
-        $selected_id = $my_stu['id'];
+// Resolve authorization for parent/student roles (Prevent IDOR & unauthorized directory browsing)
+$is_parent_or_student = in_array($current_user['role'], ['student', 'parent'], true);
+$allowed_student_ids = [];
+if ($is_parent_or_student) {
+    if ($current_user['role'] === 'student') {
+        $stmt_auth = $db->prepare("SELECT id FROM students WHERE user_id = ? AND session_id = ?");
+        $stmt_auth->execute([$current_user['id'], $session_id]);
+    } else {
+        $stmt_auth = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? AND session_id = ?");
+        $stmt_auth->execute([$current_user['id'], $session_id]);
+    }
+    $allowed_student_ids = array_map('intval', $stmt_auth->fetchAll(PDO::FETCH_COLUMN));
+
+    if ($selected_id > 0 && in_array($selected_id, $allowed_student_ids, true)) {
+        // Allowed selected_id
+    } elseif (!empty($allowed_student_ids)) {
+        $selected_id = $allowed_student_ids[0];
+    } else {
+        $selected_id = 0;
     }
 }
 
-// Fetch all students in the active session for top dropdown list
-$all_students_stmt = $db->prepare("
-    SELECT id, student_name, roll_no, standard, photo, admission_no, parent_phone, blood_group, dob, parent_name, section, qr_code 
-    FROM students 
-    WHERE session_id = ? 
-    ORDER BY standard ASC, roll_no ASC, student_name ASC
-");
-$all_students_stmt->execute([$session_id]);
-$all_students_list = $all_students_stmt->fetchAll();
+// Fetch students for dropdown list (Strictly scoped by session and user role)
+if ($is_parent_or_student) {
+    if (!empty($allowed_student_ids)) {
+        $in_auth_ph = implode(',', array_fill(0, count($allowed_student_ids), '?'));
+        $all_students_stmt = $db->prepare("
+            SELECT id, student_name, roll_no, standard, photo, admission_no, parent_phone, blood_group, dob, parent_name, section, qr_code 
+            FROM students 
+            WHERE session_id = ? AND id IN ($in_auth_ph)
+            ORDER BY standard ASC, roll_no ASC, student_name ASC
+        ");
+        $all_students_stmt->execute(array_merge([$session_id], $allowed_student_ids));
+        $all_students_list = $all_students_stmt->fetchAll();
+    } else {
+        $all_students_list = [];
+    }
+} else {
+    $all_students_stmt = $db->prepare("
+        SELECT id, student_name, roll_no, standard, photo, admission_no, parent_phone, blood_group, dob, parent_name, section, qr_code 
+        FROM students 
+        WHERE session_id = ? 
+        ORDER BY standard ASC, roll_no ASC, student_name ASC
+    ");
+    $all_students_stmt->execute([$session_id]);
+    $all_students_list = $all_students_stmt->fetchAll();
+}
 
 // Pagination & Limits Setup (10, 20, 30, 40, 50)
 $allowed_limits = [10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -55,15 +114,28 @@ $page = max(1, intval($_GET['page'] ?? 1));
 $where_clauses = ["session_id = ?"];
 $where_params = [$session_id];
 
-if (!empty($search)) {
-    $where_clauses[] = "(student_name LIKE ? OR roll_no LIKE ? OR admission_no LIKE ? OR parent_phone LIKE ?)";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
+if ($is_parent_or_student) {
+    if (!empty($allowed_student_ids)) {
+        $in_auth_where = implode(',', array_fill(0, count($allowed_student_ids), '?'));
+        $where_clauses[] = "id IN ($in_auth_where)";
+        foreach ($allowed_student_ids as $aid) {
+            $where_params[] = $aid;
+        }
+    } else {
+        $where_clauses[] = "1=0";
+    }
 }
 
-if (!empty($filter_standard)) {
+if ($search !== '') {
+    $where_clauses[] = "(student_name LIKE ? OR roll_no LIKE ? OR admission_no LIKE ? OR parent_phone LIKE ?)";
+    $search_like = addcslashes($search, '%_\\');
+    $where_params[] = "%$search_like%";
+    $where_params[] = "%$search_like%";
+    $where_params[] = "%$search_like%";
+    $where_params[] = "%$search_like%";
+}
+
+if ($filter_standard !== '') {
     $where_clauses[] = "standard = ?";
     $where_params[] = $filter_standard;
 }
@@ -101,29 +173,28 @@ $end_record = min($offset + $limit, $total_records);
 // Helper for generating student ID directory pagination links
 function get_student_id_pagination_url($target_page, $search, $filter_standard, $selected_id, $limit) {
     $params = [];
+    $selected_id = intval($selected_id);
+    $target_page = intval($target_page);
+    $limit = intval($limit);
     if ($selected_id > 0) $params['id'] = $selected_id;
     if (!empty($search)) $params['search'] = $search;
     if (!empty($filter_standard)) $params['standard'] = $filter_standard;
-    if ($limit != 10) $params['limit'] = $limit;
+    if ($limit !== 10) $params['limit'] = $limit;
     if ($target_page > 1) $params['page'] = $target_page;
     return ADMIN_URL . '/student-id' . (!empty($params) ? '?' . http_build_query($params) : '') . '#studentIdDirectoryCard';
 }
 
 // Default selected student:
-// 1. If ID requested and exists, keep it
-// 2. Otherwise default to first student in the filtered table list
-// 3. If filtered list is empty, default to first student in session
 if ($selected_id === 0) {
     if (!empty($table_students)) {
-        $selected_id = $table_students[0]['id'];
+        $selected_id = intval($table_students[0]['id']);
     } elseif (!empty($all_students_list)) {
-        $selected_id = $all_students_list[0]['id'];
+        $selected_id = intval($all_students_list[0]['id']);
     }
 }
 
-// Active navigation list for Prev / Next card switcher:
-// Get all matching student records for smooth Prev/Next card navigation
-if (!empty($search) || !empty($filter_standard)) {
+// Active navigation list for Prev / Next card switcher
+if ($search !== '' || $filter_standard !== '') {
     $nav_stmt = $db->prepare("SELECT id FROM students WHERE {$where_sql} ORDER BY standard ASC, roll_no ASC, student_name ASC");
     $nav_stmt->execute($where_params);
     $nav_list = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -134,38 +205,61 @@ if (!empty($search) || !empty($filter_standard)) {
 // Find current student index for Previous / Next navigation
 $current_index = 0;
 foreach ($nav_list as $idx => $s_item) {
-    if ($s_item['id'] == $selected_id) {
+    if (intval($s_item['id']) === $selected_id) {
         $current_index = $idx;
         break;
     }
 }
-$prev_student_id = ($current_index > 0) ? $nav_list[$current_index - 1]['id'] : null;
-$next_student_id = ($current_index < count($nav_list) - 1) ? $nav_list[$current_index + 1]['id'] : null;
+$prev_student_id = ($current_index > 0 && isset($nav_list[$current_index - 1])) ? intval($nav_list[$current_index - 1]['id']) : null;
+$next_student_id = ($current_index < count($nav_list) - 1 && isset($nav_list[$current_index + 1])) ? intval($nav_list[$current_index + 1]['id']) : null;
 
-// Fetch selected student details
+// Fetch selected student details (Enforcing session and authorization)
 $student = null;
 if ($selected_id > 0) {
-    $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-    $stmt->execute([$selected_id]);
-    $student = $stmt->fetch();
-}
-
-// Check student photo
-$has_student_photo = false;
-$student_photo_url = '';
-if ($student && !empty($student['photo'])) {
-    if ($student['photo'] !== '/assets/imgs/ksv-logo.jpg') {
-        $photo_file = __DIR__ . '/../..' . $student['photo'];
-        if (file_exists($photo_file)) {
-            $has_student_photo = true;
-            $student_photo_url = $student['photo'];
+    if ($is_parent_or_student) {
+        if (in_array($selected_id, $allowed_student_ids, true)) {
+            $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+            $stmt->execute([$selected_id, $session_id]);
+            $student = $stmt->fetch();
         }
+    } else {
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+        $stmt->execute([$selected_id, $session_id]);
+        $student = $stmt->fetch();
+    }
+    if (!$student) {
+        $selected_id = 0;
     }
 }
 
-// Generate QR Code data string (STU-{id}-{roll_no})
-$qr_data = $student ? ($student['qr_code'] ?: 'STU-' . $student['roll_no']) : 'KSV-STUDENT';
+// Check student photo with directory traversal protection
+$has_student_photo = false;
+$student_photo_url = '';
+$allowed_base_uploads = realpath(__DIR__ . '/../../uploads');
+$allowed_base_assets = realpath(__DIR__ . '/../../assets');
+
+if ($student && !empty($student['photo']) && $student['photo'] !== '/assets/imgs/ksv-logo.jpg') {
+    $photo_rel = ltrim($student['photo'], '/\\');
+    $photo_file = realpath(__DIR__ . '/../../' . $photo_rel);
+    if ($photo_file && (
+        ($allowed_base_uploads && strpos($photo_file, $allowed_base_uploads) === 0) ||
+        ($allowed_base_assets && strpos($photo_file, $allowed_base_assets) === 0)
+    ) && file_exists($photo_file)) {
+        $has_student_photo = true;
+        $student_photo_url = '/' . $photo_rel;
+    }
+}
+
+// Generate sanitized QR Code data string (STU-{id}-{roll_no})
+$raw_qr = $student ? ($student['qr_code'] ?: ('STU-' . $student['roll_no'])) : 'KSV-STUDENT';
+$qr_data = preg_replace('/[^a-zA-Z0-9_\-\.\:\/]/', '', (string)$raw_qr);
+if (empty($qr_data)) {
+    $qr_data = 'KSV-' . intval($selected_id);
+}
 $qr_image_url = get_qr_code_url($qr_data, '220x220');
+
+// Validity date
+$valid_date_str = !empty($active_session['end_date']) ? date('d M Y', strtotime($active_session['end_date'])) : ('31 MAR ' . (((int)date('Y')) + 1));
 
 // Avatar gradient fallback
 $first_letter = $student ? strtoupper(substr($student['student_name'], 0, 1)) : 'S';
@@ -1556,11 +1650,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   $qp_filter = [];
   if (!empty($search)) $qp_filter['search'] = $search;
   if (!empty($filter_standard)) $qp_filter['standard'] = $filter_standard;
-  if ($limit !== 10) $qp_filter['limit'] = $limit;
-  if ($page > 1) $qp_filter['page'] = $page;
+  if ($limit !== 10) $qp_filter['limit'] = intval($limit);
+  if ($page > 1) $qp_filter['page'] = intval($page);
   $filter_qs = !empty($qp_filter) ? '&' . http_build_query($qp_filter) : '';
-  $prev_card_url = $prev_student_id ? (ADMIN_URL . '/student-id?id=' . $prev_student_id . $filter_qs . '#id-card-stage') : '#';
-  $next_card_url = $next_student_id ? (ADMIN_URL . '/student-id?id=' . $next_student_id . $filter_qs . '#id-card-stage') : '#';
+  $prev_card_url = $prev_student_id ? (ADMIN_URL . '/student-id?id=' . intval($prev_student_id) . $filter_qs . '#id-card-stage') : '#';
+  $next_card_url = $next_student_id ? (ADMIN_URL . '/student-id?id=' . intval($next_student_id) . $filter_qs . '#id-card-stage') : '#';
 ?>
 <div class="roaster-toolbar-card no-print" style="margin-bottom: 22px;">
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
@@ -1569,12 +1663,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
       <h3 style="margin: 0; font-size: 1.08rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
         <i class="fa-solid fa-id-card" style="color: var(--hrms-primary);"></i>
-        <span><?php echo htmlspecialchars($student['student_name'] ?? 'Student'); ?></span>
+        <span><?php echo htmlspecialchars($student['student_name'] ?? 'Student', ENT_QUOTES, 'UTF-8'); ?></span>
         <span style="font-size: 0.78rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
-          <?php echo htmlspecialchars($student['roll_no'] ?? ''); ?>
+          <?php echo htmlspecialchars($student['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </span>
         <span style="font-size: 0.78rem; font-weight: 700; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 9px; border-radius: 6px;">
-          <?php echo htmlspecialchars($student['standard'] ?? ''); ?>
+          <?php echo htmlspecialchars($student['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </h3>
     </div>
@@ -1626,16 +1720,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="card-front-header">
           <div class="cf-logo-row">
             <div class="cf-logo-wrap">
-              <img src="<?php echo htmlspecialchars($school_settings['logo_url']); ?>" alt="Logo" onerror="this.src='/assets/imgs/ksv-logo.jpg'">
+              <img src="<?php echo htmlspecialchars($school_settings['logo_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" onerror="this.src='/assets/imgs/ksv-logo.jpg'">
             </div>
             <div>
-              <div class="cf-brand-name"><?php echo htmlspecialchars($school_settings['school_name']); ?></div>
+              <div class="cf-brand-name"><?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy', ENT_QUOTES, 'UTF-8'); ?></div>
               <div class="cf-sub-tag">Academic Excellence &amp; HRMS</div>
             </div>
           </div>
           <div class="cf-session-pill">
             <i class="fa-solid fa-graduation-cap"></i>
-            <span>Identity Card &bull; Session <?php echo htmlspecialchars($active_session['session_name']); ?></span>
+            <span>Identity Card &bull; Session <?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
         </div>
 
@@ -1649,10 +1743,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <!-- Photo Frame -->
           <div class="cf-photo-frame">
             <?php if ($has_student_photo): ?>
-              <img src="<?php echo htmlspecialchars($student_photo_url); ?>" alt="<?php echo htmlspecialchars($student['student_name']); ?>">
+              <img src="<?php echo htmlspecialchars($student_photo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($student['student_name'], ENT_QUOTES, 'UTF-8'); ?>">
             <?php else: ?>
               <div class="cf-photo-fallback" style="background: <?php echo $avatar_bg; ?>;">
-                <?php echo $first_letter; ?>
+                <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php endif; ?>
           </div>
@@ -1661,35 +1755,35 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <!-- Student Profile Details -->
         <div class="card-front-body">
           <h3 class="cf-student-name">
-            <?php echo htmlspecialchars($student['student_name']); ?>
+            <?php echo htmlspecialchars($student['student_name'], ENT_QUOTES, 'UTF-8'); ?>
           </h3>
           <div class="cf-standard-badge">
             <i class="fa-solid fa-book-open" style="font-size: 9px;"></i>
-            <span><?php echo htmlspecialchars($student['standard']); ?> &bull; Sec <?php echo htmlspecialchars($student['section'] ?? 'A'); ?></span>
+            <span><?php echo htmlspecialchars($student['standard'], ENT_QUOTES, 'UTF-8'); ?> &bull; Sec <?php echo htmlspecialchars($student['section'] ?? 'A', ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
 
           <!-- Info List -->
           <div class="cf-info-list">
             <div class="cf-info-row">
               <span class="cf-label">Roll Number</span>
-              <span class="cf-val mono"><?php echo htmlspecialchars($student['roll_no']); ?></span>
+              <span class="cf-val mono"><?php echo htmlspecialchars($student['roll_no'], ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Admission No</span>
-              <span class="cf-val"><?php echo htmlspecialchars($student['admission_no'] ?? 'ADM-' . $student['id']); ?></span>
+              <span class="cf-val"><?php echo htmlspecialchars($student['admission_no'] ?? ('ADM-' . $student['id']), ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Guardian</span>
-              <span class="cf-val"><?php echo htmlspecialchars($student['parent_name'] ?? '—'); ?></span>
+              <span class="cf-val"><?php echo htmlspecialchars($student['parent_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Emergency Ph</span>
-              <span class="cf-val"><?php echo htmlspecialchars($student['parent_phone'] ?? '—'); ?></span>
+              <span class="cf-val"><?php echo htmlspecialchars($student['parent_phone'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Blood Group</span>
               <span class="cf-val">
-                <span class="cf-blood-badge"><?php echo htmlspecialchars($student['blood_group'] ?? 'O+'); ?></span>
+                <span class="cf-blood-badge"><?php echo htmlspecialchars($student['blood_group'] ?? 'O+', ENT_QUOTES, 'UTF-8'); ?></span>
               </span>
             </div>
             <div class="cf-info-row">
@@ -1702,7 +1796,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <div class="cf-footer">
             <div class="cf-valid-box">
               <div class="cf-valid-lbl">Valid Till</div>
-              <div class="cf-valid-val">31 MAR <?php echo date('Y') + 1; ?></div>
+              <div class="cf-valid-val"><?php echo htmlspecialchars($valid_date_str, ENT_QUOTES, 'UTF-8'); ?></div>
             </div>
             <div class="cf-sign-box">
               <div class="cf-sign-img">Salam Khan</div>
@@ -1741,11 +1835,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
           
           <!-- High-Resolution Scannable QR Frame -->
           <div class="cb-qr-frame">
-            <img id="back_qr_img" src="<?php echo $qr_image_url; ?>" alt="Biometric QR Code" crossorigin="anonymous">
+            <img id="back_qr_img" src="<?php echo htmlspecialchars($qr_image_url, ENT_QUOTES, 'UTF-8'); ?>" alt="Biometric QR Code" crossorigin="anonymous">
           </div>
 
           <div class="cb-qr-code-text">
-            <?php echo htmlspecialchars($qr_data); ?>
+            <?php echo htmlspecialchars($qr_data, ENT_QUOTES, 'UTF-8'); ?>
           </div>
           <div class="cb-qr-hint">
             Scan via KSV Academy Biometric Camera to punch daily attendance.
@@ -1757,16 +1851,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <ol>
               <li>This identity badge is mandatory on campus at all times.</li>
               <li>Present this card for library, lab, and examination entry.</li>
-              <li>Non-transferable. Valid only for <?php echo htmlspecialchars($active_session['session_name']); ?>.</li>
+              <li>Non-transferable. Valid only for <?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?>.</li>
               <li>If lost or damaged, report to admin office immediately.</li>
             </ol>
           </div>
 
           <!-- Campus Contact & Return Address -->
           <div class="cb-footer">
-            <strong><?php echo htmlspecialchars($school_settings['school_name']); ?></strong><br>
-            <?php echo htmlspecialchars($school_settings['address']); ?><br>
-            Emergency: <strong><?php echo htmlspecialchars($school_settings['phone']); ?></strong>
+            <strong><?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy', ENT_QUOTES, 'UTF-8'); ?></strong><br>
+            <?php echo htmlspecialchars($school_settings['address'] ?? '', ENT_QUOTES, 'UTF-8'); ?><br>
+            Emergency: <strong><?php echo htmlspecialchars($school_settings['phone'] ?? '', ENT_QUOTES, 'UTF-8'); ?></strong>
           </div>
 
         </div>
@@ -1789,17 +1883,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="roaster-toolbar-inner">
       
       <!-- Filter form -->
-      <form method="GET" action="<?php echo ADMIN_URL; ?>/student-id" class="roaster-filter-form">
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+      <form method="GET" action="<?php echo htmlspecialchars(ADMIN_URL . '/student-id', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-filter-form">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
         <?php if ($selected_id > 0): ?>
-          <input type="hidden" name="id" value="<?php echo $selected_id; ?>">
+          <input type="hidden" name="id" value="<?php echo intval($selected_id); ?>">
         <?php endif; ?>
 
         <div class="roaster-search-box">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, roll no, phone..." autocomplete="off">
+          <input type="text" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search name, roll no, phone..." autocomplete="off">
           <?php if (!empty($search)): ?>
-            <a href="<?php echo htmlspecialchars(get_student_id_pagination_url(1, '', $filter_standard, $selected_id, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
+            <a href="<?php echo htmlspecialchars(get_student_id_pagination_url(1, '', $filter_standard, $selected_id, $limit), ENT_QUOTES, 'UTF-8'); ?>" class="clear-search-btn" title="Clear search">&times;</a>
           <?php endif; ?>
         </div>
 
@@ -1809,8 +1903,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <select name="standard" onchange="this.form.submit()">
               <option value="">All Academic Standards</option>
               <?php foreach ($standards as $std): ?>
-                <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-                  <?php echo $std; ?>
+                <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
+                  <?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>
                 </option>
               <?php endforeach; ?>
             </select>
@@ -1822,12 +1916,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </button>
 
           <?php if (!empty($search) || !empty($filter_standard)): ?>
-            <a href="<?php echo ADMIN_URL; ?>/student-id<?php 
+            <?php 
               $rp = [];
-              if ($selected_id > 0) $rp['id'] = $selected_id;
-              if ($limit !== 10) $rp['limit'] = $limit;
-              echo !empty($rp) ? '?' . http_build_query($rp) : '';
-            ?>" class="roaster-btn ghost" title="Reset all filters">
+              if ($selected_id > 0) $rp['id'] = intval($selected_id);
+              if ($limit !== 10) $rp['limit'] = intval($limit);
+              $reset_filter_url = ADMIN_URL . '/student-id' . (!empty($rp) ? '?' . http_build_query($rp) : '');
+            ?>
+            <a href="<?php echo htmlspecialchars($reset_filter_url, ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn ghost" title="Reset all filters">
               <i class="fa-solid fa-rotate-left"></i> Reset
             </a>
           <?php endif; ?>
@@ -1841,7 +1936,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span><strong><?php echo $total_records; ?></strong> Scholars</span>
         </div>
 
-        <a href="<?php echo ADMIN_URL; ?>/students" class="roaster-btn secondary roaster-link-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+        <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary roaster-link-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
           <i class="fa-solid fa-users"></i>
           <span>Student Roaster</span>
         </a>
@@ -1904,43 +1999,56 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php else: ?>
             <?php foreach ($table_students as $stu): ?>
               <?php 
-                $is_cur_viewing = ($stu['id'] == $selected_id);
-                $has_photo = !empty($stu['photo']) && $stu['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $stu['photo']);
-                $first_letter = strtoupper(substr($stu['student_name'], 0, 1));
+                $is_cur_viewing = (intval($stu['id']) === $selected_id);
+                $stu_has_photo = false;
+                $stu_photo_url = '';
+                if (!empty($stu['photo']) && $stu['photo'] !== '/assets/imgs/ksv-logo.jpg') {
+                    $stu_photo_rel = ltrim($stu['photo'], '/\\');
+                    $stu_photo_path = realpath(__DIR__ . '/../../' . $stu_photo_rel);
+                    if ($stu_photo_path && (
+                        ($allowed_base_uploads && strpos($stu_photo_path, $allowed_base_uploads) === 0) ||
+                        ($allowed_base_assets && strpos($stu_photo_path, $allowed_base_assets) === 0)
+                    ) && file_exists($stu_photo_path)) {
+                        $stu_has_photo = true;
+                        $stu_photo_url = '/' . $stu_photo_rel;
+                    }
+                }
+                $first_letter = strtoupper(substr($stu['student_name'] ?? 'S', 0, 1));
 
-                $stu_qr_code = $stu['qr_code'] ?: ('STU-' . $stu['roll_no']);
+                $stu_raw_qr = $stu['qr_code'] ?: ('STU-' . ($stu['roll_no'] ?? $stu['id']));
+                $stu_qr_code = preg_replace('/[^a-zA-Z0-9_\-\.\:\/]/', '', (string)$stu_raw_qr);
 
-                $switch_url = ADMIN_URL . '/student-id?id=' . $stu['id'] . 
-                              (!empty($search) ? '&search=' . urlencode($search) : '') . 
-                              (!empty($filter_standard) ? '&standard=' . urlencode($filter_standard) : '') . 
-                              ($limit !== 10 ? '&limit=' . $limit : '') .
-                              ($page > 1 ? '&page=' . $page : '') .
-                              '#id-card-stage';
+                $switch_params = ['id' => intval($stu['id'])];
+                if ($search !== '') $switch_params['search'] = $search;
+                if ($filter_standard !== '') $switch_params['standard'] = $filter_standard;
+                if ($limit !== 10) $switch_params['limit'] = intval($limit);
+                if ($page > 1) $switch_params['page'] = intval($page);
+                $switch_url = ADMIN_URL . '/student-id?' . http_build_query($switch_params) . '#id-card-stage';
               ?>
               <tr class="<?php echo $is_cur_viewing ? 'active-student-row' : ''; ?>">
                 
                 <!-- 1. Student Profile -->
                 <td>
                   <div class="user-cell" style="display: flex; align-items: center; gap: 12px;">
-                    <?php if ($has_photo): ?>
-                      <img src="<?php echo htmlspecialchars($stu['photo']); ?>" alt="<?php echo htmlspecialchars($stu['student_name']); ?>" class="staff-avatar-img" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <?php if ($stu_has_photo): ?>
+                      <img src="<?php echo htmlspecialchars($stu_photo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?>" class="staff-avatar-img" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                       <div class="staff-avatar-init" style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <?php echo $first_letter; ?>
+                        <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                     <?php else: ?>
                       <div class="staff-avatar-init" style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <?php echo $first_letter; ?>
+                        <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                     <?php endif; ?>
 
                     <div>
                       <div style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
-                        <?php echo htmlspecialchars($stu['student_name']); ?>
+                        <?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                       <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
-                        <span><?php echo htmlspecialchars($stu['gender'] ?? 'Scholar'); ?></span>
+                        <span><?php echo htmlspecialchars($stu['gender'] ?? 'Scholar', ENT_QUOTES, 'UTF-8'); ?></span>
                         <span>&bull;</span>
-                        <span class="sid-blood-badge">Blood: <?php echo htmlspecialchars($stu['blood_group'] ?? 'O+'); ?></span>
+                        <span class="sid-blood-badge">Blood: <?php echo htmlspecialchars($stu['blood_group'] ?? 'O+', ENT_QUOTES, 'UTF-8'); ?></span>
                       </div>
                     </div>
                   </div>
@@ -1950,10 +2058,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <span class="sid-roll-pill">
                     <i class="fa-solid fa-hashtag" style="font-size: 0.62rem;"></i>
-                    <span><?php echo htmlspecialchars($stu['roll_no']); ?></span>
+                    <span><?php echo htmlspecialchars($stu['roll_no'], ENT_QUOTES, 'UTF-8'); ?></span>
                   </span>
                   <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
-                    Adm: <?php echo htmlspecialchars($stu['admission_no'] ?? '—'); ?>
+                    Adm: <?php echo htmlspecialchars($stu['admission_no'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
                   </div>
                 </td>
 
@@ -1961,21 +2069,21 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <span class="sid-std-pill">
                     <i class="fa-solid fa-graduation-cap" style="font-size: 0.65rem; color: #64748b;"></i>
-                    <span><?php echo htmlspecialchars($stu['standard']); ?></span>
+                    <span><?php echo htmlspecialchars($stu['standard'], ENT_QUOTES, 'UTF-8'); ?></span>
                   </span>
                   <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">
-                    Section <?php echo htmlspecialchars($stu['section'] ?? 'A'); ?>
+                    Section <?php echo htmlspecialchars($stu['section'] ?? 'A', ENT_QUOTES, 'UTF-8'); ?>
                   </div>
                 </td>
 
                 <!-- 4. Guardian Info -->
                 <td>
                   <div style="font-size: 0.78rem; font-weight: 600; color: #334155;">
-                    <?php echo htmlspecialchars($stu['parent_name'] ?? '—'); ?>
+                    <?php echo htmlspecialchars($stu['parent_name'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
                   </div>
                   <div style="font-size: 0.74rem; color: #64748b; margin-top: 3px; display: inline-flex; align-items: center; gap: 5px;">
                     <i class="fa-solid fa-phone" style="font-size: 0.65rem; color: #64748b;"></i>
-                    <span><?php echo htmlspecialchars($stu['parent_phone'] ?? '—'); ?></span>
+                    <span><?php echo htmlspecialchars($stu['parent_phone'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></span>
                   </div>
                 </td>
 
@@ -1983,7 +2091,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <td>
                   <span class="sid-qr-chip" title="Biometric QR Pass ID">
                     <i class="fa-solid fa-qrcode" style="color: #0284c7; font-size: 0.72rem;"></i>
-                    <span><?php echo htmlspecialchars($stu_qr_code); ?></span>
+                    <span><?php echo htmlspecialchars($stu_qr_code, ENT_QUOTES, 'UTF-8'); ?></span>
                   </span>
                 </td>
 
@@ -2013,7 +2121,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                         <span>Print</span>
                       </button>
                     <?php else: ?>
-                      <a href="<?php echo $switch_url; ?>" class="sid-btn-action sid-btn-secondary" title="Load student card into preview">
+                      <a href="<?php echo htmlspecialchars($switch_url, ENT_QUOTES, 'UTF-8'); ?>" class="sid-btn-action sid-btn-secondary" title="Load student card into preview">
                         <i class="fa-solid fa-id-card" style="color: #0284c7; font-size: 0.72rem;"></i>
                         <span>View ID Card</span>
                       </a>
@@ -2045,7 +2153,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <label for="perPageLimitSelect" style="color: #64748b; font-size: 0.8rem; margin: 0; font-weight: 500;">Show Per Page</label>
           <select id="perPageLimitSelect" class="pagination-limit-select" onchange="window.location.href = this.value;">
             <?php foreach ($allowed_limits as $l): ?>
-              <option value="<?php echo htmlspecialchars(get_student_id_pagination_url(1, $search, $filter_standard, $selected_id, $l)); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
+              <option value="<?php echo htmlspecialchars(get_student_id_pagination_url(1, $search, $filter_standard, $selected_id, $l), ENT_QUOTES, 'UTF-8'); ?>" <?php echo $limit === $l ? 'selected' : ''; ?>>
                 <?php echo $l; ?>
               </option>
             <?php endforeach; ?>
@@ -2057,7 +2165,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <?php if ($total_pages > 1): ?>
         <nav class="pagination-nav" aria-label="Student ID Directory Pagination">
           <!-- Prev Page -->
-          <a href="<?php echo $page > 1 ? htmlspecialchars(get_student_id_pagination_url($page - 1, $search, $filter_standard, $selected_id, $limit)) : '#'; ?>" 
+          <a href="<?php echo $page > 1 ? htmlspecialchars(get_student_id_pagination_url($page - 1, $search, $filter_standard, $selected_id, $limit), ENT_QUOTES, 'UTF-8') : '#'; ?>" 
              class="pagination-btn <?php echo $page <= 1 ? 'disabled' : ''; ?>" 
              aria-label="Previous Page"
              title="Previous Page">
@@ -2070,7 +2178,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             for ($p = 1; $p <= $total_pages; $p++):
               if ($p == 1 || $p == $total_pages || ($p >= $page - $range && $p <= $page + $range)):
           ?>
-            <a href="<?php echo htmlspecialchars(get_student_id_pagination_url($p, $search, $filter_standard, $selected_id, $limit)); ?>" 
+            <a href="<?php echo htmlspecialchars(get_student_id_pagination_url($p, $search, $filter_standard, $selected_id, $limit), ENT_QUOTES, 'UTF-8'); ?>" 
                class="pagination-btn <?php echo $p === $page ? 'active' : ''; ?>">
               <?php echo $p; ?>
             </a>
@@ -2084,7 +2192,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           ?>
 
           <!-- Next Page -->
-          <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_student_id_pagination_url($page + 1, $search, $filter_standard, $selected_id, $limit)) : '#'; ?>" 
+          <a href="<?php echo $page < $total_pages ? htmlspecialchars(get_student_id_pagination_url($page + 1, $search, $filter_standard, $selected_id, $limit), ENT_QUOTES, 'UTF-8') : '#'; ?>" 
              class="pagination-btn <?php echo $page >= $total_pages ? 'disabled' : ''; ?>" 
              aria-label="Next Page"
              title="Next Page">
@@ -2100,7 +2208,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           Official PVC Pass
         </span>
         <span style="color: #cbd5e1;">|</span>
-        <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+        <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?></strong></span>
       </div>
 
     </div>
@@ -2122,9 +2230,12 @@ function downloadCardImage(elementId, sideLabel) {
   const card = document.getElementById(elementId);
   if (!card) return;
 
-  const stuName = <?php echo json_encode($student['student_name'] ?? 'Student'); ?>;
-  const rollNo = <?php echo json_encode($student['roll_no'] ?? 'KSV'); ?>;
-  const filename = `Student_ID_${sideLabel}_${stuName.replace(/\s+/g, '_')}_${rollNo}.png`;
+  const rawStuName = <?php echo json_encode($student['student_name'] ?? 'Student', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+  const rawRollNo = <?php echo json_encode($student['roll_no'] ?? 'KSV', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+  const safeStuName = String(rawStuName).replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const safeRollNo = String(rawRollNo).replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const safeSide = String(sideLabel).replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const filename = `Student_ID_${safeSide}_${safeStuName}_${safeRollNo}.png`;
 
   html2canvas(card, {
     scale: 2.5,

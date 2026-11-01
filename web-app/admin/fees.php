@@ -1,4 +1,13 @@
 <?php
+// HTTP Security Headers (Defense-in-depth across Apache, LiteSpeed, Nginx, PHP built-in server)
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
@@ -12,62 +21,113 @@ $active_menu = 'fees';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
+// Standards list
+$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+$allowed_methods = ['Cash', 'UPI', 'Net Banking', 'Cheque', 'Credit Card'];
+
 // Filters
-$search = trim($_GET['search'] ?? '');
-$filter_standard = trim($_GET['standard'] ?? '');
-$filter_method = trim($_GET['method'] ?? '');
+$search = trim((string)($_GET['search'] ?? ''));
+$filter_standard = isset($_GET['standard']) && in_array($_GET['standard'], $standards, true) ? (string)$_GET['standard'] : '';
+$filter_method = isset($_GET['method']) && in_array($_GET['method'], $allowed_methods, true) ? (string)$_GET['method'] : '';
 $filter_student_id = intval($_GET['student_id'] ?? 0);
 
 // Pagination & Limits Setup (10, 20, 30, 40, 50)
 $allowed_limits = [10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
 
-// Standards list
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
-
 // If parent or student role, limit to their student
 if ($current_user['role'] === 'student' || $current_user['role'] === 'parent') {
-    $stmt_mstu = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? LIMIT 1");
-    $stmt_mstu->execute([$current_user['id']]);
+    $stmt_mstu = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? AND session_id = ? LIMIT 1");
+    $stmt_mstu->execute([$current_user['id'], $session_id]);
     $my_stu = $stmt_mstu->fetch();
     if ($my_stu) {
-        $filter_student_id = $my_stu['id'];
+        $filter_student_id = intval($my_stu['id']);
     }
 }
 
+// Rate Limiting Protection (Max 30 fee submissions per 5 minutes per session)
+$now = time();
+if (!isset($_SESSION['fees_post_attempts']) || !is_array($_SESSION['fees_post_attempts'])) {
+    $_SESSION['fees_post_attempts'] = [];
+}
+$_SESSION['fees_post_attempts'] = array_filter($_SESSION['fees_post_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 300;
+});
+$is_rate_limited = (count($_SESSION['fees_post_attempts']) >= 30);
+
 // Handle Record Fee Collection
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
-    $action = $_POST['action'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['super_admin'], true)) {
+    // 1. Anti-bot honeypot check
+    if (!empty($_POST['fees_hp'])) {
+        usleep(300000);
+        set_flash('error', 'Invalid submission detected.');
+        header('Location: ' . ADMIN_URL . '/fees');
+        exit;
+    }
+
+    // 2. Brute-force flood lockout
+    if ($is_rate_limited) {
+        set_flash('error', 'Too many requests in a short period. Please wait a moment and try again.');
+        header('Location: ' . ADMIN_URL . '/fees');
+        exit;
+    }
+    $_SESSION['fees_post_attempts'][] = $now;
+
+    // 3. CSRF token validation
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/fees');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     if ($action === 'collect_fee') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $amount = floatval($_POST['amount'] ?? 0);
-        $discount = floatval($_POST['discount'] ?? 0);
-        $payment_method = trim($_POST['payment_method'] ?? 'Cash');
-        $fee_type = trim($_POST['fee_type'] ?? 'Tuition Fee');
-        $payment_date = $_POST['payment_date'] ?? date('Y-m-d');
-        $remarks = trim($_POST['remarks'] ?? 'Fee payment received');
+        $amount = max(0.01, floatval($_POST['amount'] ?? 0));
+        $discount = max(0, floatval($_POST['discount'] ?? 0));
+        $payment_method = mb_substr(trim((string)($_POST['payment_method'] ?? 'Cash')), 0, 50);
+        $fee_type = mb_substr(trim((string)($_POST['fee_type'] ?? 'Tuition Fee')), 0, 50);
+        $payment_date = isset($_POST['payment_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['payment_date']) ? (string)$_POST['payment_date'] : date('Y-m-d');
+        $remarks = mb_substr(trim((string)($_POST['remarks'] ?? 'Fee payment received')), 0, 255);
 
-        if ($student_id > 0 && $amount > 0) {
-            $receipt_no = 'RCPT-' . strtoupper(substr(uniqid(), 7));
+        // Verify that the student exists and belongs to the active session
+        $stmt_stu_chk = $db->prepare("SELECT id, student_name, roll_no, total_fees, paid_fees FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+        $stmt_stu_chk->execute([$student_id, $session_id]);
+        $stu_row = $stmt_stu_chk->fetch(PDO::FETCH_ASSOC);
 
-            $stmt = $db->prepare("
-                INSERT INTO fee_payments (session_id, student_id, receipt_no, amount, payment_method, payment_date, fee_type, discount, remarks)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$session_id, $student_id, $receipt_no, $amount, $payment_method, $payment_date, $fee_type, $discount, $remarks]);
+        if ($stu_row && $amount > 0) {
+            try {
+                $receipt_no = 'RCPT-' . strtoupper(substr(bin2hex(random_bytes(5)), 0, 8));
 
-            // Update student paid_fees
-            $db->prepare("UPDATE students SET paid_fees = paid_fees + ? WHERE id = ?")->execute([$amount, $student_id]);
+                $stmt = $db->prepare("
+                    INSERT INTO fee_payments (session_id, student_id, receipt_no, amount, payment_method, payment_date, fee_type, discount, remarks)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([$session_id, $student_id, $receipt_no, $amount, $payment_method, $payment_date, $fee_type, $discount, $remarks]);
 
-            set_flash('success', "Fee payment of ₹" . number_format($amount, 2) . " recorded with Receipt #{$receipt_no}!");
+                // Update student paid_fees with session isolation
+                $upd_stmt = $db->prepare("UPDATE students SET paid_fees = paid_fees + ? WHERE id = ? AND session_id = ?");
+                $upd_stmt->execute([$amount, $student_id, $session_id]);
+
+                set_flash('success', "Fee payment of ₹" . number_format($amount, 2) . " recorded for " . htmlspecialchars($stu_row['student_name'], ENT_QUOTES, 'UTF-8') . " with Receipt #{$receipt_no}!");
+                header('Location: ' . ADMIN_URL . '/fees');
+                exit;
+            } catch (Exception $e) {
+                error_log("Fee collection error: " . $e->getMessage());
+                set_flash('error', 'An error occurred while recording the fee collection. Please try again.');
+                header('Location: ' . ADMIN_URL . '/fees');
+                exit;
+            }
+        } else {
+            set_flash('error', 'Invalid student selection or payment amount.');
             header('Location: ' . ADMIN_URL . '/fees');
             exit;
         }
@@ -84,13 +144,15 @@ $where_clauses = ["fp.session_id = ?"];
 $where_params = [$session_id];
 
 if (!empty($search)) {
+    $search_clean = mb_substr($search, 0, 100);
+    $search_like = '%' . addcslashes($search_clean, '%_\\') . '%';
     $where_clauses[] = "(s.student_name LIKE ? OR s.roll_no LIKE ? OR fp.receipt_no LIKE ? OR s.admission_no LIKE ? OR s.parent_phone LIKE ? OR fp.remarks LIKE ?)";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
 }
 
 if (!empty($filter_standard)) {
@@ -167,14 +229,16 @@ function get_fee_pagination_url($target_page, $search, $filter_standard, $filter
     return ADMIN_URL . '/fees' . (!empty($params) ? '?' . http_build_query($params) : '');
 }
 
-// Fetch all payments mapped by student_id to show installment history
-$all_stu_payments = $db->query("
+// Fetch all payments mapped by student_id to show installment history (Prepared Statement)
+$stmt_asp = $db->prepare("
     SELECT fp.*, s.student_name, s.roll_no, s.standard, s.total_fees, s.paid_fees
     FROM fee_payments fp
     JOIN students s ON fp.student_id = s.id
-    WHERE fp.session_id = {$session_id}
+    WHERE fp.session_id = ?
     ORDER BY fp.payment_date ASC, fp.id ASC
-")->fetchAll(PDO::FETCH_ASSOC);
+");
+$stmt_asp->execute([$session_id]);
+$all_stu_payments = $stmt_asp->fetchAll(PDO::FETCH_ASSOC);
 
 $student_payments_map = [];
 foreach ($all_stu_payments as $sp) {
@@ -2156,15 +2220,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
     
     <!-- Filter form -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/fees" class="roaster-filter-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1;">
-      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+    <form method="GET" action="<?php echo htmlspecialchars(ADMIN_URL . '/fees', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-filter-form" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1;">
+      <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       <?php if ($filter_student_id > 0): ?>
-        <input type="hidden" name="student_id" value="<?php echo $filter_student_id; ?>">
+        <input type="hidden" name="student_id" value="<?php echo intval($filter_student_id); ?>">
       <?php endif; ?>
 
       <div class="roaster-search-box" style="min-width: 200px; max-width: 250px; padding: 7px 12px;">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, receipt, roll..." autocomplete="off">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search name, receipt, roll..." autocomplete="off" maxlength="100">
         <?php if (!empty($search)): ?>
           <a href="<?php echo htmlspecialchars(get_fee_pagination_url(1, '', $filter_standard, $filter_method, $filter_student_id, $limit)); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
@@ -2176,8 +2240,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <select name="standard" onchange="this.form.submit()" style="min-width: 155px; padding: 7px 28px 7px 30px; font-size: 0.82rem;">
             <option value="">All Standards</option>
             <?php foreach ($standards as $std): ?>
-              <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-                <?php echo $std; ?>
+              <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -2204,7 +2268,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </button>
 
         <?php if (!empty($search) || !empty($filter_standard) || !empty($filter_method) || $filter_student_id > 0): ?>
-          <a href="<?php echo ADMIN_URL; ?>/fees<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" style="padding: 7px 12px; font-size: 0.82rem;" title="Reset all filters">
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/fees' . ($limit !== 10 ? '?limit=' . $limit : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn ghost" style="padding: 7px 12px; font-size: 0.82rem;" title="Reset all filters">
             <i class="fa-solid fa-rotate-left"></i> Reset
           </a>
         <?php endif; ?>
@@ -2578,8 +2642,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <!-- Modal Body -->
     <div class="hrms-modal-body" style="padding: 22px;">
-      <form method="POST" action="<?php echo ADMIN_URL; ?>/fees" onsubmit="return validateCollectFeeForm();">
+      <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/fees', ENT_QUOTES, 'UTF-8'); ?>" onsubmit="return validateCollectFeeForm();">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
         <input type="hidden" name="action" value="collect_fee">
+        <div style="display:none !important;" aria-hidden="true">
+          <label for="fees_hp_collect">Leave blank</label>
+          <input type="text" id="fees_hp_collect" name="fees_hp" tabindex="-1" autocomplete="off">
+        </div>
 
         <!-- Student Selector with Due Indicator -->
         <div class="form-group" style="margin-bottom: 16px;">

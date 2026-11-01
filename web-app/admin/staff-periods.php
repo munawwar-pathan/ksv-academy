@@ -5,6 +5,8 @@ $current_user = require_login(['super_admin', 'staff']);
 if ($current_user['role'] === 'staff') {
     require_menu_permission('admin_staff_periods');
 }
+$can_manage = ($current_user['role'] === 'super_admin' || has_menu_permission('admin_staff_periods', $current_user));
+
 $page_title = 'Staff Periods & Timetable | KSV Academy HRMS';
 $page_heading = 'Staff Periods';
 $page_subheading = 'Faculty Schedules, Subject Class Distribution, Period Timings & Master Timetable';
@@ -12,34 +14,47 @@ $active_menu = 'staff-periods';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 
 // ── Handle Actions ──────────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['super_admin', 'admin'])) {
-    $action = $_POST['action'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$can_manage) {
+        set_flash('error', 'Unauthorized action: You do not have permission to manage staff periods.');
+        header('Location: ' . ADMIN_URL . '/staff-periods');
+        exit;
+    }
+
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/staff-periods');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
+    $redirect_view = in_array($_POST['redirect_view'] ?? '', ['table', 'schedule'], true) ? $_POST['redirect_view'] : 'table';
 
     // 1. Add / Assign Period
     if ($action === 'add_period') {
         $staff_id = intval($_POST['staff_id'] ?? 0);
-        $subject = trim($_POST['subject'] ?? '');
-        $class_name = trim($_POST['class_name'] ?? 'Class 10th');
-        $day_of_week = trim($_POST['day_of_week'] ?? 'Monday - Friday');
-        $period_name = trim($_POST['period_name'] ?? 'Period 1');
-        $time_period = trim($_POST['time_period'] ?? '');
-        $room_no = trim($_POST['room_no'] ?? 'Room 101');
+        $subject = mb_substr(trim((string)($_POST['subject'] ?? '')), 0, 100);
+        $class_name = mb_substr(trim((string)($_POST['class_name'] ?? 'Class 10th')), 0, 100);
+        $day_of_week = mb_substr(trim((string)($_POST['day_of_week'] ?? 'Monday - Friday')), 0, 50);
+        $period_name = mb_substr(trim((string)($_POST['period_name'] ?? 'Period 1')), 0, 50);
+        $time_period = mb_substr(trim((string)($_POST['time_period'] ?? '')), 0, 50);
+        $room_no = mb_substr(trim((string)($_POST['room_no'] ?? 'Room 101')), 0, 50);
 
         $staff_name = '';
         if ($staff_id > 0) {
             $st_stmt = $db->prepare("
                 SELECT u.full_name FROM staff_profiles sp 
                 JOIN users u ON sp.user_id = u.id 
-                WHERE sp.id = ? LIMIT 1
+                WHERE sp.id = ? AND sp.session_id = ? LIMIT 1
             ");
-            $st_stmt->execute([$staff_id]);
-            $staff_name = $st_stmt->fetchColumn() ?: 'Faculty Member';
+            $st_stmt->execute([$staff_id, $session_id]);
+            $staff_name = $st_stmt->fetchColumn();
         }
 
-        if ($staff_id > 0 && !empty($subject) && !empty($time_period)) {
+        if ($staff_id > 0 && !empty($staff_name) && !empty($subject) && !empty($time_period)) {
             $stmt = $db->prepare("
                 INSERT INTO staff_periods (staff_id, staff_name, subject, class_name, day_of_week, period_name, time_period, room_no, session_id, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
@@ -47,10 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['s
             $stmt->execute([$staff_id, $staff_name, $subject, $class_name, $day_of_week, $period_name, $time_period, $room_no, $session_id]);
             set_flash('success', "Period successfully assigned to {$staff_name} for {$subject} ({$time_period})!");
         } else {
-            set_flash('error', 'Please select a staff member and provide both subject and time period.');
+            set_flash('error', 'Please select a valid staff member in the active session and provide both subject and time period.');
         }
 
-        $redirect_view = $_POST['redirect_view'] ?? 'table';
         header('Location: ' . ADMIN_URL . '/staff-periods?view=' . urlencode($redirect_view));
         exit;
     }
@@ -59,37 +73,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['s
     if ($action === 'edit_period') {
         $id = intval($_POST['id'] ?? 0);
         $staff_id = intval($_POST['staff_id'] ?? 0);
-        $subject = trim($_POST['subject'] ?? '');
-        $class_name = trim($_POST['class_name'] ?? 'Class 10th');
-        $day_of_week = trim($_POST['day_of_week'] ?? 'Monday - Friday');
-        $period_name = trim($_POST['period_name'] ?? 'Period 1');
-        $time_period = trim($_POST['time_period'] ?? '');
-        $room_no = trim($_POST['room_no'] ?? 'Room 101');
+        $subject = mb_substr(trim((string)($_POST['subject'] ?? '')), 0, 100);
+        $class_name = mb_substr(trim((string)($_POST['class_name'] ?? 'Class 10th')), 0, 100);
+        $day_of_week = mb_substr(trim((string)($_POST['day_of_week'] ?? 'Monday - Friday')), 0, 50);
+        $period_name = mb_substr(trim((string)($_POST['period_name'] ?? 'Period 1')), 0, 50);
+        $time_period = mb_substr(trim((string)($_POST['time_period'] ?? '')), 0, 50);
+        $room_no = mb_substr(trim((string)($_POST['room_no'] ?? 'Room 101')), 0, 50);
+
+        // Verify period exists in active session
+        $check_stmt = $db->prepare("SELECT id FROM staff_periods WHERE id = ? AND session_id = ? LIMIT 1");
+        $check_stmt->execute([$id, $session_id]);
+        $period_exists = $check_stmt->fetch();
 
         $staff_name = '';
         if ($staff_id > 0) {
             $st_stmt = $db->prepare("
                 SELECT u.full_name FROM staff_profiles sp 
                 JOIN users u ON sp.user_id = u.id 
-                WHERE sp.id = ? LIMIT 1
+                WHERE sp.id = ? AND sp.session_id = ? LIMIT 1
             ");
-            $st_stmt->execute([$staff_id]);
-            $staff_name = $st_stmt->fetchColumn() ?: 'Faculty Member';
+            $st_stmt->execute([$staff_id, $session_id]);
+            $staff_name = $st_stmt->fetchColumn();
         }
 
-        if ($id > 0 && $staff_id > 0 && !empty($subject) && !empty($time_period)) {
+        if ($period_exists && $id > 0 && $staff_id > 0 && !empty($staff_name) && !empty($subject) && !empty($time_period)) {
             $stmt = $db->prepare("
                 UPDATE staff_periods 
                 SET staff_id = ?, staff_name = ?, subject = ?, class_name = ?, day_of_week = ?, period_name = ?, time_period = ?, room_no = ?
-                WHERE id = ?
+                WHERE id = ? AND session_id = ?
             ");
-            $stmt->execute([$staff_id, $staff_name, $subject, $class_name, $day_of_week, $period_name, $time_period, $room_no, $id]);
+            $stmt->execute([$staff_id, $staff_name, $subject, $class_name, $day_of_week, $period_name, $time_period, $room_no, $id, $session_id]);
             set_flash('success', "Period schedule updated successfully!");
         } else {
-            set_flash('error', 'Please fill in all required fields.');
+            set_flash('error', 'Unable to update: Please ensure all required fields are valid and belong to the active session.');
         }
 
-        $redirect_view = $_POST['redirect_view'] ?? 'table';
         header('Location: ' . ADMIN_URL . '/staff-periods?view=' . urlencode($redirect_view));
         exit;
     }
@@ -98,42 +116,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['s
     if ($action === 'delete_period') {
         $id = intval($_POST['id'] ?? 0);
         if ($id > 0) {
-            $del = $db->prepare("DELETE FROM staff_periods WHERE id = ?");
-            $del->execute([$id]);
-            set_flash('success', "Period schedule removed.");
+            $del = $db->prepare("DELETE FROM staff_periods WHERE id = ? AND session_id = ?");
+            $del->execute([$id, $session_id]);
+            if ($del->rowCount() > 0) {
+                set_flash('success', "Period schedule removed.");
+            } else {
+                set_flash('error', "Period record not found in the active session.");
+            }
         }
-        $redirect_view = $_POST['redirect_view'] ?? 'table';
         header('Location: ' . ADMIN_URL . '/staff-periods?view=' . urlencode($redirect_view));
         exit;
     }
 }
 
-// ── Query Staff List ─────────────────────────────────────────────────────────
-$staff_members = $db->query("
+// ── Query Staff List (Scoped to active session) ──────────────────────────────
+$staff_stmt = $db->prepare("
     SELECT sp.id as staff_id, sp.employee_code, sp.department, sp.designation, u.id as user_id, u.full_name, u.username
     FROM staff_profiles sp
     JOIN users u ON sp.user_id = u.id
-    WHERE u.status = 'active'
+    WHERE sp.session_id = ? AND u.status = 'active'
     ORDER BY u.full_name ASC
-")->fetchAll();
+");
+$staff_stmt->execute([$session_id]);
+$staff_members = $staff_stmt->fetchAll();
 
 // ── Query Periods with Filters ──────────────────────────────────────────────
-$filter_staff = intval($_GET['staff_id'] ?? 0);
-$filter_day = trim($_GET['day'] ?? '');
-$search = trim($_GET['search'] ?? '');
-$view_mode = trim($_GET['view'] ?? 'table'); // 'table' or 'schedule'
+$filter_staff = max(0, intval($_GET['staff_id'] ?? 0));
+$filter_day = mb_substr(trim((string)($_GET['day'] ?? '')), 0, 50);
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$view_mode = in_array($_GET['view'] ?? '', ['table', 'schedule'], true) ? $_GET['view'] : 'table';
 
 if (!function_exists('get_staff_photo_url')) {
     function get_staff_photo_url($sm) {
-        if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $sm['photo'])) {
-            return $sm['photo'];
+        $allowed_base = realpath(__DIR__ . '/../..');
+        if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg') {
+            $photo_val = trim($sm['photo']);
+            if (strpos($photo_val, '..') === false && preg_match('#^[a-zA-Z0-9_\-\./]+$#', $photo_val)) {
+                $test_path = $allowed_base . '/' . ltrim($photo_val, '/');
+                $real = realpath($test_path);
+                if ($real && $allowed_base && strpos($real, $allowed_base) === 0 && file_exists($real)) {
+                    return '/' . ltrim($photo_val, '/');
+                }
+            }
         }
         if (!empty($sm['avatar'])) {
-            if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $sm['avatar'])) {
-                return '/assets/imgs/faculties/' . $sm['avatar'];
-            }
-            if (file_exists(__DIR__ . '/../../assets/imgs/' . $sm['avatar'])) {
-                return '/assets/imgs/' . $sm['avatar'];
+            $avatar_val = trim($sm['avatar']);
+            if (strpos($avatar_val, '..') === false && preg_match('#^[a-zA-Z0-9_\-\.]+$#', $avatar_val)) {
+                $fac_path = $allowed_base . '/assets/imgs/faculties/' . $avatar_val;
+                $real_fac = realpath($fac_path);
+                if ($real_fac && $allowed_base && strpos($real_fac, $allowed_base) === 0 && file_exists($real_fac)) {
+                    return '/assets/imgs/faculties/' . $avatar_val;
+                }
+                $img_path = $allowed_base . '/assets/imgs/' . $avatar_val;
+                $real_img = realpath($img_path);
+                if ($real_img && $allowed_base && strpos($real_img, $allowed_base) === 0 && file_exists($real_img)) {
+                    return '/assets/imgs/' . $avatar_val;
+                }
             }
         }
         $name_to_check = !empty($sm['full_name']) ? $sm['full_name'] : (!empty($sm['user_full_name']) ? $sm['user_full_name'] : ($sm['staff_name'] ?? ''));
@@ -162,9 +200,6 @@ if (!function_exists('get_staff_photo_url')) {
         if (strpos($lower, 'rafeek') !== false) {
             return '/assets/imgs/faculties/rafeek-khan.png';
         }
-        if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg') {
-            return $sm['photo'];
-        }
         return '';
     }
 }
@@ -177,9 +212,9 @@ if (!in_array($limit, $allowed_limits)) {
 }
 $page = max(1, intval($_GET['page'] ?? 1));
 
-// Build WHERE filter conditions
-$where_clauses = ["1=1"];
-$where_params = [];
+// Build WHERE filter conditions (Scoped to active academic session)
+$where_clauses = ["p.session_id = ?"];
+$where_params = [$session_id];
 
 if ($filter_staff > 0) {
     $where_clauses[] = "p.staff_id = ?";
@@ -1461,7 +1496,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <span><strong><?php echo $total_records; ?></strong> <?php echo $total_records === 1 ? 'Period' : 'Periods'; ?></span>
       </div>
 
-      <?php if (in_array($current_user['role'], ['super_admin', 'admin'])): ?>
+      <?php if ($can_manage): ?>
         <button type="button" class="roaster-add-btn" onclick="openAssignModal();">
           <div class="btn-icon-circle"><i class="fa-solid fa-plus"></i></div>
           <span>Assign Period</span>
@@ -1495,12 +1530,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="periods-header-controls" style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <!-- View Switcher -->
         <div class="sp-view-toggle periods-view-toggle">
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff-periods?view=table' . ($filter_staff > 0 ? '&staff_id='.$filter_staff : '') . (!empty($filter_day) ? '&day='.urlencode($filter_day) : '') . (!empty($search) ? '&search='.urlencode($search) : '') . ($limit !== 10 ? '&limit='.$limit : ''), ENT_QUOTES, 'UTF-8'); ?>" 
              class="sp-view-tab <?php echo $view_mode !== 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-table-list"></i>
             <span>Table View</span>
           </a>
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=schedule<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff-periods?view=schedule' . ($filter_staff > 0 ? '&staff_id='.$filter_staff : '') . (!empty($filter_day) ? '&day='.urlencode($filter_day) : '') . (!empty($search) ? '&search='.urlencode($search) : '') . ($limit !== 10 ? '&limit='.$limit : ''), ENT_QUOTES, 'UTF-8'); ?>" 
              class="sp-view-tab <?php echo $view_mode === 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-calendar-days"></i>
             <span>Faculty Timetables</span>
@@ -1536,7 +1571,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
                   No period schedules match your current filters for Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
                 </p>
-                <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=<?php echo urlencode($view_mode); ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+                <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff-periods?view=' . urlencode($view_mode), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
                   <i class="fa-solid fa-rotate-left"></i> Reset All Filters
                 </a>
               </td>
@@ -1557,11 +1592,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php if ($has_st_photo): ?>
                       <img src="<?php echo htmlspecialchars($st_photo); ?>" alt="<?php echo htmlspecialchars($p['staff_name']); ?>" class="staff-avatar-img" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                       <div class="staff-avatar-init" style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 13px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <?php echo $f_letter; ?>
+                        <?php echo htmlspecialchars($f_letter, ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                     <?php else: ?>
                       <div class="staff-avatar-init" style="width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 13px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <?php echo $f_letter; ?>
+                        <?php echo htmlspecialchars($f_letter, ENT_QUOTES, 'UTF-8'); ?>
                       </div>
                     <?php endif; ?>
 
@@ -1628,19 +1663,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <!-- 6. Actions -->
                 <td style="text-align: right;">
                   <div style="display: inline-flex; align-items: center; gap: 5px; justify-content: flex-end;">
-                    <?php if (in_array($current_user['role'], ['super_admin', 'admin'])): ?>
+                    <?php if ($can_manage): ?>
                       <button type="button" 
                               class="sp-btn-action" 
-                              onclick='openEditModal(<?php echo json_encode($p); ?>)' 
+                              onclick="openEditModal(<?php echo htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8'); ?>)" 
                               title="Edit Period">
                         <i class="fa-solid fa-pen-to-square" style="color: #0284c7; font-size: 0.72rem;"></i>
                         <span>Edit</span>
                       </button>
 
                       <form method="POST" action="<?php echo ADMIN_URL; ?>/staff-periods" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to remove this period allocation?');">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                         <input type="hidden" name="action" value="delete_period">
-                        <input type="hidden" name="id" value="<?php echo $p['id']; ?>">
-                        <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
+                        <input type="hidden" name="id" value="<?php echo intval($p['id']); ?>">
+                        <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode, ENT_QUOTES, 'UTF-8'); ?>">
                         <button type="submit" class="sp-btn-action btn-danger" title="Delete Period">
                           <i class="fa-solid fa-trash-can" style="color: #ef4444; font-size: 0.72rem;"></i>
                         </button>
@@ -1758,12 +1794,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="periods-header-controls" style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <!-- View Switcher -->
         <div class="sp-view-toggle periods-view-toggle">
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=table<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff-periods?view=table' . ($filter_staff > 0 ? '&staff_id='.$filter_staff : '') . (!empty($filter_day) ? '&day='.urlencode($filter_day) : '') . (!empty($search) ? '&search='.urlencode($search) : '') . ($limit !== 10 ? '&limit='.$limit : ''), ENT_QUOTES, 'UTF-8'); ?>" 
              class="sp-view-tab <?php echo $view_mode !== 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-table-list"></i>
             <span>Table View</span>
           </a>
-          <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=schedule<?php echo $filter_staff > 0 ? '&staff_id='.$filter_staff : ''; ?><?php echo !empty($filter_day) ? '&day='.urlencode($filter_day) : ''; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?><?php echo $limit !== 10 ? '&limit='.$limit : ''; ?>" 
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff-periods?view=schedule' . ($filter_staff > 0 ? '&staff_id='.$filter_staff : '') . (!empty($filter_day) ? '&day='.urlencode($filter_day) : '') . (!empty($search) ? '&search='.urlencode($search) : '') . ($limit !== 10 ? '&limit='.$limit : ''), ENT_QUOTES, 'UTF-8'); ?>" 
              class="sp-view-tab <?php echo $view_mode === 'schedule' ? 'active' : ''; ?>">
             <i class="fa-solid fa-calendar-days"></i>
             <span>Faculty Timetables</span>
@@ -1784,7 +1820,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
       <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Faculty Timetables Found</h4>
       <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">No periods match your active search or day filters for Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.</p>
-      <a href="<?php echo ADMIN_URL; ?>/staff-periods?view=<?php echo urlencode($view_mode); ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+      <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff-periods?view=' . urlencode($view_mode), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
         <i class="fa-solid fa-rotate-left"></i> Reset All Filters
       </a>
     </div>
@@ -1802,11 +1838,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php if ($has_card_photo): ?>
               <img src="<?php echo htmlspecialchars($st_card_photo); ?>" alt="<?php echo htmlspecialchars($st_data['staff_name']); ?>" class="staff-avatar-img" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
               <div class="staff-avatar-init" style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">
-                <?php echo $f_card_letter; ?>
+                <?php echo htmlspecialchars($f_card_letter, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php else: ?>
               <div class="staff-avatar-init" style="width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <?php echo $f_card_letter; ?>
+                <?php echo htmlspecialchars($f_card_letter, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php endif; ?>
 
@@ -1867,15 +1903,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <span><?php echo htmlspecialchars($p_item['time_period']); ?></span>
                 </span>
 
-                <?php if (in_array($current_user['role'], ['super_admin', 'admin'])): ?>
+                <?php if ($can_manage): ?>
                   <div style="display: flex; gap: 4px;">
-                    <button type="button" class="sp-btn-action" style="padding: 3px 8px; font-size: 0.70rem;" onclick='openEditModal(<?php echo json_encode($p_item); ?>)' title="Edit">
+                    <button type="button" class="sp-btn-action" style="padding: 3px 8px; font-size: 0.70rem;" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($p_item), ENT_QUOTES, 'UTF-8'); ?>)" title="Edit">
                       <i class="fa-solid fa-pen-to-square" style="color: #0284c7;"></i>
                     </button>
                     <form method="POST" action="<?php echo ADMIN_URL; ?>/staff-periods" style="display: inline; margin: 0;" onsubmit="return confirm('Delete this period?');">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                       <input type="hidden" name="action" value="delete_period">
-                      <input type="hidden" name="id" value="<?php echo $p_item['id']; ?>">
-                      <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
+                      <input type="hidden" name="id" value="<?php echo intval($p_item['id']); ?>">
+                      <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode, ENT_QUOTES, 'UTF-8'); ?>">
                       <button type="submit" class="sp-btn-action btn-danger" style="padding: 3px 8px; font-size: 0.70rem;" title="Delete">
                         <i class="fa-solid fa-trash-can" style="color: #ef4444;"></i>
                       </button>
@@ -1919,8 +1956,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div class="hrms-modal-body">
       <form method="POST" action="<?php echo ADMIN_URL; ?>/staff-periods">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="add_period">
-        <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
+        <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode, ENT_QUOTES, 'UTF-8'); ?>">
 
         <!-- 1. Staff Name -->
         <div class="form-group" style="margin-bottom: 16px;">
@@ -1930,7 +1968,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <select name="staff_id" class="settings-input" required>
             <option value="">-- Choose Faculty Member --</option>
             <?php foreach ($staff_members as $sm): ?>
-              <option value="<?php echo $sm['staff_id']; ?>">
+              <option value="<?php echo intval($sm['staff_id']); ?>">
                 <?php echo htmlspecialchars($sm['full_name']); ?> &ndash; <?php echo htmlspecialchars($sm['designation']); ?> (<?php echo htmlspecialchars($sm['department']); ?>)
               </option>
             <?php endforeach; ?>
@@ -2084,9 +2122,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div class="hrms-modal-body">
       <form method="POST" action="<?php echo ADMIN_URL; ?>/staff-periods">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="edit_period">
         <input type="hidden" name="id" id="edit_id" value="">
-        <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
+        <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode, ENT_QUOTES, 'UTF-8'); ?>">
 
         <!-- Staff Member -->
         <div class="form-group" style="margin-bottom: 16px;">
@@ -2095,7 +2134,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </label>
           <select name="staff_id" id="edit_staff_id" class="settings-input" required>
             <?php foreach ($staff_members as $sm): ?>
-              <option value="<?php echo $sm['staff_id']; ?>">
+              <option value="<?php echo intval($sm['staff_id']); ?>">
                 <?php echo htmlspecialchars($sm['full_name']); ?> &ndash; <?php echo htmlspecialchars($sm['designation']); ?>
               </option>
             <?php endforeach; ?>

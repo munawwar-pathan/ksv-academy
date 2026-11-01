@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('leaves');
+}
 $page_title = 'Leave Management | KSV Academy HRMS';
 $page_heading = 'Staff Leaves';
 $page_subheading = 'Leave Entitlements, Requests & Approvals';
@@ -9,80 +12,139 @@ $active_menu = 'leaves';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
-// Filters: search, status, type
-$search = trim($_GET['search'] ?? '');
-$filter_status = trim($_GET['status'] ?? '');
-$filter_type = trim($_GET['type'] ?? '');
+// Filters: search, status, type bounded
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$filter_status = trim((string)($_GET['status'] ?? ''));
+$filter_type = trim((string)($_GET['type'] ?? ''));
 
-// Handle Approve / Reject / Revert (Super Admin)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
-    $action = $_POST['action'] ?? '';
-    
+// Handle POST Actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/leaves');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
+
+    // Handle Approve / Reject / Revert (Super Admin Only)
     if ($action === 'update_status') {
+        if ($current_user['role'] !== 'super_admin') {
+            set_flash('error', 'Unauthorized action: Only super administrators can approve or reject leave requests.');
+            header('Location: ' . ADMIN_URL . '/leaves');
+            exit;
+        }
+
         $leave_id = intval($_POST['leave_id'] ?? 0);
-        $status = $_POST['status'] ?? 'Pending';
-        if ($leave_id > 0 && in_array($status, ['Approved', 'Rejected', 'Pending'])) {
-            $stmt = $db->prepare("UPDATE leave_requests SET status = ? WHERE id = ?");
-            $stmt->execute([$status, $leave_id]);
-            set_flash('success', "Leave request #{$leave_id} successfully marked as {$status}.");
+        $status = in_array($_POST['status'] ?? '', ['Approved', 'Rejected', 'Pending'], true) ? $_POST['status'] : 'Pending';
+
+        if ($leave_id > 0) {
+            // Verify leave request belongs to active session
+            $chk = $db->prepare("
+                SELECT lr.id FROM leave_requests lr
+                JOIN staff_profiles sp ON lr.staff_id = sp.id
+                WHERE lr.id = ? AND sp.session_id = ? LIMIT 1
+            ");
+            $chk->execute([$leave_id, $session_id]);
+            if ($chk->fetch()) {
+                $stmt = $db->prepare("UPDATE leave_requests SET status = ? WHERE id = ?");
+                $stmt->execute([$status, $leave_id]);
+                set_flash('success', "Leave request #{$leave_id} successfully marked as {$status}.");
+            } else {
+                set_flash('error', 'Leave request record not found in the active session.');
+            }
+        }
+        header('Location: ' . ADMIN_URL . '/leaves');
+        exit;
+    }
+
+    // Handle Apply Leave (Super Admin on behalf of staff OR Staff for themselves)
+    if ($action === 'apply_leave') {
+        $staff_id = 0;
+        if ($current_user['role'] === 'super_admin') {
+            $staff_id = intval($_POST['staff_id'] ?? 0);
+            $chk_stf = $db->prepare("SELECT id FROM staff_profiles WHERE id = ? AND session_id = ? LIMIT 1");
+            $chk_stf->execute([$staff_id, $session_id]);
+            if (!$chk_stf->fetch()) {
+                $staff_id = 0;
+            }
+        } else {
+            $stmt_stf = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? AND session_id = ? LIMIT 1");
+            $stmt_stf->execute([$current_user['id'], $session_id]);
+            $staff = $stmt_stf->fetch();
+            if ($staff) {
+                $staff_id = intval($staff['id']);
+            }
+        }
+
+        if ($staff_id > 0) {
+            $allowed_types = ['Casual Leave', 'Medical Leave', 'Academic Duty', 'Emergency Leave', 'Maternity / Paternity Leave', 'Unpaid Leave'];
+            $ltype = in_array(trim((string)($_POST['leave_type'] ?? '')), $allowed_types, true) ? trim((string)$_POST['leave_type']) : 'Casual Leave';
+
+            $sdate = isset($_POST['start_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['start_date']) && strtotime((string)$_POST['start_date']) !== false ? (string)$_POST['start_date'] : date('Y-m-d');
+            $edate = isset($_POST['end_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['end_date']) && strtotime((string)$_POST['end_date']) !== false ? (string)$_POST['end_date'] : $sdate;
+
+            if (strtotime($edate) < strtotime($sdate)) {
+                $edate = $sdate;
+            }
+
+            $reason = mb_substr(trim((string)($_POST['reason'] ?? '')), 0, 1000);
+            $initial_status = ($current_user['role'] === 'super_admin' && isset($_POST['pre_approve'])) ? 'Approved' : 'Pending';
+
+            $stmt = $db->prepare("INSERT INTO leave_requests (staff_id, leave_type, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$staff_id, $ltype, $sdate, $edate, $reason, $initial_status]);
+            set_flash('success', 'Leave application successfully recorded.');
+            header('Location: ' . ADMIN_URL . '/leaves');
+            exit;
+        } else {
+            set_flash('error', 'Please select a valid faculty member in the active session.');
             header('Location: ' . ADMIN_URL . '/leaves');
             exit;
         }
     }
-}
 
-// Handle Apply Leave (Super Admin on behalf of staff OR Staff for themselves)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'apply_leave') {
-    $staff_id = 0;
-    if ($current_user['role'] === 'super_admin') {
-        $staff_id = intval($_POST['staff_id'] ?? 0);
-    } else {
-        $stmt_stf = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1");
-        $stmt_stf->execute([$current_user['id']]);
-        $staff = $stmt_stf->fetch();
-        if ($staff) {
-            $staff_id = $staff['id'];
+    // Handle Delete Leave (Super Admin Only)
+    if ($action === 'delete_leave') {
+        if ($current_user['role'] !== 'super_admin') {
+            set_flash('error', 'Unauthorized action: Only super administrators can delete leave records.');
+            header('Location: ' . ADMIN_URL . '/leaves');
+            exit;
         }
-    }
 
-    if ($staff_id > 0) {
-        $ltype = trim($_POST['leave_type'] ?? 'Casual Leave');
-        $sdate = trim($_POST['start_date'] ?? date('Y-m-d'));
-        $edate = trim($_POST['end_date'] ?? date('Y-m-d'));
-        $reason = trim($_POST['reason'] ?? '');
-        $initial_status = ($current_user['role'] === 'super_admin' && isset($_POST['pre_approve'])) ? 'Approved' : 'Pending';
-
-        $stmt = $db->prepare("INSERT INTO leave_requests (staff_id, leave_type, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$staff_id, $ltype, $sdate, $edate, $reason, $initial_status]);
-        set_flash('success', 'Leave application successfully recorded.');
-        header('Location: ' . ADMIN_URL . '/leaves');
-        exit;
-    } else {
-        set_flash('error', 'Please select a valid faculty member.');
-    }
-}
-
-// Handle Delete Leave (Super Admin)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin' && isset($_POST['action']) && $_POST['action'] === 'delete_leave') {
-    $leave_id = intval($_POST['leave_id'] ?? 0);
-    if ($leave_id > 0) {
-        $db->prepare("DELETE FROM leave_requests WHERE id = ?")->execute([$leave_id]);
-        set_flash('success', "Leave request record #{$leave_id} deleted.");
+        $leave_id = intval($_POST['leave_id'] ?? 0);
+        if ($leave_id > 0) {
+            $chk = $db->prepare("
+                SELECT lr.id FROM leave_requests lr
+                JOIN staff_profiles sp ON lr.staff_id = sp.id
+                WHERE lr.id = ? AND sp.session_id = ? LIMIT 1
+            ");
+            $chk->execute([$leave_id, $session_id]);
+            if ($chk->fetch()) {
+                $db->prepare("DELETE FROM leave_requests WHERE id = ?")->execute([$leave_id]);
+                set_flash('success', "Leave request record #{$leave_id} deleted.");
+            } else {
+                set_flash('error', 'Leave request record not found in the active session.');
+            }
+        }
         header('Location: ' . ADMIN_URL . '/leaves');
         exit;
     }
 }
 
-// Query all staff profiles for dropdown
-$staff_dropdown = $db->query("
+// Query staff profiles for dropdown (Scoped to active session)
+$staff_stmt = $db->prepare("
     SELECT sp.id, sp.employee_code, sp.department, sp.designation, u.full_name 
     FROM staff_profiles sp 
     JOIN users u ON sp.user_id = u.id 
+    WHERE sp.session_id = ? AND u.status = 'active'
     ORDER BY u.full_name ASC
-")->fetchAll();
+");
+$staff_stmt->execute([$session_id]);
+$staff_dropdown = $staff_stmt->fetchAll();
 
 // Pagination Settings (10, 20, 30, 40, 50)
 $allowed_limits = [10, 20, 30, 40, 50];
@@ -92,9 +154,9 @@ if (!in_array($limit, $allowed_limits)) {
 }
 $page = max(1, intval($_GET['page'] ?? 1));
 
-// Build WHERE filter conditions
-$where_clauses = ["1=1"];
-$where_params = [];
+// Build WHERE filter conditions (Scoped to active session)
+$where_clauses = ["sp.session_id = ?"];
+$where_params = [$session_id];
 
 // If staff role, restrict strictly to their own requests
 if ($current_user['role'] === 'staff') {
@@ -111,12 +173,14 @@ if (!empty($search)) {
     $where_params[] = "%$search%";
 }
 
-if (!empty($filter_status)) {
+$allowed_statuses = ['Pending', 'Approved', 'Rejected'];
+if (!empty($filter_status) && in_array($filter_status, $allowed_statuses, true)) {
     $where_clauses[] = "lr.status = ?";
     $where_params[] = $filter_status;
 }
 
-if (!empty($filter_type)) {
+$allowed_types = ['Casual Leave', 'Medical Leave', 'Academic Duty', 'Emergency Leave', 'Maternity / Paternity Leave', 'Unpaid Leave'];
+if (!empty($filter_type) && in_array($filter_type, $allowed_types, true)) {
     $where_clauses[] = "lr.leave_type = ?";
     $where_params[] = $filter_type;
 }
@@ -177,14 +241,19 @@ function get_leaves_pagination_url($target_page, $search, $filter_status, $filte
     return ADMIN_URL . '/leaves' . $query_str;
 }
 
-// Also compute overall global metrics for the KPI grid (Prepared Statement)
-$stat_query = "SELECT status, COUNT(*) as cnt FROM leave_requests";
-$stat_params = [];
+// Also compute overall metrics for the KPI grid (Scoped to active session)
+$stat_query = "
+    SELECT lr.status, COUNT(*) as cnt 
+    FROM leave_requests lr
+    JOIN staff_profiles sp ON lr.staff_id = sp.id
+    WHERE sp.session_id = ?
+";
+$stat_params = [$session_id];
 if ($current_user['role'] === 'staff') {
-    $stat_query .= " WHERE staff_id IN (SELECT id FROM staff_profiles WHERE user_id = ?)";
+    $stat_query .= " AND sp.user_id = ?";
     $stat_params[] = $current_user['id'];
 }
-$stat_query .= " GROUP BY status";
+$stat_query .= " GROUP BY lr.status";
 $stmt_stat = $db->prepare($stat_query);
 $stmt_stat->execute($stat_params);
 $stats_raw = $stmt_stat->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -194,48 +263,62 @@ $metric_pending = $stats_raw['Pending'] ?? 0;
 $metric_approved = $stats_raw['Approved'] ?? 0;
 $metric_rejected = $stats_raw['Rejected'] ?? 0;
 
-// Helper for staff avatar detection
-function get_staff_photo_url($sm) {
-    if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $sm['photo'])) {
-        return $sm['photo'];
-    }
-    if (!empty($sm['avatar'])) {
-        if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $sm['avatar'])) {
-            return '/assets/imgs/faculties/' . $sm['avatar'];
+// Helper for staff avatar detection (Path Traversal Hardened)
+if (!function_exists('get_staff_photo_url')) {
+    function get_staff_photo_url($sm) {
+        $allowed_base = realpath(__DIR__ . '/../..');
+        if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg') {
+            $photo_val = trim($sm['photo']);
+            if (strpos($photo_val, '..') === false && preg_match('#^[a-zA-Z0-9_\-\./]+$#', $photo_val)) {
+                $test_path = $allowed_base . '/' . ltrim($photo_val, '/');
+                $real = realpath($test_path);
+                if ($real && $allowed_base && strpos($real, $allowed_base) === 0 && file_exists($real)) {
+                    return '/' . ltrim($photo_val, '/');
+                }
+            }
         }
-        if (file_exists(__DIR__ . '/../../assets/imgs/' . $sm['avatar'])) {
-            return '/assets/imgs/' . $sm['avatar'];
+        if (!empty($sm['avatar'])) {
+            $avatar_val = trim($sm['avatar']);
+            if (strpos($avatar_val, '..') === false && preg_match('#^[a-zA-Z0-9_\-\.]+$#', $avatar_val)) {
+                $fac_path = $allowed_base . '/assets/imgs/faculties/' . $avatar_val;
+                $real_fac = realpath($fac_path);
+                if ($real_fac && $allowed_base && strpos($real_fac, $allowed_base) === 0 && file_exists($real_fac)) {
+                    return '/assets/imgs/faculties/' . $avatar_val;
+                }
+                $img_path = $allowed_base . '/assets/imgs/' . $avatar_val;
+                $real_img = realpath($img_path);
+                if ($real_img && $allowed_base && strpos($real_img, $allowed_base) === 0 && file_exists($real_img)) {
+                    return '/assets/imgs/' . $avatar_val;
+                }
+            }
         }
+        $lower = strtolower($sm['full_name'] ?? '');
+        if (strpos($lower, 'salam') !== false || strpos($lower, 'director') !== false) {
+            return '/assets/imgs/faculties/founder-director.png';
+        }
+        if (strpos($lower, 'mishra') !== false || strpos($lower, 'rameshwar') !== false) {
+            return '/assets/imgs/faculties/staff-mishra.png';
+        }
+        if (strpos($lower, 'priya') !== false || strpos($lower, 'desai') !== false) {
+            return '/assets/imgs/faculties/staff-priya.png';
+        }
+        if (strpos($lower, 'amit') !== false || strpos($lower, 'verma') !== false) {
+            return '/assets/imgs/faculties/staff-amit.png';
+        }
+        if (strpos($lower, 'aman') !== false) {
+            return '/assets/imgs/faculties/mr-aman-kumar-soni.png';
+        }
+        if (strpos($lower, 'lubna') !== false) {
+            return '/assets/imgs/faculties/mrs-lubna-khan.png';
+        }
+        if (strpos($lower, 'hafiza') !== false || strpos($lower, 'palikar') !== false) {
+            return '/assets/imgs/faculties/hafiza-palikar.png';
+        }
+        if (strpos($lower, 'rafeek') !== false) {
+            return '/assets/imgs/faculties/rafeek-khan.png';
+        }
+        return '';
     }
-    $lower = strtolower($sm['full_name'] ?? '');
-    if (strpos($lower, 'salam') !== false || strpos($lower, 'director') !== false) {
-        return '/assets/imgs/faculties/founder-director.png';
-    }
-    if (strpos($lower, 'mishra') !== false || strpos($lower, 'rameshwar') !== false) {
-        return '/assets/imgs/faculties/staff-mishra.png';
-    }
-    if (strpos($lower, 'priya') !== false || strpos($lower, 'desai') !== false) {
-        return '/assets/imgs/faculties/staff-priya.png';
-    }
-    if (strpos($lower, 'amit') !== false || strpos($lower, 'verma') !== false) {
-        return '/assets/imgs/faculties/staff-amit.png';
-    }
-    if (strpos($lower, 'aman') !== false) {
-        return '/assets/imgs/faculties/mr-aman-kumar-soni.png';
-    }
-    if (strpos($lower, 'lubna') !== false) {
-        return '/assets/imgs/faculties/mrs-lubna-khan.png';
-    }
-    if (strpos($lower, 'hafiza') !== false || strpos($lower, 'palikar') !== false) {
-        return '/assets/imgs/faculties/hafiza-palikar.png';
-    }
-    if (strpos($lower, 'rafeek') !== false) {
-        return '/assets/imgs/faculties/rafeek-khan.png';
-    }
-    if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg') {
-        return $sm['photo'];
-    }
-    return '';
 }
 
 // Color palettes for avatars
@@ -1178,7 +1261,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </button>
 
         <?php if (!empty($search) || !empty($filter_status) || !empty($filter_type)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/leaves<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/leaves' . ($limit !== 10 ? '?limit=' . $limit : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn ghost" title="Reset all filters">
             <i class="fa-solid fa-rotate-left"></i> Reset
           </a>
         <?php endif; ?>
@@ -1290,11 +1373,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <?php if ($has_st_photo): ?>
                     <img src="<?php echo htmlspecialchars($st_photo); ?>" alt="<?php echo htmlspecialchars($lr['full_name']); ?>" class="staff-avatar-img" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="staff-avatar-init" style="width: 38px; height: 38px; border-radius: 50%; background: <?php echo $bg_color; ?>; color: #fff; font-weight: 800; font-size: 14px; display: none; align-items: center; justify-content: center;">
-                      <?php echo $f_letter; ?>
+                      <?php echo htmlspecialchars($f_letter, ENT_QUOTES, 'UTF-8'); ?>
                     </div>
                   <?php else: ?>
                     <div class="staff-avatar-init" style="width: 38px; height: 38px; border-radius: 50%; background: <?php echo $bg_color; ?>; color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center;">
-                      <?php echo $f_letter; ?>
+                      <?php echo htmlspecialchars($f_letter, ENT_QUOTES, 'UTF-8'); ?>
                     </div>
                   <?php endif; ?>
 
@@ -1386,8 +1469,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php if ($lr['status'] === 'Pending'): ?>
                       <!-- Approve Form -->
                       <form method="POST" action="<?php echo ADMIN_URL; ?>/leaves" style="display: inline; margin: 0;">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                         <input type="hidden" name="action" value="update_status">
-                        <input type="hidden" name="leave_id" value="<?php echo $lr['id']; ?>">
+                        <input type="hidden" name="leave_id" value="<?php echo intval($lr['id']); ?>">
                         <input type="hidden" name="status" value="Approved">
                         <button type="submit" class="leave-action-btn btn-approve" title="Approve Leave Request">
                           <i class="fa-solid fa-check"></i>
@@ -1397,8 +1481,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                       <!-- Reject Form -->
                       <form method="POST" action="<?php echo ADMIN_URL; ?>/leaves" style="display: inline; margin: 0;">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                         <input type="hidden" name="action" value="update_status">
-                        <input type="hidden" name="leave_id" value="<?php echo $lr['id']; ?>">
+                        <input type="hidden" name="leave_id" value="<?php echo intval($lr['id']); ?>">
                         <input type="hidden" name="status" value="Rejected">
                         <button type="submit" class="leave-action-btn btn-reject" title="Reject Leave Request">
                           <i class="fa-solid fa-xmark"></i>
@@ -1408,8 +1493,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php else: ?>
                       <!-- Status Pill & Reset Option -->
                       <form method="POST" action="<?php echo ADMIN_URL; ?>/leaves" style="display: inline; margin: 0;">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                         <input type="hidden" name="action" value="update_status">
-                        <input type="hidden" name="leave_id" value="<?php echo $lr['id']; ?>">
+                        <input type="hidden" name="leave_id" value="<?php echo intval($lr['id']); ?>">
                         <input type="hidden" name="status" value="Pending">
                         <button type="submit" class="leave-action-btn" title="Reopen / Reset to Pending Status">
                           <i class="fa-solid fa-rotate-left"></i>
@@ -1420,8 +1506,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                     <!-- Delete Leave Request Form -->
                     <form method="POST" action="<?php echo ADMIN_URL; ?>/leaves" style="display: inline; margin: 0;" onsubmit="return confirm('Permanently remove this leave record?');">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                       <input type="hidden" name="action" value="delete_leave">
-                      <input type="hidden" name="leave_id" value="<?php echo $lr['id']; ?>">
+                      <input type="hidden" name="leave_id" value="<?php echo intval($lr['id']); ?>">
                       <button type="submit" class="leave-action-btn btn-delete" style="padding: 5px 8px;" title="Delete Record">
                         <i class="fa-solid fa-trash-can"></i>
                       </button>
@@ -1539,6 +1626,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <!-- Modal Form -->
     <form method="POST" action="<?php echo ADMIN_URL; ?>/leaves" id="applyLeaveForm">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="apply_leave">
 
       <!-- Faculty Member Selection (If Super Admin) -->
@@ -1548,7 +1636,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <select name="staff_id" required class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600;">
             <option value="">-- Choose Faculty Member --</option>
             <?php foreach ($staff_dropdown as $st_opt): ?>
-              <option value="<?php echo $st_opt['id']; ?>">
+              <option value="<?php echo intval($st_opt['id']); ?>">
                 <?php echo htmlspecialchars($st_opt['full_name']); ?> (<?php echo htmlspecialchars($st_opt['employee_code']); ?> &bull; <?php echo htmlspecialchars($st_opt['department']); ?>)
               </option>
             <?php endforeach; ?>

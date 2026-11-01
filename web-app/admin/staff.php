@@ -25,6 +25,20 @@ $page = max(1, intval($_GET['page'] ?? 1));
 
 // Handle Direct Login as Staff (GET request from "Login Direct" button in new tab)
 if (isset($_GET['action']) && $_GET['action'] === 'direct_login') {
+    // 1. Role Authorization: Only super_admin can impersonate faculty members
+    if ($current_user['role'] !== 'super_admin') {
+        set_flash('error', 'Unauthorized: Only super administrators can use direct faculty login.');
+        header('Location: ' . ADMIN_URL . '/staff');
+        exit;
+    }
+
+    // 2. CSRF Token Verification for session impersonation
+    if (!isset($_GET['csrf_token']) || !verify_csrf_token($_GET['csrf_token'])) {
+        set_flash('error', 'Security token missing or expired for direct faculty login. Please try again from the roster.');
+        header('Location: ' . ADMIN_URL . '/staff');
+        exit;
+    }
+
     $target_staff_id = intval($_GET['staff_id'] ?? 0);
     if ($target_staff_id > 0) {
         $stmt = $db->prepare("
@@ -55,7 +69,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'direct_login') {
             $_SESSION['active_staff_id'] = $target_staff['id'];
             $_SESSION['impersonated_staff'] = true;
 
-            set_flash('success', "Logged in as faculty member " . htmlspecialchars($target_staff['full_name']) . " (" . htmlspecialchars($target_staff['employee_code']) . ")!");
+            set_flash('success', "Logged in as faculty member " . htmlspecialchars($target_staff['full_name'], ENT_QUOTES, 'UTF-8') . " (" . htmlspecialchars($target_staff['employee_code'], ENT_QUOTES, 'UTF-8') . ")!");
             $dest_url = get_dashboard_url('staff', $target_staff['u_id']);
             header('Location: ' . $dest_url);
             exit;
@@ -67,40 +81,62 @@ if (isset($_GET['action']) && $_GET['action'] === 'direct_login') {
     }
 }
 
-// Handle Add Staff
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
+// Handle POST Actions (Super Admin Only with CSRF verification)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. Role Authorization
+    if ($current_user['role'] !== 'super_admin') {
+        set_flash('error', 'Unauthorized action: Super admin privileges required.');
+        header('Location: ' . ADMIN_URL . '/staff');
+        exit;
+    }
+
+    // 2. CSRF Token Verification for all state-changing POST requests
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/staff');
+        exit;
+    }
+
     $action = $_POST['action'] ?? '';
 
+    // Handle Add Staff
     if ($action === 'add_staff') {
-        $full_name = trim($_POST['full_name'] ?? '');
-        $username = trim($_POST['username'] ?? '');
+        $full_name = mb_substr(trim($_POST['full_name'] ?? ''), 0, 100);
+        $username = mb_substr(preg_replace('/[^a-zA-Z0-9_\-\.]/', '', trim($_POST['username'] ?? '')), 0, 50);
         $password = trim($_POST['password'] ?? 'staff');
-        $email = trim($_POST['email'] ?? '');
-        $phone = trim($_POST['phone'] ?? '');
-        $department = trim($_POST['department'] ?? 'Science');
-        $designation = trim($_POST['designation'] ?? 'Lecturer');
-        $qualification = trim($_POST['qualification'] ?? 'M.Sc, B.Ed');
-        $salary = floatval($_POST['salary'] ?? 55000);
-        $blood_group = trim($_POST['blood_group'] ?? 'B+');
-        $address = trim($_POST['address'] ?? '');
-        $specialization = trim($_POST['specialization'] ?? $department);
-        $experience = trim($_POST['experience'] ?? '5+ Years');
-        $highlight = trim($_POST['highlight'] ?? '');
-        $bio = trim($_POST['bio'] ?? '');
-        $sort_order = intval($_POST['sort_order'] ?? 0);
-        $user_status = in_array($_POST['user_status'] ?? 'active', ['active', 'inactive']) ? $_POST['user_status'] : 'active';
+        $raw_email = trim($_POST['email'] ?? '');
+        $email = filter_var($raw_email, FILTER_VALIDATE_EMAIL) ? mb_substr($raw_email, 0, 100) : '';
+        $phone = mb_substr(trim($_POST['phone'] ?? ''), 0, 20);
+        $department = mb_substr(trim($_POST['department'] ?? 'Science'), 0, 100);
+        $designation = mb_substr(trim($_POST['designation'] ?? 'Lecturer'), 0, 100);
+        $qualification = mb_substr(trim($_POST['qualification'] ?? 'M.Sc, B.Ed'), 0, 150);
+        $salary = max(0, floatval($_POST['salary'] ?? 55000));
+        $blood_group = in_array($_POST['blood_group'] ?? '', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], true) ? $_POST['blood_group'] : 'B+';
+        $address = mb_substr(trim($_POST['address'] ?? ''), 0, 500);
+        $specialization = mb_substr(trim($_POST['specialization'] ?? $department), 0, 150);
+        $experience = mb_substr(trim($_POST['experience'] ?? '5+ Years'), 0, 50);
+        $highlight = mb_substr(trim($_POST['highlight'] ?? ''), 0, 255);
+        $bio = mb_substr(trim($_POST['bio'] ?? ''), 0, 1000);
+        $sort_order = max(0, intval($_POST['sort_order'] ?? 0));
+        $user_status = in_array($_POST['user_status'] ?? 'active', ['active', 'inactive'], true) ? $_POST['user_status'] : 'active';
         
         $photo = '/assets/imgs/ksv-logo.jpg';
         $avatar = '';
 
-        // Handle Photo Upload
+        // Handle Photo Upload with security validation (Extension, MIME type, File Size)
         if (isset($_FILES['photo_file']) && !empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
             $p_name = $_FILES['photo_file']['name'];
             $p_tmp = $_FILES['photo_file']['tmp_name'];
+            $p_size = $_FILES['photo_file']['size'] ?? 0;
             $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-            if (in_array($p_ext, ['jpg', 'jpeg', 'png', 'webp', 'avif'])) {
-                $basename = 'faculty-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
-                $dest = __DIR__ . '/../../assets/imgs/faculties/' . $basename;
+            $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+            if (in_array($p_ext, $allowed_img_exts, true) && $p_size <= 5 * 1024 * 1024 && @getimagesize($p_tmp)) {
+                $basename = 'faculty-' . time() . '-' . bin2hex(random_bytes(6)) . '.' . $p_ext;
+                $dest_dir = __DIR__ . '/../../assets/imgs/faculties';
+                if (!is_dir($dest_dir)) {
+                    @mkdir($dest_dir, 0755, true);
+                }
+                $dest = $dest_dir . '/' . $basename;
                 if (move_uploaded_file($p_tmp, $dest)) {
                     @chmod($dest, 0644);
                     $photo = '/assets/imgs/faculties/' . $basename;
@@ -108,8 +144,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                 }
             }
         } elseif (!empty($_POST['photo_path'])) {
-            $photo = trim($_POST['photo_path']);
-            $avatar = basename($photo);
+            $raw_photo = trim($_POST['photo_path']);
+            if (preg_match('#^/assets/imgs/[a-zA-Z0-9_\-\./]+\.(jpg|jpeg|png|webp|avif)$#i', $raw_photo) && strpos($raw_photo, '..') === false) {
+                $photo = $raw_photo;
+                $avatar = basename($photo);
+            }
         }
 
         if (!empty($full_name) && !empty($username)) {
@@ -118,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                 $chk = $db->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
                 $chk->execute([$username]);
                 if ($chk->fetch()) {
-                    set_flash('error', "Username '{$username}' is already taken. Please choose another.");
+                    set_flash('error', "Username '" . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . "' is already taken. Please choose another.");
                     header('Location: ' . ADMIN_URL . '/staff');
                     exit;
                 }
@@ -166,17 +205,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
 
                 $live_note = ($user_status === 'active') ? 'Live on website faculty list' : 'Inactive in draft';
                 if ($email_dispatched) {
-                    set_flash('success', "Faculty member {$full_name} ({$emp_code}) registered successfully! Welcome credentials email delivered to {$email}. ({$live_note})");
+                    set_flash('success', "Faculty member " . htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') . " ({$emp_code}) registered successfully! Welcome credentials delivered to " . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . ". ({$live_note})");
                 } elseif (!empty($email)) {
-                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP not configured';
-                    set_flash('error', "Faculty member {$full_name} ({$emp_code}) registered! Note: Email could not reach {$email}. Reason: {$err_text}. Configure SMTP in School Settings, or view the saved email via 'View Mail' button on their roster row.");
+                    $err_text = !empty($email_diag['error']) ? htmlspecialchars($email_diag['error'], ENT_QUOTES, 'UTF-8') : 'SMTP not configured';
+                    set_flash('error', "Faculty member " . htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') . " ({$emp_code}) registered! Note: Email could not reach " . htmlspecialchars($email, ENT_QUOTES, 'UTF-8') . ". Reason: {$err_text}. Configure SMTP in School Settings, or view the saved email via 'View Mail' button on their roster row.");
                 } else {
-                    set_flash('success', "Faculty member {$full_name} ({$emp_code}) registered successfully! ({$live_note})");
+                    set_flash('success', "Faculty member " . htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') . " ({$emp_code}) registered successfully! ({$live_note})");
                 }
                 header('Location: ' . ADMIN_URL . '/staff');
                 exit;
             } catch (Exception $e) {
-                set_flash('error', 'Error adding staff: ' . $e->getMessage());
+                error_log("Error adding staff: " . $e->getMessage());
+                set_flash('error', 'Database error registering faculty member. Please check values and try again.');
             }
         }
     }
@@ -195,20 +235,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
         if ($sm) {
             $s_email = trim($sm['email'] ?: ($sm['user_email'] ?? ''));
             if (empty($s_email) || !filter_var($s_email, FILTER_VALIDATE_EMAIL)) {
-                set_flash('error', "Cannot send credentials: " . htmlspecialchars($sm['full_name']) . " does not have a valid email on file. Please edit their profile first.");
+                set_flash('error', "Cannot send credentials: " . htmlspecialchars($sm['full_name'], ENT_QUOTES, 'UTF-8') . " does not have a valid email on file. Please edit their profile first.");
             } else {
                 $custom_pwd = trim($_POST['custom_password'] ?? '') ?: 'staff';
-                if ($custom_pwd !== 'staff') {
+                if ($custom_pwd !== 'staff' && strlen($custom_pwd) >= 4) {
                     $hash = password_hash($custom_pwd, PASSWORD_DEFAULT);
                     $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hash, $sm['user_id']]);
                 }
                 $email_diag = [];
                 $sent = send_staff_welcome_email($sm, $sm['username'], $custom_pwd, $email_diag);
                 if ($sent) {
-                    set_flash('success', "Welcome email and portal credentials dispatched to {$s_email} via SMTP.");
+                    set_flash('success', "Welcome email and portal credentials dispatched to " . htmlspecialchars($s_email, ENT_QUOTES, 'UTF-8') . " via SMTP.");
                 } else {
-                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP dispatch failed';
-                    set_flash('error', "Could not dispatch email to {$s_email}. Reason: {$err_text}. Configure SMTP in School Settings, or click 'View Mail' to preview the generated email.");
+                    $err_text = !empty($email_diag['error']) ? htmlspecialchars($email_diag['error'], ENT_QUOTES, 'UTF-8') : 'SMTP dispatch failed';
+                    set_flash('error', "Could not dispatch email to " . htmlspecialchars($s_email, ENT_QUOTES, 'UTF-8') . ". Reason: {$err_text}. Configure SMTP in School Settings, or click 'View Mail' to preview the generated email.");
                 }
             }
         }
@@ -219,35 +259,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
     // Update Staff Profile
     if ($action === 'update_staff') {
         $staff_id = intval($_POST['staff_id'] ?? 0);
-        $full_name = trim($_POST['full_name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $phone = trim($_POST['phone'] ?? '');
-        $department = trim($_POST['department'] ?? 'Science');
-        $designation = trim($_POST['designation'] ?? 'Lecturer');
-        $qualification = trim($_POST['qualification'] ?? 'M.Sc, B.Ed');
-        $salary = floatval($_POST['salary'] ?? 55000);
-        $blood_group = trim($_POST['blood_group'] ?? 'B+');
-        $address = trim($_POST['address'] ?? '');
-        $specialization = trim($_POST['specialization'] ?? '');
-        $experience = trim($_POST['experience'] ?? '');
-        $highlight = trim($_POST['highlight'] ?? '');
-        $bio = trim($_POST['bio'] ?? '');
-        $sort_order = intval($_POST['sort_order'] ?? 0);
-        $user_status = in_array($_POST['user_status'] ?? 'active', ['active', 'inactive']) ? $_POST['user_status'] : 'active';
-        $permissions = isset($_POST['permissions']) && is_array($_POST['permissions']) 
-            ? json_encode(array_values(array_map('trim', $_POST['permissions']))) 
-            : json_encode([]);
+        $full_name = mb_substr(trim($_POST['full_name'] ?? ''), 0, 100);
+        $raw_email = trim($_POST['email'] ?? '');
+        $email = filter_var($raw_email, FILTER_VALIDATE_EMAIL) ? mb_substr($raw_email, 0, 100) : '';
+        $phone = mb_substr(trim($_POST['phone'] ?? ''), 0, 20);
+        $department = mb_substr(trim($_POST['department'] ?? 'Science'), 0, 100);
+        $designation = mb_substr(trim($_POST['designation'] ?? 'Lecturer'), 0, 100);
+        $qualification = mb_substr(trim($_POST['qualification'] ?? 'M.Sc, B.Ed'), 0, 150);
+        $salary = max(0, floatval($_POST['salary'] ?? 55000));
+        $blood_group = in_array($_POST['blood_group'] ?? '', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'], true) ? $_POST['blood_group'] : 'B+';
+        $address = mb_substr(trim($_POST['address'] ?? ''), 0, 500);
+        $specialization = mb_substr(trim($_POST['specialization'] ?? ''), 0, 150);
+        $experience = mb_substr(trim($_POST['experience'] ?? ''), 0, 50);
+        $highlight = mb_substr(trim($_POST['highlight'] ?? ''), 0, 255);
+        $bio = mb_substr(trim($_POST['bio'] ?? ''), 0, 1000);
+        $sort_order = max(0, intval($_POST['sort_order'] ?? 0));
+        $user_status = in_array($_POST['user_status'] ?? 'active', ['active', 'inactive'], true) ? $_POST['user_status'] : 'active';
+        
+        $valid_perms = [
+            'dashboard', 'myself-attendance', 'staff-id', 'staff-periods', 'leaves', 'payroll', 'announcements',
+            'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_marksheet',
+            'admin_staff_periods', 'admin_staff_attendance',
+            'admin_expenses', 'admin_expense_categories', 'admin_expense_report'
+        ];
+        $submitted_perms = is_array($_POST['permissions'] ?? null) ? $_POST['permissions'] : [];
+        $sanitized_perms = array_values(array_intersect($submitted_perms, $valid_perms));
+        $permissions = json_encode($sanitized_perms);
 
-        // Handle Photo Upload
+        // Handle Photo Upload with security validation (Extension, MIME type, File Size)
         $new_photo = null;
         $new_avatar = null;
         if (isset($_FILES['photo_file']) && !empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
             $p_name = $_FILES['photo_file']['name'];
             $p_tmp = $_FILES['photo_file']['tmp_name'];
+            $p_size = $_FILES['photo_file']['size'] ?? 0;
             $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-            if (in_array($p_ext, ['jpg', 'jpeg', 'png', 'webp', 'avif'])) {
-                $basename = 'faculty-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
-                $dest = __DIR__ . '/../../assets/imgs/faculties/' . $basename;
+            $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+            if (in_array($p_ext, $allowed_img_exts, true) && $p_size <= 5 * 1024 * 1024 && @getimagesize($p_tmp)) {
+                $basename = 'faculty-' . time() . '-' . bin2hex(random_bytes(6)) . '.' . $p_ext;
+                $dest_dir = __DIR__ . '/../../assets/imgs/faculties';
+                if (!is_dir($dest_dir)) {
+                    @mkdir($dest_dir, 0755, true);
+                }
+                $dest = $dest_dir . '/' . $basename;
                 if (move_uploaded_file($p_tmp, $dest)) {
                     @chmod($dest, 0644);
                     $new_photo = '/assets/imgs/faculties/' . $basename;
@@ -255,8 +309,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                 }
             }
         } elseif (!empty($_POST['photo_path'])) {
-            $new_photo = trim($_POST['photo_path']);
-            $new_avatar = basename($new_photo);
+            $raw_photo = trim($_POST['photo_path']);
+            if (preg_match('#^/assets/imgs/[a-zA-Z0-9_\-\./]+\.(jpg|jpeg|png|webp|avif)$#i', $raw_photo) && strpos($raw_photo, '..') === false) {
+                $new_photo = $raw_photo;
+                $new_avatar = basename($new_photo);
+            }
         }
 
         if ($staff_id > 0 && !empty($full_name)) {
@@ -273,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                         $stmt_u->execute([$full_name, $email, $phone, $user_status, $user_id]);
                     }
 
-                    if (!empty($_POST['password'])) {
+                    if (!empty($_POST['password']) && strlen($_POST['password']) >= 4) {
                         $hash = password_hash($_POST['password'], PASSWORD_DEFAULT);
                         $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hash, $user_id]);
                     }
@@ -304,11 +361,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
                 }
 
                 $status_txt = ($user_status === 'active') ? 'Active (Live on website)' : 'Inactive (Hidden from website)';
-                set_flash('success', "Faculty profile for {$full_name} updated successfully! Status: {$status_txt}.");
+                set_flash('success', "Faculty profile for " . htmlspecialchars($full_name, ENT_QUOTES, 'UTF-8') . " updated successfully! Status: {$status_txt}.");
                 header('Location: ' . ADMIN_URL . '/staff');
                 exit;
             } catch (Exception $e) {
-                set_flash('error', 'Error updating staff: ' . $e->getMessage());
+                error_log("Error updating staff: " . $e->getMessage());
+                set_flash('error', 'Database error updating faculty profile.');
             }
         }
     }
@@ -321,10 +379,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
             $stmt->execute([$staff_id]);
             $u = $stmt->fetch();
             if ($u) {
+                // Prevent deactivating own account
+                if ((int)$u['id'] === (int)$current_user['id']) {
+                    set_flash('error', 'Security restriction: You cannot deactivate your own active administrator account.');
+                    header('Location: ' . ADMIN_URL . '/staff');
+                    exit;
+                }
                 $new_status = ($u['status'] === 'active') ? 'inactive' : 'active';
                 $db->prepare("UPDATE users SET status = ? WHERE id = ?")->execute([$new_status, $u['id']]);
                 $lbl = ($new_status === 'active') ? 'ACTIVE (live on website faculty list)' : 'INACTIVE (hidden from website)';
-                set_flash('success', "Faculty member '{$u['full_name']}' is now {$lbl}.");
+                set_flash('success', "Faculty member '" . htmlspecialchars($u['full_name'], ENT_QUOTES, 'UTF-8') . "' is now {$lbl}.");
             }
         }
         header('Location: ' . ADMIN_URL . '/staff');
@@ -335,26 +399,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
     if ($action === 'delete_staff') {
         $staff_id = intval($_POST['staff_id'] ?? 0);
         if ($staff_id > 0) {
-            $stmt_uid = $db->prepare("SELECT user_id FROM staff_profiles WHERE id = ?");
+            $stmt_uid = $db->prepare("SELECT sp.id, sp.user_id, u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.id = ?");
             $stmt_uid->execute([$staff_id]);
-            $user_id = $stmt_uid->fetchColumn();
-            $db->prepare("DELETE FROM staff_profiles WHERE id = ?")->execute([$staff_id]);
-            if ($user_id) {
-                $db->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);
+            $del_row = $stmt_uid->fetch();
+            if ($del_row) {
+                // Prevent deleting own account
+                if ((int)$del_row['user_id'] === (int)$current_user['id']) {
+                    set_flash('error', 'Security restriction: You cannot delete your own currently logged-in account.');
+                    header('Location: ' . ADMIN_URL . '/staff');
+                    exit;
+                }
+                $db->prepare("DELETE FROM staff_profiles WHERE id = ?")->execute([$staff_id]);
+                if (!empty($del_row['user_id'])) {
+                    $db->prepare("DELETE FROM users WHERE id = ?")->execute([$del_row['user_id']]);
+                }
+                set_flash('success', "Faculty member record for '" . htmlspecialchars($del_row['full_name'], ENT_QUOTES, 'UTF-8') . "' removed successfully.");
+                header('Location: ' . ADMIN_URL . '/staff');
+                exit;
             }
-            set_flash('success', "Faculty member record removed successfully.");
-            header('Location: ' . ADMIN_URL . '/staff');
-            exit;
         }
     }
 
     // Change Staff Password
     if ($action === 'change_staff_password') {
         $staff_id = intval($_POST['staff_id'] ?? 0);
-        $new_password = trim($_POST['new_password'] ?? '');
-        $confirm_password = trim($_POST['confirm_password'] ?? '');
+        $new_password = (string)($_POST['new_password'] ?? '');
+        $confirm_password = (string)($_POST['confirm_password'] ?? '');
 
-        if (empty($new_password) || empty($confirm_password)) {
+        if ($staff_id <= 0) {
+            set_flash('error', 'Invalid faculty member identifier.');
+        } elseif (empty($new_password) || empty($confirm_password)) {
             set_flash('error', 'Please enter and confirm the new password.');
         } elseif ($new_password !== $confirm_password) {
             set_flash('error', 'New password and confirm password do not match.');
@@ -373,7 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_ad
             if ($sm && !empty($sm['u_id'])) {
                 $hashed = password_hash($new_password, PASSWORD_DEFAULT);
                 $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hashed, $sm['u_id']]);
-                set_flash('success', "Password for faculty member " . htmlspecialchars($sm['full_name']) . " (" . htmlspecialchars($sm['employee_code']) . ") updated successfully!");
+                set_flash('success', "Password for faculty member " . htmlspecialchars($sm['full_name'], ENT_QUOTES, 'UTF-8') . " (" . htmlspecialchars($sm['employee_code'], ENT_QUOTES, 'UTF-8') . ") updated successfully!");
             } else {
                 set_flash('error', 'Faculty member not found.');
             }
@@ -476,17 +550,22 @@ $default_depts = ['Science', 'Chemistry & IIT-JEE', 'Physics', 'Mathematics & CE
 $departments = array_values(array_unique(array_merge($db_depts, $default_depts)));
 sort($departments);
 
-// Helper for staff avatar detection
+// Helper for staff avatar detection (with path traversal security hardening)
 function get_staff_photo_url($sm) {
-    if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $sm['photo'])) {
-        return $sm['photo'];
-    }
-    if (!empty($sm['avatar'])) {
-        if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $sm['avatar'])) {
-            return '/assets/imgs/faculties/' . $sm['avatar'];
+    if (!empty($sm['photo']) && strpos($sm['photo'], '..') === false && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg') {
+        $real_path = realpath(__DIR__ . '/../..' . $sm['photo']);
+        $base_allowed = realpath(__DIR__ . '/../../assets/imgs');
+        if ($real_path && $base_allowed && strpos($real_path, $base_allowed) === 0 && file_exists($real_path)) {
+            return $sm['photo'];
         }
-        if (file_exists(__DIR__ . '/../../assets/imgs/' . $sm['avatar'])) {
-            return '/assets/imgs/' . $sm['avatar'];
+    }
+    if (!empty($sm['avatar']) && strpos($sm['avatar'], '..') === false && strpos($sm['avatar'], '/') === false && strpos($sm['avatar'], '\\') === false) {
+        $avatar_clean = basename($sm['avatar']);
+        if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $avatar_clean)) {
+            return '/assets/imgs/faculties/' . $avatar_clean;
+        }
+        if (file_exists(__DIR__ . '/../../assets/imgs/' . $avatar_clean)) {
+            return '/assets/imgs/' . $avatar_clean;
         }
     }
     $lower = strtolower($sm['full_name']);
@@ -1065,6 +1144,39 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #fef08a !important;
   border-color: rgba(202, 138, 4, 0.6) !important;
 }
+[data-theme="dark"] .btn-staff-mail,
+[data-theme="dark"] .btn-student-pwd[style*="color: #0284c7"],
+[data-theme="dark"] .btn-student-pwd[style*="color:#0284c7"] {
+  background: rgba(2, 132, 199, 0.18) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(2, 132, 199, 0.45) !important;
+}
+[data-theme="dark"] .btn-staff-mail:hover,
+[data-theme="dark"] .btn-student-pwd[style*="color: #0284c7"]:hover,
+[data-theme="dark"] .btn-student-pwd[style*="color:#0284c7"]:hover {
+  background: rgba(2, 132, 199, 0.32) !important;
+  color: #7dd3fc !important;
+  border-color: rgba(2, 132, 199, 0.65) !important;
+}
+[data-theme="dark"] .btn-staff-viewmail,
+[data-theme="dark"] .btn-student-pwd[style*="color: #7c3aed"],
+[data-theme="dark"] .btn-student-pwd[style*="color:#7c3aed"] {
+  background: rgba(124, 58, 237, 0.18) !important;
+  color: #c4b5fd !important;
+  border-color: rgba(124, 58, 237, 0.45) !important;
+}
+[data-theme="dark"] .btn-staff-viewmail:hover,
+[data-theme="dark"] .btn-student-pwd[style*="color: #7c3aed"]:hover,
+[data-theme="dark"] .btn-student-pwd[style*="color:#7c3aed"]:hover {
+  background: rgba(124, 58, 237, 0.32) !important;
+  color: #ddd6fe !important;
+  border-color: rgba(124, 58, 237, 0.65) !important;
+}
+[data-theme="dark"] .sid-status-inactive {
+  background: rgba(217, 119, 6, 0.18) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(217, 119, 6, 0.4) !important;
+}
 
 /* Action Buttons */
 [data-theme="dark"] .sid-action-btn {
@@ -1253,6 +1365,179 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 [data-theme="dark"] input[name="salary"] {
   color: #34d399 !important;
+}
+
+/* Faculty Portrait Photo Upload & Preview Box (Light & Dark Mode) */
+.add-faculty-photo-box {
+  margin-bottom: 16px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.add-faculty-photo-box .faculty-photo-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  color: #166534;
+}
+.add-faculty-photo-box .faculty-photo-input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px dashed #16a34a;
+  border-radius: 6px;
+  background: #ffffff;
+}
+.add-faculty-photo-box .faculty-photo-hint {
+  font-size: 11px;
+  color: #15803d;
+  display: block;
+  margin-top: 3px;
+}
+
+.edit-faculty-photo-box {
+  margin-bottom: 16px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.edit-faculty-photo-box .faculty-photo-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #334155;
+}
+.edit-faculty-photo-box .faculty-photo-input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px dashed #0284c7;
+  border-radius: 6px;
+  background: #ffffff;
+}
+.edit-faculty-photo-box .faculty-photo-hint {
+  font-size: 11px;
+  color: #64748b;
+  display: block;
+  margin-top: 3px;
+}
+
+/* Faculty Portrait Photo Upload & Preview Box (Dark Mode) */
+[data-theme="dark"] .faculty-photo-box,
+[data-theme="dark"] .add-faculty-photo-box,
+[data-theme="dark"] .edit-faculty-photo-box,
+[data-theme="dark"] #addStaffModal .faculty-photo-box,
+[data-theme="dark"] #editStaffModal .faculty-photo-box,
+[data-theme="dark"] #addStaffModal div[class*="faculty-photo-box"],
+[data-theme="dark"] #editStaffModal div[class*="faculty-photo-box"],
+[data-theme="dark"] #addStaffModal .form-group[style*="background: #f0fdf4"],
+[data-theme="dark"] #addStaffModal .form-group[style*="background:#f0fdf4"],
+[data-theme="dark"] #editStaffModal .form-group[style*="background: #f8fafc"],
+[data-theme="dark"] #editStaffModal .form-group[style*="background:#f8fafc"] {
+  background: #0f172a !important;
+  border: 1.5px dashed #334155 !important;
+  border-radius: 10px !important;
+}
+[data-theme="dark"] .faculty-photo-box:hover,
+[data-theme="dark"] .add-faculty-photo-box:hover,
+[data-theme="dark"] .edit-faculty-photo-box:hover {
+  border-color: #0284c7 !important;
+  background: #111e33 !important;
+}
+[data-theme="dark"] .faculty-photo-box label,
+[data-theme="dark"] .faculty-photo-label,
+[data-theme="dark"] .add-faculty-photo-box .faculty-photo-label,
+[data-theme="dark"] .edit-faculty-photo-box .faculty-photo-label,
+[data-theme="dark"] #addStaffModal .form-group[style*="background: #f0fdf4"] label,
+[data-theme="dark"] #addStaffModal .form-group[style*="background:#f0fdf4"] label,
+[data-theme="dark"] #editStaffModal .form-group[style*="background: #f8fafc"] label,
+[data-theme="dark"] #editStaffModal .form-group[style*="background:#f8fafc"] label {
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .faculty-photo-box label i,
+[data-theme="dark"] .faculty-photo-label i {
+  color: #0284c7 !important;
+}
+[data-theme="dark"] .faculty-photo-box input[type="file"],
+[data-theme="dark"] .faculty-photo-input,
+[data-theme="dark"] .add-faculty-photo-box .faculty-photo-input,
+[data-theme="dark"] .edit-faculty-photo-box .faculty-photo-input,
+[data-theme="dark"] #addStaffModal input[type="file"],
+[data-theme="dark"] #editStaffModal input[type="file"],
+[data-theme="dark"] input[type="file"].hrms-input {
+  background: #1e293b !important;
+  border: 1px dashed #475569 !important;
+  border-radius: 8px !important;
+  -webkit-border-radius: 8px !important;
+  color: #cbd5e1 !important;
+  padding: 6px 10px !important;
+  width: 100% !important;
+}
+[data-theme="dark"] .faculty-photo-box input[type="file"]:focus,
+[data-theme="dark"] .faculty-photo-input:focus,
+[data-theme="dark"] input[type="file"].hrms-input:focus {
+  border-color: #0284c7 !important;
+  background: #1e293b !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25) !important;
+}
+[data-theme="dark"] .faculty-photo-box input[type="file"]::file-selector-button,
+[data-theme="dark"] .faculty-photo-input::file-selector-button,
+[data-theme="dark"] input[type="file"].hrms-input::file-selector-button {
+  background: #334155 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #475569 !important;
+  border-radius: 6px !important;
+  -webkit-border-radius: 6px !important;
+  padding: 4px 10px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  margin-right: 8px !important;
+}
+[data-theme="dark"] .faculty-photo-box input[type="file"]::file-selector-button:hover,
+[data-theme="dark"] .faculty-photo-input::file-selector-button:hover,
+[data-theme="dark"] input[type="file"].hrms-input::file-selector-button:hover {
+  background: #475569 !important;
+  color: #ffffff !important;
+  border-color: #64748b !important;
+}
+[data-theme="dark"] .faculty-photo-box span,
+[data-theme="dark"] .faculty-photo-hint,
+[data-theme="dark"] .add-faculty-photo-box .faculty-photo-hint,
+[data-theme="dark"] .edit-faculty-photo-box .faculty-photo-hint,
+[data-theme="dark"] #addStaffModal .form-group[style*="background: #f0fdf4"] span,
+[data-theme="dark"] #addStaffModal .form-group[style*="background:#f0fdf4"] span,
+[data-theme="dark"] #editStaffModal .form-group[style*="background: #f8fafc"] span,
+[data-theme="dark"] #editStaffModal .form-group[style*="background:#f8fafc"] span {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .faculty-photo-box code,
+[data-theme="dark"] .faculty-photo-hint code,
+[data-theme="dark"] #addStaffModal code {
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+  border: 1px solid #334155 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+[data-theme="dark"] .edit-photo-preview-wrap {
+  background: #0b1329 !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #edit_photo_preview {
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .hrms-modal small {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .hrms-modal small[style*="color: #0284c7"],
+[data-theme="dark"] .hrms-modal small[style*="color:#0284c7"] {
+  color: #38bdf8 !important;
 }
 
 /* 5. Modal 2: #viewStaffModal (Faculty Profile Details) */
@@ -1705,8 +1990,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                   <?php if ($current_user['role'] === 'super_admin'): ?>
                     <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="margin: 0;">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                       <input type="hidden" name="action" value="toggle_staff_status">
-                      <input type="hidden" name="staff_id" value="<?php echo $sm['id']; ?>">
+                      <input type="hidden" name="staff_id" value="<?php echo (int)$sm['id']; ?>">
                       <button type="submit" style="background: none; border: none; padding: 0; font-size: 0.70rem; color: <?php echo $sm['user_status'] === 'active' ? '#d97706' : '#059669'; ?>; cursor: pointer; text-decoration: underline; font-weight: 600;">
                         <?php echo $sm['user_status'] === 'active' ? 'Pause' : 'Activate'; ?>
                       </button>
@@ -1715,41 +2001,46 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 </div>
               </td>
 
-              <!-- 8. Login Actions (Login Direct & Change Password) -->
+              <!-- 8. Login Actions (Login Direct & Change Password - Super Admin Only) -->
               <td>
                 <div class="sid-login-wrap">
-                  <a href="<?php echo ADMIN_URL; ?>/staff?action=direct_login&staff_id=<?php echo $sm['id']; ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($sm['full_name']); ?> in a new tab">
-                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i>
-                    <span>Login Direct</span>
-                  </a>
+                  <?php if ($current_user['role'] === 'super_admin'): ?>
+                    <a href="<?php echo htmlspecialchars(ADMIN_URL . '/staff?action=direct_login&staff_id=' . (int)$sm['id'] . '&csrf_token=' . get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($sm['full_name'], ENT_QUOTES, 'UTF-8'); ?> in a new tab">
+                      <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i>
+                      <span>Login Direct</span>
+                    </a>
 
-                  <button type="button" class="btn-student-pwd" title="Change Password for <?php echo htmlspecialchars($sm['full_name']); ?>" onclick='openChangeStaffPasswordModal(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
-                    <i class="fa-solid fa-key" style="font-size: 0.7rem;"></i>
-                    <span>Change Password</span>
-                  </button>
-
-                  <?php 
-                    $f_email = trim($sm['email'] ?: ($sm['user_email'] ?? ''));
-                    if (!empty($f_email)): 
-                  ?>
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="display:inline; margin:0;" onsubmit="return confirm('Send portal login credentials &amp; welcome email to <?php echo htmlspecialchars(addslashes($f_email)); ?>?');">
-                      <input type="hidden" name="action" value="send_credentials">
-                      <input type="hidden" name="staff_id" value="<?php echo $sm['id']; ?>">
-                      <button type="submit" class="btn-student-pwd" style="color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Send Welcome &amp; Login Details to <?php echo htmlspecialchars($f_email); ?>">
-                        <i class="fa-solid fa-paper-plane" style="font-size: 0.7rem;"></i>
-                        <span>Send Mail</span>
-                      </button>
-                    </form>
+                    <button type="button" class="btn-student-pwd" title="Change Password for <?php echo htmlspecialchars($sm['full_name'], ENT_QUOTES, 'UTF-8'); ?>" onclick='openChangeStaffPasswordModal(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
+                      <i class="fa-solid fa-key" style="font-size: 0.7rem;"></i>
+                      <span>Change Password</span>
+                    </button>
 
                     <?php 
-                      $preview_file = __DIR__ . '/../uploads/sent_emails/welcome_staff_' . $sm['id'] . '.html';
-                      if (file_exists($preview_file)): 
+                      $f_email = trim($sm['email'] ?: ($sm['user_email'] ?? ''));
+                      if (!empty($f_email)): 
                     ?>
-                      <a href="<?php echo HRMS_URL; ?>/uploads/sent_emails/welcome_staff_<?php echo $sm['id']; ?>.html" target="_blank" rel="noopener noreferrer" class="btn-student-pwd" style="color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;" title="Preview Saved Welcome Email HTML in new tab">
-                        <i class="fa-solid fa-envelope-open-text" style="font-size: 0.7rem;"></i>
-                        <span>View Mail</span>
-                      </a>
+                      <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="display:inline; margin:0;" onsubmit="return confirm('Send portal login credentials &amp; welcome email to <?php echo htmlspecialchars(addslashes($f_email), ENT_QUOTES, 'UTF-8'); ?>?');">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
+                        <input type="hidden" name="action" value="send_credentials">
+                        <input type="hidden" name="staff_id" value="<?php echo (int)$sm['id']; ?>">
+                        <button type="submit" class="btn-student-pwd btn-staff-mail" style="color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Send Welcome &amp; Login Details to <?php echo htmlspecialchars($f_email, ENT_QUOTES, 'UTF-8'); ?>">
+                          <i class="fa-solid fa-paper-plane" style="font-size: 0.7rem;"></i>
+                          <span>Send Mail</span>
+                        </button>
+                      </form>
+
+                      <?php 
+                        $preview_file = __DIR__ . '/../uploads/sent_emails/welcome_staff_' . (int)$sm['id'] . '.html';
+                        if (file_exists($preview_file)): 
+                      ?>
+                        <a href="<?php echo HRMS_URL; ?>/uploads/sent_emails/welcome_staff_<?php echo (int)$sm['id']; ?>.html" target="_blank" rel="noopener noreferrer" class="btn-student-pwd btn-staff-viewmail" style="color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;" title="Preview Saved Welcome Email HTML in new tab">
+                          <i class="fa-solid fa-envelope-open-text" style="font-size: 0.7rem;"></i>
+                          <span>View Mail</span>
+                        </a>
+                      <?php endif; ?>
                     <?php endif; ?>
+                  <?php else: ?>
+                    <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">Protected</span>
                   <?php endif; ?>
                 </div>
               </td>
@@ -1763,16 +2054,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid fa-eye"></i>
                   </button>
 
-                  <!-- Pen Icon: Edit Profile -->
-                  <button type="button" class="sid-action-btn edit" title="Edit Faculty Profile" onclick='openEditStaffModal(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
-                    <i class="fa-solid fa-pencil"></i>
-                  </button>
-
-                  <!-- Trash Icon: Delete Profile -->
                   <?php if ($current_user['role'] === 'super_admin'): ?>
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars(addslashes($sm['full_name'])); ?> and their user credentials?');">
+                    <!-- Pen Icon: Edit Profile -->
+                    <button type="button" class="sid-action-btn edit" title="Edit Faculty Profile" onclick='openEditStaffModal(<?php echo htmlspecialchars(json_encode($sm), ENT_QUOTES, "UTF-8"); ?>)'>
+                      <i class="fa-solid fa-pencil"></i>
+                    </button>
+
+                    <!-- Trash Icon: Delete Profile -->
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars(addslashes($sm['full_name']), ENT_QUOTES, 'UTF-8'); ?> and their user credentials?');">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                       <input type="hidden" name="action" value="delete_staff">
-                      <input type="hidden" name="staff_id" value="<?php echo $sm['id']; ?>">
+                      <input type="hidden" name="staff_id" value="<?php echo (int)$sm['id']; ?>">
                       <button type="submit" class="sid-action-btn delete" title="Delete Faculty Record">
                         <i class="fa-solid fa-trash"></i>
                       </button>
@@ -1891,6 +2183,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="add_staff">
 
       <div class="hrms-modal-body" style="padding: 24px; max-height: calc(85vh - 140px); overflow-y: auto;">
@@ -1960,12 +2253,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Faculty Portrait Photo Upload -->
-        <div class="form-group" style="margin-bottom: 16px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px 14px;">
-          <label style="display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px; color: #166534;">
+        <div class="form-group faculty-photo-box add-faculty-photo-box">
+          <label class="faculty-photo-label">
             <i class="fa-solid fa-camera"></i> Faculty Portrait Photo (Optional)
           </label>
-          <input type="file" name="photo_file" accept="image/*" class="hrms-input" style="width: 100%; padding: 6px 8px; font-size: 12px; border: 1px dashed #16a34a; border-radius: 6px; background: #fff;">
-          <span style="font-size: 11px; color: #15803d; display: block; margin-top: 3px;">Upload portrait photo for website faculty card. Stored in <code>assets/imgs/faculties/</code>.</span>
+          <input type="file" name="photo_file" accept="image/*" class="hrms-input faculty-photo-input">
+          <span class="faculty-photo-hint">Upload portrait photo for website faculty card. Stored in <code>assets/imgs/faculties/</code>.</span>
         </div>
 
         <!-- Key Credential Highlight -->
@@ -2153,6 +2446,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="update_staff">
       <input type="hidden" name="staff_id" id="edit_staff_id" value="">
 
@@ -2235,17 +2529,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Row 3d: Faculty Portrait Photo Preview & Replace -->
-        <div class="form-group" style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px 14px;">
-          <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">
+        <div class="form-group faculty-photo-box edit-faculty-photo-box">
+          <label class="faculty-photo-label">
             Faculty Portrait Photo
           </label>
           <div style="display: flex; gap: 14px; align-items: center;">
-            <div style="width: 50px; height: 65px; border-radius: 8px; overflow: hidden; background: #0f172a; flex-shrink: 0; border: 1px solid #cbd5e1;">
+            <div class="edit-photo-preview-wrap" style="width: 50px; height: 65px; border-radius: 8px; overflow: hidden; background: #0f172a; flex-shrink: 0; border: 1px solid #cbd5e1;">
               <img id="edit_photo_preview" src="/assets/imgs/ksv-logo.jpg" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div style="flex: 1;">
-              <input type="file" name="photo_file" accept="image/*" class="hrms-input" style="width: 100%; padding: 6px 8px; font-size: 12px; border: 1px dashed #0284c7; border-radius: 6px; background: #fff;">
-              <span style="font-size: 11px; color: #64748b; display: block; margin-top: 3px;">Select a new portrait image file to replace current photo.</span>
+              <input type="file" name="photo_file" accept="image/*" class="hrms-input faculty-photo-input">
+              <span class="faculty-photo-hint">Select a new portrait image file to replace current photo.</span>
             </div>
           </div>
         </div>
@@ -2505,6 +2799,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/staff" id="changeStaffPasswordForm">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="change_staff_password">
       <input type="hidden" name="staff_id" id="pwd_staff_id" value="">
 

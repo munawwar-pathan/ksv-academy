@@ -1,4 +1,13 @@
 <?php
+// HTTP Security Headers (Defense-in-depth across Apache, LiteSpeed, Nginx, PHP built-in server)
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
@@ -12,24 +21,34 @@ $active_menu = 'students';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
+
+// Standards list for filter & validation
+$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
 
 // Filter by search and standard
-$search = trim($_GET['search'] ?? '');
-$filter_standard = trim($_GET['standard'] ?? '');
+$search = trim((string)($_GET['search'] ?? ''));
+$filter_standard = trim((string)($_GET['standard'] ?? ''));
 
 // Handle Direct Login as Student (GET request from "Login Direct" button in new tab)
 if (isset($_GET['action']) && $_GET['action'] === 'direct_login') {
+    // CSRF protection for impersonation action
+    if (!isset($_GET['csrf_token']) || !verify_csrf_token($_GET['csrf_token'])) {
+        set_flash('error', 'Security token missing or expired for direct student login. Please try again from the roaster.');
+        header('Location: ' . ADMIN_URL . '/students');
+        exit;
+    }
+
     $target_student_id = intval($_GET['student_id'] ?? 0);
     if ($target_student_id > 0) {
-        $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-        $stmt->execute([$target_student_id]);
+        $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+        $stmt->execute([$target_student_id, $session_id]);
         $target_student = $stmt->fetch();
         if ($target_student) {
             $stu_user = get_or_create_student_user($target_student, $db);
 
             // Preserve admin session so admin tab is never logged out
-            if (!empty($_SESSION['user_id']) && in_array(($_SESSION['role'] ?? ''), ['super_admin', 'staff'])) {
+            if (!empty($_SESSION['user_id']) && in_array(($_SESSION['role'] ?? ''), ['super_admin', 'staff'], true)) {
                 $_SESSION['admin_user_id'] = $_SESSION['user_id'];
                 $_SESSION['admin_username'] = $_SESSION['username'];
                 $_SESSION['admin_role'] = $_SESSION['role'];
@@ -46,54 +65,88 @@ if (isset($_GET['action']) && $_GET['action'] === 'direct_login') {
             $_SESSION['active_student_id'] = $target_student['id'];
             $_SESSION['impersonated_student'] = true;
 
-            set_flash('success', "Logged in as student " . htmlspecialchars($target_student['student_name']) . " (Roll: " . htmlspecialchars($target_student['roll_no']) . ")!");
+            set_flash('success', "Logged in as student " . htmlspecialchars($target_student['student_name'], ENT_QUOTES, 'UTF-8') . " (Roll: " . htmlspecialchars($target_student['roll_no'], ENT_QUOTES, 'UTF-8') . ")!");
             header('Location: ' . PARENT_URL . '/dashboard');
             exit;
         } else {
-            set_flash('error', "Student record not found.");
+            set_flash('error', "Student record not found in current session.");
             header('Location: ' . ADMIN_URL . '/students');
             exit;
         }
     }
 }
 
-// Handle Actions
+// Rate Limiting Protection (Max 40 POST submissions per 5 minutes per session)
+$now = time();
+if (!isset($_SESSION['students_post_attempts']) || !is_array($_SESSION['students_post_attempts'])) {
+    $_SESSION['students_post_attempts'] = [];
+}
+$_SESSION['students_post_attempts'] = array_filter($_SESSION['students_post_attempts'], function($timestamp) use ($now) {
+    return ($now - (int)$timestamp) < 300;
+});
+$is_rate_limited = (count($_SESSION['students_post_attempts']) >= 40);
+
+// Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. Anti-bot honeypot check
+    if (!empty($_POST['students_hp'])) {
+        usleep(300000);
+        set_flash('error', 'Invalid request detected.');
+        header('Location: ' . ADMIN_URL . '/students');
+        exit;
+    }
+
+    // 2. Brute-force / spam flood lockout
+    if ($is_rate_limited) {
+        set_flash('error', 'Too many requests in a short period. Please wait a moment and try again.');
+        header('Location: ' . ADMIN_URL . '/students');
+        exit;
+    }
+    $_SESSION['students_post_attempts'][] = $now;
+
+    // 3. CSRF token validation
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/students');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     // 1. Register New Student
     if ($action === 'register_student') {
-        $student_name = trim($_POST['student_name'] ?? '');
-        $roll_no = trim($_POST['roll_no'] ?? '');
-        $admission_no = trim($_POST['admission_no'] ?? '');
-        $standard = trim($_POST['standard'] ?? '10th Standard');
-        $section = trim($_POST['section'] ?? 'A');
-        $batch_timing = trim($_POST['batch_timing'] ?? '07:30 AM - 01:30 PM');
-        $parent_name = trim($_POST['parent_name'] ?? '');
-        $mother_name = trim($_POST['mother_name'] ?? '');
-        $parent_phone = trim($_POST['parent_phone'] ?? '');
-        $student_phone = trim($_POST['student_phone'] ?? '');
-        $student_email = trim($_POST['student_email'] ?? '');
-        $gender = trim($_POST['gender'] ?? 'Male');
-        $dob = !empty($_POST['dob']) ? $_POST['dob'] : null;
-        $blood_group = trim($_POST['blood_group'] ?? 'O+');
-        $address = trim($_POST['address'] ?? '');
-        $total_fees = floatval($_POST['total_fees'] ?? 45000);
-        $paid_fees = floatval($_POST['paid_fees'] ?? 0);
+        $student_name = mb_substr(trim((string)($_POST['student_name'] ?? '')), 0, 100);
+        $roll_no = mb_substr(trim((string)($_POST['roll_no'] ?? '')), 0, 50);
+        $admission_no = mb_substr(trim((string)($_POST['admission_no'] ?? '')), 0, 50);
+        $standard = mb_substr(trim((string)($_POST['standard'] ?? '10th Standard')), 0, 50);
+        $section = mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10);
+        $batch_timing = mb_substr(trim((string)($_POST['batch_timing'] ?? '07:30 AM - 01:30 PM')), 0, 50);
+        $parent_name = mb_substr(trim((string)($_POST['parent_name'] ?? '')), 0, 100);
+        $mother_name = mb_substr(trim((string)($_POST['mother_name'] ?? '')), 0, 100);
+        $parent_phone = preg_replace('/[^0-9+\-\s]/', '', mb_substr(trim((string)($_POST['parent_phone'] ?? '')), 0, 25));
+        $student_phone = preg_replace('/[^0-9+\-\s]/', '', mb_substr(trim((string)($_POST['student_phone'] ?? '')), 0, 25));
+        $student_email = filter_var(trim((string)($_POST['student_email'] ?? '')), FILTER_VALIDATE_EMAIL) ? mb_substr(trim((string)($_POST['student_email'] ?? '')), 0, 100) : '';
+        $gender = in_array($_POST['gender'] ?? '', ['Male', 'Female', 'Other'], true) ? $_POST['gender'] : 'Male';
+        $dob = (!empty($_POST['dob']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['dob'])) ? $_POST['dob'] : null;
+        $blood_group = mb_substr(trim((string)($_POST['blood_group'] ?? 'O+')), 0, 10);
+        $address = mb_substr(trim((string)($_POST['address'] ?? '')), 0, 500);
+        $total_fees = max(0, floatval($_POST['total_fees'] ?? 45000));
+        $paid_fees = max(0, min($total_fees, floatval($_POST['paid_fees'] ?? 0)));
 
-        // Upload Profile Picture
+        // Upload Profile Picture (Strict verification)
         $photo = '/assets/imgs/ksv-logo.jpg';
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
             $p_tmp = $_FILES['profile_picture']['tmp_name'];
+            $p_size = $_FILES['profile_picture']['size'];
             $p_name = $_FILES['profile_picture']['name'];
             $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-            $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
-            if (in_array($p_ext, $allowed_img_exts)) {
+            $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp'];
+            if (in_array($p_ext, $allowed_img_exts, true) && $p_size <= 5 * 1024 * 1024 && @getimagesize($p_tmp)) {
                 $p_dir = __DIR__ . '/../uploads/students';
                 if (!is_dir($p_dir)) {
-                    mkdir($p_dir, 0777, true);
+                    mkdir($p_dir, 0755, true);
                 }
-                $photo_filename = 'stu_' . time() . '_' . rand(1000, 9999) . '.' . $p_ext;
+                $photo_filename = 'stu_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $p_ext;
                 $dest_photo = $p_dir . '/' . $photo_filename;
                 if (move_uploaded_file($p_tmp, $dest_photo)) {
                     $photo = '/web-app/uploads/students/' . $photo_filename;
@@ -101,26 +154,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // Upload Academic Files (single input choosing multiple files)
+        // Upload Academic Files
         $academic_docs = [];
         if (isset($_FILES['academic_files']) && !empty($_FILES['academic_files']['name'])) {
             $files_array = $_FILES['academic_files'];
             $file_count = is_array($files_array['name']) ? count($files_array['name']) : 0;
             $docs_dir = __DIR__ . '/../uploads/academic_docs';
             if (!is_dir($docs_dir)) {
-                mkdir($docs_dir, 0777, true);
+                mkdir($docs_dir, 0755, true);
             }
 
             $allowed_doc_exts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'webp', 'txt'];
             for ($i = 0; $i < $file_count; $i++) {
-                if ($files_array['error'][$i] === UPLOAD_ERR_OK) {
-                    $orig_name = $files_array['name'][$i];
+                if ($files_array['error'][$i] === UPLOAD_ERR_OK && $files_array['size'][$i] <= 15 * 1024 * 1024) {
+                    $orig_name = mb_substr(basename($files_array['name'][$i]), 0, 100);
                     $tmp_doc = $files_array['tmp_name'][$i];
                     $doc_ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
-                    if (!in_array($doc_ext, $allowed_doc_exts)) {
+                    if (!in_array($doc_ext, $allowed_doc_exts, true)) {
                         continue;
                     }
-                    $safe_doc_name = 'doc_' . time() . '_' . rand(100, 999) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
+                    $safe_doc_name = 'doc_' . time() . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
                     $dest_doc = $docs_dir . '/' . $safe_doc_name;
                     if (move_uploaded_file($tmp_doc, $dest_doc)) {
                         $academic_docs[] = [
@@ -138,10 +191,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!empty($student_name)) {
             try {
-                // Generate roll no if empty
+                // Generate sequential roll no if empty
                 if (empty($roll_no)) {
-                    $next_num = $db->query("SELECT COALESCE(MAX(id), 0) + 1 FROM students")->fetchColumn();
-                    $roll_no = 'KSV-' . str_pad($next_num, 4, '0', STR_PAD_LEFT);
+                    $next_num_stmt = $db->prepare("SELECT COALESCE(MAX(id), 0) + 1 FROM students WHERE session_id = ?");
+                    $next_num_stmt->execute([$session_id]);
+                    $next_num = $next_num_stmt->fetchColumn();
+                    $roll_no = 'KSV-' . str_pad((string)$next_num, 4, '0', STR_PAD_LEFT);
                 }
                 if (empty($admission_no)) {
                     $admission_no = 'ADM-' . date('Y') . '-' . rand(100, 999);
@@ -175,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt_new->execute([$new_student_id]);
                 $new_stu = $stmt_new->fetch();
                 $portal_user = null;
-                $student_password = trim($_POST['student_password'] ?? '') ?: 'student';
+                $student_password = trim((string)($_POST['student_password'] ?? '')) ?: 'student';
                 if ($new_stu) {
                     $portal_user = get_or_create_student_user($new_stu, $db, $student_password);
                 }
@@ -209,7 +264,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: ' . ADMIN_URL . '/students');
                 exit;
             } catch (Exception $e) {
-                set_flash('error', 'Registration error: ' . $e->getMessage());
+                error_log("Student registration error: " . $e->getMessage());
+                set_flash('error', 'An error occurred during student registration. Please verify your inputs and try again.');
+                header('Location: ' . ADMIN_URL . '/students');
+                exit;
             }
         }
     }
@@ -217,13 +275,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 1B. Send / Resend Welcome & Credentials Email
     if ($action === 'send_credentials') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $stmt_s = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-        $stmt_s->execute([$student_id]);
+        $stmt_s = $db->prepare("SELECT * FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+        $stmt_s->execute([$student_id, $session_id]);
         $stu = $stmt_s->fetch();
         if ($stu) {
             $s_email = trim($stu['student_email'] ?? '');
             if (empty($s_email) || !filter_var($s_email, FILTER_VALIDATE_EMAIL)) {
-                set_flash('error', "Cannot send credentials: " . htmlspecialchars($stu['student_name']) . " does not have a valid email on file. Please edit their profile first.");
+                set_flash('error', "Cannot send credentials: " . htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8') . " does not have a valid email on file. Please edit their profile first.");
             } else {
                 $custom_pwd = trim($_POST['custom_password'] ?? '') ?: 'student';
                 $puser = get_or_create_student_user($stu, $db, $custom_pwd);
@@ -245,33 +303,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 2. Update Student Profile
     if ($action === 'update_student') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $student_name = trim($_POST['student_name'] ?? '');
-        $standard = trim($_POST['standard'] ?? '');
-        $section = trim($_POST['section'] ?? 'A');
-        $batch_timing = trim($_POST['batch_timing'] ?? '07:30 AM - 01:30 PM');
-        $roll_no = trim($_POST['roll_no'] ?? '');
-        $admission_no = trim($_POST['admission_no'] ?? '');
-        $parent_name = trim($_POST['parent_name'] ?? '');
-        $mother_name = trim($_POST['mother_name'] ?? '');
-        $parent_phone = trim($_POST['parent_phone'] ?? '');
-        $student_phone = trim($_POST['student_phone'] ?? '');
-        $student_email = trim($_POST['student_email'] ?? '');
-        $gender = trim($_POST['gender'] ?? 'Male');
-        $dob = !empty($_POST['dob']) ? trim($_POST['dob']) : null;
-        $blood_group = trim($_POST['blood_group'] ?? 'O+');
-        $address = trim($_POST['address'] ?? '');
-        $total_fees = floatval($_POST['total_fees'] ?? 0);
-        $paid_fees = floatval($_POST['paid_fees'] ?? 0);
+        $student_name = mb_substr(trim((string)($_POST['student_name'] ?? '')), 0, 100);
+        $standard = mb_substr(trim((string)($_POST['standard'] ?? '')), 0, 50);
+        $section = mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10);
+        $batch_timing = mb_substr(trim((string)($_POST['batch_timing'] ?? '07:30 AM - 01:30 PM')), 0, 50);
+        $roll_no = mb_substr(trim((string)($_POST['roll_no'] ?? '')), 0, 50);
+        $admission_no = mb_substr(trim((string)($_POST['admission_no'] ?? '')), 0, 50);
+        $parent_name = mb_substr(trim((string)($_POST['parent_name'] ?? '')), 0, 100);
+        $mother_name = mb_substr(trim((string)($_POST['mother_name'] ?? '')), 0, 100);
+        $parent_phone = preg_replace('/[^0-9+\-\s]/', '', mb_substr(trim((string)($_POST['parent_phone'] ?? '')), 0, 25));
+        $student_phone = preg_replace('/[^0-9+\-\s]/', '', mb_substr(trim((string)($_POST['student_phone'] ?? '')), 0, 25));
+        $student_email = filter_var(trim((string)($_POST['student_email'] ?? '')), FILTER_VALIDATE_EMAIL) ? mb_substr(trim((string)($_POST['student_email'] ?? '')), 0, 100) : '';
+        $gender = in_array($_POST['gender'] ?? '', ['Male', 'Female', 'Other'], true) ? $_POST['gender'] : 'Male';
+        $dob = (!empty($_POST['dob']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['dob'])) ? trim($_POST['dob']) : null;
+        $blood_group = mb_substr(trim((string)($_POST['blood_group'] ?? 'O+')), 0, 10);
+        $address = mb_substr(trim((string)($_POST['address'] ?? '')), 0, 500);
+        $total_fees = max(0, floatval($_POST['total_fees'] ?? 0));
+        $paid_fees = max(0, min($total_fees, floatval($_POST['paid_fees'] ?? 0)));
         $permissions = isset($_POST['permissions']) && is_array($_POST['permissions']) 
             ? json_encode(array_values(array_map('trim', $_POST['permissions']))) 
             : json_encode([]);
 
         if ($student_id > 0 && !empty($student_name)) {
             try {
-                // Fetch current student record
-                $curr_stmt = $db->prepare("SELECT photo, academic_files FROM students WHERE id = ?");
-                $curr_stmt->execute([$student_id]);
+                // Fetch current student record scoped to session
+                $curr_stmt = $db->prepare("SELECT photo, academic_files FROM students WHERE id = ? AND session_id = ?");
+                $curr_stmt->execute([$student_id, $session_id]);
                 $curr_stu = $curr_stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$curr_stu) {
+                    set_flash('error', 'Student record not found in current session.');
+                    header('Location: ' . ADMIN_URL . '/students');
+                    exit;
+                }
 
                 $photo = $curr_stu['photo'] ?? '/assets/imgs/ksv-logo.jpg';
                 $docs_list = [];
@@ -285,15 +349,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Check if new profile photo was uploaded
                 if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
                     $p_tmp = $_FILES['profile_picture']['tmp_name'];
+                    $p_size = $_FILES['profile_picture']['size'];
                     $p_name = $_FILES['profile_picture']['name'];
                     $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-                    $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
-                    if (in_array($p_ext, $allowed_img_exts)) {
+                    $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp'];
+                    if (in_array($p_ext, $allowed_img_exts, true) && $p_size <= 5 * 1024 * 1024 && @getimagesize($p_tmp)) {
                         $p_dir = __DIR__ . '/../uploads/students';
                         if (!is_dir($p_dir)) {
-                            mkdir($p_dir, 0777, true);
+                            mkdir($p_dir, 0755, true);
                         }
-                        $photo_filename = 'stu_' . time() . '_' . rand(1000, 9999) . '.' . $p_ext;
+                        $photo_filename = 'stu_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $p_ext;
                         $dest_photo = $p_dir . '/' . $photo_filename;
                         if (move_uploaded_file($p_tmp, $dest_photo)) {
                             $photo = '/web-app/uploads/students/' . $photo_filename;
@@ -307,19 +372,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $file_count = is_array($files_array['name']) ? count($files_array['name']) : 0;
                     $docs_dir = __DIR__ . '/../uploads/academic_docs';
                     if (!is_dir($docs_dir)) {
-                        mkdir($docs_dir, 0777, true);
+                        mkdir($docs_dir, 0755, true);
                     }
 
                     $allowed_doc_exts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'webp', 'txt'];
                     for ($i = 0; $i < $file_count; $i++) {
-                        if ($files_array['error'][$i] === UPLOAD_ERR_OK) {
-                            $orig_name = $files_array['name'][$i];
+                        if ($files_array['error'][$i] === UPLOAD_ERR_OK && $files_array['size'][$i] <= 15 * 1024 * 1024) {
+                            $orig_name = mb_substr(basename($files_array['name'][$i]), 0, 100);
                             $tmp_doc = $files_array['tmp_name'][$i];
                             $doc_ext = strtolower(pathinfo($orig_name, PATHINFO_EXTENSION));
-                            if (!in_array($doc_ext, $allowed_doc_exts)) {
+                            if (!in_array($doc_ext, $allowed_doc_exts, true)) {
                                 continue;
                             }
-                            $safe_doc_name = 'doc_' . time() . '_' . rand(100, 999) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
+                            $safe_doc_name = 'doc_' . time() . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
                             $dest_doc = $docs_dir . '/' . $safe_doc_name;
                             if (move_uploaded_file($tmp_doc, $dest_doc)) {
                                 $docs_list[] = [
@@ -341,21 +406,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         batch_timing = ?, parent_name = ?, mother_name = ?, parent_phone = ?, student_phone = ?, student_email = ?, gender = ?,
                         dob = ?, blood_group = ?, address = ?, total_fees = ?, paid_fees = ?,
                         photo = ?, academic_files = ?, menu_permissions = ?
-                    WHERE id = ?
+                    WHERE id = ? AND session_id = ?
                 ");
                 $stmt->execute([
                     $student_name, $roll_no, $admission_no, $standard, $section,
                     $batch_timing, $parent_name, $mother_name, $parent_phone, $student_phone, $student_email, $gender,
                     $dob, $blood_group, $address, $total_fees, $paid_fees,
                     $photo, $academic_files_json, $permissions,
-                    $student_id
+                    $student_id, $session_id
                 ]);
 
                 set_flash('success', "Student profile and menu permissions for {$student_name} updated successfully!");
                 header('Location: ' . ADMIN_URL . '/students');
                 exit;
             } catch (Exception $e) {
-                set_flash('error', 'Update error: ' . $e->getMessage());
+                error_log("Student update error: " . $e->getMessage());
+                set_flash('error', 'An error occurred while updating the student profile. Please try again.');
+                header('Location: ' . ADMIN_URL . '/students');
+                exit;
             }
         }
     }
@@ -364,8 +432,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_student') {
         $del_id = intval($_POST['student_id'] ?? 0);
         if ($del_id > 0) {
-            $stmt = $db->prepare("DELETE FROM students WHERE id = ?");
-            $stmt->execute([$del_id]);
+            $stmt = $db->prepare("DELETE FROM students WHERE id = ? AND session_id = ?");
+            $stmt->execute([$del_id, $session_id]);
             set_flash('success', "Student record deleted from roaster.");
             header('Location: ' . ADMIN_URL . '/students');
             exit;
@@ -375,26 +443,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 4. Change Student Password
     if ($action === 'change_student_password') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $new_password = trim($_POST['new_password'] ?? '');
-        $confirm_password = trim($_POST['confirm_password'] ?? '');
+        $new_password = (string)($_POST['new_password'] ?? '');
+        $confirm_password = (string)($_POST['confirm_password'] ?? '');
 
         if (empty($new_password) || empty($confirm_password)) {
             set_flash('error', 'Please enter and confirm the new password.');
         } elseif ($new_password !== $confirm_password) {
             set_flash('error', 'New password and confirm password do not match.');
-        } elseif (strlen($new_password) < 4) {
-            set_flash('error', 'New password must be at least 4 characters long.');
+        } elseif (strlen($new_password) < 4 || strlen($new_password) > 100) {
+            set_flash('error', 'New password must be between 4 and 100 characters long.');
         } else {
-            $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
-            $stmt->execute([$student_id]);
+            $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+            $stmt->execute([$student_id, $session_id]);
             $stu = $stmt->fetch();
             if ($stu) {
                 $stu_user = get_or_create_student_user($stu, $db);
                 $hashed = password_hash($new_password, PASSWORD_DEFAULT);
                 $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hashed, $stu_user['id']]);
-                set_flash('success', "Password for student " . htmlspecialchars($stu['student_name']) . " (Roll: " . htmlspecialchars($stu['roll_no']) . ") updated successfully!");
+                set_flash('success', "Password for student " . htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8') . " (Roll: " . htmlspecialchars($stu['roll_no'], ENT_QUOTES, 'UTF-8') . ") updated successfully!");
             } else {
-                set_flash('error', 'Student record not found.');
+                set_flash('error', 'Student record not found in current session.');
             }
         }
         header('Location: ' . ADMIN_URL . '/students');
@@ -425,7 +493,7 @@ $fee_collection_pct = $total_fees_amount > 0 ? round(($total_paid_amount / $tota
 // Pagination & limits
 $allowed_limits = [10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -435,16 +503,18 @@ $where_clauses = ["session_id = ?"];
 $where_params = [$session_id];
 
 if (!empty($search)) {
+    $search_clean = mb_substr($search, 0, 100);
+    $search_like = '%' . addcslashes($search_clean, '%_\\') . '%';
     $where_clauses[] = "(student_name LIKE ? OR roll_no LIKE ? OR admission_no LIKE ? OR parent_phone LIKE ? OR student_phone LIKE ? OR student_email LIKE ?)";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
-    $where_params[] = "%$search%";
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
+    $where_params[] = $search_like;
 }
 
-if (!empty($filter_standard)) {
+if (!empty($filter_standard) && in_array($filter_standard, $standards, true)) {
     $where_clauses[] = "standard = ?";
     $where_params[] = $filter_standard;
 }
@@ -488,9 +558,6 @@ function get_student_pagination_url($target_page, $search, $filter_standard, $li
     if ($target_page > 1) $params['page'] = $target_page;
     return ADMIN_URL . '/students' . (!empty($params) ? '?' . http_build_query($params) : '');
 }
-
-// Standards list for filter
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
@@ -2256,14 +2323,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner">
     
     <!-- Filter form -->
-    <form method="GET" action="<?php echo ADMIN_URL; ?>/students" class="roaster-filter-form">
-      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+    <form method="GET" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-filter-form">
+      <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
 
       <div class="roaster-search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search name, roll no, phone..." autocomplete="off">
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Search name, roll no, phone..." autocomplete="off" maxlength="100">
         <?php if (!empty($search)): ?>
-          <a href="<?php echo ADMIN_URL; ?>/students<?php echo !empty($filter_standard) ? '?standard=' . urlencode($filter_standard) . '&limit=' . $limit : ($limit !== 10 ? '?limit=' . $limit : ''); ?>" class="clear-search-btn" title="Clear search">&times;</a>
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students' . (!empty($filter_standard) ? '?standard=' . urlencode($filter_standard) . '&limit=' . $limit : ($limit !== 10 ? '?limit=' . $limit : '')), ENT_QUOTES, 'UTF-8'); ?>" class="clear-search-btn" title="Clear search">&times;</a>
         <?php endif; ?>
       </div>
 
@@ -2272,8 +2339,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <select name="standard" onchange="this.form.submit()">
           <option value="">All Academic Standards</option>
           <?php foreach ($standards as $std): ?>
-            <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-              <?php echo $std; ?>
+            <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -2285,7 +2352,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
 
       <?php if (!empty($search) || !empty($filter_standard)): ?>
-        <a href="<?php echo ADMIN_URL; ?>/students<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn ghost" title="Reset all filters">
+        <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students' . ($limit !== 10 ? '?limit=' . $limit : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn ghost" title="Reset all filters">
           <i class="fa-solid fa-rotate-left"></i> Reset
         </a>
       <?php endif; ?>
@@ -2480,21 +2547,22 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 8. Login Actions (Login Direct & Change Password) -->
               <td>
                 <div class="sid-login-wrap">
-                  <a href="<?php echo ADMIN_URL; ?>/students?action=direct_login&student_id=<?php echo $stu['id']; ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($stu['student_name']); ?> in a new tab">
+                  <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students?action=direct_login&student_id=' . $stu['id'] . '&csrf_token=' . get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?> in a new tab">
                     <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i>
                     <span>Login Direct</span>
                   </a>
 
-                  <button type="button" class="btn-student-pwd" title="Change Password for <?php echo htmlspecialchars($stu['student_name']); ?>" onclick='openChangePasswordModal(<?php echo htmlspecialchars(json_encode($stu), ENT_QUOTES, "UTF-8"); ?>)'>
+                  <button type="button" class="btn-student-pwd" title="Change Password for <?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?>" onclick='openChangePasswordModal(<?php echo htmlspecialchars(json_encode($stu), ENT_QUOTES, "UTF-8"); ?>)'>
                     <i class="fa-solid fa-key" style="font-size: 0.7rem;"></i>
                     <span>Change Password</span>
                   </button>
 
                   <?php if (!empty($stu['student_email'])): ?>
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/students" style="display:inline; margin:0;" onsubmit="return confirm('Send portal login credentials &amp; welcome email to <?php echo htmlspecialchars(addslashes($stu['student_email'])); ?>?');">
+                    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" style="display:inline; margin:0;" onsubmit="return confirm('Send portal login credentials &amp; welcome email to <?php echo htmlspecialchars(addslashes($stu['student_email']), ENT_QUOTES, 'UTF-8'); ?>?');">
+                      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                       <input type="hidden" name="action" value="send_credentials">
-                      <input type="hidden" name="student_id" value="<?php echo $stu['id']; ?>">
-                      <button type="submit" class="btn-student-pwd" style="color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Send Welcome &amp; Login Details to <?php echo htmlspecialchars($stu['student_email']); ?>">
+                      <input type="hidden" name="student_id" value="<?php echo intval($stu['id']); ?>">
+                      <button type="submit" class="btn-student-pwd" style="color: #0284c7; border-color: #bae6fd; background: #f0f9ff;" title="Send Welcome &amp; Login Details to <?php echo htmlspecialchars($stu['student_email'], ENT_QUOTES, 'UTF-8'); ?>">
                         <i class="fa-solid fa-paper-plane" style="font-size: 0.7rem;"></i>
                         <span>Send Mail</span>
                       </button>
@@ -2528,9 +2596,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </button>
 
                   <!-- Trash Icon: Delete Profile -->
-                  <form method="POST" action="<?php echo ADMIN_URL; ?>/students" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars(addslashes($stu['student_name'])); ?> from the student roaster?');">
+                  <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to remove <?php echo htmlspecialchars(addslashes($stu['student_name']), ENT_QUOTES, 'UTF-8'); ?> from the student roaster?');">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <input type="hidden" name="action" value="delete_student">
-                    <input type="hidden" name="student_id" value="<?php echo $stu['id']; ?>">
+                    <input type="hidden" name="student_id" value="<?php echo intval($stu['id']); ?>">
                     <button type="submit" class="sid-action-btn delete" title="Delete Student Record">
                       <i class="fa-solid fa-trash"></i>
                     </button>
@@ -2636,8 +2705,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('registerStudentModal')" aria-label="Close modal">&times;</button>
     </div>
 
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/students" enctype="multipart/form-data">
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="register_student">
+      <div style="display:none !important;" aria-hidden="true">
+        <label for="students_hp_reg">Leave blank</label>
+        <input type="text" id="students_hp_reg" name="students_hp" tabindex="-1" autocomplete="off">
+      </div>
 
       <div class="hrms-modal-body" style="padding: 22px; max-height: calc(85vh - 140px); overflow-y: auto;">
         
@@ -2928,9 +3002,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('editStudentModal')" aria-label="Close modal">&times;</button>
     </div>
 
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/students" enctype="multipart/form-data">
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="update_student">
       <input type="hidden" name="student_id" id="edit_student_id" value="">
+      <div style="display:none !important;" aria-hidden="true">
+        <label for="students_hp_edit">Leave blank</label>
+        <input type="text" id="students_hp_edit" name="students_hp" tabindex="-1" autocomplete="off">
+      </div>
 
       <div class="hrms-modal-body" style="padding: 22px; max-height: calc(85vh - 130px); overflow-y: auto;">
         
@@ -3211,9 +3290,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('changeStudentPasswordModal')" aria-label="Close modal">&times;</button>
     </div>
 
-    <form method="POST" action="<?php echo ADMIN_URL; ?>/students" id="changeStudentPasswordForm">
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" id="changeStudentPasswordForm">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="change_student_password">
       <input type="hidden" name="student_id" id="pwd_modal_student_id" value="">
+      <div style="display:none !important;" aria-hidden="true">
+        <label for="students_hp_pwd">Leave blank</label>
+        <input type="text" id="students_hp_pwd" name="students_hp" tabindex="-1" autocomplete="off">
+      </div>
 
       <div class="hrms-modal-body" style="padding: 22px 24px;">
         <!-- Student Info Chip -->

@@ -12,7 +12,7 @@ $active_menu = 'expense-report';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = $active_session ? intval($active_session['id']) : 1;
 $school_settings = get_school_settings();
 
 // Summary calculations for the active session (Prepared Statements)
@@ -57,16 +57,18 @@ $stmt_month = $db->prepare("
 $stmt_month->execute([$session_id]);
 $monthly_expenses = $stmt_month->fetchAll();
 
-// Payment Method Distribution
-$method_breakdown = $db->query("
+// Payment Method Distribution (Prepared Statement)
+$stmt_method = $db->prepare("
     SELECT payment_method,
            COUNT(id) as voucher_count,
            COALESCE(SUM(amount), 0) as total_amount
     FROM expenses
-    WHERE session_id = {$session_id}
+    WHERE session_id = ?
     GROUP BY payment_method
     ORDER BY total_amount DESC
-")->fetchAll();
+");
+$stmt_method->execute([$session_id]);
+$method_breakdown = $stmt_method->fetchAll();
 
 // Helper to pick category icon and color
 function get_report_cat_icon($name) {
@@ -995,17 +997,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </a>
     </div>
 
-    <!-- Right: Session Badge & Print Button -->
+    <!-- Right: Session Badge -->
     <div class="roaster-toolbar-actions exp-rep-toolbar-actions">
       <div class="scholars-count-badge exp-rep-session-badge">
         <span class="count-dot" style="background: #10b981;"></span>
-        <span>Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+        <span>Session <strong><?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?></strong></span>
       </div>
-
-      <button type="button" onclick="window.print();" class="roaster-add-btn exp-rep-print-btn" style="padding: 7px 18px; font-size: 0.82rem;" title="Print Official Financial Audit Report">
-        <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-print"></i></div>
-        <span>Print Audit Report</span>
-      </button>
     </div>
 
   </div>
@@ -1029,7 +1026,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
       <div style="text-align: right;">
         <div style="font-size: 12px; font-weight: 700; color: #0284c7;">ACADEMIC AUDIT SESSION</div>
-        <div style="font-size: 18px; font-weight: 800; color: #0f172a;"><?php echo htmlspecialchars($active_session['session_name']); ?></div>
+        <div style="font-size: 18px; font-weight: 800; color: #0f172a;"><?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?></div>
         <div style="font-size: 11px; color: #64748b;">Generated: <?php echo date('d M Y, h:i A'); ?></div>
       </div>
     </div>
@@ -1074,7 +1071,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                         <?php echo htmlspecialchars($cb['category_name']); ?>
                       </span>
                       <span class="exp-rep-cat-sub" style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">
-                        &bull; <?php echo $cb['vouchers_count']; ?> vouchers
+                        &bull; <?php echo intval($cb['vouchers_count']); ?> vouchers
                       </span>
                     </div>
                   </div>
@@ -1144,7 +1141,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </td>
                   <td style="text-align: center;">
                     <span class="exp-rep-vouchers-pill" style="display: inline-flex; align-items: center; gap: 4px; font-weight: 600; font-size: 0.74rem; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; padding: 2px 8px; border-radius: 5px;">
-                      <?php echo $me['voucher_count']; ?> vouchers
+                      <?php echo intval($me['voucher_count']); ?> vouchers
                     </span>
                   </td>
                   <td>
@@ -1207,7 +1204,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <?php echo format_inr($mb['total_amount']); ?>
                 </div>
                 <div class="exp-rep-method-sub" style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
-                  <?php echo $mb['voucher_count']; ?> vouchers settled
+                  <?php echo intval($mb['voucher_count']); ?> vouchers settled
                 </div>
               </div>
             </div>
@@ -1224,7 +1221,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span>Institutional Ledger Reconcilement</span>
         </h4>
         <span class="exp-rep-header-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          Session <?php echo htmlspecialchars($active_session['session_name'] ?? 'Active'); ?>
         </span>
       </div>
 
