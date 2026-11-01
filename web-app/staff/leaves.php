@@ -11,7 +11,7 @@ $active_menu = 'leaves';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'] ?? 1;
+$session_id = intval($active_session['id'] ?? 1);
 
 // Resolve Logged-in Staff Profile Info
 $stmt = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ? LIMIT 1");
@@ -20,56 +20,101 @@ $staff_profile = $stmt->fetch();
 
 if (!$staff_profile) {
     $emp_code = 'KSV-FAC-0' . $current_user['id'];
-    $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present')");
-    $stmt->execute([$current_user['id'], $emp_code]);
-    $stmt_sp = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ?");
+    $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status, session_id) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present', ?)");
+    $stmt->execute([$current_user['id'], $emp_code, $session_id]);
+    $stmt_sp = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ? LIMIT 1");
     $stmt_sp->execute([$current_user['id']]);
     $staff_profile = $stmt_sp->fetch();
 }
 $staff_id = $staff_profile['id'];
 
-// Handle Cancel / Withdraw Leave Request (Self Staff, only if Pending)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel_leave') {
-    $cancel_id = intval($_POST['leave_id'] ?? 0);
-    if ($cancel_id > 0) {
-        $stmt = $db->prepare("DELETE FROM leave_requests WHERE id = ? AND staff_id = ? AND status = 'Pending'");
-        $stmt->execute([$cancel_id, $staff_id]);
-        if ($stmt->rowCount() > 0) {
-            set_flash('success', "Pending leave application #{$cancel_id} has been withdrawn.");
+// Available leave types
+$leave_types_list = [
+    'Casual Leave',
+    'Medical Leave',
+    'Academic Duty',
+    'Emergency Leave'
+];
+
+// Handle POST actions (Cancel, Update Status, Apply Leave)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+        header('Location: ' . STAFF_URL . '/leaves');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
+
+    // Handle Cancel / Withdraw Leave Request (Self Staff, only if Pending)
+    if ($action === 'cancel_leave') {
+        $cancel_id = intval($_POST['leave_id'] ?? 0);
+        if ($cancel_id > 0) {
+            $stmt = $db->prepare("DELETE FROM leave_requests WHERE id = ? AND staff_id = ? AND status = 'Pending'");
+            $stmt->execute([$cancel_id, $staff_id]);
+            if ($stmt->rowCount() > 0) {
+                set_flash('success', "Pending leave application #{$cancel_id} has been withdrawn.");
+            }
         }
         header('Location: ' . STAFF_URL . '/leaves');
         exit;
     }
-}
 
-// Handle Approve / Reject (if Super Admin is testing)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin' && isset($_POST['action']) && $_POST['action'] === 'update_status') {
-    $leave_id = intval($_POST['leave_id'] ?? 0);
-    $status = $_POST['status'] ?? 'Pending';
-    if ($leave_id > 0 && in_array($status, ['Approved', 'Rejected', 'Pending'])) {
-        $db->prepare("UPDATE leave_requests SET status = ? WHERE id = ?")->execute([$status, $leave_id]);
-        set_flash('success', "Leave request #{$leave_id} set to {$status}.");
+    // Handle Approve / Reject (if Super Admin is testing)
+    if ($current_user['role'] === 'super_admin' && $action === 'update_status') {
+        $leave_id = intval($_POST['leave_id'] ?? 0);
+        $status = trim((string)($_POST['status'] ?? 'Pending'));
+        if ($leave_id > 0 && in_array($status, ['Approved', 'Rejected', 'Pending'], true)) {
+            $db->prepare("UPDATE leave_requests SET status = ? WHERE id = ?")->execute([$status, $leave_id]);
+            set_flash('success', "Leave request #{$leave_id} set to {$status}.");
+        }
         header('Location: ' . STAFF_URL . '/leaves');
         exit;
     }
-}
 
-// Handle Apply Leave (Staff)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'apply_leave') {
-    $ltype = trim($_POST['leave_type'] ?? 'Casual Leave');
-    $sdate = trim($_POST['start_date'] ?? date('Y-m-d'));
-    $edate = trim($_POST['end_date'] ?? date('Y-m-d'));
-    $reason = trim($_POST['reason'] ?? '');
+    // Handle Apply Leave (Staff)
+    if ($action === 'apply_leave') {
+        $ltype = trim((string)($_POST['leave_type'] ?? 'Casual Leave'));
+        if (!in_array($ltype, $leave_types_list, true)) {
+            $ltype = 'Casual Leave';
+        }
 
-    if (strtotime($edate) < strtotime($sdate)) {
-        set_flash('error', 'End date cannot be earlier than start date.');
-    } else {
+        $sdate = trim((string)($_POST['start_date'] ?? ''));
+        $edate = trim((string)($_POST['end_date'] ?? ''));
+        $reason = mb_substr(trim((string)($_POST['reason'] ?? '')), 0, 1000);
+
+        $is_valid_date = function($d) {
+            if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $d, $matches)) {
+                return false;
+            }
+            return checkdate((int)$matches[2], (int)$matches[3], (int)$matches[1]);
+        };
+
+        if (!$is_valid_date($sdate) || !$is_valid_date($edate)) {
+            set_flash('error', 'Please provide valid calendar start and end dates.');
+            header('Location: ' . STAFF_URL . '/leaves');
+            exit;
+        }
+
+        if ($sdate > $edate) {
+            set_flash('error', 'End date cannot be earlier than start date.');
+            header('Location: ' . STAFF_URL . '/leaves');
+            exit;
+        }
+
+        if ($reason === '') {
+            set_flash('error', 'Please provide a clear justification / reason for your leave request.');
+            header('Location: ' . STAFF_URL . '/leaves');
+            exit;
+        }
+
         $stmt = $db->prepare("INSERT INTO leave_requests (staff_id, leave_type, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
         $stmt->execute([$staff_id, $ltype, $sdate, $edate, $reason]);
         set_flash('success', 'Leave application successfully submitted for approval.');
+        header('Location: ' . STAFF_URL . '/leaves');
+        exit;
     }
-    header('Location: ' . STAFF_URL . '/leaves');
-    exit;
 }
 
 // Calculate KPI Metrics for this Staff
@@ -105,14 +150,20 @@ $annual_entitlement = 15;
 $leaves_remaining = max(0, $annual_entitlement - $total_approved_days);
 
 // Filter Parameters
-$search = trim($_GET['search'] ?? '');
-$filter_status = trim($_GET['status'] ?? '');
-$filter_type = trim($_GET['type'] ?? '');
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$filter_status = trim((string)($_GET['status'] ?? ''));
+if (!in_array($filter_status, ['Approved', 'Pending', 'Rejected'], true)) {
+    $filter_status = '';
+}
+$filter_type = trim((string)($_GET['type'] ?? ''));
+if (!in_array($filter_type, $leave_types_list, true)) {
+    $filter_type = '';
+}
 
 // Pagination Settings (10, 20, 30, 40, 50 - plus 5 for convenience)
 $allowed_limits = [5, 10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -175,14 +226,6 @@ function get_staff_leaves_pagination_url($target_page, $search, $filter_status, 
     if ($target_page > 1) $params['page'] = $target_page;
     return STAFF_URL . '/leaves' . (!empty($params) ? '?' . http_build_query($params) : '');
 }
-
-// Available leave types
-$leave_types_list = [
-    'Casual Leave',
-    'Medical Leave',
-    'Academic Duty',
-    'Emergency Leave'
-];
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
@@ -1145,9 +1188,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Search & Filter Form -->
-    <form method="GET" action="<?php echo STAFF_URL; ?>/leaves" class="roaster-filter-form">
+    <form method="GET" action="<?php echo htmlspecialchars(STAFF_URL); ?>/leaves" class="roaster-filter-form">
       <?php if ($limit !== 10): ?>
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       <?php endif; ?>
 
       <!-- Search Input -->
@@ -1213,7 +1256,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-plane-departure" style="color: #0284c7;"></i>
         My Leave Applications &amp; History
         <span style="font-size: 0.72rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          Session <?php echo htmlspecialchars($active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'))); ?>
         </span>
       </h3>
       <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -1340,9 +1383,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 8. Action (Withdraw if pending, or decisions if admin) -->
               <td style="text-align: right; white-space: nowrap;">
                 <?php if ($lr['status'] === 'Pending'): ?>
-                  <form method="POST" action="<?php echo STAFF_URL; ?>/leaves" onsubmit="return confirm('Withdraw this pending leave application?');" style="display: inline;">
+                  <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL); ?>/leaves" onsubmit="return confirm('Withdraw this pending leave application?');" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                     <input type="hidden" name="action" value="cancel_leave">
-                    <input type="hidden" name="leave_id" value="<?php echo $lr['id']; ?>">
+                    <input type="hidden" name="leave_id" value="<?php echo intval($lr['id']); ?>">
                     <button type="submit" class="leave-action-btn btn-reject" title="Withdraw Application">
                       <i class="fa-solid fa-rotate-left"></i> Withdraw
                     </button>
@@ -1454,7 +1498,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('applyLeaveModal')" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <form method="POST" action="<?php echo STAFF_URL; ?>/leaves">
+    <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL); ?>/leaves">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="apply_leave">
       <div class="hrms-modal-body" style="padding: 20px;">
         

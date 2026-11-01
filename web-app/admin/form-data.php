@@ -22,18 +22,38 @@ ensure_form_data_table($db);
 
 // ── Handle Actions (Status Update, Note, Delete) ─────────────────────────────
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+        $redirect_to = !empty($_POST['redirect_url']) && strpos($_POST['redirect_url'], ADMIN_URL) === 0
+            ? $_POST['redirect_url']
+            : (ADMIN_URL . '/form-data');
+        header('Location: ' . $redirect_to);
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
+
+    // Safe redirect destination calculator
+    $calc_redirect_url = function() {
+        if (!empty($_POST['redirect_url']) && strpos($_POST['redirect_url'], ADMIN_URL) === 0) {
+            return $_POST['redirect_url'];
+        }
+        $tab = in_array($_GET['tab'] ?? 'all', ['all', 'demo_class', 'admission', 'inquiry'], true) ? $_GET['tab'] : 'all';
+        $status = in_array($_GET['status'] ?? 'all', ['all', 'unread', 'contacted', 'enrolled', 'closed'], true) ? $_GET['status'] : 'all';
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $limit = intval($_GET['limit'] ?? 10);
+        if (!in_array($limit, [10, 20, 30, 40, 50], true)) $limit = 10;
+        return ADMIN_URL . "/form-data?tab=" . urlencode($tab) . "&status=" . urlencode($status) . "&page=" . $page . "&limit=" . $limit;
+    };
 
     // 1. Update Status & Notes
     if ($action === 'update_status') {
         $id = intval($_POST['id'] ?? 0);
-        $new_status = trim($_POST['status'] ?? 'unread');
-        $notes = trim($_POST['notes'] ?? '');
-
+        $raw_status = trim((string)($_POST['status'] ?? 'unread'));
         $valid_statuses = ['unread', 'contacted', 'enrolled', 'closed'];
-        if (!in_array($new_status, $valid_statuses)) {
-            $new_status = 'unread';
-        }
+        $new_status = in_array($raw_status, $valid_statuses, true) ? $raw_status : 'unread';
+        $notes = mb_substr(trim((string)($_POST['notes'] ?? '')), 0, 1000);
 
         if ($id > 0) {
             $stmt = $db->prepare("UPDATE form_data SET status = ?, notes = ? WHERE id = ?");
@@ -41,11 +61,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             set_flash('success', "Lead #{$id} status updated to " . ucfirst($new_status) . ".");
         }
 
-        $tab = urlencode($_GET['tab'] ?? 'all');
-        $status = urlencode($_GET['status'] ?? 'all');
-        $page = intval($_GET['page'] ?? 1);
-        $limit = intval($_GET['limit'] ?? 10);
-        header("Location: " . ADMIN_URL . "/form-data?tab={$tab}&status={$status}&page={$page}&limit={$limit}");
+        header("Location: " . $calc_redirect_url());
         exit;
     }
 
@@ -58,34 +74,23 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             set_flash('success', "Submission record #{$id} permanently removed.");
         }
 
-        $tab = urlencode($_GET['tab'] ?? 'all');
-        $status = urlencode($_GET['status'] ?? 'all');
-        $page = intval($_GET['page'] ?? 1);
-        $limit = intval($_GET['limit'] ?? 10);
-        header("Location: " . ADMIN_URL . "/form-data?tab={$tab}&status={$status}&page={$page}&limit={$limit}");
+        header("Location: " . $calc_redirect_url());
         exit;
     }
 }
 
 // ── Query Parameters: Tabs, Search, Status & Sorting ─────────────────────────
-$active_tab = $_GET['tab'] ?? 'all';
-if (!in_array($active_tab, ['all', 'demo_class', 'admission', 'inquiry'])) {
-    $active_tab = 'all';
-}
+$active_tab = in_array($_GET['tab'] ?? 'all', ['all', 'demo_class', 'admission', 'inquiry'], true) ? $_GET['tab'] : 'all';
 
-$filter_status = $_GET['status'] ?? 'all';
-$valid_filter_statuses = ['all', 'unread', 'contacted', 'enrolled', 'closed'];
-if (!in_array($filter_status, $valid_filter_statuses)) {
-    $filter_status = 'all';
-}
+$filter_status = in_array($_GET['status'] ?? 'all', ['all', 'unread', 'contacted', 'enrolled', 'closed'], true) ? $_GET['status'] : 'all';
 
-$search = trim($_GET['search'] ?? '');
-$sort = $_GET['sort'] ?? 'newest';
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$sort = in_array($_GET['sort'] ?? 'newest', ['newest', 'oldest'], true) ? $_GET['sort'] : 'newest';
 
 // ── Pagination Settings ──────────────────────────────────────────────────────
 $allowed_limits = [10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -129,8 +134,8 @@ if ($filter_status !== 'all') {
 }
 if (!empty($search)) {
     $where[] = "(full_name LIKE ? OR phone LIKE ? OR email LIKE ? OR course LIKE ? OR school_name LIKE ? OR message LIKE ?)";
-    $term = "%{$search}%";
-    $params = array_merge($params, [$term, $term, $term, $term, $term, $term]);
+    $like_term = "%" . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . "%";
+    $params = array_merge($params, [$like_term, $like_term, $like_term, $like_term, $like_term, $like_term]);
 }
 
 $where_sql = implode(' AND ', $where);
@@ -1033,7 +1038,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <form method="GET" action="<?php echo ADMIN_URL; ?>/form-data" class="fd-search-form">
       <input type="hidden" name="tab" value="<?php echo htmlspecialchars($active_tab); ?>">
       <input type="hidden" name="status" value="<?php echo htmlspecialchars($filter_status); ?>">
-      <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+      <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       
       <div class="fd-search-box">
         <i class="fa-solid fa-magnifying-glass fd-search-icon"></i>
@@ -1145,7 +1150,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <tr class="<?php echo $sub['status'] === 'unread' ? 'row-unread' : ''; ?>">
                 <!-- ID -->
                 <td style="font-weight: 700; color: #64748b; font-size: 0.82rem;">
-                  #<?php echo $sub['id']; ?>
+                  #<?php echo intval($sub['id']); ?>
                 </td>
 
                 <!-- Applicant / Student Details -->
@@ -1158,10 +1163,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       ?>
                     </div>
                     <div class="cell-meta">
-                      <span class="cell-name"><?php echo htmlspecialchars($sub['full_name']); ?></span>
+                      <span class="cell-name"><?php echo htmlspecialchars($sub['full_name'], ENT_QUOTES, 'UTF-8'); ?></span>
                       <div style="font-size: 0.78rem; margin-top: 2px;">
-                        <a href="tel:<?php echo htmlspecialchars($sub['phone']); ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;">
-                          <i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars($sub['phone']); ?>
+                        <a href="tel:<?php echo htmlspecialchars(preg_replace('/[^0-9+\-\s()]/', '', $sub['phone']), ENT_QUOTES, 'UTF-8'); ?>" style="color: #0284c7; text-decoration: none; font-weight: 600;">
+                          <i class="fa-solid fa-phone"></i> <?php echo htmlspecialchars($sub['phone'], ENT_QUOTES, 'UTF-8'); ?>
                         </a>
                       </div>
                       <?php if (!empty($sub['email'])): ?>
@@ -1258,9 +1263,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     </button>
 
                     <!-- Delete Button Form -->
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/form-data" style="margin: 0; display: inline;" onsubmit="return confirm('Permanently remove this submission record for <?php echo htmlspecialchars(addslashes($sub['full_name'])); ?>?');">
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/form-data" style="margin: 0; display: inline;" onsubmit="return confirm('Permanently remove this submission record for <?php echo htmlspecialchars(addslashes($sub['full_name']), ENT_QUOTES, 'UTF-8'); ?>?');">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
+                      <input type="hidden" name="redirect_url" value="<?php echo htmlspecialchars(get_form_data_pagination_url($page, $active_tab, $filter_status, $search, $sort, $limit), ENT_QUOTES, 'UTF-8'); ?>">
                       <input type="hidden" name="action" value="delete">
-                      <input type="hidden" name="id" value="<?php echo $sub['id']; ?>">
+                      <input type="hidden" name="id" value="<?php echo intval($sub['id']); ?>">
                       <button type="submit" class="sid-action-btn delete" title="Delete record">
                         <i class="fa-solid fa-trash-can"></i>
                       </button>
@@ -1448,6 +1455,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
 
     <form method="POST" action="<?php echo ADMIN_URL; ?>/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
+      <input type="hidden" name="redirect_url" value="<?php echo htmlspecialchars(get_form_data_pagination_url($page, $active_tab, $filter_status, $search, $sort, $limit), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="update_status">
       <input type="hidden" name="id" id="statusModalLeadId" value="">
       
@@ -1534,7 +1543,8 @@ function showLeadDetails(sub) {
   document.getElementById('detailSource').textContent = sub.source_page || 'Website Direct';
 
   // Phone call action link
-  document.getElementById('detailCallBtn').href = 'tel:' + (sub.phone || '');
+  var cleanPhone = (sub.phone || '').toString().replace(/[^0-9+\-\s()]/g, '');
+  document.getElementById('detailCallBtn').href = cleanPhone ? ('tel:' + cleanPhone) : '#';
 
   openModal('viewDetailModal');
 }

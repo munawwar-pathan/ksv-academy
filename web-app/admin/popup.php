@@ -13,7 +13,7 @@ $active_session = get_active_session();
 // Target directory for popup images: /assets/imgs/popup
 $popup_fs_dir = realpath(__DIR__ . '/../../assets/imgs/popup') ?: (__DIR__ . '/../../assets/imgs/popup');
 if (!is_dir($popup_fs_dir)) {
-    @mkdir($popup_fs_dir, 0777, true);
+    @mkdir($popup_fs_dir, 0755, true);
 }
 
 // ── Ensure Database Table Exists ─────────────────────────────────────────────
@@ -104,112 +104,183 @@ if (is_dir($popup_fs_dir)) {
 
 // ── Handle Actions ──────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // Determine validated redirect target early
+    $redirect_view = in_array($_POST['redirect_view'] ?? '', ['grid', 'table'], true) ? $_POST['redirect_view'] : 'grid';
+    $redirect_status = in_array($_GET['status'] ?? 'all', ['all', 'active', 'inactive', 'paused'], true) ? $_GET['status'] : 'all';
+
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
+
+    // Common popup file upload validator
+    $process_popup_upload = function($file_field) use ($popup_fs_dir) {
+        if (!isset($_FILES[$file_field]) || empty($_FILES[$file_field]['name'])) {
+            return ['path' => '', 'error' => ''];
+        }
+        if ($_FILES[$file_field]['error'] === UPLOAD_ERR_NO_FILE) {
+            return ['path' => '', 'error' => ''];
+        }
+        if ($_FILES[$file_field]['error'] !== UPLOAD_ERR_OK) {
+            return ['path' => '', 'error' => 'Upload failed with error code: ' . intval($_FILES[$file_field]['error'])];
+        }
+
+        $p_name = $_FILES[$file_field]['name'];
+        $p_tmp = $_FILES[$file_field]['tmp_name'];
+        $p_size = $_FILES[$file_field]['size'];
+
+        // Size limit: 10MB
+        if ($p_size > 10 * 1024 * 1024) {
+            return ['path' => '', 'error' => 'Uploaded file exceeds the maximum allowed size of 10MB.'];
+        }
+        if (!is_uploaded_file($p_tmp)) {
+            return ['path' => '', 'error' => 'Invalid file upload source.'];
+        }
+
+        $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
+        $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+        if (!in_array($p_ext, $allowed_exts, true)) {
+            return ['path' => '', 'error' => "File extension '.{$p_ext}' is not supported. Please use JPG, JPEG, PNG, WEBP, or AVIF."];
+        }
+
+        // MIME validation
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = $finfo ? finfo_file($finfo, $p_tmp) : '';
+        if ($finfo) finfo_close($finfo);
+
+        $valid_mimes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/heif'];
+        if (!in_array($mime, $valid_mimes, true)) {
+            return ['path' => '', 'error' => 'Uploaded file is not a supported image format (detected: ' . htmlspecialchars($mime, ENT_QUOTES, 'UTF-8') . ').'];
+        }
+
+        // Header integrity check
+        if (in_array($p_ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            $img_info = @getimagesize($p_tmp);
+            if ($img_info === false) {
+                return ['path' => '', 'error' => 'Corrupt or unreadable image file header.'];
+            }
+        }
+
+        if (!is_dir($popup_fs_dir)) {
+            @mkdir($popup_fs_dir, 0755, true);
+        }
+
+        $clean_basename = 'popup-' . time() . '-' . bin2hex(random_bytes(5)) . '.' . $p_ext;
+        $dest = $popup_fs_dir . '/' . $clean_basename;
+        if (move_uploaded_file($p_tmp, $dest)) {
+            @chmod($dest, 0644);
+            return ['path' => '/assets/imgs/popup/' . $clean_basename, 'error' => ''];
+        }
+        return ['path' => '', 'error' => 'Failed to save file to assets/imgs/popup/. Please check write permissions.'];
+    };
 
     // 1. Add Slide
     if ($action === 'add_slide') {
-        $title = trim($_POST['title'] ?? '');
-        $caption = trim($_POST['caption'] ?? '');
-        $link_url = trim($_POST['link_url'] ?? '/admissions');
-        $sort_order = intval($_POST['sort_order'] ?? 0);
-        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
+        $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 150);
+        $caption = mb_substr(trim((string)($_POST['caption'] ?? '')), 0, 255);
+        
+        $raw_link = trim((string)($_POST['link_url'] ?? '/admissions'));
+        if (preg_match('/^(javascript|data|vbscript):/i', $raw_link)) {
+            $link_url = '/admissions';
+        } else {
+            $link_url = mb_substr($raw_link, 0, 255);
+        }
+
+        $sort_order = max(0, min(999999, intval($_POST['sort_order'] ?? 0)));
+        $raw_status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $status = in_array($raw_status, ['active', 'inactive', 'paused'], true) ? (($raw_status === 'paused') ? 'inactive' : $raw_status) : 'active';
         $image = '';
-        $upload_error = '';
 
         // Process File Upload directly into assets/imgs/popup/
-        if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
-            $p_err = $_FILES['image_file']['error'];
-            if ($p_err === UPLOAD_ERR_OK) {
-                $p_name = $_FILES['image_file']['name'];
-                $p_tmp = $_FILES['image_file']['tmp_name'];
-                $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-                $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+        $upload_res = $process_popup_upload('image_file');
+        if (!empty($upload_res['error'])) {
+            set_flash('error', $upload_res['error']);
+            header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
+            exit;
+        }
 
-                if (in_array($p_ext, $allowed_exts)) {
-                    $clean_basename = 'popup-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
-                    $dest = $popup_fs_dir . '/' . $clean_basename;
-                    if (move_uploaded_file($p_tmp, $dest)) {
-                        @chmod($dest, 0644);
-                        $image = '/assets/imgs/popup/' . $clean_basename;
-                    } else {
-                        $upload_error = "Failed to save file to assets/imgs/popup/. Please check write permissions.";
-                    }
-                } else {
-                    $upload_error = "File extension '.{$p_ext}' is not supported. Please use JPG, JPEG, PNG, WEBP, or AVIF.";
+        if (!empty($upload_res['path'])) {
+            $image = $upload_res['path'];
+        } elseif (!empty($_POST['selected_existing_file'])) {
+            $chosen = basename(trim((string)$_POST['selected_existing_file']));
+            $chosen_ext = strtolower(pathinfo($chosen, PATHINFO_EXTENSION));
+            if (in_array($chosen_ext, ['jpg', 'jpeg', 'png', 'webp', 'avif'], true)) {
+                $target_path = $popup_fs_dir . '/' . $chosen;
+                if (file_exists($target_path) && strpos(realpath($target_path), realpath($popup_fs_dir)) === 0) {
+                    $image = '/assets/imgs/popup/' . $chosen;
                 }
-            } elseif ($p_err !== UPLOAD_ERR_NO_FILE) {
-                $upload_error = "Upload failed with error code: " . $p_err;
             }
-        }
-
-        // Check if an existing file was chosen from popup folder
-        if (empty($image) && !empty($_POST['selected_existing_file'])) {
-            $chosen = basename(trim($_POST['selected_existing_file']));
-            if (file_exists($popup_fs_dir . '/' . $chosen)) {
-                $image = '/assets/imgs/popup/' . $chosen;
+        } elseif (!empty($_POST['image_url'])) {
+            $raw_img = trim((string)$_POST['image_url']);
+            if (!preg_match('/^(javascript|data|vbscript):/i', $raw_img)) {
+                $image = mb_substr($raw_img, 0, 500);
             }
-        }
-
-        // Fallback to manual image URL/path if provided
-        if (empty($image) && !empty($_POST['image_url'])) {
-            $image = trim($_POST['image_url']);
         }
 
         if (!empty($title) && !empty($image)) {
             $stmt = $db->prepare("INSERT INTO popup_sliders (title, image, caption, link_url, sort_order, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
             $stmt->execute([$title, $image, $caption, $link_url, $sort_order, $status]);
             $status_note = ($status === 'active') ? 'Live on homepage modal' : 'Paused in draft';
-            set_flash('success', "Slide '{$title}' added successfully! ({$status_note})");
+            set_flash('success', "Slide '" . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . "' added successfully! ({$status_note})");
         } else {
-            $err_msg = !empty($upload_error) ? $upload_error : "Please provide a Slide Title and upload/select an Image.";
-            set_flash('error', $err_msg);
+            set_flash('error', "Please provide a Slide Title and upload/select an Image.");
         }
 
-        $redirect_view = $_POST['redirect_view'] ?? 'grid';
-        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($_GET['status'] ?? 'all') . '&view=' . urlencode($redirect_view));
+        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 
     // 2. Edit Slide
     if ($action === 'edit_slide') {
         $id = intval($_POST['id'] ?? 0);
-        $title = trim($_POST['title'] ?? '');
-        $caption = trim($_POST['caption'] ?? '');
-        $link_url = trim($_POST['link_url'] ?? '/admissions');
-        $sort_order = intval($_POST['sort_order'] ?? 0);
-        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
-        $image = trim($_POST['current_image'] ?? '');
-        $upload_error = '';
+        $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 150);
+        $caption = mb_substr(trim((string)($_POST['caption'] ?? '')), 0, 255);
+
+        $raw_link = trim((string)($_POST['link_url'] ?? '/admissions'));
+        if (preg_match('/^(javascript|data|vbscript):/i', $raw_link)) {
+            $link_url = '/admissions';
+        } else {
+            $link_url = mb_substr($raw_link, 0, 255);
+        }
+
+        $sort_order = max(0, min(999999, intval($_POST['sort_order'] ?? 0)));
+        $raw_status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $status = in_array($raw_status, ['active', 'inactive', 'paused'], true) ? (($raw_status === 'paused') ? 'inactive' : $raw_status) : 'active';
+        
+        $image = '';
+        $raw_current = trim((string)($_POST['current_image'] ?? ''));
+        if (!preg_match('/^(javascript|data|vbscript):/i', $raw_current)) {
+            $image = mb_substr($raw_current, 0, 500);
+        }
 
         // Process File Upload
-        if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
-            $p_err = $_FILES['image_file']['error'];
-            if ($p_err === UPLOAD_ERR_OK) {
-                $p_name = $_FILES['image_file']['name'];
-                $p_tmp = $_FILES['image_file']['tmp_name'];
-                $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-                $allowed_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+        $upload_res = $process_popup_upload('image_file');
+        if (!empty($upload_res['error'])) {
+            set_flash('error', $upload_res['error']);
+            header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
+            exit;
+        }
 
-                if (in_array($p_ext, $allowed_exts)) {
-                    $clean_basename = 'popup-' . time() . '-' . rand(100, 999) . '.' . $p_ext;
-                    $dest = $popup_fs_dir . '/' . $clean_basename;
-                    if (move_uploaded_file($p_tmp, $dest)) {
-                        @chmod($dest, 0644);
-                        $image = '/assets/imgs/popup/' . $clean_basename;
-                    } else {
-                        $upload_error = "Could not replace image in assets/imgs/popup/.";
-                    }
-                } else {
-                    $upload_error = "Extension '.{$p_ext}' not supported.";
+        if (!empty($upload_res['path'])) {
+            $image = $upload_res['path'];
+        } elseif (!empty($_POST['selected_existing_file'])) {
+            $chosen = basename(trim((string)$_POST['selected_existing_file']));
+            $chosen_ext = strtolower(pathinfo($chosen, PATHINFO_EXTENSION));
+            if (in_array($chosen_ext, ['jpg', 'jpeg', 'png', 'webp', 'avif'], true)) {
+                $target_path = $popup_fs_dir . '/' . $chosen;
+                if (file_exists($target_path) && strpos(realpath($target_path), realpath($popup_fs_dir)) === 0) {
+                    $image = '/assets/imgs/popup/' . $chosen;
                 }
             }
-        } elseif (!empty($_POST['selected_existing_file'])) {
-            $chosen = basename(trim($_POST['selected_existing_file']));
-            if (file_exists($popup_fs_dir . '/' . $chosen)) {
-                $image = '/assets/imgs/popup/' . $chosen;
-            }
         } elseif (!empty($_POST['image_url'])) {
-            $image = trim($_POST['image_url']);
+            $raw_img = trim((string)$_POST['image_url']);
+            if (!preg_match('/^(javascript|data|vbscript):/i', $raw_img)) {
+                $image = mb_substr($raw_img, 0, 500);
+            }
         }
 
         if ($id > 0 && !empty($title) && !empty($image)) {
@@ -218,12 +289,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $status_note = ($status === 'active') ? 'Live on homepage modal' : 'Paused';
             set_flash('success', "Popup slide updated successfully! ({$status_note})");
         } else {
-            $err_msg = !empty($upload_error) ? $upload_error : "Slide Title and Image cannot be empty.";
-            set_flash('error', $err_msg);
+            set_flash('error', "Slide Title and Image cannot be empty.");
         }
 
-        $redirect_view = $_POST['redirect_view'] ?? 'grid';
-        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($_GET['status'] ?? 'all') . '&view=' . urlencode($redirect_view));
+        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 
@@ -239,14 +308,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $new_status = ($current_status === 'active') ? 'inactive' : 'active';
                 $upd = $db->prepare("UPDATE popup_sliders SET status = ? WHERE id = ?");
                 $upd->execute([$new_status, $id]);
+                $safe_title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
                 $status_msg = ($new_status === 'active') 
-                    ? "Slide '{$row['title']}' is now ACTIVE (live on homepage popup)." 
-                    : "Slide '{$row['title']}' is now PAUSED (hidden from homepage popup).";
+                    ? "Slide '{$safe_title}' is now ACTIVE (live on homepage popup)." 
+                    : "Slide '{$safe_title}' is now PAUSED (hidden from homepage popup).";
                 set_flash('success', $status_msg);
             }
         }
-        $redirect_view = $_POST['redirect_view'] ?? 'grid';
-        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($_GET['status'] ?? 'all') . '&view=' . urlencode($redirect_view));
+        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 
@@ -258,16 +327,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$id]);
             set_flash('success', "Popup slide removed successfully.");
         }
-        $redirect_view = $_POST['redirect_view'] ?? 'grid';
-        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($_GET['status'] ?? 'all') . '&view=' . urlencode($redirect_view));
+        header('Location: ' . ADMIN_URL . '/popup?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 }
 
 // ── Query Slider Data ────────────────────────────────────────────────────────
-$search = trim($_GET['search'] ?? '');
-$filter_status = trim($_GET['status'] ?? 'all');
-$view_mode = trim($_GET['view'] ?? 'grid'); // 'grid' or 'table'
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$filter_status = in_array($_GET['status'] ?? 'all', ['all', 'active', 'inactive', 'paused'], true) ? $_GET['status'] : 'all';
+$view_mode = in_array($_GET['view'] ?? 'grid', ['grid', 'table'], true) ? $_GET['view'] : 'grid';
 
 $query = "SELECT * FROM popup_sliders WHERE 1=1";
 $params = [];
@@ -280,8 +348,9 @@ if ($filter_status === 'active') {
 
 if (!empty($search)) {
     $query .= " AND (title LIKE ? OR caption LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
+    $like_term = "%" . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . "%";
+    $params[] = $like_term;
+    $params[] = $like_term;
 }
 
 $query .= " ORDER BY sort_order ASC, id DESC";
@@ -1309,8 +1378,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="popup-card-footer">
               <!-- Toggle Status Form -->
               <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=grid" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                 <input type="hidden" name="action" value="toggle_status">
-                <input type="hidden" name="id" value="<?php echo $slide['id']; ?>">
+                <input type="hidden" name="id" value="<?php echo intval($slide['id']); ?>">
                 <input type="hidden" name="redirect_view" value="grid">
                 <?php if ($slide['status'] === 'active'): ?>
                   <button type="submit" class="action-btn-pill action-pause" style="padding: 6px 12px; font-size: 0.74rem; font-weight: 700; border-radius: 6px; border: 1px solid #fcd34d; background: #fffbeb; cursor: pointer; color: #b45309; display: inline-flex; align-items: center; gap: 5px;" title="Pause Slide (temporarily hide from frontend)">
@@ -1327,15 +1397,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
               <div style="display: flex; gap: 6px;">
                 <!-- Edit Button -->
-                <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($slide)); ?>);" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($slide), ENT_QUOTES, 'UTF-8'); ?>);" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 5px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                   <i class="fa-solid fa-pen-to-square"></i>
                   <span>Edit</span>
                 </button>
 
                 <!-- Delete Button -->
-                <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=grid" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete slide \'<?php echo addslashes($slide['title']); ?>\'?');">
+                <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=grid" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete slide \'<?php echo htmlspecialchars(addslashes($slide['title']), ENT_QUOTES, 'UTF-8'); ?>\'?');">
+                  <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                   <input type="hidden" name="action" value="delete_slide">
-                  <input type="hidden" name="id" value="<?php echo $slide['id']; ?>">
+                  <input type="hidden" name="id" value="<?php echo intval($slide['id']); ?>">
                   <input type="hidden" name="redirect_view" value="grid">
                   <button type="submit" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; border-radius: 6px; padding: 5px 8px; font-size: 0.76rem; cursor: pointer;" title="Delete Slide">
                     <i class="fa-solid fa-trash-can"></i>
@@ -1413,8 +1484,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
                     <!-- Toggle Status (Pause / Activate) -->
                     <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=table" style="margin: 0;">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                       <input type="hidden" name="action" value="toggle_status">
-                      <input type="hidden" name="id" value="<?php echo $slide['id']; ?>">
+                      <input type="hidden" name="id" value="<?php echo intval($slide['id']); ?>">
                       <input type="hidden" name="redirect_view" value="table">
                       <?php if ($slide['status'] === 'active'): ?>
                         <button type="submit" style="background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; border-radius: 6px; padding: 6px 10px; font-size: 0.74rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Pause slide (hide from frontend)">
@@ -1428,14 +1500,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     </form>
 
                     <!-- Edit Button -->
-                    <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($slide)); ?>);" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;" title="Edit Slide">
+                    <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($slide), ENT_QUOTES, 'UTF-8'); ?>);" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; font-weight: 700; cursor: pointer;" title="Edit Slide">
                       <i class="fa-solid fa-pen-to-square"></i>
                     </button>
 
                     <!-- Delete Button -->
-                    <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=table" style="margin: 0;" onsubmit="return confirm('Delete slide \'<?php echo addslashes($slide['title']); ?>\'?');">
+                    <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=table" style="margin: 0;" onsubmit="return confirm('Delete slide \'<?php echo htmlspecialchars(addslashes($slide['title']), ENT_QUOTES, 'UTF-8'); ?>\'?');">
+                      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                       <input type="hidden" name="action" value="delete_slide">
-                      <input type="hidden" name="id" value="<?php echo $slide['id']; ?>">
+                      <input type="hidden" name="id" value="<?php echo intval($slide['id']); ?>">
                       <input type="hidden" name="redirect_view" value="table">
                       <button type="submit" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecdd3; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; cursor: pointer;" title="Delete Slide">
                         <i class="fa-solid fa-trash-can"></i>
@@ -1478,6 +1551,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div style="padding: 24px;">
       <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=<?php echo urlencode($view_mode); ?>" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="add_slide">
         <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
         <input type="hidden" name="selected_existing_file" id="addSelectedExistingFile" value="">
@@ -1624,6 +1698,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div style="padding: 24px;">
       <form method="POST" action="<?php echo ADMIN_URL; ?>/popup?status=<?php echo urlencode($filter_status); ?>&view=<?php echo urlencode($view_mode); ?>" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="edit_slide">
         <input type="hidden" name="id" id="editSlideId" value="">
         <input type="hidden" name="current_image" id="editSlideCurrentImage" value="">
@@ -1786,14 +1861,19 @@ function openEditModal(slide) {
   var curImg = document.getElementById('editCurrentPreviewImg');
   var rawImg = slide.image || '';
   var src = (rawImg.startsWith('http://') || rawImg.startsWith('https://')) ? rawImg : (rawImg.startsWith('/') ? rawImg : ('/' + rawImg));
+  if (/^(javascript|data|vbscript):/i.test(rawImg)) {
+    src = '/assets/imgs/ksv-logo.png';
+  }
   curImg.src = src;
 
   // Read dimensions of current image
   var testImg = new Image();
   testImg.onload = function() {
     var ratio = (this.naturalWidth / this.naturalHeight).toFixed(2);
-    document.getElementById('editCurrentDimText').innerHTML = 
-      'Current: <strong>' + this.naturalWidth + ' × ' + this.naturalHeight + ' px</strong> (' + ratio + ' ratio)';
+    var dimEl = document.getElementById('editCurrentDimText');
+    if (dimEl) {
+      dimEl.textContent = 'Current: ' + this.naturalWidth + ' × ' + this.naturalHeight + ' px (' + ratio + ' ratio)';
+    }
   };
   testImg.src = src;
 
@@ -1873,14 +1953,23 @@ function selectExistingFile(filename, webPath, dimStr, hiddenInputId, previewWra
   previewImg.src = webPath;
   wrap.style.display = 'block';
 
+  function escapeHTML(str) {
+    var p = document.createElement('p');
+    p.textContent = str;
+    return p.innerHTML;
+  }
+
+  var safeFilename = escapeHTML(filename);
+  var safeDimStr = escapeHTML(dimStr || '1024×1536');
+
   var statusEl = document.getElementById(statusId);
   if (statusEl) {
-    statusEl.innerHTML = '<span style="color:#059669;"><i class="fa-solid fa-check"></i> Selected: ' + filename + ' (' + (dimStr || '1024×1536') + ')</span>';
+    statusEl.innerHTML = '<span style="color:#059669;"><i class="fa-solid fa-check"></i> Selected: ' + safeFilename + ' (' + safeDimStr + ')</span>';
   }
 
   var dimText = document.getElementById(dimTextId);
   if (dimText) {
-    dimText.innerHTML = 'Selected: <strong>' + filename + '</strong> (' + (dimStr || '1024 × 1536 px') + ')';
+    dimText.innerHTML = 'Selected: <strong>' + safeFilename + '</strong> (' + safeDimStr + ')';
   }
 }
 

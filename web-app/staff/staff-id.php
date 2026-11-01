@@ -10,54 +10,76 @@ $active_menu = 'staff-id';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = intval($active_session['id'] ?? 1);
 $school_settings = get_school_settings();
 
 // Selected Staff ID
 $selected_id = intval($_GET['id'] ?? 0);
+$staff_list = [];
 
-// If staff role, restrict strictly to their own profile
+// Access control & profile resolution
 if ($current_user['role'] === 'staff') {
-    $my_prof = $db->query("SELECT id FROM staff_profiles WHERE user_id = {$current_user['id']} LIMIT 1")->fetch();
-    if ($my_prof) {
-        $selected_id = $my_prof['id'];
+    // If staff role, restrict strictly to their own profile (IDOR prevention)
+    $stmt_mp = $db->prepare("SELECT id FROM staff_profiles WHERE user_id = ? LIMIT 1");
+    $stmt_mp->execute([$current_user['id']]);
+    $my_prof = $stmt_mp->fetch();
+
+    if (!$my_prof) {
+        $emp_code = 'KSV-FAC-0' . $current_user['id'];
+        $stmt_ins = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status, session_id) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present', ?)");
+        $stmt_ins->execute([$current_user['id'], $emp_code, $session_id]);
+        $stmt_mp->execute([$current_user['id']]);
+        $my_prof = $stmt_mp->fetch();
     }
-}
 
-// Fetch staff dropdown for super_admin
-$all_staff = $db->prepare("SELECT sp.id, sp.employee_code, sp.department, sp.designation, u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.session_id = ? ORDER BY u.full_name ASC");
-$all_staff->execute([$session_id]);
-$staff_list = $all_staff->fetchAll();
+    $selected_id = $my_prof ? intval($my_prof['id']) : 0;
+} else {
+    // Fetch staff dropdown only for super_admin
+    $all_staff = $db->prepare("SELECT sp.id, sp.employee_code, sp.department, sp.designation, u.full_name FROM staff_profiles sp JOIN users u ON sp.user_id = u.id WHERE sp.session_id = ? ORDER BY u.full_name ASC");
+    $all_staff->execute([$session_id]);
+    $staff_list = $all_staff->fetchAll();
 
-if ($selected_id === 0 && !empty($staff_list)) {
-    $selected_id = $staff_list[0]['id'];
+    if ($selected_id === 0 && !empty($staff_list)) {
+        $selected_id = intval($staff_list[0]['id']);
+    }
 }
 
 // Fetch selected staff details
 $staff = null;
 if ($selected_id > 0) {
-    $stmt = $db->prepare("
-        SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
-        FROM staff_profiles sp
-        JOIN users u ON sp.user_id = u.id
-        WHERE sp.id = ? LIMIT 1
-    ");
-    $stmt->execute([$selected_id]);
+    if ($current_user['role'] === 'staff') {
+        $stmt = $db->prepare("
+            SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
+            FROM staff_profiles sp
+            JOIN users u ON sp.user_id = u.id
+            WHERE sp.id = ? AND sp.user_id = ? LIMIT 1
+        ");
+        $stmt->execute([$selected_id, $current_user['id']]);
+    } else {
+        $stmt = $db->prepare("
+            SELECT sp.*, u.full_name, u.email as user_email, u.phone as user_phone, u.avatar, u.username
+            FROM staff_profiles sp
+            JOIN users u ON sp.user_id = u.id
+            WHERE sp.id = ? LIMIT 1
+        ");
+        $stmt->execute([$selected_id]);
+    }
     $staff = $stmt->fetch();
 }
 
 // Helper for staff avatar detection
 if (!function_exists('get_staff_photo_url')) {
     function get_staff_photo_url($sm) {
-        if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../..' . $sm['photo'])) {
+        if (!empty($sm['photo']) && $sm['photo'] !== '/assets/imgs/ksv-logo.jpg' && file_exists(__DIR__ . '/../../' . ltrim($sm['photo'], '/'))) {
             return $sm['photo'];
         }
         if (!empty($sm['avatar'])) {
-            if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $sm['avatar'])) {
-                return '/assets/imgs/faculties/' . $sm['avatar'];
+            $avatar_file = basename($sm['avatar']);
+            if (file_exists(__DIR__ . '/../../assets/imgs/faculties/' . $avatar_file)) {
+                return '/assets/imgs/faculties/' . $avatar_file;
             }
-            if (file_exists(__DIR__ . '/../../assets/imgs/' . $sm['avatar'])) {
-                return '/assets/imgs/' . $sm['avatar'];
+            if (file_exists(__DIR__ . '/../../assets/imgs/' . $avatar_file)) {
+                return '/assets/imgs/' . $avatar_file;
             }
         }
         $lower = strtolower($sm['full_name'] ?? '');
@@ -99,7 +121,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 ?>
 
 <!-- html2canvas for High-Resolution Card Export -->
-<script src="<?php echo HRMS_URL; ?>/assets/js/html2canvas.min.js"></script>
+<script src="<?php echo htmlspecialchars(HRMS_URL, ENT_QUOTES, 'UTF-8'); ?>/assets/js/html2canvas.min.js"></script>
 
 <style>
 /* ── Premium PVC Staff ID Card Styles (Identical CR80 Standard like admin staff-id.php) ── */
@@ -829,13 +851,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <!-- Left: Selected Faculty Member Label or Switcher -->
     <div class="staff-id-toolbar-left">
       <?php if ($current_user['role'] === 'super_admin'): ?>
-        <form method="GET" action="<?php echo STAFF_URL; ?>/staff-id" class="staff-id-select-form">
+        <form method="GET" action="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/staff-id" class="staff-id-select-form">
           <label style="font-size: 13px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
             <i class="fa-solid fa-id-badge" style="color: #0284c7;"></i> Select Faculty:
           </label>
           <select name="id" onchange="this.form.submit()" class="hrms-input staff-id-select-input">
             <?php foreach ($staff_list as $st_item): ?>
-              <option value="<?php echo $st_item['id']; ?>" <?php echo $st_item['id'] == $selected_id ? 'selected' : ''; ?>>
+              <option value="<?php echo intval($st_item['id']); ?>" <?php echo intval($st_item['id']) === $selected_id ? 'selected' : ''; ?>>
                 <?php echo htmlspecialchars($st_item['full_name']); ?> (<?php echo htmlspecialchars($st_item['employee_code']); ?>)
               </option>
             <?php endforeach; ?>
@@ -909,7 +931,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
           <div class="cf-session-pill">
             <i class="fa-solid fa-chalkboard-user"></i>
-            <span>Faculty ID Card &bull; Session <?php echo htmlspecialchars($active_session['session_name']); ?></span>
+            <span>Faculty ID Card &bull; Session <?php echo htmlspecialchars($active_session['session_name'] ?? CURRENT_SESSION); ?></span>
           </div>
         </div>
 
@@ -923,11 +945,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php if ($has_staff_photo): ?>
               <img src="<?php echo htmlspecialchars($staff_photo_url); ?>" alt="<?php echo htmlspecialchars($staff['full_name']); ?>" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
               <div class="cf-photo-fallback" style="background: <?php echo $avatar_bg; ?>; display: none;">
-                <?php echo $first_letter; ?>
+                <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php else: ?>
               <div class="cf-photo-fallback" style="background: <?php echo $avatar_bg; ?>;">
-                <?php echo $first_letter; ?>
+                <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
               </div>
             <?php endif; ?>
           </div>
@@ -953,11 +975,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Phone Contact</span>
-              <span class="cf-val"><?php echo htmlspecialchars($staff['phone'] ?: $staff['user_phone']); ?></span>
+              <span class="cf-val"><?php echo htmlspecialchars((string)($staff['phone'] ?: $staff['user_phone']), ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Official Email</span>
-              <span class="cf-val cf-val-email" style="font-size: 10px;"><?php echo htmlspecialchars($staff['email'] ?: $staff['user_email']); ?></span>
+              <span class="cf-val cf-val-email" style="font-size: 10px;"><?php echo htmlspecialchars((string)($staff['email'] ?: $staff['user_email']), ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Blood Group</span>
@@ -967,7 +989,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </div>
             <div class="cf-info-row">
               <span class="cf-label">Date of Joining</span>
-              <span class="cf-val"><?php echo format_date($staff['joining_date']); ?></span>
+              <span class="cf-val"><?php echo htmlspecialchars(format_date($staff['joining_date']), ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
           </div>
 
@@ -1014,7 +1036,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           
           <!-- QR Frame -->
           <div class="cb-qr-frame">
-            <img src="<?php echo $qr_image_url; ?>" alt="Faculty Attendance QR Code">
+            <img src="<?php echo htmlspecialchars($qr_image_url, ENT_QUOTES, 'UTF-8'); ?>" alt="Faculty Attendance QR Code">
           </div>
           
           <div class="cb-qr-code-text"><?php echo htmlspecialchars($qr_data); ?></div>
@@ -1064,8 +1086,8 @@ function downloadCardImage(elementId, sideLabel) {
   const card = document.getElementById(elementId);
   if (!card) return;
 
-  const staffName = <?php echo json_encode($staff['full_name'] ?? 'Faculty'); ?>;
-  const empCode = <?php echo json_encode($staff['employee_code'] ?? 'KSV'); ?>;
+  const staffName = <?php echo json_encode((string)($staff['full_name'] ?? 'Faculty'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+  const empCode = <?php echo json_encode((string)($staff['employee_code'] ?? 'KSV'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
   const filename = `Staff_ID_${sideLabel}_${staffName.replace(/\s+/g, '_')}_${empCode}.png`;
 
   html2canvas(card, {

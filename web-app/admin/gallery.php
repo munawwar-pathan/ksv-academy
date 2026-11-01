@@ -12,52 +12,124 @@ $active_session = get_active_session();
 
 // ── Handle Actions ──────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // Determine validated redirect target early
+    $redirect_view = in_array($_POST['redirect_view'] ?? '', ['table', 'grid'], true) ? $_POST['redirect_view'] : 'table';
+    $redirect_status = in_array($_POST['redirect_status'] ?? '', ['all', 'active', 'inactive'], true) ? $_POST['redirect_status'] : 'all';
+
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
+
+    // Common gallery file upload validator
+    $process_gallery_upload = function($file_field) {
+        if (!isset($_FILES[$file_field]) || empty($_FILES[$file_field]['name'])) {
+            return ['path' => '', 'error' => ''];
+        }
+        if ($_FILES[$file_field]['error'] === UPLOAD_ERR_NO_FILE) {
+            return ['path' => '', 'error' => ''];
+        }
+        if ($_FILES[$file_field]['error'] !== UPLOAD_ERR_OK) {
+            return ['path' => '', 'error' => 'Error during file upload (Code: ' . intval($_FILES[$file_field]['error']) . ').'];
+        }
+
+        $p_name = $_FILES[$file_field]['name'];
+        $p_tmp = $_FILES[$file_field]['tmp_name'];
+        $p_size = $_FILES[$file_field]['size'];
+
+        // Size limit: 10MB
+        if ($p_size > 10 * 1024 * 1024) {
+            return ['path' => '', 'error' => 'Uploaded file exceeds the maximum allowed size of 10MB.'];
+        }
+        if (!is_uploaded_file($p_tmp)) {
+            return ['path' => '', 'error' => 'Invalid file upload source.'];
+        }
+
+        $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
+        $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
+        if (!in_array($p_ext, $allowed_img_exts, true)) {
+            return ['path' => '', 'error' => 'Invalid file extension. Allowed: JPG, JPEG, PNG, WEBP, AVIF, GIF.'];
+        }
+
+        // MIME validation
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = $finfo ? finfo_file($finfo, $p_tmp) : '';
+        if ($finfo) finfo_close($finfo);
+
+        $valid_mimes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/heif'];
+        if (!in_array($mime, $valid_mimes, true)) {
+            return ['path' => '', 'error' => 'Uploaded file is not a supported image format (detected: ' . htmlspecialchars($mime, ENT_QUOTES, 'UTF-8') . ').'];
+        }
+
+        // Header integrity check for formats supported by getimagesize
+        if (in_array($p_ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            $img_info = @getimagesize($p_tmp);
+            if ($img_info === false) {
+                return ['path' => '', 'error' => 'Corrupt or unreadable image file header.'];
+            }
+        }
+
+        $p_dir = __DIR__ . '/../uploads/gallery';
+        if (!is_dir($p_dir)) {
+            mkdir($p_dir, 0755, true);
+        }
+
+        $filename = 'gal_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $p_ext;
+        $dest = $p_dir . '/' . $filename;
+        if (move_uploaded_file($p_tmp, $dest)) {
+            return ['path' => '/web-app/uploads/gallery/' . $filename, 'error' => ''];
+        }
+        return ['path' => '', 'error' => 'Could not save the uploaded file to destination directory.'];
+    };
 
     // 1. Add Photo
     if ($action === 'add_photo') {
-        $title = trim($_POST['title'] ?? '');
-        $caption = trim($_POST['caption'] ?? '');
-        $category = trim($_POST['category'] ?? 'Smart Classrooms');
-        $sort_order = intval($_POST['sort_order'] ?? 0);
-        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
+        $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 150);
+        $caption = mb_substr(trim((string)($_POST['caption'] ?? '')), 0, 500);
+        $category = mb_substr(trim((string)($_POST['category'] ?? 'Smart Classrooms')), 0, 60);
+        $sort_order = max(0, min(999999, intval($_POST['sort_order'] ?? 0)));
+        $raw_status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $status = in_array($raw_status, ['active', 'inactive', 'paused'], true) ? (($raw_status === 'paused') ? 'inactive' : $raw_status) : 'active';
         $image = '';
 
         // Process File Upload
-        if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
-            $p_name = $_FILES['image_file']['name'];
-            $p_tmp = $_FILES['image_file']['tmp_name'];
-            $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-            $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
-            if (in_array($p_ext, $allowed_img_exts)) {
-                $p_dir = __DIR__ . '/../uploads/gallery';
-                if (!is_dir($p_dir)) {
-                    mkdir($p_dir, 0777, true);
-                }
-                $filename = 'gal_' . time() . '_' . rand(1000, 9999) . '.' . $p_ext;
-                $dest = $p_dir . '/' . $filename;
-                if (move_uploaded_file($p_tmp, $dest)) {
-                    $image = '/web-app/uploads/gallery/' . $filename;
-                }
-            }
+        $upload_res = $process_gallery_upload('image_file');
+        if (!empty($upload_res['error'])) {
+            set_flash('error', $upload_res['error']);
+            header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
+            exit;
+        }
+
+        if (!empty($upload_res['path'])) {
+            $image = $upload_res['path'];
         } elseif (!empty($_POST['selected_existing_file'])) {
-            $sel = trim($_POST['selected_existing_file']);
-            $image = (strpos($sel, '/') === 0) ? $sel : ('/assets/imgs/gallers/' . $sel);
+            $sel = basename(trim((string)$_POST['selected_existing_file']));
+            $allowed_file_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
+            $clean_ext = strtolower(pathinfo($sel, PATHINFO_EXTENSION));
+            $gal_check_dir = dirname(__DIR__, 2) . '/assets/imgs/gallers';
+            if (in_array($clean_ext, $allowed_file_exts, true) && file_exists($gal_check_dir . '/' . $sel)) {
+                $image = '/assets/imgs/gallers/' . $sel;
+            }
         } elseif (!empty($_POST['image_url'])) {
-            $image = trim($_POST['image_url']);
+            $raw_url = trim((string)$_POST['image_url']);
+            if (!preg_match('/^(javascript|data|vbscript):/i', $raw_url)) {
+                $image = mb_substr($raw_url, 0, 500);
+            }
         }
 
         if (!empty($title) && !empty($image)) {
             $stmt = $db->prepare("INSERT INTO gallery (title, caption, category, image, sort_order, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
             $stmt->execute([$title, $caption, $category, $image, $sort_order, $status]);
             $status_note = ($status === 'active') ? 'Live on website' : 'Paused';
-            set_flash('success', "Media '{$title}' added to gallery successfully! ({$status_note})");
+            set_flash('success', "Media '" . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . "' added to gallery successfully! ({$status_note})");
         } else {
-            set_flash('error', "Please provide both a title and an image.");
+            set_flash('error', "Please provide both a valid title and an image.");
         }
 
-        $redirect_view = $_POST['redirect_view'] ?? 'table';
-        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
         header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
@@ -65,35 +137,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 2. Edit Photo
     if ($action === 'edit_photo') {
         $id = intval($_POST['id'] ?? 0);
-        $title = trim($_POST['title'] ?? '');
-        $caption = trim($_POST['caption'] ?? '');
-        $category = trim($_POST['category'] ?? 'Smart Classrooms');
-        $sort_order = intval($_POST['sort_order'] ?? 0);
-        $status = in_array($_POST['status'] ?? 'active', ['active', 'inactive', 'paused']) ? (($_POST['status'] === 'paused') ? 'inactive' : $_POST['status']) : 'active';
-        $image = trim($_POST['current_image'] ?? '');
+        $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 150);
+        $caption = mb_substr(trim((string)($_POST['caption'] ?? '')), 0, 500);
+        $category = mb_substr(trim((string)($_POST['category'] ?? 'Smart Classrooms')), 0, 60);
+        $sort_order = max(0, min(999999, intval($_POST['sort_order'] ?? 0)));
+        $raw_status = strtolower(trim((string)($_POST['status'] ?? 'active')));
+        $status = in_array($raw_status, ['active', 'inactive', 'paused'], true) ? (($raw_status === 'paused') ? 'inactive' : $raw_status) : 'active';
+        
+        $image = '';
+        $raw_current = trim((string)($_POST['current_image'] ?? ''));
+        if (!preg_match('/^(javascript|data|vbscript):/i', $raw_current)) {
+            $image = mb_substr($raw_current, 0, 500);
+        }
 
         // New File Upload
-        if (isset($_FILES['image_file']) && !empty($_FILES['image_file']['name'])) {
-            $p_name = $_FILES['image_file']['name'];
-            $p_tmp = $_FILES['image_file']['tmp_name'];
-            $p_ext = strtolower(pathinfo($p_name, PATHINFO_EXTENSION));
-            $allowed_img_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
-            if (in_array($p_ext, $allowed_img_exts)) {
-                $p_dir = __DIR__ . '/../uploads/gallery';
-                if (!is_dir($p_dir)) {
-                    mkdir($p_dir, 0777, true);
-                }
-                $filename = 'gal_' . time() . '_' . rand(1000, 9999) . '.' . $p_ext;
-                $dest = $p_dir . '/' . $filename;
-                if (move_uploaded_file($p_tmp, $dest)) {
-                    $image = '/web-app/uploads/gallery/' . $filename;
-                }
-            }
+        $upload_res = $process_gallery_upload('image_file');
+        if (!empty($upload_res['error'])) {
+            set_flash('error', $upload_res['error']);
+            header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
+            exit;
+        }
+
+        if (!empty($upload_res['path'])) {
+            $image = $upload_res['path'];
         } elseif (!empty($_POST['selected_existing_file'])) {
-            $sel = trim($_POST['selected_existing_file']);
-            $image = (strpos($sel, '/') === 0) ? $sel : ('/assets/imgs/gallers/' . $sel);
+            $sel = basename(trim((string)$_POST['selected_existing_file']));
+            $allowed_file_exts = ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'];
+            $clean_ext = strtolower(pathinfo($sel, PATHINFO_EXTENSION));
+            $gal_check_dir = dirname(__DIR__, 2) . '/assets/imgs/gallers';
+            if (in_array($clean_ext, $allowed_file_exts, true) && file_exists($gal_check_dir . '/' . $sel)) {
+                $image = '/assets/imgs/gallers/' . $sel;
+            }
         } elseif (!empty($_POST['image_url'])) {
-            $image = trim($_POST['image_url']);
+            $raw_url = trim((string)$_POST['image_url']);
+            if (!preg_match('/^(javascript|data|vbscript):/i', $raw_url)) {
+                $image = mb_substr($raw_url, 0, 500);
+            }
         }
 
         if ($id > 0 && !empty($title) && !empty($image)) {
@@ -105,8 +184,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_flash('error', "Title and image cannot be empty.");
         }
 
-        $redirect_view = $_POST['redirect_view'] ?? 'table';
-        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
         header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
@@ -123,14 +200,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $new_status = ($current_status === 'active') ? 'inactive' : 'active';
                 $upd = $db->prepare("UPDATE gallery SET status = ? WHERE id = ?");
                 $upd->execute([$new_status, $id]);
+                $safe_title = htmlspecialchars($row['title'], ENT_QUOTES, 'UTF-8');
                 $msg = ($new_status === 'active') 
-                    ? "Media '{$row['title']}' is now Active & Live on website." 
-                    : "Media '{$row['title']}' is now Paused (hidden from website).";
+                    ? "Media '{$safe_title}' is now Active & Live on website." 
+                    : "Media '{$safe_title}' is now Paused (hidden from website).";
                 set_flash('success', $msg);
             }
         }
-        $redirect_view = $_POST['redirect_view'] ?? 'table';
-        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
         header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
@@ -143,11 +219,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$id]);
             $item = $stmt->fetch();
             if ($item) {
-                // If local uploaded file, delete from disk
+                // If local uploaded file, delete from disk safely without traversal
                 if (strpos($item['image'], '/web-app/uploads/gallery/') === 0) {
-                    $local_path = __DIR__ . '/..' . str_replace('/web-app', '', $item['image']);
-                    if (file_exists($local_path)) {
-                        @unlink($local_path);
+                    $clean_file = basename($item['image']);
+                    $upload_dir = realpath(__DIR__ . '/../uploads/gallery');
+                    if ($upload_dir) {
+                        $local_path = $upload_dir . DIRECTORY_SEPARATOR . $clean_file;
+                        if (file_exists($local_path) && strpos(realpath($local_path), $upload_dir) === 0) {
+                            @unlink($local_path);
+                        }
                     }
                 }
                 $del = $db->prepare("DELETE FROM gallery WHERE id = ?");
@@ -155,18 +235,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 set_flash('success', "Media deleted from gallery.");
             }
         }
-        $redirect_view = $_POST['redirect_view'] ?? 'table';
-        $redirect_status = $_POST['redirect_status'] ?? ($_GET['status'] ?? 'all');
         header('Location: ' . ADMIN_URL . '/gallery?status=' . urlencode($redirect_status) . '&view=' . urlencode($redirect_view));
         exit;
     }
 }
 
 // ── Query Data ──────────────────────────────────────────────────────────────
-$filter_category = trim($_GET['category'] ?? '');
-$filter_status = trim($_GET['status'] ?? 'all');
-$search = trim($_GET['search'] ?? '');
-$view_mode = trim($_GET['view'] ?? 'table'); // 'table' or 'grid'
+$filter_category = mb_substr(trim((string)($_GET['category'] ?? '')), 0, 100);
+$filter_status = in_array($_GET['status'] ?? 'all', ['all', 'active', 'inactive'], true) ? $_GET['status'] : 'all';
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$view_mode = in_array($_GET['view'] ?? 'table', ['table', 'grid'], true) ? $_GET['view'] : 'table';
 
 // Scan existing gallery photos in assets/imgs/gallers/
 $existing_gallery_files = [];
@@ -208,9 +286,10 @@ if (!empty($filter_category) && $filter_category !== 'all') {
 
 if (!empty($search)) {
     $where_clauses[] = "(title LIKE ? OR caption LIKE ? OR category LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
+    $like_term = "%" . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . "%";
+    $params[] = $like_term;
+    $params[] = $like_term;
+    $params[] = $like_term;
 }
 
 $where_sql = implode(' AND ', $where_clauses);
@@ -283,6 +362,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 <style>
 /* ── Gallery Specific Enhanced Styles ── */
+.gallery-status-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
 .gallery-tab-pill {
   display: inline-flex;
   align-items: center;
@@ -712,6 +800,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: #1e293b !important;
   border-color: #334155 !important;
 }
+[data-theme="dark"] .gallery-status-tabs {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+}
+[data-theme="dark"] .gallery-status-tabs .gallery-tab-pill:not(.active) .fa-circle-check {
+  color: #34d399 !important;
+}
+[data-theme="dark"] .gallery-status-tabs .gallery-tab-pill:not(.active) .fa-pause {
+  color: #fbbf24 !important;
+}
 [data-theme="dark"] .gallery-categories-nav {
   background: #0f172a !important;
   border: 1px solid #334155 !important;
@@ -793,6 +891,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* 2. Category Badges */
+[data-theme="dark"] .cat-pill {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+}
 [data-theme="dark"] .cat-pill.campus {
   background: rgba(2, 132, 199, 0.15) !important;
   color: #38bdf8 !important;
@@ -817,6 +920,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
   background: rgba(244, 63, 94, 0.15) !important;
   color: #fb7185 !important;
   border: 1px solid rgba(244, 63, 94, 0.3) !important;
+}
+[data-theme="dark"] .cat-pill.classrooms {
+  background: rgba(37, 99, 235, 0.15) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(37, 99, 235, 0.3) !important;
 }
 [data-theme="dark"] .cat-pill.other {
   background: #0f172a !important;
@@ -1093,7 +1201,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1; min-width: 300px;">
       
       <!-- 1. Status Filter Pills (All, Active, Paused) -->
-      <div style="display: inline-flex; align-items: center; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; border: 1px solid #e2e8f0;">
+      <div class="gallery-status-tabs" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px; border-radius: 12px;">
         <a href="?status=all<?php echo !empty($filter_category) ? '&category=' . urlencode($filter_category) : ''; ?>&view=<?php echo urlencode($view_mode); ?><?php echo $limit !== 10 ? '&limit=' . $limit : ''; ?>" 
            class="gallery-tab-pill <?php echo ($filter_status === 'all' || empty($filter_status)) ? 'active' : ''; ?>" style="padding: 6px 12px; font-size: 0.78rem;">
           <i class="fa-solid fa-layer-group"></i>
@@ -1237,7 +1345,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           $is_active = (($item['status'] ?? 'active') === 'active');
         ?>
         <div class="gallery-card">
-          <div class="gallery-card-img-wrap" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')">
+          <div class="gallery-card-img-wrap" onclick="openLightbox(<?php echo htmlspecialchars(json_encode($item['image']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['title']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['category']), ENT_QUOTES, 'UTF-8'); ?>)">
             <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" class="gallery-card-img" onerror="this.src='/assets/imgs/ksv-logo.png'">
             
             <div class="gallery-card-badge" style="display: flex; gap: 6px; align-items: center;">
@@ -1287,8 +1395,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <div class="gallery-card-actions" style="display: flex; justify-content: space-between; align-items: center;">
               <!-- Toggle Active / Pause Form -->
               <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;">
+                <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                 <input type="hidden" name="action" value="toggle_status">
-                <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                <input type="hidden" name="id" value="<?php echo intval($item['id']); ?>">
                 <input type="hidden" name="redirect_view" value="grid">
                 <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
                 <?php if ($is_active): ?>
@@ -1305,18 +1414,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </form>
 
               <div style="display: flex; gap: 6px;">
-                <button type="button" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" class="action-btn-pill secondary" style="padding: 6px 10px; font-size: 0.76rem;" title="View Preview">
+                <button type="button" onclick="openLightbox(<?php echo htmlspecialchars(json_encode($item['image']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['title']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['category']), ENT_QUOTES, 'UTF-8'); ?>)" class="action-btn-pill secondary" style="padding: 6px 10px; font-size: 0.76rem;" title="View Preview">
                   <i class="fa-solid fa-eye"></i>
                 </button>
 
-                <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item)); ?>);" class="action-btn-pill primary" style="padding: 6px 12px; font-size: 0.76rem;" title="Edit Media Details">
+                <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8'); ?>);" class="action-btn-pill primary" style="padding: 6px 12px; font-size: 0.76rem;" title="Edit Media Details">
                   <i class="fa-solid fa-pen-to-square"></i>
                   <span>Edit</span>
                 </button>
 
-                <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to delete \'<?php echo addslashes($item['title']); ?>\'?');">
+                <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;" onsubmit="return confirm('Are you sure you want to delete \'<?php echo htmlspecialchars(addslashes($item['title']), ENT_QUOTES, 'UTF-8'); ?>\'?');">
+                  <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                   <input type="hidden" name="action" value="delete_photo">
-                  <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                  <input type="hidden" name="id" value="<?php echo intval($item['id']); ?>">
                   <input type="hidden" name="redirect_view" value="grid">
                   <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
                   <button type="submit" class="action-btn-pill secondary" style="padding: 6px 10px; font-size: 0.76rem; color: #dc2626; border-color: #fecdd3;" title="Delete Media">
@@ -1462,7 +1572,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <tr>
                   <!-- 1. Image Thumbnail -->
                   <td style="text-align: center;">
-                    <div class="gallery-thumb-container" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" title="Click to view full preview">
+                    <div class="gallery-thumb-container" onclick="openLightbox(<?php echo htmlspecialchars(json_encode($item['image']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['title']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['category']), ENT_QUOTES, 'UTF-8'); ?>)" title="Click to view full preview">
                       <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" class="gallery-thumb-img" onerror="this.src='/assets/imgs/ksv-logo.png'">
                       <div class="gallery-thumb-overlay">
                         <i class="fa-solid fa-magnifying-glass-plus"></i>
@@ -1515,8 +1625,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                       <!-- Quick Toggle Button -->
                       <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                         <input type="hidden" name="action" value="toggle_status">
-                        <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                        <input type="hidden" name="id" value="<?php echo intval($item['id']); ?>">
                         <input type="hidden" name="redirect_view" value="table">
                         <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
                         <button type="submit" class="action-btn-pill secondary" style="padding: 3px 6px; font-size: 0.7rem;" title="<?php echo $is_active ? 'Click to Pause' : 'Click to Activate'; ?>">
@@ -1537,17 +1648,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <!-- 7. Actions -->
                   <td style="text-align: right;">
                     <div style="display: flex; gap: 5px; justify-content: flex-end; align-items: center;">
-                      <button type="button" onclick="openLightbox('<?php echo htmlspecialchars($item['image']); ?>', '<?php echo htmlspecialchars(addslashes($item['title'])); ?>', '<?php echo htmlspecialchars(addslashes($item['category'])); ?>')" class="action-btn-pill secondary" style="padding: 4px 8px;" title="Preview Photo">
+                      <button type="button" onclick="openLightbox(<?php echo htmlspecialchars(json_encode($item['image']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['title']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($item['category']), ENT_QUOTES, 'UTF-8'); ?>)" class="action-btn-pill secondary" style="padding: 4px 8px;" title="Preview Photo">
                         <i class="fa-solid fa-eye" style="font-size: 0.72rem;"></i>
                       </button>
 
-                      <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item)); ?>);" class="action-btn-pill primary" style="padding: 4px 8px;" title="Edit Media Details">
+                      <button type="button" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8'); ?>);" class="action-btn-pill primary" style="padding: 4px 8px;" title="Edit Media Details">
                         <i class="fa-solid fa-pencil" style="font-size: 0.72rem;"></i>
                       </button>
 
-                      <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;" onsubmit="return confirm('Delete \'<?php echo addslashes($item['title']); ?>\' from gallery?');">
+                      <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" style="display: inline; margin: 0;" onsubmit="return confirm('Delete \'<?php echo htmlspecialchars(addslashes($item['title']), ENT_QUOTES, 'UTF-8'); ?>\' from gallery?');">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                         <input type="hidden" name="action" value="delete_photo">
-                        <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
+                        <input type="hidden" name="id" value="<?php echo intval($item['id']); ?>">
                         <input type="hidden" name="redirect_view" value="table">
                         <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
                         <button type="submit" class="action-btn-pill secondary" style="padding: 4px 8px; color: #dc2626; border-color: #fecdd3;" title="Delete Photo">
@@ -1660,6 +1772,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div class="hrms-modal-body">
       <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="add_photo">
         <input type="hidden" name="redirect_view" value="<?php echo htmlspecialchars($view_mode); ?>">
         <input type="hidden" name="redirect_status" value="<?php echo htmlspecialchars($filter_status); ?>">
@@ -1805,6 +1918,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div class="hrms-modal-body">
       <form method="POST" action="<?php echo ADMIN_URL; ?>/gallery" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="edit_photo">
         <input type="hidden" name="id" id="edit_id">
         <input type="hidden" name="current_image" id="edit_current_image">
@@ -1908,7 +2022,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #1e293b; margin-bottom: 5px;">
             Or Update Image URL / Path
           </label>
-          <input type="text" name="image_url" id="edit_image_url" placeholder="/assets/imgs/gallers/gallery-1.png" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;">
+          <input type="text" name="image_url" id="edit_image_url" placeholder="/assets/imgs/gallers/gallery-1.png" class="form-control" style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; font-size: 0.84rem;">
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
@@ -1992,12 +2106,18 @@ function closeEditModal() {
 }
 
 function openLightbox(imgSrc, title, category) {
-  document.getElementById('lbImage').src = imgSrc;
-  document.getElementById('lbTitle').innerText = title;
-  document.getElementById('lbOriginalLink').href = imgSrc;
+  // Validate image URL scheme before setting to prevent javascript: or malformed URIs
+  if (imgSrc && (imgSrc.startsWith('/') || /^https?:\/\//i.test(imgSrc))) {
+    document.getElementById('lbImage').src = imgSrc;
+    document.getElementById('lbOriginalLink').href = imgSrc;
+  } else {
+    document.getElementById('lbImage').src = '/assets/imgs/ksv-logo.png';
+    document.getElementById('lbOriginalLink').href = '#';
+  }
+  document.getElementById('lbTitle').innerText = title || 'Photo Preview';
   
   const catEl = document.getElementById('lbCategory');
-  catEl.innerText = category;
+  catEl.innerText = category || 'Category';
   catEl.className = 'cat-pill other';
   const c = (category || '').toLowerCase();
   if (c.includes('camp')) catEl.className = 'cat-pill campus';

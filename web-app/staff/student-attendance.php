@@ -10,47 +10,85 @@ $active_menu = 'student-attendance';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'];
+$session_id = intval($active_session['id'] ?? 1);
 
-$filter_date = $_GET['date'] ?? date('Y-m-d');
-$filter_standard = $_GET['standard'] ?? '';
+$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+
+// Validate Filter Date (Format YYYY-MM-DD + checkdate)
+$filter_date = trim((string)($_GET['date'] ?? date('Y-m-d')));
+if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $filter_date, $m_fdate) || !checkdate((int)$m_fdate[2], (int)$m_fdate[3], (int)$m_fdate[1])) {
+    $filter_date = date('Y-m-d');
+}
+
+// Validate Filter Standard (Whitelisted against valid standards)
+$filter_standard = trim((string)($_GET['standard'] ?? ''));
+if (!empty($filter_standard) && !in_array($filter_standard, $standards, true)) {
+    $filter_standard = '';
+}
 
 // Handle QR Scan / Manual Attendance Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. CSRF Token Verification
+    $csrf = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    if (!verify_csrf_token($csrf)) {
+        if (!empty($_POST['ajax'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Security token invalid or expired. Please refresh the page.']);
+            exit;
+        }
+        set_flash('error', 'Security token invalid or expired. Please refresh the page.');
+        header('Location: ' . STAFF_URL . '/student-attendance?date=' . urlencode($filter_date));
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     // Mark attendance by Student ID or QR Code String
     if ($action === 'mark_attendance') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $qr_data = trim($_POST['qr_data'] ?? '');
-        $status = in_array($_POST['status'] ?? '', ['Present', 'Late', 'Absent', 'Leave']) ? $_POST['status'] : 'Present';
-        $log_date = $_POST['log_date'] ?? date('Y-m-d');
+        $qr_data = mb_substr(trim((string)($_POST['qr_data'] ?? '')), 0, 100);
+        $status = in_array($_POST['status'] ?? '', ['Present', 'Late', 'Absent', 'Leave'], true) ? $_POST['status'] : 'Present';
+        
+        $raw_log_date = trim((string)($_POST['log_date'] ?? date('Y-m-d')));
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw_log_date, $m_ldate) && checkdate((int)$m_ldate[2], (int)$m_ldate[3], (int)$m_ldate[1])) {
+            $log_date = $raw_log_date;
+        } else {
+            $log_date = date('Y-m-d');
+        }
 
-        // Check-in timestamp handling
+        // Check-in timestamp handling with strict format validation
         if ($status === 'Absent') {
             $check_in = null;
             $default_remarks = 'Marked Absent';
-        } elseif (!empty($_POST['check_in_time'])) {
-            $check_in = date('H:i:s', strtotime($_POST['check_in_time']));
-            $default_remarks = $status === 'Late' ? 'Late arrival recorded (' . date('h:i A', strtotime($check_in)) . ')' : 'Marked Present';
         } else {
-            $check_in = date('H:i:s');
-            $default_remarks = $status === 'Late' ? 'Late arrival recorded (' . date('h:i A') . ')' : 'Marked via Quick Punch';
+            $raw_time = trim((string)($_POST['check_in_time'] ?? ''));
+            if (!empty($raw_time) && preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/', $raw_time)) {
+                $check_in = date('H:i:s', strtotime($raw_time));
+                $default_remarks = $status === 'Late' ? 'Late arrival recorded (' . date('h:i A', strtotime($check_in)) . ')' : 'Marked Present';
+            } else {
+                $check_in = date('H:i:s');
+                $default_remarks = $status === 'Late' ? 'Late arrival recorded (' . date('h:i A') . ')' : 'Marked via Quick Punch';
+            }
         }
 
-        $remarks = trim($_POST['remarks'] ?? $default_remarks);
-        if (empty($remarks)) {
-            $remarks = $default_remarks;
-        }
+        $raw_remarks = trim((string)($_POST['remarks'] ?? ''));
+        $remarks = !empty($raw_remarks) ? mb_substr($raw_remarks, 0, 255) : $default_remarks;
 
-        // If scanned via QR string, resolve student_id
+        // If scanned via QR string, resolve student_id scoped to current session
         if ($student_id === 0 && !empty($qr_data)) {
-            // Find student by qr_code, roll_no, or admission_no
-            $stmt = $db->prepare("SELECT id, student_name, roll_no FROM students WHERE qr_code = ? OR roll_no = ? OR admission_no = ? OR CONCAT('STU-', roll_no) = ? LIMIT 1");
-            $stmt->execute([$qr_data, $qr_data, $qr_data, $qr_data]);
+            // Find student by qr_code, roll_no, or admission_no scoped to session
+            $stmt = $db->prepare("SELECT id, student_name, roll_no FROM students WHERE session_id = ? AND (qr_code = ? OR roll_no = ? OR admission_no = ? OR CONCAT('STU-', roll_no) = ?) LIMIT 1");
+            $stmt->execute([$session_id, $qr_data, $qr_data, $qr_data, $qr_data]);
             $stu = $stmt->fetch();
             if ($stu) {
-                $student_id = $stu['id'];
+                $student_id = intval($stu['id']);
+            }
+        } elseif ($student_id > 0) {
+            // Verify student belongs to this active session
+            $chk_stu = $db->prepare("SELECT id FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+            $chk_stu->execute([$student_id, $session_id]);
+            if (!$chk_stu->fetchColumn()) {
+                $student_id = 0;
             }
         }
 
@@ -91,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Content-Type: application/json');
                 $stmt_sinfo = $db->prepare("SELECT student_name, roll_no, standard FROM students WHERE id = ?");
                 $stmt_sinfo->execute([$student_id]);
-                $stu_info = $stmt_sinfo->fetch(PDO::FETCH_ASSOC);
+                $stu_info = $stmt_sinfo->fetch(PDO::FETCH_ASSOC) ?: ['student_name' => 'Scholar', 'roll_no' => ''];
 
                 // Get updated counts for the page date
                 $stats_stmt = $db->prepare("
@@ -110,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 echo json_encode([
                     'success' => true,
-                    'message' => "Marked {$status} for {$stu_info['student_name']} ({$stu_info['roll_no']})",
+                    'message' => "Marked {$status} for " . htmlspecialchars($stu_info['student_name'], ENT_QUOTES, 'UTF-8') . " (" . htmlspecialchars($stu_info['roll_no'], ENT_QUOTES, 'UTF-8') . ")",
                     'student' => $stu_info,
                     'status' => $status,
                     'check_in_time' => $check_in,
@@ -127,27 +165,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             set_flash('success', "Attendance marked as {$status} for student #{$student_id}.");
-            header("Location: " . STAFF_URL . "/student-attendance?date={$log_date}");
+            header("Location: " . STAFF_URL . "/student-attendance?date=" . urlencode($log_date));
             exit;
         } else {
+            $safe_qr_label = htmlspecialchars($qr_data, ENT_QUOTES, 'UTF-8');
             if (!empty($_POST['ajax'])) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => "No student found matching QR code '{$qr_data}'."]);
+                echo json_encode(['success' => false, 'message' => "No student found matching QR code '{$safe_qr_label}' in current session."]);
                 exit;
             }
-            set_flash('error', "No student found matching scanned QR code '{$qr_data}'.");
+            set_flash('error', "No student found matching scanned QR code '{$safe_qr_label}' in current session.");
         }
     }
 
     // Mark all students present for the date
     if ($action === 'mark_all_present') {
-        $log_date = $_POST['log_date'] ?? date('Y-m-d');
+        $raw_log_date = trim((string)($_POST['log_date'] ?? date('Y-m-d')));
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw_log_date, $m_ldate) && checkdate((int)$m_ldate[2], (int)$m_ldate[3], (int)$m_ldate[1])) {
+            $log_date = $raw_log_date;
+        } else {
+            $log_date = date('Y-m-d');
+        }
+
         $all_stus = $db->prepare("SELECT id FROM students WHERE session_id = ?");
         $all_stus->execute([$session_id]);
         $stu_ids = $all_stus->fetchAll(PDO::FETCH_COLUMN);
 
         $now_time = date('H:i:s');
         foreach ($stu_ids as $sid) {
+            $sid = intval($sid);
             $chk = $db->prepare("SELECT id FROM attendance_logs WHERE type = 'student' AND reference_id = ? AND log_date = ? LIMIT 1");
             $chk->execute([$sid, $log_date]);
             $existing_id = $chk->fetchColumn();
@@ -160,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         set_flash('success', "All enrolled scholars marked as Present for " . date('d M Y', strtotime($log_date)) . ".");
-        header("Location: " . STAFF_URL . "/student-attendance?date={$log_date}");
+        header("Location: " . STAFF_URL . "/student-attendance?date=" . urlencode($log_date));
         exit;
     }
 }
@@ -168,13 +214,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Auto-mark unpunched students as Absent for previous dates:
 // 1. Any past date where attendance was already logged for some students in this session
 // 2. The currently viewed $filter_date if it is in the past (< today)
-$past_dates = $db->query("
+$past_stmt = $db->prepare("
     SELECT DISTINCT log_date 
     FROM attendance_logs 
-    WHERE session_id = {$session_id} AND type = 'student' AND log_date < CURDATE()
-")->fetchAll(PDO::FETCH_COLUMN);
+    WHERE session_id = ? AND type = 'student' AND log_date < CURDATE()
+");
+$past_stmt->execute([$session_id]);
+$past_dates = $past_stmt->fetchAll(PDO::FETCH_COLUMN);
 
-if ($filter_date < date('Y-m-d') && !in_array($filter_date, $past_dates)) {
+if ($filter_date < date('Y-m-d') && !in_array($filter_date, $past_dates, true)) {
     $past_dates[] = $filter_date;
 }
 
@@ -1201,7 +1249,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
     </div>
     <div class="stat-card-footer">
-      <span>Academic Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      <span>Academic Session <strong><?php echo htmlspecialchars($active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y')), ENT_QUOTES, 'UTF-8'); ?></strong></span>
       <span style="color: #0284c7; font-weight: 700;"><i class="fa-solid fa-check"></i> Active</span>
     </div>
   </div>
@@ -1292,16 +1340,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <!-- Date, Class Filter & Quick Actions -->
     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-      <form method="GET" action="<?php echo STAFF_URL; ?>/student-attendance" style="display: flex; gap: 8px; align-items: center; margin: 0;">
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+      <form method="GET" action="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/student-attendance" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
         <div style="position: relative;">
-          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date); ?>" onchange="this.form.submit()" class="hrms-input" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: 140px; border: 1px solid #cbd5e1;">
+          <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date, ENT_QUOTES, 'UTF-8'); ?>" onchange="this.form.submit()" class="hrms-input" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: 140px; border: 1px solid #cbd5e1;">
         </div>
         
         <select name="standard" onchange="this.form.submit()" class="hrms-input" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; min-width: 140px; border: 1px solid #cbd5e1;">
           <option value="">All Academic Classes</option>
           <?php foreach ($standards as $std): ?>
-            <option value="<?php echo $std; ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>><?php echo $std; ?></option>
+            <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>><?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?></option>
           <?php endforeach; ?>
         </select>
       </form>
@@ -1336,9 +1384,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </div>
               <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Scholars Found</h4>
               <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
-                No students in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong> matched the selected criteria.
+                No students in Session <strong><?php echo htmlspecialchars($active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y')), ENT_QUOTES, 'UTF-8'); ?></strong> matched the selected criteria.
               </p>
-              <a href="<?php echo STAFF_URL; ?>/student-attendance" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+              <a href="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/student-attendance" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
                 <i class="fa-solid fa-rotate-left"></i> Reset Filter
               </a>
             </td>
@@ -1440,7 +1488,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   
                   <!-- P: Present -->
                   <button type="button" 
-                          onclick="punchStudent(<?php echo $row['id']; ?>, 'Present', this)" 
+                          onclick="punchStudent(<?php echo intval($row['id']); ?>, 'Present', this)" 
                           class="punch-action-btn present <?php echo $cur_status === 'Present' ? 'active' : ''; ?>" 
                           title="Mark Present">
                     P
@@ -1448,7 +1496,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                   <!-- L: Late (Opens small tooltip popup for entering late time) -->
                   <button type="button" 
-                          onclick="openLateTooltip(this, <?php echo $row['id']; ?>, '<?php echo addslashes(htmlspecialchars($row['student_name'])); ?>', '<?php echo addslashes(htmlspecialchars($row['roll_no'])); ?>', '<?php echo (!empty($row['check_in_time']) && $cur_status === 'Late') ? date('H:i', strtotime($row['check_in_time'])) : ''; ?>')" 
+                          onclick="openLateTooltip(this, <?php echo intval($row['id']); ?>, <?php echo htmlspecialchars(json_encode($row['student_name']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($row['roll_no']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode((!empty($row['check_in_time']) && $cur_status === 'Late') ? date('H:i', strtotime($row['check_in_time'])) : ''), ENT_QUOTES, 'UTF-8'); ?>)" 
                           class="punch-action-btn late <?php echo $cur_status === 'Late' ? 'active' : ''; ?>" 
                           title="Mark Late &amp; Enter Time">
                     L
@@ -1456,7 +1504,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
                   <!-- A: Absent -->
                   <button type="button" 
-                          onclick="punchStudent(<?php echo $row['id']; ?>, 'Absent', this)" 
+                          onclick="punchStudent(<?php echo intval($row['id']); ?>, 'Absent', this)" 
                           class="punch-action-btn absent <?php echo $cur_status === 'Absent' ? 'active' : ''; ?>" 
                           title="Mark Absent">
                     A
@@ -1652,6 +1700,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <script>
 let html5QrCode = null;
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function killAllCameraTracks() {
   // Explicitly terminate all video track streams from DOM video elements to guarantee hardware camera indicator shuts off
   const videoElements = document.querySelectorAll('#qrReader video, #qrScannerContainer video');
@@ -1807,13 +1865,14 @@ function submitManualQr() {
 
 function postAttendancePunch(qrCodeValue) {
   const formData = new FormData();
+  formData.append('csrf_token', '<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>');
   formData.append('action', 'mark_attendance');
   formData.append('qr_data', qrCodeValue);
   formData.append('status', 'Present');
-  formData.append('log_date', '<?php echo $filter_date; ?>');
+  formData.append('log_date', '<?php echo htmlspecialchars(addslashes($filter_date), ENT_QUOTES, 'UTF-8'); ?>');
   formData.append('ajax', '1');
 
-  fetch('<?php echo STAFF_URL; ?>/student-attendance', {
+  fetch('<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/student-attendance', {
     method: 'POST',
     body: formData
   })
@@ -1937,16 +1996,17 @@ function punchStudent(studentId, status, btnElement, checkInTime) {
   if (group) group.style.opacity = '0.6';
 
   const formData = new FormData();
+  formData.append('csrf_token', '<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>');
   formData.append('action', 'mark_attendance');
   formData.append('student_id', studentId);
   formData.append('status', status);
-  formData.append('log_date', '<?php echo $filter_date; ?>');
+  formData.append('log_date', '<?php echo htmlspecialchars(addslashes($filter_date), ENT_QUOTES, 'UTF-8'); ?>');
   if (checkInTime) {
     formData.append('check_in_time', checkInTime);
   }
   formData.append('ajax', '1');
 
-  fetch('<?php echo STAFF_URL; ?>/student-attendance', {
+  fetch('<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/student-attendance', {
     method: 'POST',
     body: formData
   })
@@ -1973,7 +2033,7 @@ function punchStudent(studentId, status, btnElement, checkInTime) {
         if (status === 'Absent' || !data.formatted_time || data.formatted_time === '—') {
           checkInCell.innerHTML = `<span style="color: #94a3b8; font-size: 0.75rem; font-weight: 600;">—</span>`;
         } else {
-          checkInCell.innerHTML = `<span class="att-time-badge"><i class="fa-regular fa-clock" style="color: var(--hrms-primary); font-size: 0.68rem;"></i> ${data.formatted_time}</span>`;
+          checkInCell.innerHTML = `<span class="att-time-badge"><i class="fa-regular fa-clock" style="color: var(--hrms-primary); font-size: 0.68rem;"></i> ${escapeHtml(data.formatted_time)}</span>`;
         }
       }
 
@@ -1983,12 +2043,15 @@ function punchStudent(studentId, status, btnElement, checkInTime) {
         const activeBtn = group.querySelector(`.punch-action-btn.${status.toLowerCase()}`);
         if (activeBtn) activeBtn.classList.add('active');
 
-        // Update the L button's onclick to remember the new late time
+        // Update the L button's onclick to remember the new late time safely
         const lateBtn = group.querySelector('.punch-action-btn.late');
         if (lateBtn && status === 'Late' && data.input_time) {
-          const stuName = data.student.student_name.replace(/'/g, "\\'");
-          const stuRoll = data.student.roll_no.replace(/'/g, "\\'");
-          lateBtn.setAttribute('onclick', `openLateTooltip(this, ${studentId}, '${stuName}', '${stuRoll}', '${data.input_time}')`);
+          const sName = (data.student && data.student.student_name) ? data.student.student_name : '';
+          const sRoll = (data.student && data.student.roll_no) ? data.student.roll_no : '';
+          const inTime = data.input_time || '';
+          lateBtn.onclick = function() {
+            openLateTooltip(this, studentId, sName, sRoll, inTime);
+          };
         }
       }
 
@@ -2048,7 +2111,8 @@ function showPunchToast(message) {
     toast.className = 'punch-toast';
     document.body.appendChild(toast);
   }
-  toast.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <span>${message}</span>`;
+  toast.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i> <span></span>';
+  toast.querySelector('span').textContent = message;
   toast.style.display = 'flex';
   clearTimeout(window.punchToastTimer);
   window.punchToastTimer = setTimeout(() => {

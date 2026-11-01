@@ -22,11 +22,13 @@ $active_menu = 'fees';
 $db = get_db_connection();
 $active_session = get_active_session();
 $session_id = $active_session ? intval($active_session['id']) : 1;
+$current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
 // Standards list
 $standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
 $allowed_methods = ['Cash', 'UPI', 'Net Banking', 'Cheque', 'Credit Card'];
+$allowed_fee_types = ['Tuition Fee', 'Admission Fee', 'Examination Fee', 'Laboratory Charges', 'Library Fee', 'Transport Fee', 'Annual Charges'];
 
 // Filters
 $search = trim((string)($_GET['search'] ?? ''));
@@ -42,13 +44,28 @@ if (!in_array($limit, $allowed_limits, true)) {
 }
 $page = max(1, intval($_GET['page'] ?? 1));
 
-// If parent or student role, limit to their student
-if ($current_user['role'] === 'student' || $current_user['role'] === 'parent') {
-    $stmt_mstu = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? AND session_id = ? LIMIT 1");
-    $stmt_mstu->execute([$current_user['id'], $session_id]);
-    $my_stu = $stmt_mstu->fetch();
-    if ($my_stu) {
-        $filter_student_id = intval($my_stu['id']);
+// Resolve authorization for parent/student roles (Prevent IDOR & unauthorized directory browsing)
+$is_parent_or_student = in_array($current_user['role'], ['student', 'parent'], true);
+$allowed_student_ids = [];
+if ($is_parent_or_student) {
+    if ($current_user['role'] === 'student') {
+        $stmt_auth = $db->prepare("SELECT id FROM students WHERE user_id = ? AND session_id = ?");
+        $stmt_auth->execute([$current_user['id'], $session_id]);
+    } else {
+        $stmt_auth = $db->prepare("SELECT id FROM students WHERE parent_user_id = ? AND session_id = ?");
+        $stmt_auth->execute([$current_user['id'], $session_id]);
+    }
+    $allowed_student_ids = array_map('intval', $stmt_auth->fetchAll(PDO::FETCH_COLUMN));
+
+    if (empty($allowed_student_ids)) {
+        $filter_student_id = -1;
+    } elseif ($filter_student_id > 0 && in_array($filter_student_id, $allowed_student_ids, true)) {
+        // Valid selected child
+    } elseif (count($allowed_student_ids) === 1) {
+        $filter_student_id = $allowed_student_ids[0];
+    } else {
+        // Multi-child parent without a specific child selected
+        $filter_student_id = 0;
     }
 }
 
@@ -62,8 +79,15 @@ $_SESSION['fees_post_attempts'] = array_filter($_SESSION['fees_post_attempts'], 
 });
 $is_rate_limited = (count($_SESSION['fees_post_attempts']) >= 30);
 
-// Handle Record Fee Collection
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['super_admin'], true)) {
+// Handle Record Fee Collection (Super Admin Only)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($current_user['role'] !== 'super_admin') {
+        http_response_code(403);
+        set_flash('error', 'Unauthorized action: Fee collection is restricted to administrators.');
+        header('Location: ' . ADMIN_URL . '/fees');
+        exit;
+    }
+
     // 1. Anti-bot honeypot check
     if (!empty($_POST['fees_hp'])) {
         usleep(300000);
@@ -91,19 +115,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['s
 
     if ($action === 'collect_fee') {
         $student_id = intval($_POST['student_id'] ?? 0);
-        $amount = max(0.01, floatval($_POST['amount'] ?? 0));
-        $discount = max(0, floatval($_POST['discount'] ?? 0));
-        $payment_method = mb_substr(trim((string)($_POST['payment_method'] ?? 'Cash')), 0, 50);
-        $fee_type = mb_substr(trim((string)($_POST['fee_type'] ?? 'Tuition Fee')), 0, 50);
-        $payment_date = isset($_POST['payment_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['payment_date']) ? (string)$_POST['payment_date'] : date('Y-m-d');
+        $amount = floatval($_POST['amount'] ?? 0);
+        $discount = max(0, min(10000000, floatval($_POST['discount'] ?? 0)));
+        $payment_method = trim((string)($_POST['payment_method'] ?? 'Cash'));
+        if (!in_array($payment_method, $allowed_methods, true)) {
+            $payment_method = 'Cash';
+        }
+        $fee_type = trim((string)($_POST['fee_type'] ?? 'Tuition Fee'));
+        if (!in_array($fee_type, $allowed_fee_types, true)) {
+            $fee_type = 'Tuition Fee';
+        }
+
+        // Strict payment date validation with Gregorian calendar check
+        $payment_date = date('Y-m-d');
+        if (!empty($_POST['payment_date']) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', (string)$_POST['payment_date'], $m)) {
+            if (checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
+                $payment_date = (string)$_POST['payment_date'];
+            }
+        }
+
         $remarks = mb_substr(trim((string)($_POST['remarks'] ?? 'Fee payment received')), 0, 255);
+
+        if ($student_id <= 0 || $amount <= 0 || $amount > 10000000) {
+            set_flash('error', 'Please enter a valid student and payment amount.');
+            header('Location: ' . ADMIN_URL . '/fees');
+            exit;
+        }
 
         // Verify that the student exists and belongs to the active session
         $stmt_stu_chk = $db->prepare("SELECT id, student_name, roll_no, total_fees, paid_fees FROM students WHERE id = ? AND session_id = ? LIMIT 1");
         $stmt_stu_chk->execute([$student_id, $session_id]);
         $stu_row = $stmt_stu_chk->fetch(PDO::FETCH_ASSOC);
 
-        if ($stu_row && $amount > 0) {
+        if ($stu_row) {
             try {
                 $receipt_no = 'RCPT-' . strtoupper(substr(bin2hex(random_bytes(5)), 0, 8));
 
@@ -127,21 +171,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && in_array($current_user['role'], ['s
                 exit;
             }
         } else {
-            set_flash('error', 'Invalid student selection or payment amount.');
+            set_flash('error', 'Invalid student selection or record not found in active session.');
             header('Location: ' . ADMIN_URL . '/fees');
             exit;
         }
     }
 }
 
-// Fetch all students for the dropdown
-$all_students = $db->prepare("SELECT id, student_name, roll_no, standard, total_fees, paid_fees FROM students WHERE session_id = ? ORDER BY student_name ASC");
-$all_students->execute([$session_id]);
-$students_list = $all_students->fetchAll();
+// Fetch all students for the dropdown only for super_admin (Performance & Data isolation)
+$students_list = [];
+if ($current_user['role'] === 'super_admin') {
+    $all_students = $db->prepare("SELECT id, student_name, roll_no, standard, total_fees, paid_fees FROM students WHERE session_id = ? ORDER BY student_name ASC");
+    $all_students->execute([$session_id]);
+    $students_list = $all_students->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Build WHERE filter conditions
 $where_clauses = ["fp.session_id = ?"];
 $where_params = [$session_id];
+
+if ($is_parent_or_student) {
+    if (empty($allowed_student_ids)) {
+        $where_clauses[] = "1 = 0";
+    } elseif ($filter_student_id > 0 && in_array($filter_student_id, $allowed_student_ids, true)) {
+        $where_clauses[] = "fp.student_id = ?";
+        $where_params[] = $filter_student_id;
+    } elseif (count($allowed_student_ids) === 1) {
+        $where_clauses[] = "fp.student_id = ?";
+        $where_params[] = $allowed_student_ids[0];
+    } else {
+        $in_auth_ph = implode(',', array_fill(0, count($allowed_student_ids), '?'));
+        $where_clauses[] = "fp.student_id IN ($in_auth_ph)";
+        $where_params = array_merge($where_params, $allowed_student_ids);
+    }
+} else {
+    if ($filter_student_id > 0) {
+        $where_clauses[] = "fp.student_id = ?";
+        $where_params[] = $filter_student_id;
+    }
+}
 
 if (!empty($search)) {
     $search_clean = mb_substr($search, 0, 100);
@@ -167,11 +235,6 @@ if (!empty($filter_method)) {
         $where_clauses[] = "fp.payment_method LIKE ?";
         $where_params[] = "%$filter_method%";
     }
-}
-
-if ($filter_student_id > 0) {
-    $where_clauses[] = "fp.student_id = ?";
-    $where_params[] = $filter_student_id;
 }
 
 $where_sql = implode(' AND ', $where_clauses);
@@ -229,20 +292,25 @@ function get_fee_pagination_url($target_page, $search, $filter_standard, $filter
     return ADMIN_URL . '/fees' . (!empty($params) ? '?' . http_build_query($params) : '');
 }
 
-// Fetch all payments mapped by student_id to show installment history (Prepared Statement)
-$stmt_asp = $db->prepare("
-    SELECT fp.*, s.student_name, s.roll_no, s.standard, s.total_fees, s.paid_fees
-    FROM fee_payments fp
-    JOIN students s ON fp.student_id = s.id
-    WHERE fp.session_id = ?
-    ORDER BY fp.payment_date ASC, fp.id ASC
-");
-$stmt_asp->execute([$session_id]);
-$all_stu_payments = $stmt_asp->fetchAll(PDO::FETCH_ASSOC);
-
+// Fetch all payments mapped by student_id to show installment history (Scoped to current page & session)
+$page_student_ids = array_values(array_unique(array_filter(array_map('intval', array_column($payments, 'student_id')))));
 $student_payments_map = [];
-foreach ($all_stu_payments as $sp) {
-    $student_payments_map[$sp['student_id']][] = $sp;
+
+if (!empty($page_student_ids)) {
+    $ph = implode(',', array_fill(0, count($page_student_ids), '?'));
+    $stmt_asp = $db->prepare("
+        SELECT fp.*, s.student_name, s.roll_no, s.standard, s.total_fees, s.paid_fees
+        FROM fee_payments fp
+        JOIN students s ON fp.student_id = s.id
+        WHERE fp.session_id = ? AND fp.student_id IN ($ph)
+        ORDER BY fp.payment_date ASC, fp.id ASC
+    ");
+    $stmt_asp->execute(array_merge([$session_id], $page_student_ids));
+    $all_stu_payments = $stmt_asp->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($all_stu_payments as $sp) {
+        $student_payments_map[$sp['student_id']][] = $sp;
+    }
 }
 
 foreach ($payments as &$p) {
@@ -250,20 +318,39 @@ foreach ($payments as &$p) {
 }
 unset($p);
 
-// Total collections in this session (Prepared Statements)
-$stmt_tc = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = ?");
-$stmt_tc->execute([$session_id]);
-$total_collected = floatval($stmt_tc->fetchColumn());
+// Financial KPI Metrics (Scoped to authorized students for parents/students, or academy-wide for staff/admin)
+if ($is_parent_or_student) {
+    if (empty($allowed_student_ids)) {
+        $total_collected = 0.0;
+        $total_receivable = 0.0;
+        $receipts_count = 0;
+    } else {
+        $in_auth_ph = implode(',', array_fill(0, count($allowed_student_ids), '?'));
+        $stmt_tc = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = ? AND student_id IN ($in_auth_ph)");
+        $stmt_tc->execute(array_merge([$session_id], $allowed_student_ids));
+        $total_collected = floatval($stmt_tc->fetchColumn());
 
-$stmt_tr = $db->prepare("SELECT COALESCE(SUM(total_fees), 0) FROM students WHERE session_id = ?");
-$stmt_tr->execute([$session_id]);
-$total_receivable = floatval($stmt_tr->fetchColumn());
+        $stmt_tr = $db->prepare("SELECT COALESCE(SUM(total_fees), 0) FROM students WHERE session_id = ? AND id IN ($in_auth_ph)");
+        $stmt_tr->execute(array_merge([$session_id], $allowed_student_ids));
+        $total_receivable = floatval($stmt_tr->fetchColumn());
 
-$total_dues = max(0, $total_receivable - $total_collected);
+        $stmt_rc = $db->prepare("SELECT COUNT(*) FROM fee_payments WHERE session_id = ? AND student_id IN ($in_auth_ph)");
+        $stmt_rc->execute(array_merge([$session_id], $allowed_student_ids));
+        $receipts_count = intval($stmt_rc->fetchColumn());
+    }
+} else {
+    $stmt_tc = $db->prepare("SELECT COALESCE(SUM(amount), 0) FROM fee_payments WHERE session_id = ?");
+    $stmt_tc->execute([$session_id]);
+    $total_collected = floatval($stmt_tc->fetchColumn());
 
-$stmt_rc = $db->prepare("SELECT COUNT(*) FROM fee_payments WHERE session_id = ?");
-$stmt_rc->execute([$session_id]);
-$receipts_count = intval($stmt_rc->fetchColumn());
+    $stmt_tr = $db->prepare("SELECT COALESCE(SUM(total_fees), 0) FROM students WHERE session_id = ?");
+    $stmt_tr->execute([$session_id]);
+    $total_receivable = floatval($stmt_tr->fetchColumn());
+
+    $stmt_rc = $db->prepare("SELECT COUNT(*) FROM fee_payments WHERE session_id = ?");
+    $stmt_rc->execute([$session_id]);
+    $receipts_count = intval($stmt_rc->fetchColumn());
+}
 
 $collection_rate = $total_receivable > 0 ? round(($total_collected / $total_receivable) * 100, 1) : 0;
 $dues_rate = $total_receivable > 0 ? round(($total_dues / $total_receivable) * 100, 1) : 0;
@@ -2165,7 +2252,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
     <div class="stat-card-footer">
       <span>Annual Enrolled Fee Demand</span>
-      <span style="color: #0284c7; font-weight: 700;"><i class="fa-solid fa-building-columns"></i> Session <?php echo htmlspecialchars($active_session['session_name']); ?></span>
+      <span style="color: #0284c7; font-weight: 700;"><i class="fa-solid fa-building-columns"></i> Session <?php echo htmlspecialchars($current_session_name); ?></span>
     </div>
   </div>
 
@@ -2302,7 +2389,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
         Fee Payment Ledger &amp; Receipts
         <span class="fee-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          Session <?php echo htmlspecialchars($current_session_name); ?>
         </span>
       </h3>
       <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -2339,7 +2426,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </div>
               <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Fee Transactions Recorded</h4>
               <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
-                No fee collection receipts match the selected filters in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
+                No fee collection receipts match the selected filters in Session <strong><?php echo htmlspecialchars($current_session_name); ?></strong>.
               </p>
               <a href="<?php echo ADMIN_URL; ?>/fees" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
                 <i class="fa-solid fa-rotate-left"></i> Reset All Filters
@@ -2465,7 +2552,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                       <span>Collect</span>
                     </button>
                   <?php endif; ?>
-                  <button type="button" onclick='openReceiptModal(<?php echo json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>);' class="sid-btn-action sid-btn-primary" title="View &amp; Print Official Receipt">
+                  <button type="button" onclick="openReceiptModal(<?php echo htmlspecialchars(json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>);" class="sid-btn-action sid-btn-primary" title="View &amp; Print Official Receipt">
                     <i class="fa-solid fa-receipt" style="font-size: 0.70rem;"></i>
                     <span>Receipt</span>
                   </button>
@@ -2547,7 +2634,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
       <span>Total Collected: <strong style="color: #059669; font-family: 'Outfit', sans-serif;"><?php echo format_inr($total_collected); ?></strong></span>
       <span style="color: #cbd5e1;">|</span>
-      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($current_session_name); ?></strong></span>
     </div>
 
   </div>
@@ -2615,6 +2702,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 </div>
 
+<?php if ($current_user['role'] === 'super_admin'): ?>
 <!-- ══════════════════════════════════════════════════════
      MODAL: COLLECT FEE PAYMENT FORM
      ══════════════════════════════════════════════════════ -->
@@ -2746,6 +2834,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
   </div>
 </div>
+<?php endif; ?>
 
 <script>
 // ── State for Active Payment in Modal ──
@@ -2814,16 +2903,16 @@ function buildPaymentReceipt(record) {
 
   const esc = (str) => {
     if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   };
 
   // Verification QR string
   const qrData = "VERIFIED-INSTITUTE-FEE-RECEIPT:" + receiptNo + "|STUDENT:" + (record.student_name || '') + "|TOTAL_AMT:" + totalReceived + "|PAYMENTS:" + paymentsList.length;
 
-  const schoolName = <?php echo json_encode($school_settings['school_name'] ?? 'KSV Academy'); ?>;
-  const schoolAddress = <?php echo json_encode(($school_settings['address'] ?? 'KSV Campus, Near City Center') . ' • Contact: ' . ($school_settings['phone'] ?? '+91 98765 43210')); ?>;
-  const sessionName = <?php echo json_encode($active_session['session_name'] ?? date('Y')); ?>;
-  const schoolLogo = <?php echo json_encode($school_settings['logo_url'] ?? '/assets/imgs/ksv-logo.jpg'); ?>;
+  const schoolName = <?php echo json_encode($school_settings['school_name'] ?? 'KSV Academy', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+  const schoolAddress = <?php echo json_encode(($school_settings['address'] ?? 'KSV Campus, Near City Center') . ' • Contact: ' . ($school_settings['phone'] ?? '+91 98765 43210'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+  const sessionName = <?php echo json_encode($current_session_name, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+  const schoolLogo = <?php echo json_encode($school_settings['logo_url'] ?? '/assets/imgs/ksv-logo.jpg', JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
 
   return `
     <div class="pay-receipt" id="renderedReceiptCard">

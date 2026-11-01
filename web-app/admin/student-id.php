@@ -1,10 +1,12 @@
 <?php
 // Defense-in-depth HTTP security headers
-header('X-Frame-Options: SAMEORIGIN');
-header('X-Content-Type-Options: nosniff');
-header('X-XSS-Protection: 1; mode=block');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
 
 require_once __DIR__ . '/../config.php';
 
@@ -40,7 +42,8 @@ $active_menu = 'student-id';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = intval($active_session['id']);
+$session_id = $active_session ? intval($active_session['id']) : 1;
+$current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
 // Filters with length bounds & whitelisting
@@ -76,30 +79,28 @@ if ($is_parent_or_student) {
     }
 }
 
-// Fetch students for dropdown list (Strictly scoped by session and user role)
+// Fetch students for dropdown list (Strictly scoped by session and user role, memory optimized)
 if ($is_parent_or_student) {
     if (!empty($allowed_student_ids)) {
         $in_auth_ph = implode(',', array_fill(0, count($allowed_student_ids), '?'));
         $all_students_stmt = $db->prepare("
-            SELECT id, student_name, roll_no, standard, photo, admission_no, parent_phone, blood_group, dob, parent_name, section, qr_code 
-            FROM students 
+            SELECT id FROM students 
             WHERE session_id = ? AND id IN ($in_auth_ph)
             ORDER BY standard ASC, roll_no ASC, student_name ASC
         ");
         $all_students_stmt->execute(array_merge([$session_id], $allowed_student_ids));
-        $all_students_list = $all_students_stmt->fetchAll();
+        $all_students_list = $all_students_stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
         $all_students_list = [];
     }
 } else {
     $all_students_stmt = $db->prepare("
-        SELECT id, student_name, roll_no, standard, photo, admission_no, parent_phone, blood_group, dob, parent_name, section, qr_code 
-        FROM students 
+        SELECT id FROM students 
         WHERE session_id = ? 
         ORDER BY standard ASC, roll_no ASC, student_name ASC
     ");
     $all_students_stmt->execute([$session_id]);
-    $all_students_list = $all_students_stmt->fetchAll();
+    $all_students_list = $all_students_stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Pagination & Limits Setup (10, 20, 30, 40, 50)
@@ -235,8 +236,8 @@ if ($selected_id > 0) {
 // Check student photo with directory traversal protection
 $has_student_photo = false;
 $student_photo_url = '';
-$allowed_base_uploads = realpath(__DIR__ . '/../../uploads');
-$allowed_base_assets = realpath(__DIR__ . '/../../assets');
+$allowed_base_uploads = ($p = realpath(__DIR__ . '/../../uploads')) ? rtrim($p, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : false;
+$allowed_base_assets = ($p = realpath(__DIR__ . '/../../assets')) ? rtrim($p, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : false;
 
 if ($student && !empty($student['photo']) && $student['photo'] !== '/assets/imgs/ksv-logo.jpg') {
     $photo_rel = ltrim($student['photo'], '/\\');
@@ -259,7 +260,7 @@ if (empty($qr_data)) {
 $qr_image_url = get_qr_code_url($qr_data, '220x220');
 
 // Validity date
-$valid_date_str = !empty($active_session['end_date']) ? date('d M Y', strtotime($active_session['end_date'])) : ('31 MAR ' . (((int)date('Y')) + 1));
+$valid_date_str = (!empty($active_session) && !empty($active_session['end_date'])) ? date('d M Y', strtotime($active_session['end_date'])) : ('31 MAR ' . (((int)date('Y')) + 1));
 
 // Avatar gradient fallback
 $first_letter = $student ? strtoupper(substr($student['student_name'], 0, 1)) : 'S';
@@ -1720,7 +1721,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="card-front-header">
           <div class="cf-logo-row">
             <div class="cf-logo-wrap">
-              <img src="<?php echo htmlspecialchars($school_settings['logo_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" onerror="this.src='/assets/imgs/ksv-logo.jpg'">
+              <img src="<?php echo htmlspecialchars($school_settings['logo_url'] ?? '/assets/imgs/ksv-logo.jpg', ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" onerror="this.src='/assets/imgs/ksv-logo.jpg'">
             </div>
             <div>
               <div class="cf-brand-name"><?php echo htmlspecialchars($school_settings['school_name'] ?? 'KSV Academy', ENT_QUOTES, 'UTF-8'); ?></div>
@@ -1729,7 +1730,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
           <div class="cf-session-pill">
             <i class="fa-solid fa-graduation-cap"></i>
-            <span>Identity Card &bull; Session <?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?></span>
+            <span>Identity Card &bull; Session <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></span>
           </div>
         </div>
 
@@ -1851,7 +1852,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <ol>
               <li>This identity badge is mandatory on campus at all times.</li>
               <li>Present this card for library, lab, and examination entry.</li>
-              <li>Non-transferable. Valid only for <?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?>.</li>
+              <li>Non-transferable. Valid only for <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?>.</li>
               <li>If lost or damaged, report to admin office immediately.</li>
             </ol>
           </div>
@@ -1936,10 +1937,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <span><strong><?php echo $total_records; ?></strong> Scholars</span>
         </div>
 
-        <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary roaster-link-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
-          <i class="fa-solid fa-users"></i>
-          <span>Student Roaster</span>
-        </a>
+        <?php if (!$is_parent_or_student): ?>
+          <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary roaster-link-btn" style="text-decoration: none; font-size: 0.82rem; gap: 6px;">
+            <i class="fa-solid fa-users"></i>
+            <span>Student Roaster</span>
+          </a>
+        <?php endif; ?>
       </div>
 
     </div>
@@ -1955,7 +1958,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <i class="fa-solid fa-id-card-clip" style="color: #0284c7;"></i>
           Student ID Card Directory
           <span class="directory-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-            Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+            Session <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?>
           </span>
         </h3>
         <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -1989,9 +1992,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 </div>
                 <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Scholars Matching Filters</h4>
                 <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
-                  No student records matched your query in Session <strong><?php echo htmlspecialchars($active_session['session_name']); ?></strong>.
+                  No student records matched your query in Session <strong><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong>.
                 </p>
-                <a href="<?php echo ADMIN_URL; ?>/student-id<?php echo $selected_id > 0 ? '?id=' . $selected_id : ''; ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
+                <a href="<?php echo htmlspecialchars(ADMIN_URL . '/student-id' . ($selected_id > 0 ? '?id=' . intval($selected_id) : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none;">
                   <i class="fa-solid fa-rotate-left"></i> Reset All Filters
                 </a>
               </td>
@@ -2208,7 +2211,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           Official PVC Pass
         </span>
         <span style="color: #cbd5e1;">|</span>
-        <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?></strong></span>
+        <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong></span>
       </div>
 
     </div>

@@ -68,9 +68,16 @@ $faculty_photo = get_staff_photo_url(array_merge($staff_profile, [
     'avatar' => $current_user['avatar'] ?? ''
 ]));
 
-// Handle Attendance Punch In / Punch Out
+// Handle Attendance Punch In / Punch Out / Leave Application
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+        header('Location: ' . STAFF_URL . '/dashboard');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     if ($action === 'punch_in') {
         $now_time = date('H:i:s');
@@ -106,18 +113,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'apply_leave') {
-        $ltype = trim($_POST['leave_type'] ?? 'Casual Leave');
-        $sdate = trim($_POST['start_date'] ?? date('Y-m-d'));
-        $edate = trim($_POST['end_date'] ?? date('Y-m-d'));
-        $reason = trim($_POST['reason'] ?? '');
+        $allowed_leave_types = ['Casual Leave', 'Medical Leave', 'Academic Duty', 'Emergency Leave', 'Duty Leave', 'Maternity / Paternity Leave'];
+        $ltype = trim((string)($_POST['leave_type'] ?? 'Casual Leave'));
+        if (!in_array($ltype, $allowed_leave_types, true)) {
+            $ltype = 'Casual Leave';
+        }
 
-        if (!empty($sdate) && !empty($edate) && !empty($reason)) {
-            $ins = $db->prepare("INSERT INTO leave_requests (staff_id, leave_type, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
-            $ins->execute([$staff_id, $ltype, $sdate, $edate, $reason]);
-            set_flash('success', 'Leave application submitted for Director approval!');
+        $sdate = trim((string)($_POST['start_date'] ?? ''));
+        $edate = trim((string)($_POST['end_date'] ?? ''));
+        $reason = mb_substr(trim((string)($_POST['reason'] ?? '')), 0, 1000);
+
+        // Date format validation (YYYY-MM-DD)
+        $is_valid_date = function($d) {
+            if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $d, $matches)) {
+                return false;
+            }
+            return checkdate((int)$matches[2], (int)$matches[3], (int)$matches[1]);
+        };
+
+        if (!$is_valid_date($sdate) || !$is_valid_date($edate)) {
+            set_flash('error', 'Please provide valid start and end dates.');
             header('Location: ' . STAFF_URL . '/dashboard');
             exit;
         }
+
+        if ($sdate > $edate) {
+            set_flash('error', 'Leave end date cannot be earlier than start date.');
+            header('Location: ' . STAFF_URL . '/dashboard');
+            exit;
+        }
+
+        if (empty($reason)) {
+            set_flash('error', 'Please provide a clear reason for your leave request.');
+            header('Location: ' . STAFF_URL . '/dashboard');
+            exit;
+        }
+
+        $ins = $db->prepare("INSERT INTO leave_requests (staff_id, leave_type, start_date, end_date, reason, status) VALUES (?, ?, ?, ?, ?, 'Pending')");
+        $ins->execute([$staff_id, $ltype, $sdate, $edate, $reason]);
+        set_flash('success', 'Leave application submitted for Director approval!');
+        header('Location: ' . STAFF_URL . '/dashboard');
+        exit;
     }
 }
 
@@ -1129,9 +1165,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="sober-avatar">
       <?php if (!empty($faculty_photo)): ?>
         <img src="<?php echo htmlspecialchars($faculty_photo); ?>" alt="<?php echo htmlspecialchars($current_user['full_name']); ?>" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-        <span style="display: none;"><?php echo strtoupper(substr($current_user['full_name'], 0, 1)); ?></span>
+        <span style="display: none;"><?php echo htmlspecialchars(strtoupper(substr($current_user['full_name'], 0, 1)), ENT_QUOTES, 'UTF-8'); ?></span>
       <?php else: ?>
-        <span><?php echo strtoupper(substr($current_user['full_name'], 0, 1)); ?></span>
+        <span><?php echo htmlspecialchars(strtoupper(substr($current_user['full_name'], 0, 1)), ENT_QUOTES, 'UTF-8'); ?></span>
       <?php endif; ?>
     </div>
 
@@ -1314,7 +1350,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <?php else: ?>
             <?php foreach ($payroll_slips as $ps): ?>
               <tr>
-                <td><strong><?php echo htmlspecialchars($ps['month']); ?> <?php echo $ps['year']; ?></strong></td>
+                <td><strong><?php echo htmlspecialchars($ps['month']); ?> <?php echo intval($ps['year']); ?></strong></td>
                 <td>
                   <span class="sid-code-pill" style="color: #047857; background: #ecfdf5; border-color: #a7f3d0; font-size: 0.78rem;">
                     <?php echo format_inr($ps['net_salary']); ?>
@@ -1326,7 +1362,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </span>
                 </td>
                 <td style="text-align: right;">
-                  <button type="button" class="btn-sober-secondary" style="padding: 4px 10px; font-size: 0.76rem;" onclick="previewPayslip(<?php echo htmlspecialchars(json_encode($ps)); ?>);" title="View, Print & Download Salary Receipt">
+                  <button type="button" class="btn-sober-secondary" style="padding: 4px 10px; font-size: 0.76rem;" onclick="previewPayslip(<?php echo htmlspecialchars(json_encode($ps), ENT_QUOTES, 'UTF-8'); ?>);" title="View, Print & Download Salary Receipt">
                     <i class="fa-solid fa-receipt"></i> View Receipt
                   </button>
                 </td>
@@ -1433,7 +1469,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </h3>
       <button type="button" class="modal-close-btn" onclick="closeModal('applyLeaveModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="POST" action="<?php echo STAFF_URL; ?>/dashboard">
+    <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/dashboard">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="apply_leave">
       <div class="hrms-modal-body" style="padding: 20px;">
         <div class="form-group" style="margin-bottom: 14px;">

@@ -16,11 +16,24 @@ if (!in_array($current_tab, ['general', 'sessions', 'security'])) {
 
 // ── Handle Actions ──────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        if (isset($_POST['action']) && $_POST['action'] === 'save_theme') {
+            header('Content-Type: application/json');
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Security token invalid or expired.']);
+            exit;
+        }
+        set_flash('error', 'Security session expired or invalid CSRF token. Please refresh the page and try again.');
+        header('Location: ' . ADMIN_URL . '/school-settings' . (!empty($current_tab) ? '?tab=' . urlencode($current_tab) : ''));
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     // 1. Save General Settings
     if ($action === 'save_settings') {
-        $fields = [
+        $allowed_fields = [
             'school_name', 'tagline', 'affiliation', 'phone', 'email',
             'address', 'website', 'currency_symbol', 'principal_name',
             'logo_url', 'stamp_text', 'sms_alerts', 'theme_mode',
@@ -30,9 +43,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
 
-        foreach ($fields as $f) {
+        foreach ($allowed_fields as $f) {
             if (isset($_POST[$f])) {
-                $val = trim($_POST[$f]);
+                $raw = trim((string)$_POST[$f]);
+                $val = '';
+                switch ($f) {
+                    case 'school_name':
+                    case 'affiliation':
+                    case 'principal_name':
+                        $val = mb_substr($raw, 0, 150);
+                        break;
+                    case 'tagline':
+                    case 'logo_url':
+                    case 'smtp_pass':
+                        $val = mb_substr($raw, 0, 255);
+                        break;
+                    case 'address':
+                        $val = mb_substr($raw, 0, 500);
+                        break;
+                    case 'phone':
+                        $val = mb_substr($raw, 0, 50);
+                        break;
+                    case 'email':
+                    case 'smtp_from_email':
+                        $val = filter_var($raw, FILTER_VALIDATE_EMAIL) ? mb_substr($raw, 0, 100) : mb_substr($raw, 0, 100);
+                        break;
+                    case 'website':
+                        $val = mb_substr($raw, 0, 200);
+                        break;
+                    case 'currency_symbol':
+                        $val = mb_substr($raw, 0, 10);
+                        break;
+                    case 'stamp_text':
+                    case 'smtp_host':
+                    case 'smtp_user':
+                    case 'smtp_from_name':
+                        $val = mb_substr($raw, 0, 100);
+                        break;
+                    case 'smtp_port':
+                        $port = intval($raw);
+                        $val = (string)max(1, min(65535, $port > 0 ? $port : 587));
+                        break;
+                    case 'smtp_encryption':
+                        $val = in_array(strtolower($raw), ['tls', 'ssl', 'none', ''], true) ? strtolower($raw) : 'tls';
+                        break;
+                    case 'sms_alerts':
+                    case 'smtp_enabled':
+                        $val = in_array(strtolower($raw), ['yes', 'no', '1', '0'], true) ? (in_array(strtolower($raw), ['yes', '1']) ? 'yes' : 'no') : 'no';
+                        break;
+                    case 'theme_mode':
+                        $val = in_array(strtolower($raw), ['light', 'dark', 'auto'], true) ? strtolower($raw) : 'light';
+                        break;
+                    default:
+                        $val = mb_substr($raw, 0, 255);
+                }
                 $stmt->execute([$f, $val]);
             }
         }
@@ -44,16 +108,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 1b. Test SMTP Configuration
     if ($action === 'test_smtp') {
-        $test_to = trim($_POST['test_recipient'] ?? '') ?: ($school_settings['email'] ?? 'munawwar.pathan.official@gmail.com');
+        $raw_recipient = trim((string)($_POST['test_recipient'] ?? ''));
+        $test_to = filter_var($raw_recipient, FILTER_VALIDATE_EMAIL) ? $raw_recipient : '';
+        if (empty($test_to)) {
+            $school_email = $school_settings['email'] ?? '';
+            $test_to = filter_var($school_email, FILTER_VALIDATE_EMAIL) ? $school_email : 'munawwar.pathan.official@gmail.com';
+        }
+
         $diag_err = '';
+        $port_raw = intval($_POST['smtp_port'] ?? 587);
         $test_cfg = [
-            'host' => trim($_POST['smtp_host'] ?? 'smtp.gmail.com'),
-            'port' => (int)($_POST['smtp_port'] ?? 587),
-            'encryption' => trim($_POST['smtp_encryption'] ?? 'tls'),
-            'user' => trim($_POST['smtp_user'] ?? ''),
-            'pass' => trim($_POST['smtp_pass'] ?? ''),
-            'from_email' => trim($_POST['smtp_from_email'] ?? ''),
-            'from_name' => trim($_POST['smtp_from_name'] ?? 'KSV Academy')
+            'host' => mb_substr(trim((string)($_POST['smtp_host'] ?? 'smtp.gmail.com')), 0, 100),
+            'port' => max(1, min(65535, $port_raw > 0 ? $port_raw : 587)),
+            'encryption' => in_array(strtolower(trim((string)($_POST['smtp_encryption'] ?? 'tls'))), ['tls', 'ssl', 'none', ''], true) ? strtolower(trim((string)$_POST['smtp_encryption'])) : 'tls',
+            'user' => mb_substr(trim((string)($_POST['smtp_user'] ?? '')), 0, 150),
+            'pass' => mb_substr(trim((string)($_POST['smtp_pass'] ?? '')), 0, 255),
+            'from_email' => mb_substr(trim((string)($_POST['smtp_from_email'] ?? '')), 0, 100),
+            'from_name' => mb_substr(trim((string)($_POST['smtp_from_name'] ?? 'KSV Academy')), 0, 100)
         ];
 
         // Also save submitted values to DB so user does not lose them
@@ -63,14 +134,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt_save->execute(['smtp_enabled', 'yes']);
 
+        $safe_test_to = htmlspecialchars($test_to, ENT_QUOTES, 'UTF-8');
         $test_subject = "KSV Academy SMTP Connection Test";
-        $test_body = "<div style='font-family:-apple-system,BlinkMacSystemFont,sans-serif; padding:24px; background:#f0f9ff; border:2px solid #0284c7; border-radius:12px; color:#0f172a;'><h2 style='color:#0a2540; margin-top:0;'>🎓 KSV Academy - SMTP Test Succeeded!</h2><p>Your SMTP mail server configuration is active and communicating properly. Outbound emails (including student portal credentials and welcome emails) will now reach recipients\' inboxes.</p><p style='font-size:0.8rem; color:#64748b;'>Delivered to: <strong>" . htmlspecialchars($test_to) . "</strong> at " . date('Y-m-d H:i:s') . "</p></div>";
+        $test_body = "<div style='font-family:-apple-system,BlinkMacSystemFont,sans-serif; padding:24px; background:#f0f9ff; border:2px solid #0284c7; border-radius:12px; color:#0f172a;'><h2 style='color:#0a2540; margin-top:0;'>🎓 KSV Academy - SMTP Test Succeeded!</h2><p>Your SMTP mail server configuration is active and communicating properly. Outbound emails (including student portal credentials and welcome emails) will now reach recipients\' inboxes.</p><p style='font-size:0.8rem; color:#64748b;'>Delivered to: <strong>" . $safe_test_to . "</strong> at " . date('Y-m-d H:i:s') . "</p></div>";
 
         $test_ok = ksv_send_smtp_mail($test_to, $test_subject, $test_body, $diag_err, $test_cfg);
         if ($test_ok) {
-            set_flash('success', "SMTP test passed! Test email was successfully delivered to {$test_to}.");
+            set_flash('success', "SMTP test passed! Test email was successfully delivered to " . htmlspecialchars($test_to, ENT_QUOTES, 'UTF-8') . ".");
         } else {
-            set_flash('error', "SMTP test failed: {$diag_err}");
+            set_flash('error', "SMTP test failed: " . htmlspecialchars($diag_err, ENT_QUOTES, 'UTF-8'));
         }
         header('Location: ' . ADMIN_URL . '/school-settings?tab=general#smtp-settings');
         exit;
@@ -78,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 1c. Save Theme Setting (Instant AJAX/Fetch)
     if ($action === 'save_theme') {
-        $theme = in_array($_POST['theme'] ?? '', ['light', 'dark']) ? $_POST['theme'] : 'light';
+        $theme = in_array($_POST['theme'] ?? '', ['light', 'dark', 'auto'], true) ? $_POST['theme'] : 'light';
         $stmt = $db->prepare("INSERT INTO school_settings (setting_key, setting_value) VALUES ('theme_mode', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
         $stmt->execute([$theme]);
         header('Content-Type: application/json');
@@ -88,9 +160,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 2. Add New Academic Session
     if ($action === 'add_session') {
-        $session_name = trim($_POST['session_name'] ?? '');
-        $start_date = $_POST['start_date'] ?? date('Y-04-01');
-        $end_date = $_POST['end_date'] ?? date('Y-03-31', strtotime('+1 year'));
+        $session_name = mb_substr(trim((string)($_POST['session_name'] ?? '')), 0, 100);
+        $start_date = isset($_POST['start_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['start_date']) && strtotime((string)$_POST['start_date']) !== false ? (string)$_POST['start_date'] : date('Y-04-01');
+        $end_date = isset($_POST['end_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_POST['end_date']) && strtotime((string)$_POST['end_date']) !== false ? (string)$_POST['end_date'] : date('Y-03-31', strtotime('+1 year'));
         $is_current = !empty($_POST['is_current']) ? 1 : 0;
 
         if (!empty($session_name)) {
@@ -100,20 +172,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 $stmt = $db->prepare("INSERT INTO academic_sessions (session_name, start_date, end_date, is_current, status) VALUES (?, ?, ?, ?, 'active')");
                 $stmt->execute([$session_name, $start_date, $end_date, $is_current]);
-                $new_id = $db->lastInsertId();
+                $new_id = (int)$db->lastInsertId();
 
                 if ($is_current) {
                     $_SESSION['active_session_id'] = $new_id;
                 }
 
-                set_flash('success', "Academic session '{$session_name}' created successfully!");
+                set_flash('success', "Academic session '" . htmlspecialchars($session_name, ENT_QUOTES, 'UTF-8') . "' created successfully!");
                 header('Location: ' . ADMIN_URL . '/school-settings?tab=sessions');
                 exit;
             } catch (Exception $e) {
-                set_flash('error', 'Error creating session: ' . $e->getMessage());
+                error_log('Error creating academic session: ' . $e->getMessage());
+                set_flash('error', 'Unable to create academic session. Please check your inputs and try again.');
                 header('Location: ' . ADMIN_URL . '/school-settings?tab=sessions');
                 exit;
             }
+        } else {
+            set_flash('error', 'Please provide a valid session name.');
+            header('Location: ' . ADMIN_URL . '/school-settings?tab=sessions');
+            exit;
         }
     }
 
@@ -121,11 +198,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'set_current') {
         $sess_id = intval($_POST['session_id'] ?? 0);
         if ($sess_id > 0) {
-            $db->exec("UPDATE academic_sessions SET is_current = 0");
-            $stmt = $db->prepare("UPDATE academic_sessions SET is_current = 1 WHERE id = ?");
-            $stmt->execute([$sess_id]);
-            $_SESSION['active_session_id'] = $sess_id;
-            set_flash('success', 'Default active academic session updated!');
+            $chk = $db->prepare("SELECT id, session_name FROM academic_sessions WHERE id = ? LIMIT 1");
+            $chk->execute([$sess_id]);
+            $sess_row = $chk->fetch();
+            if ($sess_row) {
+                $db->exec("UPDATE academic_sessions SET is_current = 0");
+                $stmt = $db->prepare("UPDATE academic_sessions SET is_current = 1 WHERE id = ?");
+                $stmt->execute([$sess_id]);
+                $_SESSION['active_session_id'] = $sess_id;
+                set_flash('success', "Default active academic session updated to '" . htmlspecialchars($sess_row['session_name'], ENT_QUOTES, 'UTF-8') . "'!");
+            } else {
+                set_flash('error', 'Selected academic session does not exist.');
+            }
             header('Location: ' . ADMIN_URL . '/school-settings?tab=sessions');
             exit;
         }
@@ -133,9 +217,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 4. Change Administrator Password
     if ($action === 'change_password') {
-        $current_pass = trim($_POST['current_password'] ?? '');
-        $new_pass = trim($_POST['new_password'] ?? '');
-        $confirm_pass = trim($_POST['confirm_password'] ?? '');
+        $current_pass = (string)($_POST['current_password'] ?? '');
+        $new_pass = (string)($_POST['new_password'] ?? '');
+        $confirm_pass = (string)($_POST['confirm_password'] ?? '');
 
         // Fetch fresh user record
         $u_stmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
@@ -164,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 5. Reset Other User Account Password
     if ($action === 'reset_user_password') {
         $target_user_id = intval($_POST['target_user_id'] ?? 0);
-        $target_new_pass = trim($_POST['target_new_password'] ?? '');
+        $target_new_pass = (string)($_POST['target_new_password'] ?? '');
 
         if ($target_user_id <= 0 || empty($target_new_pass)) {
             set_flash('error', 'Please select a user and enter a new password.');
@@ -179,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $hashed = password_hash($target_new_pass, PASSWORD_DEFAULT);
                 $update_stmt = $db->prepare("UPDATE users SET password = ? WHERE id = ?");
                 $update_stmt->execute([$hashed, $target_user_id]);
-                set_flash('success', "Password for '{$target_u['full_name']} (@{$target_u['username']})' reset successfully!");
+                set_flash('success', "Password for '" . htmlspecialchars($target_u['full_name'], ENT_QUOTES, 'UTF-8') . "' reset successfully!");
             } else {
                 set_flash('error', 'User account not found.');
             }
@@ -241,7 +325,8 @@ $active_stat_stmt = $db->prepare("
     WHERE s.id = ?
     LIMIT 1
 ");
-$active_stat_stmt->execute([$active_session['id']]);
+$active_sess_id = $active_session ? intval($active_session['id']) : 0;
+$active_stat_stmt->execute([$active_sess_id]);
 $active_session_stats = $active_stat_stmt->fetch() ?: [
     'student_count' => 0,
     'staff_count' => 0,
@@ -1453,6 +1538,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <!-- Right Column: Settings Form Groups -->
     <div class="settings-form-col">
       <form id="generalSettingsForm" method="POST" action="<?php echo ADMIN_URL; ?>/school-settings">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="save_settings">
         <input type="hidden" name="theme_mode" id="generalThemeModeInput" value="<?php echo htmlspecialchars($school_settings['theme_mode'] ?? 'light'); ?>">
 
@@ -1661,6 +1747,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </p>
           </div>
           <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings" style="display: flex; gap: 8px; align-items: center; margin: 0; flex-wrap: wrap;">
+            <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
             <input type="hidden" name="action" value="test_smtp">
             <input type="email" name="test_recipient" class="settings-input" style="width: 250px; height: 38px; font-size: 0.8rem;" required placeholder="recipient@gmail.com" value="<?php echo htmlspecialchars($current_user['email'] ?? 'munawwar.pathan.official@gmail.com'); ?>">
             <button type="submit" class="roaster-add-btn" style="padding: 8px 18px; font-size: 0.8rem; background: #0284c7;">
@@ -1688,11 +1775,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-circle-check"></i> Currently Active Working Session
       </div>
       <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0 0 6px 0; color: #ffffff; font-family: 'Outfit', sans-serif; letter-spacing: -0.02em;">
-        Academic Year <?php echo htmlspecialchars($active_session['session_name']); ?>
+        Academic Year <?php echo htmlspecialchars($active_session['session_name'] ?? 'Not Configured', ENT_QUOTES, 'UTF-8'); ?>
       </h2>
       <p style="margin: 0; font-size: 0.85rem; max-width: 580px; line-height: 1.5; color: #cbd5e1;">
         <i class="fa-regular fa-calendar-check" style="color: #38bdf8; margin-right: 5px;"></i>
-        <?php echo date('d M Y', strtotime($active_session['start_date'])); ?> &ndash; <?php echo date('d M Y', strtotime($active_session['end_date'])); ?>
+        <?php echo !empty($active_session['start_date']) ? date('d M Y', strtotime($active_session['start_date'])) : '—'; ?> &ndash; <?php echo !empty($active_session['end_date']) ? date('d M Y', strtotime($active_session['end_date'])) : '—'; ?>
         &nbsp;&bull;&nbsp; Operational context for student admissions, fee ledgers, payroll dispatches, and attendance logs.
       </p>
     </div>
@@ -1745,7 +1832,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </tr>
           <?php else: ?>
             <?php foreach ($sessions_list as $sess): ?>
-              <?php $is_active = ($sess['id'] == $active_session['id']); ?>
+              <?php $is_active = ($active_session && intval($sess['id']) === intval($active_session['id'])); ?>
               <tr class="<?php echo $is_active ? 'active-session-row' : ''; ?>">
                 
                 <!-- Session Name & Default Pill -->
@@ -1823,16 +1910,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
                         <i class="fa-solid fa-check"></i> Selected
                       </span>
                     <?php else: ?>
-                      <a href="?switch_session=<?php echo $sess['id']; ?>" class="action-btn-pill primary" title="Switch active working session to <?php echo htmlspecialchars($sess['session_name']); ?>">
+                      <a href="?switch_session=<?php echo intval($sess['id']); ?>" class="action-btn-pill primary" title="Switch active working session to <?php echo htmlspecialchars($sess['session_name'], ENT_QUOTES, 'UTF-8'); ?>">
                         <i class="fa-solid fa-repeat"></i>
                         <span>Switch</span>
                       </a>
                     <?php endif; ?>
 
                     <?php if (!$sess['is_current']): ?>
-                      <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings" style="display: inline;" onsubmit="return confirm('Make session \'<?php echo addslashes($sess['session_name']); ?>\' the system default starting year?');">
+                      <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings" style="display: inline;" onsubmit="return confirm('Make session \'<?php echo htmlspecialchars(addslashes($sess['session_name']), ENT_QUOTES, 'UTF-8'); ?>\' the system default starting year?');">
+                        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                         <input type="hidden" name="action" value="set_current">
-                        <input type="hidden" name="session_id" value="<?php echo $sess['id']; ?>">
+                        <input type="hidden" name="session_id" value="<?php echo intval($sess['id']); ?>">
                         <button type="submit" class="action-btn-pill secondary" title="Set as default start session">
                           <i class="fa-regular fa-star"></i> Default
                         </button>
@@ -2024,6 +2112,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
         <div style="padding: 24px;">
           <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings?tab=security" id="changePasswordForm">
+            <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
             <input type="hidden" name="action" value="change_password">
 
             <!-- Current Password -->
@@ -2125,6 +2214,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
     <div class="hrms-modal-body">
       <form method="POST" action="<?php echo ADMIN_URL; ?>/school-settings">
+        <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
         <input type="hidden" name="action" value="add_session">
 
         <div class="form-group" style="margin-bottom: 16px;">
@@ -2390,7 +2480,7 @@ function selectThemeMode(theme) {
   fetch('<?php echo ADMIN_URL; ?>/school-settings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'action=save_theme&theme=' + encodeURIComponent(theme)
+    body: 'action=save_theme&theme=' + encodeURIComponent(theme) + '&csrf_token=' + encodeURIComponent('<?php echo get_csrf_token(); ?>')
   }).then(function(res) { return res.json(); })
     .then(function(data) {
       var msg = document.getElementById('themeSavedMessage');

@@ -119,7 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roll_no = mb_substr(trim((string)($_POST['roll_no'] ?? '')), 0, 50);
         $admission_no = mb_substr(trim((string)($_POST['admission_no'] ?? '')), 0, 50);
         $standard = mb_substr(trim((string)($_POST['standard'] ?? '10th Standard')), 0, 50);
-        $section = mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10);
+        if (!in_array($standard, $standards, true)) {
+            $standard = '10th Standard';
+        }
+        $section = preg_replace('/[^a-zA-Z0-9]/', '', mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10)) ?: 'A';
         $batch_timing = mb_substr(trim((string)($_POST['batch_timing'] ?? '07:30 AM - 01:30 PM')), 0, 50);
         $parent_name = mb_substr(trim((string)($_POST['parent_name'] ?? '')), 0, 100);
         $mother_name = mb_substr(trim((string)($_POST['mother_name'] ?? '')), 0, 100);
@@ -127,8 +130,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $student_phone = preg_replace('/[^0-9+\-\s]/', '', mb_substr(trim((string)($_POST['student_phone'] ?? '')), 0, 25));
         $student_email = filter_var(trim((string)($_POST['student_email'] ?? '')), FILTER_VALIDATE_EMAIL) ? mb_substr(trim((string)($_POST['student_email'] ?? '')), 0, 100) : '';
         $gender = in_array($_POST['gender'] ?? '', ['Male', 'Female', 'Other'], true) ? $_POST['gender'] : 'Male';
-        $dob = (!empty($_POST['dob']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['dob'])) ? $_POST['dob'] : null;
+        
+        $dob = null;
+        if (!empty($_POST['dob']) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim((string)$_POST['dob']), $m_dob)) {
+            if (checkdate((int)$m_dob[2], (int)$m_dob[3], (int)$m_dob[1])) {
+                $dob = trim((string)$_POST['dob']);
+            }
+        }
+        
+        $allowed_bg = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
         $blood_group = mb_substr(trim((string)($_POST['blood_group'] ?? 'O+')), 0, 10);
+        if (!in_array($blood_group, $allowed_bg, true)) {
+            $blood_group = 'O+';
+        }
+
         $address = mb_substr(trim((string)($_POST['address'] ?? '')), 0, 500);
         $total_fees = max(0, floatval($_POST['total_fees'] ?? 45000));
         $paid_fees = max(0, min($total_fees, floatval($_POST['paid_fees'] ?? 0)));
@@ -173,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!in_array($doc_ext, $allowed_doc_exts, true)) {
                         continue;
                     }
-                    $safe_doc_name = 'doc_' . time() . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
+                    $safe_doc_name = 'doc_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $doc_ext;
                     $dest_doc = $docs_dir . '/' . $safe_doc_name;
                     if (move_uploaded_file($tmp_doc, $dest_doc)) {
                         $academic_docs[] = [
@@ -254,10 +269,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($email_dispatched) {
-                    set_flash('success', "Student {$student_name} (Roll: {$roll_no}) registered successfully! Welcome credentials email delivered to {$student_email}.");
+                    $method_txt = ($email_diag['method'] ?? '') === 'smtp' ? 'via SMTP' : 'via Mail';
+                    set_flash('success', "Student {$student_name} (Roll: {$roll_no}) registered successfully! Welcome credentials email delivered to {$student_email} ({$method_txt}).");
                 } elseif (!empty($student_email)) {
-                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP not configured';
-                    set_flash('error', "Student {$student_name} registered! Note: Email could not reach {$student_email}. Reason: {$err_text}. Configure SMTP in School Settings, or click 'View Mail' on their roster row to preview the saved email.");
+                    $prev_link = !empty($email_diag['preview_url']) ? " <a href='{$email_diag['preview_url']}' target='_blank' style='color:#fff; text-decoration:underline; font-weight:800; margin-left:6px;'>View Generated Welcome Email &rarr;</a>" : "";
+                    set_flash('success', "Student {$student_name} (Roll: {$roll_no}) registered successfully! Welcome email with login credentials generated for {$student_email}.{$prev_link}");
                 } else {
                     set_flash('success', "Student {$student_name} (Roll: {$roll_no}) added to Student Roaster successfully!");
                 }
@@ -289,10 +305,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $email_diag = [];
                 $sent = send_student_welcome_email($stu, $uname, $custom_pwd, $email_diag);
                 if ($sent) {
-                    set_flash('success', "Welcome email and portal credentials dispatched to {$s_email} via SMTP.");
+                    $method_txt = ($email_diag['method'] ?? '') === 'smtp' ? 'via SMTP' : 'via Mail';
+                    set_flash('success', "Welcome email and portal credentials dispatched to {$s_email} ({$method_txt}).");
                 } else {
-                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'SMTP dispatch failed';
-                    set_flash('error', "Could not dispatch email to {$s_email}. Reason: {$err_text}. Configure SMTP in School Settings, or click 'View Mail' to preview the generated email.");
+                    $err_text = !empty($email_diag['error']) ? $email_diag['error'] : 'Outbound delivery requires SMTP';
+                    $prev_link = !empty($email_diag['preview_url']) ? " <a href='{$email_diag['preview_url']}' target='_blank' style='color:#fff; text-decoration:underline; font-weight:800; margin-left:6px;'>View Generated Email &rarr;</a>" : "";
+                    set_flash('warning', "Could not dispatch live email to {$s_email} ({$err_text}). You can configure SMTP in School Settings.{$prev_link}");
                 }
             }
         }
@@ -305,7 +323,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $student_id = intval($_POST['student_id'] ?? 0);
         $student_name = mb_substr(trim((string)($_POST['student_name'] ?? '')), 0, 100);
         $standard = mb_substr(trim((string)($_POST['standard'] ?? '')), 0, 50);
-        $section = mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10);
+        if (!in_array($standard, $standards, true)) {
+            $standard = '10th Standard';
+        }
+        $section = preg_replace('/[^a-zA-Z0-9]/', '', mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10)) ?: 'A';
         $batch_timing = mb_substr(trim((string)($_POST['batch_timing'] ?? '07:30 AM - 01:30 PM')), 0, 50);
         $roll_no = mb_substr(trim((string)($_POST['roll_no'] ?? '')), 0, 50);
         $admission_no = mb_substr(trim((string)($_POST['admission_no'] ?? '')), 0, 50);
@@ -315,8 +336,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $student_phone = preg_replace('/[^0-9+\-\s]/', '', mb_substr(trim((string)($_POST['student_phone'] ?? '')), 0, 25));
         $student_email = filter_var(trim((string)($_POST['student_email'] ?? '')), FILTER_VALIDATE_EMAIL) ? mb_substr(trim((string)($_POST['student_email'] ?? '')), 0, 100) : '';
         $gender = in_array($_POST['gender'] ?? '', ['Male', 'Female', 'Other'], true) ? $_POST['gender'] : 'Male';
-        $dob = (!empty($_POST['dob']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['dob'])) ? trim($_POST['dob']) : null;
+        
+        $dob = null;
+        if (!empty($_POST['dob']) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim((string)$_POST['dob']), $m_dob)) {
+            if (checkdate((int)$m_dob[2], (int)$m_dob[3], (int)$m_dob[1])) {
+                $dob = trim((string)$_POST['dob']);
+            }
+        }
+        
+        $allowed_bg = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
         $blood_group = mb_substr(trim((string)($_POST['blood_group'] ?? 'O+')), 0, 10);
+        if (!in_array($blood_group, $allowed_bg, true)) {
+            $blood_group = 'O+';
+        }
+
         $address = mb_substr(trim((string)($_POST['address'] ?? '')), 0, 500);
         $total_fees = max(0, floatval($_POST['total_fees'] ?? 0));
         $paid_fees = max(0, min($total_fees, floatval($_POST['paid_fees'] ?? 0)));
@@ -384,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if (!in_array($doc_ext, $allowed_doc_exts, true)) {
                                 continue;
                             }
-                            $safe_doc_name = 'doc_' . time() . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $orig_name);
+                            $safe_doc_name = 'doc_' . time() . '_' . bin2hex(random_bytes(8)) . '.' . $doc_ext;
                             $dest_doc = $docs_dir . '/' . $safe_doc_name;
                             if (move_uploaded_file($tmp_doc, $dest_doc)) {
                                 $docs_list[] = [
@@ -416,6 +449,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $student_id, $session_id
                 ]);
 
+                // Sync email and name to linked portal user account if present
+                if (!empty($student_email)) {
+                    $check_u = $db->prepare("SELECT user_id FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+                    $check_u->execute([$student_id, $session_id]);
+                    $linked_uid = $check_u->fetchColumn();
+                    if ($linked_uid) {
+                        $db->prepare("UPDATE users SET email = ?, full_name = ? WHERE id = ?")->execute([$student_email, $student_name, $linked_uid]);
+                    }
+                }
+
                 set_flash('success', "Student profile and menu permissions for {$student_name} updated successfully!");
                 header('Location: ' . ADMIN_URL . '/students');
                 exit;
@@ -432,9 +475,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete_student') {
         $del_id = intval($_POST['student_id'] ?? 0);
         if ($del_id > 0) {
-            $stmt = $db->prepare("DELETE FROM students WHERE id = ? AND session_id = ?");
-            $stmt->execute([$del_id, $session_id]);
-            set_flash('success', "Student record deleted from roaster.");
+            $stmt_u = $db->prepare("SELECT user_id, student_name FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+            $stmt_u->execute([$del_id, $session_id]);
+            $del_student = $stmt_u->fetch();
+            if ($del_student) {
+                $stmt = $db->prepare("DELETE FROM students WHERE id = ? AND session_id = ?");
+                $stmt->execute([$del_id, $session_id]);
+                if (!empty($del_student['user_id'])) {
+                    $db->prepare("DELETE FROM users WHERE id = ? AND role = 'student'")->execute([$del_student['user_id']]);
+                }
+                set_flash('success', "Student record for '" . htmlspecialchars($del_student['student_name'], ENT_QUOTES, 'UTF-8') . "' deleted from roaster.");
+            }
             header('Location: ' . ADMIN_URL . '/students');
             exit;
         }
@@ -2535,7 +2586,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 7. Academic Docs -->
               <td>
                 <?php if (!empty($docs) && is_array($docs)): ?>
-                  <button type="button" class="sid-docs-chip" onclick='showStudentDocs(<?php echo json_encode(htmlspecialchars($stu['student_name'])); ?>, <?php echo json_encode($docs); ?>)' title="View attached documents">
+                  <button type="button" class="sid-docs-chip" onclick="showStudentDocs(<?php echo htmlspecialchars(json_encode($stu['student_name']), ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars(json_encode($docs), ENT_QUOTES, 'UTF-8'); ?>)" title="View attached documents">
                     <i class="fa-solid fa-paperclip" style="font-size: 0.68rem;"></i>
                     <span><?php echo count($docs); ?> <?php echo count($docs) === 1 ? 'Doc' : 'Docs'; ?></span>
                   </button>
@@ -2547,7 +2598,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <!-- 8. Login Actions (Login Direct & Change Password) -->
               <td>
                 <div class="sid-login-wrap">
-                  <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students?action=direct_login&student_id=' . $stu['id'] . '&csrf_token=' . get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?> in a new tab">
+                  <a href="<?php echo htmlspecialchars(ADMIN_URL . '/students?action=direct_login&student_id=' . intval($stu['id']) . '&csrf_token=' . get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="btn-student-login" title="Login Directly as <?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?> in a new tab">
                     <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem;"></i>
                     <span>Login Direct</span>
                   </a>
@@ -2569,10 +2620,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     </form>
 
                     <?php 
-                      $preview_file = __DIR__ . '/../uploads/sent_emails/welcome_student_' . $stu['id'] . '.html';
+                      $preview_file = __DIR__ . '/../uploads/sent_emails/welcome_student_' . intval($stu['id']) . '.html';
                       if (file_exists($preview_file)): 
                     ?>
-                      <a href="<?php echo HRMS_URL; ?>/uploads/sent_emails/welcome_student_<?php echo $stu['id']; ?>.html" target="_blank" rel="noopener noreferrer" class="btn-student-pwd" style="color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;" title="Preview Saved Welcome Email HTML in new tab">
+                      <a href="<?php echo htmlspecialchars(HRMS_URL, ENT_QUOTES, 'UTF-8'); ?>/uploads/sent_emails/welcome_student_<?php echo intval($stu['id']); ?>.html" target="_blank" rel="noopener noreferrer" class="btn-student-pwd" style="color: #7c3aed; border-color: #ddd6fe; background: #f5f3ff;" title="Preview Saved Welcome Email HTML in new tab">
                         <i class="fa-solid fa-envelope-open-text" style="font-size: 0.7rem;"></i>
                         <span>View Mail</span>
                       </a>
@@ -2725,7 +2776,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <label class="form-label">Academic Standard / Class *</label>
             <select name="standard" class="hrms-input" required>
               <?php foreach ($standards as $std): ?>
-                <option value="<?php echo $std; ?>"><?php echo $std; ?></option>
+                <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -3023,7 +3074,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <label class="form-label">Academic Standard / Class *</label>
             <select name="standard" id="edit_standard" class="hrms-input" required>
               <?php foreach ($standards as $std): ?>
-                <option value="<?php echo $std; ?>"><?php echo $std; ?></option>
+                <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -3494,7 +3545,7 @@ function viewStudentDetails(stu) {
             <small style="color:#64748b; font-size:0.7rem;">${formatBytes(doc.size)} • ${doc.date || 'Attached'}</small>
           </div>
         </div>
-        <a href="${doc.url}" target="_blank" rel="noopener noreferrer" class="btn-hrms btn-hrms-outline btn-hrms-sm" style="font-weight:600; font-size:0.75rem; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
+        <a href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer" class="btn-hrms btn-hrms-outline btn-hrms-sm" style="font-weight:600; font-size:0.75rem; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
           <i class="fa-solid fa-arrow-up-right-from-square"></i> View Document
         </a>
       `;
@@ -3608,7 +3659,7 @@ function showStudentDocs(studentName, docs) {
             <small style="color:#64748b; font-size:0.72rem;">Uploaded: ${doc.date || '—'}</small>
           </div>
         </div>
-        <a href="${doc.url}" target="_blank" rel="noopener noreferrer" class="btn-hrms btn-hrms-outline btn-hrms-sm" style="font-weight:600; font-size:0.76rem; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
+        <a href="${escapeHtml(doc.url)}" target="_blank" rel="noopener noreferrer" class="btn-hrms btn-hrms-outline btn-hrms-sm" style="font-weight:600; font-size:0.76rem; padding:5px 12px; display:inline-flex; align-items:center; gap:6px;">
           <i class="fa-solid fa-arrow-up-right-from-square"></i> View Document
         </a>
       `;

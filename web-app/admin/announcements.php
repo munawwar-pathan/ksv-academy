@@ -1,44 +1,87 @@
 <?php
 require_once __DIR__ . '/../config.php';
 
-$current_user = require_login(['super_admin', 'staff', 'parent', 'student']);
+$current_user = require_login(['super_admin', 'admin', 'staff', 'parent', 'student']);
 $page_title = 'Announcements & Notices';
 $page_heading = 'Announcements';
 $page_subheading = 'Official notifications, circulars and campus broadcasts';
 $active_menu = 'announcements';
 
 $db = get_db_connection();
+$is_admin = in_array($current_user['role'] ?? '', ['super_admin', 'admin'], true);
 
-// Handle Delete Notice (Admin)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete' && $current_user['role'] === 'super_admin') {
-    $notice_id = (int)($_POST['id'] ?? 0);
-    if ($notice_id > 0) {
-        $stmt = $db->prepare("DELETE FROM announcements WHERE id = ?");
-        $stmt->execute([$notice_id]);
-        set_flash('success', 'Notice deleted successfully from the academy board.');
+// ── Handle Actions (Post Notice, Delete Notice) ──────────────────────────────
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
         header('Location: ' . ADMIN_URL . '/announcements');
         exit;
     }
-}
 
-// Handle Post Notice (Admin)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST['action'] === 'create') && $current_user['role'] === 'super_admin') {
-    $title = trim($_POST['title'] ?? '');
-    $content = trim($_POST['content'] ?? '');
-    $target = trim($_POST['target_role'] ?? 'all');
-    if (!empty($title) && !empty($content)) {
+    // 2. Authorization Check (Admin Only)
+    if (!$is_admin) {
+        set_flash('error', 'Unauthorized action. Only administrators can publish or delete announcements.');
+        header('Location: ' . ADMIN_URL . '/announcements');
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? 'create'));
+
+    // Handle Delete Notice
+    if ($action === 'delete') {
+        $notice_id = intval($_POST['id'] ?? 0);
+        if ($notice_id <= 0) {
+            set_flash('error', 'Invalid notice ID specified.');
+            header('Location: ' . ADMIN_URL . '/announcements');
+            exit;
+        }
+
+        $stmt = $db->prepare("DELETE FROM announcements WHERE id = ?");
+        $stmt->execute([$notice_id]);
+        if ($stmt->rowCount() > 0) {
+            set_flash('success', 'Notice deleted successfully from the academy board.');
+        } else {
+            set_flash('error', 'Notice not found or already deleted.');
+        }
+        header('Location: ' . ADMIN_URL . '/announcements');
+        exit;
+    }
+
+    // Handle Post Notice
+    if ($action === 'create') {
+        $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 255);
+        $content = mb_substr(trim((string)($_POST['content'] ?? '')), 0, 10000);
+        $valid_targets = ['all', 'staff', 'parent'];
+        $raw_target = trim((string)($_POST['target_role'] ?? 'all'));
+        $target = in_array($raw_target, $valid_targets, true) ? $raw_target : 'all';
+
+        if (mb_strlen($title) === 0 || mb_strlen($content) === 0) {
+            set_flash('error', 'Notice headline and message content are required.');
+            header('Location: ' . ADMIN_URL . '/announcements');
+            exit;
+        }
+
+        $posted_by = !empty($current_user['full_name']) 
+            ? mb_substr(trim((string)$current_user['full_name']), 0, 100) 
+            : 'Administration';
+
         $stmt = $db->prepare("INSERT INTO announcements (title, content, target_role, posted_by) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$title, $content, $target, $current_user['full_name']]);
+        $stmt->execute([$title, $content, $target, $posted_by]);
         set_flash('success', 'Notice published successfully on the academy board!');
         header('Location: ' . ADMIN_URL . '/announcements');
         exit;
     }
+
+    // Fallback for unhandled action
+    header('Location: ' . ADMIN_URL . '/announcements');
+    exit;
 }
 
-// Fetch Announcements
-if ($current_user['role'] === 'super_admin') {
+// ── Fetch Announcements ──────────────────────────────────────────────────────
+if ($is_admin) {
     $notices = $db->query("SELECT * FROM announcements ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-} elseif ($current_user['role'] === 'staff') {
+} elseif (($current_user['role'] ?? '') === 'staff') {
     $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'staff') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 } else {
     $notices = $db->query("SELECT * FROM announcements WHERE target_role IN ('all', 'parent') ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
@@ -500,7 +543,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <?php if ($current_user['role'] === 'super_admin'): ?>
+    <?php if ($is_admin): ?>
       <button type="button" class="btn-hrms btn-hrms-primary ann-broadcast-btn" onclick="openModal('announcementModal')">
         <i class="fa-solid fa-bullhorn"></i>
         <span>Broadcast Notice</span>
@@ -524,7 +567,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <div class="ann-empty-icon"><i class="fa-solid fa-bullhorn"></i></div>
           <h3 class="ann-empty-title">No notices published yet</h3>
           <p class="ann-empty-desc">Official academic notifications, schedules, and alerts will appear here once published.</p>
-          <?php if ($current_user['role'] === 'super_admin'): ?>
+          <?php if ($is_admin): ?>
             <button type="button" class="btn-hrms btn-hrms-primary" style="margin-top: 14px;" onclick="openModal('announcementModal')">
               <i class="fa-solid fa-plus"></i> Broadcast First Notice
             </button>
@@ -532,10 +575,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
       <?php else: ?>
         <?php foreach ($notices as $ann): ?>
-          <div class="notice-item ann-item" data-target="<?php echo htmlspecialchars($ann['target_role']); ?>" data-id="<?php echo $ann['id']; ?>">
+          <div class="notice-item ann-item" data-target="<?php echo htmlspecialchars($ann['target_role'], ENT_QUOTES, 'UTF-8'); ?>" data-id="<?php echo intval($ann['id']); ?>">
             <div class="notice-header ann-item-header">
               <div class="ann-item-title-box">
-                <span class="ann-target-badge-icon target-<?php echo htmlspecialchars($ann['target_role']); ?>" title="Target: <?php echo ucfirst(htmlspecialchars($ann['target_role'])); ?>">
+                <span class="ann-target-badge-icon target-<?php echo htmlspecialchars($ann['target_role'], ENT_QUOTES, 'UTF-8'); ?>" title="Target: <?php echo htmlspecialchars(($ann['target_role'] === 'all') ? 'All' : ucfirst($ann['target_role']), ENT_QUOTES, 'UTF-8'); ?>">
                   <?php if ($ann['target_role'] === 'staff'): ?>
                     <i class="fa-solid fa-chalkboard-user"></i>
                   <?php elseif ($ann['target_role'] === 'parent'): ?>
@@ -544,31 +587,31 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <i class="fa-solid fa-globe"></i>
                   <?php endif; ?>
                 </span>
-                <h3 class="ann-item-title"><?php echo htmlspecialchars($ann['title']); ?></h3>
+                <h3 class="ann-item-title"><?php echo htmlspecialchars($ann['title'], ENT_QUOTES, 'UTF-8'); ?></h3>
               </div>
               <div class="ann-item-meta-right">
                 <span class="notice-time ann-item-time">
                   <i class="fa-regular fa-calendar-days"></i> <?php echo format_date($ann['created_at'], 'd M Y, h:i A'); ?>
                 </span>
-                <?php if ($current_user['role'] === 'super_admin'): ?>
-                  <button type="button" class="ann-delete-btn" title="Delete notice" onclick="openDeleteNoticeModal(<?php echo $ann['id']; ?>, '<?php echo htmlspecialchars(addslashes($ann['title'])); ?>')">
+                <?php if ($is_admin): ?>
+                  <button type="button" class="ann-delete-btn" title="Delete notice" onclick="openDeleteNoticeModal(<?php echo intval($ann['id']); ?>, <?php echo htmlspecialchars(json_encode((string)$ann['title'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>)">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>
                 <?php endif; ?>
               </div>
             </div>
 
-            <p class="notice-desc ann-item-desc"><?php echo nl2br(htmlspecialchars($ann['content'])); ?></p>
+            <p class="notice-desc ann-item-desc"><?php echo nl2br(htmlspecialchars($ann['content'], ENT_QUOTES, 'UTF-8')); ?></p>
 
             <div class="ann-item-footer">
               <div class="ann-posted-by">
                 <i class="fa-solid fa-user-tie"></i>
-                <span>Posted by: <strong><?php echo htmlspecialchars($ann['posted_by']); ?></strong></span>
+                <span>Posted by: <strong><?php echo htmlspecialchars($ann['posted_by'], ENT_QUOTES, 'UTF-8'); ?></strong></span>
               </div>
               <div class="ann-target-pill-wrap">
-                <span class="badge-status ann-target-pill target-<?php echo htmlspecialchars($ann['target_role']); ?>">
+                <span class="badge-status ann-target-pill target-<?php echo htmlspecialchars($ann['target_role'], ENT_QUOTES, 'UTF-8'); ?>">
                   <i class="fa-solid fa-circle-dot"></i>
-                  <span>Target: <?php echo ($ann['target_role'] === 'all') ? 'All (Everyone)' : ucfirst(htmlspecialchars($ann['target_role'])); ?></span>
+                  <span>Target: <?php echo htmlspecialchars(($ann['target_role'] === 'all') ? 'All (Everyone)' : ucfirst($ann['target_role']), ENT_QUOTES, 'UTF-8'); ?></span>
                 </span>
               </div>
             </div>
@@ -590,7 +633,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 </div>
 
 <!-- Modal: Post Announcement -->
-<?php if ($current_user['role'] === 'super_admin'): ?>
+<?php if ($is_admin): ?>
 <div class="hrms-modal" id="announcementModal">
   <div class="hrms-modal-card ann-modal-card">
     <div class="hrms-modal-header ann-modal-header">
@@ -606,11 +649,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('announcementModal')" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <form method="POST" action="<?php echo ADMIN_URL; ?>/announcements">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="create">
       <div class="hrms-modal-body ann-modal-body">
         <div class="form-group">
           <label class="form-label" style="font-weight: 700; font-size: 0.82rem;">Notice Headline / Title <span style="color: #ef4444;">*</span></label>
-          <input type="text" name="title" class="hrms-input" placeholder="e.g. Sunday Mock Test Schedule &amp; Timings" required autocomplete="off">
+          <input type="text" name="title" maxlength="255" class="hrms-input" placeholder="e.g. Sunday Mock Test Schedule &amp; Timings" required autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label" style="font-weight: 700; font-size: 0.82rem;">Target Audience <span style="color: #ef4444;">*</span></label>
@@ -625,7 +669,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
         <div class="form-group">
           <label class="form-label" style="font-weight: 700; font-size: 0.82rem;">Notice Message Details <span style="color: #ef4444;">*</span></label>
-          <textarea name="content" class="hrms-input" rows="5" placeholder="Write full notice details, instructions, date/time and necessary contacts..." required></textarea>
+          <textarea name="content" maxlength="10000" class="hrms-input" rows="5" placeholder="Write full notice details, instructions, date/time and necessary contacts..." required></textarea>
         </div>
       </div>
       <div class="hrms-modal-footer ann-modal-footer">
@@ -656,6 +700,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('deleteNoticeModal')" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <form method="POST" action="<?php echo ADMIN_URL; ?>/announcements">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="delete">
       <input type="hidden" name="id" id="deleteNoticeId" value="">
       <div class="hrms-modal-body ann-modal-body">
@@ -776,8 +821,8 @@ function applyFilters() {
 function openDeleteNoticeModal(id, title) {
   const idInput = document.getElementById('deleteNoticeId');
   const titleDisplay = document.getElementById('deleteNoticeTitle');
-  if (idInput) idInput.value = id;
-  if (titleDisplay) titleDisplay.textContent = title;
+  if (idInput) idInput.value = parseInt(id, 10) || 0;
+  if (titleDisplay) titleDisplay.textContent = title || '';
   openModal('deleteNoticeModal');
 }
 </script>

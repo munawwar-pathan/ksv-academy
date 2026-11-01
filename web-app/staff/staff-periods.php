@@ -12,7 +12,7 @@ $active_menu = 'staff-periods';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'] ?? 1;
+$session_id = intval($active_session['id'] ?? 1);
 
 // Resolve Logged-in Staff Profile Info
 $stmt = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ? LIMIT 1");
@@ -21,23 +21,38 @@ $staff_profile = $stmt->fetch();
 
 if (!$staff_profile) {
     $emp_code = 'KSV-FAC-0' . $current_user['id'];
-    $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present')");
-    $stmt->execute([$current_user['id'], $emp_code]);
-    $stmt_sp = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ?");
+    $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status, session_id) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present', ?)");
+    $stmt->execute([$current_user['id'], $emp_code, $session_id]);
+    $stmt_sp = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ? LIMIT 1");
     $stmt_sp->execute([$current_user['id']]);
     $staff_profile = $stmt_sp->fetch();
 }
 
 $staff_id = $staff_profile['id'];
 
-// Filter parameters
-$search = trim($_GET['search'] ?? '');
-$filter_day = trim($_GET['day'] ?? '');
+// Available days for filter dropdown & strict whitelist validation
+$days_list = [
+    'Monday - Friday',
+    'Monday - Saturday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday'
+];
+
+// Filter parameters with length bounds & validation
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$filter_day = trim((string)($_GET['day'] ?? ''));
+if (!empty($filter_day) && !in_array($filter_day, $days_list, true)) {
+    $filter_day = '';
+}
 
 // Pagination Settings (10, 20, 30, 40, 50 - plus 5 for convenience)
 $allowed_limits = [5, 10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -143,18 +158,6 @@ $total_assigned = count($all_periods);
 $distinct_classes = count(array_unique(array_filter(array_column($all_periods, 'class_name'))));
 $distinct_subjects = count(array_unique(array_filter(array_column($all_periods, 'subject'))));
 $distinct_rooms = count(array_unique(array_filter(array_column($all_periods, 'room_no'))));
-
-// Available days for filter dropdown
-$days_list = [
-    'Monday - Friday',
-    'Monday - Saturday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday'
-];
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
@@ -972,9 +975,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Search & Day Filter Form -->
-    <form method="GET" action="<?php echo STAFF_URL; ?>/staff-periods" class="roaster-filter-form">
+    <form method="GET" action="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/staff-periods" class="roaster-filter-form">
       <?php if ($limit !== 10): ?>
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       <?php endif; ?>
 
       <!-- Search Input -->
@@ -999,7 +1002,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
 
       <?php if (!empty($search) || !empty($filter_day)): ?>
-        <a href="<?php echo STAFF_URL; ?>/staff-periods<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn secondary" style="gap: 5px; font-size: 0.80rem; text-decoration: none; padding: 7px 12px; border-radius: 8px;">
+        <a href="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/staff-periods<?php echo $limit !== 10 ? '?limit=' . intval($limit) : ''; ?>" class="roaster-btn secondary" style="gap: 5px; font-size: 0.80rem; text-decoration: none; padding: 7px 12px; border-radius: 8px;">
           <i class="fa-solid fa-rotate-left"></i> Reset Filters
         </a>
       <?php endif; ?>
@@ -1026,7 +1029,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-calendar-week" style="color: #0284c7;"></i>
         My Assigned Periods Timetable
         <span style="font-size: 0.72rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          Session <?php echo htmlspecialchars($active_session['session_name'] ?? CURRENT_SESSION); ?>
         </span>
       </h3>
       <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -1064,7 +1067,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <?php echo (!empty($search) || !empty($filter_day)) ? 'No lecture periods match your search filters.' : 'No lecture periods have been allocated to your profile for this session yet.'; ?>
               </p>
               <?php if (!empty($search) || !empty($filter_day)): ?>
-                <a href="<?php echo STAFF_URL; ?>/staff-periods" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none; padding: 7px 14px; border-radius: 8px;">
+                <a href="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/staff-periods" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none; padding: 7px 14px; border-radius: 8px;">
                   <i class="fa-solid fa-rotate-left"></i> Reset All Filters
                 </a>
               <?php endif; ?>
@@ -1120,7 +1123,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </div>
                   <div class="sp-time-sub">
                     <?php if (!empty($duration_str)): ?>
-                      <span class="sp-duration-tag"><i class="fa-solid fa-stopwatch"></i> <?php echo $duration_str; ?></span>
+                      <span class="sp-duration-tag"><i class="fa-solid fa-stopwatch"></i> <?php echo htmlspecialchars($duration_str, ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endif; ?>
                     <span class="sp-slot-name">Daily Academic Slot</span>
                   </div>

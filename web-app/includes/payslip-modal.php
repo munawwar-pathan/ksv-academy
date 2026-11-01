@@ -22,7 +22,7 @@ if (!isset($active_session)) {
   color: #0f172a;
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   width: 100%;
-  max-width: 440px;
+  max-width: 480px;
   margin: 0 auto;
   border-radius: 12px;
   overflow: hidden;
@@ -116,34 +116,41 @@ if (!isset($active_session)) {
 
 /* Meta Grid */
 .pay-receipt .receipt-meta-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px 14px !important;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 6px 10px;
+  padding: 9px 12px;
   margin-bottom: 8px;
 }
 .pay-receipt .rmg-cell {
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+.pay-receipt .rmg-cell.full-width {
+  grid-column: 1 / -1 !important;
+  grid-column: span 2 !important;
+  width: 100% !important;
 }
 .pay-receipt .rmg-label {
-  font-size: 9px;
+  font-size: 8.5px;
   color: #64748b;
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 .pay-receipt .rmg-val {
-  font-size: 11.5px;
+  font-size: 11px !important;
   color: #0f172a;
   font-weight: 600;
   margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
 }
 .pay-receipt .rmg-val.bold {
   font-weight: 800;
@@ -153,6 +160,7 @@ if (!isset($active_session)) {
   font-family: monospace;
   font-weight: 800;
   color: #0284c7;
+  white-space: nowrap;
 }
 
 /* Particulars Table */
@@ -868,7 +876,7 @@ function buildPayslip(payroll) {
         </div>
 
         <!-- Faculty & Payslip Meta Grid -->
-        <div class="receipt-meta-grid">
+        <div class="receipt-meta-grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 14px;">
           <div class="rmg-cell">
             <span class="rmg-label">Payslip Ref No</span>
             <span class="rmg-val mono-badge">${esc(slipNo)}</span>
@@ -885,13 +893,17 @@ function buildPayslip(payroll) {
             <span class="rmg-label">Employee ID</span>
             <span class="rmg-val mono-badge" style="color: #0f172a;">${esc(payroll.employee_code || 'EMP-' + payroll.staff_id)}</span>
           </div>
-          <div class="rmg-cell">
+          <div class="rmg-cell full-width" style="grid-column: 1 / -1; grid-column: span 2; width: 100%;">
             <span class="rmg-label">Designation &amp; Dept</span>
-            <span class="rmg-val">${esc(payroll.designation || 'Faculty')} &bull; ${esc(payroll.department || 'Academic')}</span>
+            <span class="rmg-val" style="white-space: normal; word-break: break-word; overflow-wrap: break-word;">${esc(payroll.designation || 'Faculty')}${payroll.department ? (' &bull; ' + esc(payroll.department)) : ''}</span>
           </div>
-          <div class="rmg-cell">
+          <div class="rmg-cell" style="min-width: 0;">
             <span class="rmg-label">Payment Mode</span>
-            <span class="rmg-val" style="color: #0284c7; font-weight: 700;">${esc(payroll.payment_method || 'Bank Transfer (NEFT)')}</span>
+            <span class="rmg-val" style="color: #0284c7; font-weight: 700; white-space: normal; word-break: break-word; overflow-wrap: break-word;">${esc(payroll.payment_method || 'Bank Transfer (NEFT)')}</span>
+          </div>
+          <div class="rmg-cell" style="min-width: 0;">
+            <span class="rmg-label">Payment Status</span>
+            <span class="rmg-val" style="color: #059669; font-weight: 700; white-space: normal; word-break: break-word; overflow-wrap: break-word;"><i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 3px;"></i>${esc(payroll.payment_status || 'Paid')}</span>
           </div>
         </div>
 
@@ -1171,28 +1183,33 @@ function printPayslip() {
       border-radius: 5px;
     }
     .pay-receipt .receipt-meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 6px 12px !important;
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 6px 10px;
+      padding: 7px 12px;
       margin-bottom: 8px;
     }
-    .pay-receipt .rmg-cell { display: flex; flex-direction: column; }
+    .pay-receipt .rmg-cell { display: flex !important; flex-direction: column !important; min-width: 0 !important; }
+    .pay-receipt .rmg-cell.full-width { grid-column: 1 / -1 !important; grid-column: span 2 !important; width: 100% !important; }
     .pay-receipt .rmg-label {
-      font-size: 8.5px;
+      font-size: 8px;
       color: #64748b;
       text-transform: uppercase;
       font-weight: 700;
       letter-spacing: 0.03em;
     }
     .pay-receipt .rmg-val {
-      font-size: 10.5px;
+      font-size: 10.5px !important;
       color: #0f172a;
       font-weight: 600;
       margin-top: 1px;
+      line-height: 1.3 !important;
+      white-space: normal !important;
+      word-break: break-word !important;
+      overflow-wrap: break-word !important;
     }
     .pay-receipt .rmg-val.bold {
       font-weight: 800;

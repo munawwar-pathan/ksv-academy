@@ -10,18 +10,43 @@ $active_menu = 'announcements';
 
 $db = get_db_connection();
 
-// Handle Post Notice (Admin)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin') {
-    $title = trim($_POST['title'] ?? '');
-    $content = trim($_POST['content'] ?? '');
-    $target = trim($_POST['target_role'] ?? 'all');
-    if (!empty($title) && !empty($content)) {
-        $stmt = $db->prepare("INSERT INTO announcements (title, content, target_role, posted_by) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$title, $content, $target, $current_user['full_name']]);
-        set_flash('success', 'Notice published successfully on the academy board!');
+// Handle Post Notice (Super Admin)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. Authorization check
+    if ($current_user['role'] !== 'super_admin') {
+        set_flash('error', 'Unauthorized action. Only administrators can publish circulars.');
         header('Location: ' . STAFF_URL . '/announcements');
         exit;
     }
+
+    // 2. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+        header('Location: ' . STAFF_URL . '/announcements');
+        exit;
+    }
+
+    $title = mb_substr(trim((string)($_POST['title'] ?? '')), 0, 255);
+    $content = mb_substr(trim((string)($_POST['content'] ?? '')), 0, 10000);
+    $target = trim((string)($_POST['target_role'] ?? 'all'));
+    $allowed_targets = ['all', 'staff', 'parent'];
+    if (!in_array($target, $allowed_targets, true)) {
+        $target = 'all';
+    }
+
+    $posted_by = mb_substr(trim((string)($current_user['full_name'] ?? 'Super Admin')), 0, 100);
+
+    if ($title === '' || $content === '') {
+        set_flash('error', 'Please provide both notice headline and details.');
+        header('Location: ' . STAFF_URL . '/announcements');
+        exit;
+    }
+
+    $stmt = $db->prepare("INSERT INTO announcements (title, content, target_role, posted_by) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$title, $content, $target, $posted_by]);
+    set_flash('success', 'Notice published successfully on the academy board!');
+    header('Location: ' . STAFF_URL . '/announcements');
+    exit;
 }
 
 // Fetch Announcements
@@ -462,11 +487,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--hrms-navy);"><i class="fa-solid fa-bullhorn" style="color: var(--hrms-primary);"></i> Broadcast Circular</h3>
       <button type="button" class="modal-close-btn" onclick="closeModal('announcementModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="POST" action="<?php echo STAFF_URL; ?>/announcements">
+    <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL); ?>/announcements">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <div class="hrms-modal-body">
         <div class="form-group">
           <label class="form-label">Notice Headline</label>
-          <input type="text" name="title" class="hrms-input" placeholder="e.g. Sunday Mock Test Timing" required>
+          <input type="text" name="title" maxlength="255" class="hrms-input" placeholder="e.g. Sunday Mock Test Timing" required autocomplete="off">
         </div>
         <div class="form-group">
           <label class="form-label">Target Audience</label>
@@ -478,7 +504,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
         <div class="form-group">
           <label class="form-label">Notice Message Details</label>
-          <textarea name="content" class="hrms-input" rows="4" placeholder="Enter notice content here..." required></textarea>
+          <textarea name="content" maxlength="10000" class="hrms-input" rows="4" placeholder="Enter notice content here..." required></textarea>
         </div>
         <button type="submit" class="login-submit-btn">
           <i class="fa-solid fa-paper-plane"></i> Publish Notice

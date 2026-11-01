@@ -11,7 +11,11 @@ $active_menu = 'payroll';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = $active_session['id'] ?? 1;
+$session_id = intval($active_session['id'] ?? 1);
+
+// Available filter months and years
+$months_list = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+$years_list = [2027, 2026, 2025, 2024];
 
 // Resolve Logged-in Staff Profile Info
 $stmt = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ? LIMIT 1");
@@ -20,23 +24,58 @@ $staff_profile = $stmt->fetch();
 
 if (!$staff_profile) {
     $emp_code = 'KSV-FAC-0' . $current_user['id'];
-    $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present')");
-    $stmt->execute([$current_user['id'], $emp_code]);
-    $staff_profile = $db->query("SELECT * FROM staff_profiles WHERE user_id = {$current_user['id']}")->fetch();
+    $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status, session_id) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present', ?)");
+    $stmt->execute([$current_user['id'], $emp_code, $session_id]);
+    $stmt_sp = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ? LIMIT 1");
+    $stmt_sp->execute([$current_user['id']]);
+    $staff_profile = $stmt_sp->fetch();
 }
-$staff_id = $staff_profile['id'];
+$staff_id = intval($staff_profile['id']);
 
 // Handle Generate Payroll Entry (Admin Testing)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $current_user['role'] === 'super_admin' && isset($_POST['action']) && $_POST['action'] === 'generate_payroll') {
-    $target_staff_id = intval($_POST['staff_id'] ?? $staff_id);
-    $month = trim($_POST['month'] ?? date('F'));
-    $year = intval($_POST['year'] ?? date('Y'));
-    $basic = floatval($_POST['basic_salary'] ?? 65000);
-    $allowances = floatval($_POST['allowances'] ?? 3000);
-    $deductions = floatval($_POST['deductions'] ?? 200);
-    $net = $basic + $allowances - $deductions;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = trim((string)($_POST['action'] ?? ''));
 
-    if ($target_staff_id > 0) {
+    if ($action === 'generate_payroll') {
+        // 1. Authorization check
+        if ($current_user['role'] !== 'super_admin') {
+            set_flash('error', 'Unauthorized action. Only super administrators can disburse salary records.');
+            header('Location: ' . STAFF_URL . '/payroll');
+            exit;
+        }
+
+        // 2. CSRF Token Verification
+        if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+            set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+            header('Location: ' . STAFF_URL . '/payroll');
+            exit;
+        }
+
+        $target_staff_id = intval($_POST['staff_id'] ?? $staff_id);
+        $month = trim((string)($_POST['month'] ?? date('F')));
+        if (!in_array($month, $months_list, true)) {
+            $month = date('F');
+        }
+
+        $year = intval($_POST['year'] ?? date('Y'));
+        if ($year < 2000 || $year > 2099) {
+            $year = intval(date('Y'));
+        }
+
+        $basic = max(0, floatval($_POST['basic_salary'] ?? 65000));
+        $allowances = max(0, floatval($_POST['allowances'] ?? 3000));
+        $deductions = max(0, floatval($_POST['deductions'] ?? 200));
+        $net = max(0, $basic + $allowances - $deductions);
+
+        // Verify target staff profile exists
+        $check_staff = $db->prepare("SELECT id FROM staff_profiles WHERE id = ? LIMIT 1");
+        $check_staff->execute([$target_staff_id]);
+        if (!$check_staff->fetch()) {
+            set_flash('error', 'Target faculty profile not found.');
+            header('Location: ' . STAFF_URL . '/payroll');
+            exit;
+        }
+
         $stmt = $db->prepare("INSERT INTO payroll (session_id, staff_id, month, year, basic_salary, allowances, deductions, net_salary, payment_status, payment_date, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Paid', CURDATE(), 'Bank Transfer (NEFT)')");
         $stmt->execute([$session_id, $target_staff_id, $month, $year, $basic, $allowances, $deductions, $net]);
         set_flash('success', "Salary record generated for {$month} {$year}! Net Disbursed: ₹" . number_format($net, 2));
@@ -63,14 +102,20 @@ $avg_payout = floatval($metric_data['avg_payout'] ?? 0);
 $monthly_base = floatval($staff_profile['monthly_salary'] ?? 60000);
 
 // Filter Parameters
-$search = trim($_GET['search'] ?? '');
-$filter_month = trim($_GET['month'] ?? '');
-$filter_year = trim($_GET['year'] ?? '');
+$search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
+$filter_month = trim((string)($_GET['month'] ?? ''));
+if (!in_array($filter_month, $months_list, true)) {
+    $filter_month = '';
+}
+$filter_year = trim((string)($_GET['year'] ?? ''));
+if (!in_array(intval($filter_year), $years_list, true)) {
+    $filter_year = '';
+}
 
 // Pagination Settings (10, 20, 30, 40, 50 - plus 5 for convenience)
 $allowed_limits = [5, 10, 20, 30, 40, 50];
 $limit = intval($_GET['limit'] ?? 10);
-if (!in_array($limit, $allowed_limits)) {
+if (!in_array($limit, $allowed_limits, true)) {
     $limit = 10;
 }
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -143,14 +188,10 @@ function get_staff_payroll_pagination_url($target_page, $search, $filter_month, 
     if (!empty($search)) $params['search'] = $search;
     if (!empty($filter_month)) $params['month'] = $filter_month;
     if (!empty($filter_year)) $params['year'] = $filter_year;
-    if ($limit != 10) $params['limit'] = $limit;
-    if ($target_page > 1) $params['page'] = $target_page;
+    if ($limit != 10) $params['limit'] = intval($limit);
+    if ($target_page > 1) $params['page'] = intval($target_page);
     return STAFF_URL . '/payroll' . (!empty($params) ? '?' . http_build_query($params) : '');
 }
-
-// Available filter months and years
-$months_list = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-$years_list = [2027, 2026, 2025, 2024];
 
 require_once __DIR__ . '/../includes/layout-header.php';
 ?>
@@ -987,9 +1028,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
     
     <!-- Left: Search & Month/Year Filter Form -->
-    <form method="GET" action="<?php echo STAFF_URL; ?>/payroll" class="roaster-filter-form">
+    <form method="GET" action="<?php echo htmlspecialchars(STAFF_URL); ?>/payroll" class="roaster-filter-form">
       <?php if ($limit !== 10): ?>
-        <input type="hidden" name="limit" value="<?php echo $limit; ?>">
+        <input type="hidden" name="limit" value="<?php echo intval($limit); ?>">
       <?php endif; ?>
 
       <!-- Search Input -->
@@ -1018,15 +1059,15 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <select name="year" onchange="this.form.submit()">
           <option value="">All Years</option>
           <?php foreach ($years_list as $y): ?>
-            <option value="<?php echo $y; ?>" <?php echo strval($filter_year) === strval($y) ? 'selected' : ''; ?>>
-              <?php echo $y; ?>
+            <option value="<?php echo htmlspecialchars(strval($y)); ?>" <?php echo strval($filter_year) === strval($y) ? 'selected' : ''; ?>>
+              <?php echo htmlspecialchars(strval($y)); ?>
             </option>
           <?php endforeach; ?>
         </select>
       </div>
 
       <?php if (!empty($search) || !empty($filter_month) || !empty($filter_year)): ?>
-        <a href="<?php echo STAFF_URL; ?>/payroll<?php echo $limit !== 10 ? '?limit=' . $limit : ''; ?>" class="roaster-btn secondary" style="gap: 5px; font-size: 0.80rem; text-decoration: none; padding: 7px 12px; border-radius: 8px;">
+        <a href="<?php echo htmlspecialchars(STAFF_URL); ?>/payroll<?php echo $limit !== 10 ? '?limit=' . intval($limit) : ''; ?>" class="roaster-btn secondary" style="gap: 5px; font-size: 0.80rem; text-decoration: none; padding: 7px 12px; border-radius: 8px;">
           <i class="fa-solid fa-rotate-left"></i> Reset Filters
         </a>
       <?php endif; ?>
@@ -1059,7 +1100,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-file-invoice-dollar" style="color: #0284c7;"></i>
         My Salary Slips &amp; Payroll Ledger
         <span style="font-size: 0.72rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-          Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+          Session <?php echo htmlspecialchars($active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'))); ?>
         </span>
       </h3>
       <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -1098,7 +1139,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
                 <?php echo (!empty($search) || !empty($filter_month) || !empty($filter_year)) ? 'No payroll records match your search filters.' : 'No salary slips have been disbursed for your account yet.'; ?>
               </p>
               <?php if (!empty($search) || !empty($filter_month) || !empty($filter_year)): ?>
-                <a href="<?php echo STAFF_URL; ?>/payroll" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none; padding: 7px 14px; border-radius: 8px;">
+                <a href="<?php echo htmlspecialchars(STAFF_URL); ?>/payroll" class="roaster-btn secondary" style="display: inline-flex; text-decoration: none; padding: 7px 14px; border-radius: 8px;">
                   <i class="fa-solid fa-rotate-left"></i> Reset All Filters
                 </a>
               <?php endif; ?>
@@ -1117,7 +1158,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td>
                 <div style="font-weight: 700; color: #0f172a; font-size: 0.86rem; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 6px;">
                   <i class="fa-regular fa-calendar-check" style="color: #0284c7; font-size: 0.72rem;"></i>
-                  <span><?php echo htmlspecialchars($pl['month']); ?> <?php echo $pl['year']; ?></span>
+                  <span><?php echo htmlspecialchars($pl['month']); ?> <?php echo intval($pl['year']); ?></span>
                 </div>
                 <div style="font-size: 0.71rem; color: #64748b; margin-top: 2px;">Monthly Pay Cycle</div>
               </td>
@@ -1273,15 +1314,16 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </h3>
       <button type="button" class="modal-close-btn" onclick="closeModal('generatePayrollModal')" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <form method="POST" action="<?php echo STAFF_URL; ?>/payroll">
+    <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL); ?>/payroll">
+      <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
       <input type="hidden" name="action" value="generate_payroll">
       <div class="hrms-modal-body" style="padding: 20px;">
         <div class="form-group" style="margin-bottom: 16px;">
           <label class="form-label" style="font-size: 0.80rem; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Select Staff Member</label>
           <select name="staff_id" class="hrms-input" required style="width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; background: #fff;">
             <?php foreach ($staff_options as $so): ?>
-              <option value="<?php echo $so['id']; ?>" <?php echo $so['id'] == $staff_id ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($so['full_name']); ?> (<?php echo $so['employee_code']; ?>) &bull; Base: ₹<?php echo number_format($so['monthly_salary'], 0); ?>
+              <option value="<?php echo intval($so['id']); ?>" <?php echo intval($so['id']) === intval($staff_id) ? 'selected' : ''; ?>>
+                <?php echo htmlspecialchars($so['full_name']); ?> (<?php echo htmlspecialchars($so['employee_code']); ?>) &bull; Base: ₹<?php echo number_format($so['monthly_salary'], 0); ?>
               </option>
             <?php endforeach; ?>
           </select>

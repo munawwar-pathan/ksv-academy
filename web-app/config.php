@@ -595,7 +595,7 @@ function send_student_welcome_email($student, $username, $password, &$out_diag =
                       </table>
 
                       <p style="margin:14px 0 0; font-size:0.78rem; color:#64748b; line-height:1.5;">
-                        <em>Tip: You can sign in using either your Username (<strong>{$safe_username}</strong>) or your Roll Number (<strong>{$roll_no}</strong>). For security, we recommend changing your password after your first login.</em>
+                        <em>Tip: You can sign in using either your Username (<strong>{$safe_username}</strong>), your Roll Number (<strong>{$roll_no}</strong>), or your Email (<strong>{$recipient_email}</strong>). For security, we recommend changing your password after your first login.</em>
                       </p>
                     </td>
                   </tr>
@@ -676,6 +676,7 @@ HTML;
     $smtp_user = !empty($settings['smtp_user']) ? $settings['smtp_user'] : (defined('SMTP_USER') ? SMTP_USER : '');
     $smtp_pass = !empty($settings['smtp_pass']) ? $settings['smtp_pass'] : (defined('SMTP_PASS') ? SMTP_PASS : '');
 
+    $smtp_err = '';
     if (!empty($smtp_user) && !empty($smtp_pass)) {
         $diag_err = '';
         $smtp_ok = ksv_send_smtp_mail($recipient_email, $subject, $html_body, $diag_err);
@@ -684,19 +685,37 @@ HTML;
             $out_diag['method'] = 'smtp';
             return true;
         } else {
-            $out_diag['success'] = false;
-            $out_diag['method'] = 'smtp';
-            $out_diag['error'] = 'SMTP dispatch failed: ' . $diag_err;
+            $smtp_err = $diag_err;
             error_log("send_student_welcome_email SMTP error: " . $diag_err);
-            return false;
         }
     }
 
-    // 3. Fallback when SMTP is not configured
-    // On localhost/macOS without SMTP, emails cannot reach external inboxes like Gmail.
+    // 3. Fallback: Attempt PHP native mail() function
+    $from_email = !empty($settings['smtp_from_email']) ? $settings['smtp_from_email'] : (!empty($smtp_user) ? $smtp_user : (defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : 'admissions@ksvacademy.com'));
+    $from_name = !empty($settings['smtp_from_name']) ? $settings['smtp_from_name'] : (defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : $school_name);
+    $encoded_from_name = '=?UTF-8?B?' . base64_encode($from_name) . '?=';
+    $encoded_subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    $headers = [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        "From: {$encoded_from_name} <{$from_email}>",
+        "Reply-To: <{$from_email}>",
+        'X-Mailer: PHP/' . phpversion()
+    ];
+
+    if (@mail($recipient_email, $encoded_subject, $html_body, implode("\r\n", $headers))) {
+        $out_diag['success'] = true;
+        $out_diag['method'] = 'mail';
+        return true;
+    }
+
+    // 4. Fallback when neither SMTP nor mail() can reach external inbox (e.g. offline dev environment)
     $out_diag['success'] = false;
     $out_diag['method'] = 'local_preview';
-    $out_diag['error'] = 'SMTP credentials not configured. Outbound emails to external inboxes like Gmail require SMTP settings in School Settings or config.php.';
+    $out_diag['error'] = !empty($smtp_err) 
+        ? ('SMTP error: ' . $smtp_err) 
+        : 'SMTP credentials not configured. Configure SMTP in School Settings or config.php to dispatch live outbound emails to external inboxes.';
     return false;
 }
 
@@ -924,6 +943,7 @@ HTML;
     $smtp_user = !empty($settings['smtp_user']) ? $settings['smtp_user'] : (defined('SMTP_USER') ? SMTP_USER : '');
     $smtp_pass = !empty($settings['smtp_pass']) ? $settings['smtp_pass'] : (defined('SMTP_PASS') ? SMTP_PASS : '');
 
+    $smtp_err = '';
     if (!empty($smtp_user) && !empty($smtp_pass)) {
         $diag_err = '';
         $smtp_ok = ksv_send_smtp_mail($recipient_email, $subject, $html_body, $diag_err);
@@ -932,18 +952,37 @@ HTML;
             $out_diag['method'] = 'smtp';
             return true;
         } else {
-            $out_diag['success'] = false;
-            $out_diag['method'] = 'smtp';
-            $out_diag['error'] = 'SMTP dispatch failed: ' . $diag_err;
+            $smtp_err = $diag_err;
             error_log("send_staff_welcome_email SMTP error: " . $diag_err);
-            return false;
         }
     }
 
-    // 3. Fallback when SMTP is not configured
+    // 3. Fallback: Attempt PHP native mail() function
+    $from_email = !empty($settings['smtp_from_email']) ? $settings['smtp_from_email'] : (!empty($smtp_user) ? $smtp_user : (defined('SMTP_FROM_EMAIL') ? SMTP_FROM_EMAIL : 'admissions@ksvacademy.com'));
+    $from_name = !empty($settings['smtp_from_name']) ? $settings['smtp_from_name'] : (defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : $school_name);
+    $encoded_from_name = '=?UTF-8?B?' . base64_encode($from_name) . '?=';
+    $encoded_subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    $headers = [
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        "From: {$encoded_from_name} <{$from_email}>",
+        "Reply-To: <{$from_email}>",
+        'X-Mailer: PHP/' . phpversion()
+    ];
+
+    if (@mail($recipient_email, $encoded_subject, $html_body, implode("\r\n", $headers))) {
+        $out_diag['success'] = true;
+        $out_diag['method'] = 'mail';
+        return true;
+    }
+
+    // 4. Fallback when neither SMTP nor mail() succeeds (e.g. offline dev environment)
     $out_diag['success'] = false;
     $out_diag['method'] = 'local_preview';
-    $out_diag['error'] = 'SMTP credentials not configured. Outbound emails to external inboxes require SMTP settings in School Settings or config.php.';
+    $out_diag['error'] = !empty($smtp_err) 
+        ? ('SMTP error: ' . $smtp_err) 
+        : 'SMTP credentials not configured. Configure SMTP in School Settings or config.php to dispatch live outbound emails to external inboxes.';
     return false;
 }
 

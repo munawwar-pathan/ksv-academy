@@ -23,14 +23,25 @@ if (!$staff_profile) {
     $emp_code = 'KSV-FAC-0' . $current_user['id'];
     $stmt = $db->prepare("INSERT INTO staff_profiles (user_id, employee_code, department, designation, joining_date, monthly_salary, today_status) VALUES (?, ?, 'Academics', 'Faculty Member', CURDATE(), 60000, 'Present')");
     $stmt->execute([$current_user['id'], $emp_code]);
-    $staff_profile = $db->query("SELECT * FROM staff_profiles WHERE user_id = {$current_user['id']}")->fetch();
+    $stmt_sp = $db->prepare("SELECT * FROM staff_profiles WHERE user_id = ? LIMIT 1");
+    $stmt_sp->execute([$current_user['id']]);
+    $staff_profile = $stmt_sp->fetch();
 }
 
 $staff_id = $staff_profile['id'];
 
 // Handle Biometric Quick Punch In / Punch Out
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    $redir_month = (isset($_POST['redirect_month']) && preg_match('/^\d{4}-\d{2}$/', $_POST['redirect_month'])) ? $_POST['redirect_month'] : date('Y-m');
+
+    // 1. CSRF Token Verification
+    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
+        set_flash('error', 'Security token invalid or expired. Please refresh the page and try again.');
+        header('Location: ' . STAFF_URL . '/myself-attendance?month=' . urlencode($redir_month));
+        exit;
+    }
+
+    $action = trim((string)($_POST['action'] ?? ''));
 
     if ($action === 'punch_in') {
         $now_time = date('H:i:s');
@@ -49,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $db->prepare("UPDATE staff_profiles SET today_status = 'Present' WHERE id = ?")->execute([$staff_id]);
         set_flash('success', "Biometric Punch In recorded at " . date('h:i A') . "!");
-        header('Location: ' . STAFF_URL . '/myself-attendance?month=' . urlencode($_GET['month'] ?? date('Y-m')));
+        header('Location: ' . STAFF_URL . '/myself-attendance?month=' . urlencode($redir_month));
         exit;
     }
 
@@ -59,24 +70,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $upd = $db->prepare("UPDATE attendance_logs SET check_out_time = ? WHERE type = 'staff' AND reference_id = ? AND log_date = ?");
         $upd->execute([$now_time, $staff_id, $today]);
         set_flash('success', "Biometric Punch Out recorded at " . date('h:i A') . "!");
-        header('Location: ' . STAFF_URL . '/myself-attendance?month=' . urlencode($_GET['month'] ?? date('Y-m')));
+        header('Location: ' . STAFF_URL . '/myself-attendance?month=' . urlencode($redir_month));
         exit;
     }
 }
 
 // Selected Month setup (defaults to current month YYYY-MM)
-$selected_month = $_GET['month'] ?? date('Y-m');
+$selected_month = trim((string)($_GET['month'] ?? date('Y-m')));
 if (!preg_match('/^\d{4}-\d{2}$/', $selected_month)) {
     $selected_month = date('Y-m');
 }
 
-$status_filter = strtolower(trim($_GET['status'] ?? 'all'));
-if (!in_array($status_filter, ['all', 'present', 'absent', 'late', 'leave', 'weekly_off'])) {
+$status_filter = strtolower(trim((string)($_GET['status'] ?? 'all')));
+if (!in_array($status_filter, ['all', 'present', 'absent', 'late', 'leave', 'weekly_off'], true)) {
     $status_filter = 'all';
 }
 
 $year = intval(substr($selected_month, 0, 4));
 $month = intval(substr($selected_month, 5, 2));
+
+// Guard against invalid month/year ranges to prevent ValueError in cal_days_in_month
+if ($year < 2000 || $year > 2099 || $month < 1 || $month > 12 || !checkdate($month, 1, $year)) {
+    $selected_month = date('Y-m');
+    $year = intval(substr($selected_month, 0, 4));
+    $month = intval(substr($selected_month, 5, 2));
+}
+
 $days_in_month = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 $start_date = "{$selected_month}-01";
 $end_date = sprintf("%s-%02d", $selected_month, $days_in_month);
@@ -182,7 +201,7 @@ for ($d = 1; $d <= $days_in_month; $d++) {
         }
     } elseif ($leave) {
         $status = 'Leave';
-        $remarks = "Approved " . htmlspecialchars($leave['leave_type']);
+        $remarks = "Approved " . ($leave['leave_type'] ?? 'Leave');
         $total_leave++;
         if (!$is_sunday && ($is_past || $is_today)) {
             $total_working_days_passed++;
@@ -941,19 +960,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="attendance-header-actions">
       <div class="month-nav-group">
         <div class="month-picker-control">
-          <a href="<?php echo STAFF_URL; ?>/myself-attendance?month=<?php echo $prev_month; ?>" 
+          <a href="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/myself-attendance?month=<?php echo urlencode($prev_month); ?>" 
              title="Previous Month">
             <i class="fa-solid fa-chevron-left"></i>
           </a>
           
-          <form method="GET" action="<?php echo STAFF_URL; ?>/myself-attendance" style="margin: 0; display: inline-flex; align-items: center;">
+          <form method="GET" action="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/myself-attendance" style="margin: 0; display: inline-flex; align-items: center;">
             <input type="month" 
                    name="month" 
-                   value="<?php echo htmlspecialchars($selected_month); ?>" 
+                   value="<?php echo htmlspecialchars($selected_month, ENT_QUOTES, 'UTF-8'); ?>" 
                    onchange="this.form.submit()">
           </form>
 
-          <a href="<?php echo STAFF_URL; ?>/myself-attendance?month=<?php echo $next_month; ?>" 
+          <a href="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/myself-attendance?month=<?php echo urlencode($next_month); ?>" 
              title="Next Month">
             <i class="fa-solid fa-chevron-right"></i>
           </a>
@@ -961,7 +980,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
         <!-- Reset to Current Month Button -->
         <?php if ($selected_month !== date('Y-m')): ?>
-          <a href="<?php echo STAFF_URL; ?>/myself-attendance" class="btn-hrms btn-hrms-outline btn-hrms-sm current-month-btn">
+          <a href="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/myself-attendance" class="btn-hrms btn-hrms-outline btn-hrms-sm current-month-btn">
             Current Month
           </a>
         <?php endif; ?>
@@ -1025,8 +1044,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php echo $row['check_in']; ?>
                   </span>
                 <?php elseif ($is_active_today): ?>
-                  <form method="POST" style="margin: 0; display: inline-block;">
+                  <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/myself-attendance" style="margin: 0; display: inline-block;">
+                    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                     <input type="hidden" name="action" value="punch_in">
+                    <input type="hidden" name="redirect_month" value="<?php echo htmlspecialchars($selected_month, ENT_QUOTES, 'UTF-8'); ?>">
                     <button type="submit" class="btn-hrms btn-hrms-primary btn-hrms-sm" style="padding: 3px 9px; font-size: 0.72rem; background: #0284c7; border-color: #0284c7; gap: 4px;">
                       <i class="fa-solid fa-fingerprint"></i> Punch In
                     </button>
@@ -1044,8 +1065,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php echo $row['check_out']; ?>
                   </span>
                 <?php elseif ($is_active_today && $row['check_in'] !== '—'): ?>
-                  <form method="POST" style="margin: 0; display: inline-block;">
+                  <form method="POST" action="<?php echo htmlspecialchars(STAFF_URL, ENT_QUOTES, 'UTF-8'); ?>/myself-attendance" style="margin: 0; display: inline-block;">
+                    <input type="hidden" name="csrf_token" value="<?php echo get_csrf_token(); ?>">
                     <input type="hidden" name="action" value="punch_out">
+                    <input type="hidden" name="redirect_month" value="<?php echo htmlspecialchars($selected_month, ENT_QUOTES, 'UTF-8'); ?>">
                     <button type="submit" class="btn-hrms btn-hrms-sm" style="padding: 3px 9px; font-size: 0.72rem; background: #d97706; color: #ffffff; border: 1px solid #b45309; gap: 4px;">
                       <i class="fa-solid fa-right-from-bracket"></i> Punch Out
                     </button>

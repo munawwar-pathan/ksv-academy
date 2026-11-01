@@ -1,10 +1,12 @@
 <?php
 // Defense-in-depth HTTP security headers
-header('X-Frame-Options: SAMEORIGIN');
-header('X-Content-Type-Options: nosniff');
-header('X-XSS-Protection: 1; mode=block');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+}
 
 require_once __DIR__ . '/../config.php';
 
@@ -34,7 +36,8 @@ $active_menu = 'marksheet';
 
 $db = get_db_connection();
 $active_session = get_active_session();
-$session_id = intval($active_session['id']);
+$session_id = $active_session ? intval($active_session['id']) : 1;
+$current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
 // Filters with length bounds & whitelisting
@@ -71,30 +74,30 @@ if ($is_parent_or_student) {
     }
 }
 
-// Fetch students for dropdown list (Strictly scoped by session and user role)
+// Fetch students for dropdown list (Strictly scoped by session and user role, memory optimized)
 if ($is_parent_or_student) {
     if (!empty($allowed_student_ids)) {
         $in_auth_ph = implode(',', array_fill(0, count($allowed_student_ids), '?'));
         $all_students_stmt = $db->prepare("
-            SELECT id, student_name, roll_no, standard, photo, admission_no, parent_phone, blood_group, dob, parent_name, section, qr_code, gender 
+            SELECT id, student_name, roll_no, standard 
             FROM students 
             WHERE session_id = ? AND id IN ($in_auth_ph)
             ORDER BY standard ASC, roll_no ASC, student_name ASC
         ");
         $all_students_stmt->execute(array_merge([$session_id], $allowed_student_ids));
-        $all_students_list = $all_students_stmt->fetchAll();
+        $all_students_list = $all_students_stmt->fetchAll(PDO::FETCH_ASSOC);
     } else {
         $all_students_list = [];
     }
 } else {
     $all_students_stmt = $db->prepare("
-        SELECT id, student_name, roll_no, standard, photo, admission_no, parent_phone, blood_group, dob, parent_name, section, qr_code, gender 
+        SELECT id, student_name, roll_no, standard 
         FROM students 
         WHERE session_id = ? 
         ORDER BY standard ASC, roll_no ASC, student_name ASC
     ");
     $all_students_stmt->execute([$session_id]);
-    $all_students_list = $all_students_stmt->fetchAll();
+    $all_students_list = $all_students_stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Pagination & Limits Setup (10, 20, 30, 40, 50)
@@ -223,28 +226,12 @@ $avg_academic_pct = ($eval_stats && $eval_stats['avg_pct'] !== null) ? round($ev
 $passed_count = intval($eval_stats['pass_cnt'] ?? 0);
 $pass_rate = $total_marksheets_count > 0 ? round(($passed_count / $total_marksheets_count) * 100) : 0;
 
-// Query summary of marksheets per student in active session
+// Query summary of marksheets per student for displayed table records in active session (Performance & Memory optimized)
+$page_student_ids = array_values(array_unique(array_filter(array_map('intval', array_column($table_students, 'id')))));
 $stu_ms_summary = [];
-if ($is_parent_or_student) {
-    if (!empty($allowed_student_ids)) {
-        $in_stu_ph = implode(',', array_fill(0, count($allowed_student_ids), '?'));
-        $ms_summary_stmt = $db->prepare("
-            SELECT m.student_id, COUNT(m.id) as total_marksheets, 
-                   SUBSTRING_INDEX(GROUP_CONCAT(m.exam_name ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_exam_name,
-                   SUBSTRING_INDEX(GROUP_CONCAT(m.percentage ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_percentage,
-                   SUBSTRING_INDEX(GROUP_CONCAT(m.overall_grade ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_grade,
-                   SUBSTRING_INDEX(GROUP_CONCAT(m.result_status ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_status,
-                   SUBSTRING_INDEX(GROUP_CONCAT(m.id ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_marksheet_id
-            FROM marksheets m
-            WHERE m.session_id = ? AND m.student_id IN ($in_stu_ph)
-            GROUP BY m.student_id
-        ");
-        $ms_summary_stmt->execute(array_merge([$session_id], $allowed_student_ids));
-        while ($row = $ms_summary_stmt->fetch()) {
-            $stu_ms_summary[$row['student_id']] = $row;
-        }
-    }
-} else {
+
+if (!empty($page_student_ids)) {
+    $in_stu_ph = implode(',', array_fill(0, count($page_student_ids), '?'));
     $ms_summary_stmt = $db->prepare("
         SELECT m.student_id, COUNT(m.id) as total_marksheets, 
                SUBSTRING_INDEX(GROUP_CONCAT(m.exam_name ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_exam_name,
@@ -253,17 +240,24 @@ if ($is_parent_or_student) {
                SUBSTRING_INDEX(GROUP_CONCAT(m.result_status ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_status,
                SUBSTRING_INDEX(GROUP_CONCAT(m.id ORDER BY m.id DESC SEPARATOR '||'), '||', 1) as latest_marksheet_id
         FROM marksheets m
-        WHERE m.session_id = ?
+        WHERE m.session_id = ? AND m.student_id IN ($in_stu_ph)
         GROUP BY m.student_id
     ");
-    $ms_summary_stmt->execute([$session_id]);
-    while ($row = $ms_summary_stmt->fetch()) {
+    $ms_summary_stmt->execute(array_merge([$session_id], $page_student_ids));
+    while ($row = $ms_summary_stmt->fetch(PDO::FETCH_ASSOC)) {
         $stu_ms_summary[$row['student_id']] = $row;
     }
 }
 
 // Handle Add/Generate Marksheet Submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff')) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($current_user['role'] !== 'super_admin' && $current_user['role'] !== 'staff') {
+        http_response_code(403);
+        set_flash('error', 'Unauthorized action: Marksheet generation is restricted to staff and administrators.');
+        header("Location: " . ADMIN_URL . "/marksheet");
+        exit;
+    }
+
     // 1. Anti-bot honeypot check
     if (!empty($_POST['marksheet_hp'])) {
         usleep(300000);
@@ -308,11 +302,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($current_user['role'] === 'super_a
         }
 
         $exam_name = mb_substr(trim($_POST['exam_name'] ?? 'Annual Examination'), 0, 100);
+        
+        // Strict calendar date verification
         $raw_date = trim($_POST['exam_date'] ?? '');
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw_date) && strtotime($raw_date)) {
-            $exam_date = $raw_date;
-        } else {
-            $exam_date = date('Y-m-d');
+        $exam_date = date('Y-m-d');
+        if (!empty($raw_date) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw_date, $m)) {
+            if (checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
+                $exam_date = $raw_date;
+            }
         }
         $remarks = mb_substr(trim($_POST['remarks'] ?? 'Good academic discipline and consistent effort.'), 0, 500);
 
@@ -377,7 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($current_user['role'] === 'super_a
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
-            $session_id, $student_id, $exam_name, $exam_date, json_encode($subjects_data),
+            $session_id, $student_id, $exam_name, $exam_date, json_encode($subjects_data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP),
             $total_obtained, $total_max, $overall_percentage, $overall_grade, $result_status, $remarks
         ]);
         $new_ms_id = intval($db->lastInsertId());
@@ -442,8 +439,8 @@ if ($student_profile && $active_marksheet) {
 }
 
 // Base directories for safe photo verification
-$allowed_base_uploads = realpath(__DIR__ . '/../../uploads');
-$allowed_base_assets = realpath(__DIR__ . '/../../assets');
+$allowed_base_uploads = ($p = realpath(__DIR__ . '/../../uploads')) ? rtrim($p, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : false;
+$allowed_base_assets = ($p = realpath(__DIR__ . '/../../assets')) ? rtrim($p, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : false;
 
 // Build query string to preserve search & filter
 $qp_filter = [];
@@ -3272,7 +3269,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     
     <!-- Watermark Logo -->
     <div style="position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; pointer-events: none; z-index: 0;">
-      <img src="<?php echo htmlspecialchars($school_settings['logo_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width: 360px; height: 360px;">
+      <img src="<?php echo htmlspecialchars($school_settings['logo_url'] ?? '/assets/imgs/ksv-logo.jpg', ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width: 360px; height: 360px;">
     </div>
 
     <!-- Official Header Section -->
@@ -3281,7 +3278,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         
         <!-- Left: Academy Crest -->
         <div class="report-brand-logo-wrap" style="width: 80px; text-align: left;">
-          <img class="school-logo-img" src="<?php echo htmlspecialchars($school_settings['logo_url'], ENT_QUOTES, 'UTF-8'); ?>" alt="KSV Logo" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid #0092df; padding: 2px; background: #ffffff;">
+          <img class="school-logo-img" src="<?php echo htmlspecialchars($school_settings['logo_url'] ?? '/assets/imgs/ksv-logo.jpg', ENT_QUOTES, 'UTF-8'); ?>" alt="KSV Logo" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid #0092df; padding: 2px; background: #ffffff;">
         </div>
 
         <!-- Center: Institutional Identity -->
@@ -3312,7 +3309,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <!-- Academic Session Ribbon -->
       <div class="report-session-ribbon">
         <i class="fa-solid fa-award"></i>
-        <span>STATEMENT OF ACADEMIC MARKS &bull; SESSION <?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?></span>
+        <span>STATEMENT OF ACADEMIC MARKS &bull; SESSION <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></span>
       </div>
     </div>
 
@@ -3465,7 +3462,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       No Marksheet Record Generated Yet
     </h3>
     <p style="margin: 0 0 18px; color: #64748b; font-size: 0.9rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-      Scholar <strong><?php echo htmlspecialchars($student_profile['student_name'] ?? 'Selected Scholar', ENT_QUOTES, 'UTF-8'); ?></strong> does not have an evaluation for Session <strong><?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?></strong>.
+      Scholar <strong><?php echo htmlspecialchars($student_profile['student_name'] ?? 'Selected Scholar', ENT_QUOTES, 'UTF-8'); ?></strong> does not have an evaluation for Session <strong><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong>.
     </p>
     <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
       <button type="button" onclick="openCreateMarksheetModal(<?php echo intval($selected_student_id); ?>);" class="action-primary-btn" style="background: #0092df; color: #fff; padding: 10px 22px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(0, 146, 223, 0.25);">
@@ -3553,7 +3550,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <i class="fa-solid fa-graduation-cap" style="color: #0284c7;"></i>
           Scholar Academic Directory &amp; Marksheet Register
           <span class="marksheet-session-badge" style="font-size: 0.74rem; font-weight: 600; background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 6px;">
-            Session <?php echo htmlspecialchars($active_session['session_name']); ?>
+            Session <?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?>
           </span>
         </h3>
         <p style="margin: 3px 0 0; font-size: 0.78rem; color: #64748b;">
@@ -3597,7 +3594,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </div>
               <h4 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Outfit', sans-serif;">No Scholars Matching Filters</h4>
               <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 14px;">
-                No student records matched your query in Session <strong><?php echo htmlspecialchars($active_session['session_name'], ENT_QUOTES, 'UTF-8'); ?></strong>.
+                No student records matched your query in Session <strong><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong>.
               </p>
               <?php
                 $reset_table_params = [];
@@ -3617,7 +3614,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
               $has_photo = false;
               if (!empty($stu_photo_path) && $stu_photo_path !== '/assets/imgs/ksv-logo.jpg' && !str_contains($stu_photo_path, '..')) {
                   $full_stu_photo = realpath(__DIR__ . '/../..' . $stu_photo_path);
-                  $allowed_base_dir = realpath(__DIR__ . '/../..');
+                  $allowed_base_dir = ($p = realpath(__DIR__ . '/../..')) ? rtrim($p, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : false;
                   if ($full_stu_photo && $allowed_base_dir && strpos($full_stu_photo, $allowed_base_dir) === 0 && file_exists($full_stu_photo)) {
                       $has_photo = true;
                   }
@@ -3857,12 +3854,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <div class="pagination-summary-group" style="font-size: 0.78rem; color: #64748b; display: flex; align-items: center; gap: 12px; margin-left: auto;">
       <span>Total Evaluations: <strong style="color: #0284c7;"><?php echo $total_marksheets_count; ?></strong></span>
       <span style="color: #cbd5e1;">|</span>
-      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($active_session['session_name']); ?></strong></span>
+      <span>Session: <strong style="color: #334155;"><?php echo htmlspecialchars($current_session_name, ENT_QUOTES, 'UTF-8'); ?></strong></span>
     </div>
 
   </div>
 </div>
 
+<?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
 <!-- ══════════════════════════════════════════════════════
      MODAL: Create New Marksheet Form (With Dynamic Calculation)
      ══════════════════════════════════════════════════════ -->
@@ -3983,6 +3981,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </form>
   </div>
 </div>
+<?php endif; ?>
 
 <script>
 function openCreateMarksheetModal(studentId = null) {
@@ -4055,9 +4054,12 @@ function recalcModalTotals() {
   else if (pct >= 50) grade = 'C';
   else if (pct >= 35) grade = 'D';
 
-  document.getElementById('calcTotalObtained').innerText = totalObt;
-  document.getElementById('calcTotalMax').innerText = totalMax;
-  document.getElementById('calcPercentage').innerText = pct + '%';
+  const elObt = document.getElementById('calcTotalObtained');
+  if (elObt) elObt.innerText = totalObt;
+  const elMax = document.getElementById('calcTotalMax');
+  if (elMax) elMax.innerText = totalMax;
+  const elPct = document.getElementById('calcPercentage');
+  if (elPct) elPct.innerText = pct + '%';
 
   const badge = document.getElementById('calcGradeBadge');
   if (badge) {
