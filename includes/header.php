@@ -20,6 +20,7 @@ $og_image = isset($page_image) ? $page_image : rtrim($base_domain_url, '/') . '/
 $breadcrumb_titles = [
     'home'       => 'Home',
     'about'      => 'About Us',
+    'toppers'    => 'Academic Toppers',
     'courses'    => 'Courses & Batches',
     'admissions' => 'Admissions & Scholarships',
     'faculty'    => 'Expert Faculty',
@@ -98,6 +99,16 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
   <meta property="article:tag" content="Ulwe Sector 19 Coaching Phone">
   <meta property="article:tag" content="Admissions Guidance">
   <meta property="article:tag" content="Free Demo Class Booking">
+  <meta property="article:publisher" content="<?php echo htmlspecialchars(rtrim($base_domain_url, '/')); ?>">
+  <?php endif; ?>
+  <?php if ($active_page_name === 'toppers'): ?>
+  <meta property="article:section" content="Academic Toppers &amp; Merit Scholars">
+  <meta property="article:tag" content="KSV Academy Toppers">
+  <meta property="article:tag" content="Board Exam Merit Rankers Ulwe">
+  <meta property="article:tag" content="HSC Science Toppers Ulwe Sector 19">
+  <meta property="article:tag" content="CBSE 10th 12th Distinction Scorers">
+  <meta property="article:tag" content="NEET Medical Top Rankers">
+  <meta property="article:tag" content="IIT-JEE Achievers Ulwe Navi Mumbai">
   <meta property="article:publisher" content="<?php echo htmlspecialchars(rtrim($base_domain_url, '/')); ?>">
   <?php endif; ?>
 
@@ -461,6 +472,111 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
         }
       }
       <?php endif; ?>
+      <?php if ($active_page_name === 'toppers'): 
+        $schema_toppers = function_exists('get_active_toppers') ? get_active_toppers() : [];
+      ?>
+      ,{
+        "@type": "CollectionPage",
+        "@id": "<?php echo htmlspecialchars($current_canonical); ?>#webpage",
+        "url": "<?php echo htmlspecialchars($current_canonical); ?>",
+        "name": <?php echo json_encode($page_title, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>,
+        "description": <?php echo json_encode($page_description, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP); ?>,
+        "inLanguage": "en-IN",
+        "isPartOf": {
+          "@id": "https://ksvacademy.org/#website"
+        },
+        "breadcrumb": {
+          "@id": "<?php echo htmlspecialchars($current_canonical); ?>#breadcrumb"
+        },
+        "about": {
+          "@id": "https://ksvacademy.org/#organization"
+        }
+      },
+      {
+        "@type": "ItemList",
+        "@id": "https://ksvacademy.org/toppers#topperslist",
+        "name": "KSV Academy Academic Toppers & Merit Scholars Hall of Fame",
+        "description": "Outstanding academic board and competitive entrance toppers across Science, Commerce, and Medical streams at KSV Academy Ulwe.",
+        "itemListElement": [
+          <?php
+          $topper_nodes = [];
+          $t_pos = 1;
+          foreach ($schema_toppers as $st):
+            $raw_t_img = !empty($st['image']) ? $st['image'] : 'assets/imgs/ksv-logo.jpg';
+            if (!preg_match('#^https?://#i', $raw_t_img)) {
+              $raw_t_img = rtrim($base_domain_url, '/') . '/' . ltrim($raw_t_img, '/');
+            }
+            $t_pct = trim($st['percentage'] ?? '');
+            $t_score_str = (strpos($t_pct, '%') !== false) ? $t_pct : ($t_pct . '%');
+            $t_award = (!empty($st['rank_title']) ? $st['rank_title'] . ' - ' : '') . $t_score_str . ' in ' . ($st['year_or_batch'] ?: 'Board Exams');
+            $t_node = [
+              "@type" => "Person",
+              "position" => $t_pos,
+              "name" => $st['name'],
+              "image" => $raw_t_img,
+              "description" => !empty($st['description']) ? $st['description'] : ($st['name'] . ' scored ' . $t_score_str . ' in ' . $st['subject'] . ' at KSV Academy Ulwe.'),
+              "award" => $t_award,
+              "knowsAbout" => $st['subject'],
+              "alumniOf" => [
+                "@type" => "EducationalOrganization",
+                "name" => SITE_NAME,
+                "url" => "https://ksvacademy.org"
+              ]
+            ];
+            $topper_nodes[] = json_encode($t_node, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP);
+            $t_pos++;
+          endforeach;
+          echo implode(",\n          ", $topper_nodes);
+          ?>
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://ksvacademy.org/toppers#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is the highest score achieved by KSV Academy students?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The highest score achieved by KSV Academy students is 98.8% in Maharashtra State Board HSC Science exams, alongside a 100% board examination pass rate across all batches."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which boards and competitive entrance exams do KSV Academy toppers belong to?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "KSV Academy toppers represent Maharashtra State Board (HSC Science & Commerce, SSC 10th), CBSE Board (Classes 8th to 12th), ICSE, and competitive entrances including NEET-UG Medical and IIT-JEE Main."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does KSV Academy mentor students to produce top rankers in Ulwe?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "KSV Academy produces consistent top rankers through small batches capped at 25 students, concept-first teaching by senior mentors Mr. Salam Khan and Mr. Rameshwar Mishra, weekly subjective Prelim Test Series, and dedicated daily 1-on-1 doubt clearance."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Are merit scholarships available for students aiming to become toppers?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, KSV Academy offers up to 60% merit scholarships based on the KSV Diagnostic cum Scholarship Aptitude Test or previous academic board scores (85%+ earns direct fee concessions)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How can I attend demo classes at KSV Academy?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Students can attend a 3-Days Free Demo Class with zero upfront fees or commitments by registering on our website (ksvacademy.org) or contacting our Ulwe Sector 19 center directly."
+            }
+          }
+        ]
+      }
+      <?php endif; ?>
     ]
   }
   </script>
@@ -543,6 +659,14 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
           <li class="nav-item">
             <a href="<?php echo url('about'); ?>" class="nav-link <?php echo is_active('about'); ?>">
               <span>About Us</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="<?php echo url('toppers'); ?>" class="nav-link <?php echo is_active('toppers'); ?>">
+              <span class="nav-topper-wrap">
+                <span>Toppers</span>
+                <span class="nav-topper-badge"><i class="fa-solid fa-crown"></i></span>
+              </span>
             </a>
           </li>
           <li class="nav-item has-dropdown">
@@ -660,6 +784,15 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
       <ul class="drawer-menu-list">
         <li><a href="<?php echo url(); ?>" class="<?php echo is_active('home'); ?>"><i class="fa-solid fa-house"></i> Home</a></li>
         <li><a href="<?php echo url('about'); ?>" class="<?php echo is_active('about'); ?>"><i class="fa-solid fa-circle-info"></i> About Us</a></li>
+        <li>
+          <a href="<?php echo url('toppers'); ?>" class="<?php echo is_active('toppers'); ?>">
+            <i class="fa-solid fa-trophy"></i>
+            <span class="nav-topper-wrap">
+              <span>Academic Toppers</span>
+              <span class="nav-topper-badge"><i class="fa-solid fa-crown"></i></span>
+            </span>
+          </a>
+        </li>
         <li class="drawer-item-dropdown">
           <a href="<?php echo url('courses'); ?>" class="<?php echo is_active('courses'); ?>"><i class="fa-solid fa-book-open"></i> Courses &amp; Batches</a>
           <div class="drawer-sub-links">
@@ -689,10 +822,10 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
       </ul>
 
       <div class="drawer-cta-section">
-        <button type="button" class="btn btn-outline-primary btn-block mb-2" data-modal="demoModal">
+        <button type="button" class="btn btn-outline-primary btn-block" data-modal="demoModal">
           <i class="fa-solid fa-calendar-check"></i> Book 3-Days Free Demo
         </button>
-        <a href="<?php echo url('admissions'); ?>" class="btn btn-primary btn-block mb-3">
+        <a href="<?php echo url('admissions'); ?>" class="btn btn-primary btn-block">
           <i class="fa-solid fa-user-plus"></i> Online Admission Form
         </a>
         <div class="drawer-contact-card">

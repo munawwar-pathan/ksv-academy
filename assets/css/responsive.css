@@ -1447,6 +1447,7 @@ img, svg, video {
   transition: all 0.15s ease !important;
 }
 
+.drawer-menu-list a > i:first-child,
 .drawer-menu-list a i:first-child {
   width: 20px;
   text-align: center;
@@ -1455,9 +1456,19 @@ img, svg, video {
   flex-shrink: 0;
 }
 
+[data-theme="dark"] .drawer-menu-list a > i:first-child,
+[data-theme="dark"] .drawer-menu-list a i:first-child {
+  color: var(--primary-400, #38bdf8);
+}
+
 .drawer-menu-list a:hover {
   background: var(--bg-surface-soft, #f8fafc) !important;
   color: var(--primary-600, #0092df) !important;
+}
+
+.drawer-menu-list a:hover > i:first-child,
+.drawer-menu-list a:hover i:first-child {
+  color: var(--primary-600, #0092df);
 }
 
 .drawer-menu-list a.active {
@@ -1465,6 +1476,46 @@ img, svg, video {
   color: var(--primary-600, #0092df) !important;
   font-weight: 700 !important;
   border-left: 3px solid var(--primary-600, #0092df) !important;
+}
+
+.drawer-menu-list a.active > i:first-child,
+.drawer-menu-list a.active i:first-child {
+  color: var(--primary-600, #0092df);
+}
+
+[data-theme="dark"] .drawer-menu-list a.active > i:first-child,
+[data-theme="dark"] .drawer-menu-list a.active i:first-child {
+  color: var(--primary-300, #7dd3fc);
+}
+
+/* Crown badge in mobile drawer */
+.drawer-menu-list .nav-topper-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.drawer-menu-list .nav-topper-badge {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b !important;
+  font-size: 0.72rem !important;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.45));
+  animation: pulse-topper-badge 2.5s infinite ease-in-out;
+}
+
+.drawer-menu-list .nav-topper-badge i {
+  color: #f59e0b !important;
+  font-size: 0.72rem !important;
+  width: auto !important;
+  text-align: center;
+  display: inline-block;
 }
 
 /* Sleek Courses Sub-Links in Drawer (Overrides bulky pills) */
@@ -1577,6 +1628,23 @@ img, svg, video {
   border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+/* Drawer CTA Action Buttons & Spacing (Mobile Responsive View) */
+.drawer-cta-section {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  margin-top: 6px !important;
+}
+
+.drawer-cta-section .btn {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+.drawer-cta-section .drawer-contact-card {
+  margin-top: 2px !important;
 }
 
 /* Keyframes for Mobile Top Bar Announcement Marquee */

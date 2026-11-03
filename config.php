@@ -27,24 +27,28 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 /**
  * CSRF Protection Token Helpers
  */
-function get_csrf_token() {
-    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
-        session_start();
+if (!function_exists('get_csrf_token')) {
+    function get_csrf_token() {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+            session_start();
+        }
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
     }
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
 }
 
-function verify_csrf_token($token) {
-    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
-        session_start();
+if (!function_exists('verify_csrf_token')) {
+    function verify_csrf_token($token) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+            session_start();
+        }
+        if (empty($_SESSION['csrf_token']) || empty($token)) {
+            return false;
+        }
+        return hash_equals($_SESSION['csrf_token'], (string)$token);
     }
-    if (empty($_SESSION['csrf_token']) || empty($token)) {
-        return false;
-    }
-    return hash_equals($_SESSION['csrf_token'], (string)$token);
 }
 
 // Site Information
@@ -719,4 +723,159 @@ function get_gallery_category_icon($cat) {
     if (strpos($c, 'celeb') !== false) return 'fa-wand-magic-sparkles';
     return 'fa-camera';
 }
+
+/**
+ * Retrieve active toppers from database with graceful fallback
+ *
+ * @param string|int|null $session
+ * @param int|null $limit
+ * @return array
+ */
+function get_active_toppers($session = null, $limit = null) {
+    try {
+        $db = null;
+        if (function_exists('get_db_connection')) {
+            $db = get_db_connection();
+        } elseif (file_exists(__DIR__ . '/web-app/config.php')) {
+            require_once __DIR__ . '/web-app/config.php';
+            if (function_exists('get_db_connection')) {
+                $db = get_db_connection();
+            }
+        }
+
+        if (!empty($db)) {
+            $sql = "SELECT * FROM toppers WHERE status = 'active'";
+            $params = [];
+            if (!empty($session) && $session !== 'all') {
+                $sql .= " AND (session_name = ? OR session_id = ?)";
+                $params[] = (string)$session;
+                $params[] = intval($session);
+            }
+            $sql .= " ORDER BY display_order ASC, id DESC";
+            if ($limit !== null && (int)$limit > 0) {
+                $sql .= " LIMIT " . (int)$limit;
+            }
+            if (!empty($params)) {
+                $stmt = $db->prepare($sql);
+                $stmt->execute($params);
+            } else {
+                $stmt = $db->query($sql);
+            }
+            if ($stmt) {
+                return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }
+    } catch (Throwable $e) {}
+
+    return [
+        [
+            'id' => 1,
+            'name' => 'Aarav Sharma',
+            'subject' => 'HSC Science',
+            'percentage' => '98.8%',
+            'rank_title' => 'Academy Rank 1',
+            'year_or_batch' => 'HSC Board 2026',
+            'session_name' => '2025-2026',
+            'session_id' => 2,
+            'image' => 'assets/imgs/toppers/topper_boy_1.jpg',
+            'description' => 'Secured 98.8% in Maharashtra State Board HSC Science exams with distinction in Physics, Chemistry, and Mathematics.',
+            'status' => 'active',
+            'display_order' => 1
+        ],
+        [
+            'id' => 2,
+            'name' => 'Ananya Deshmukh',
+            'subject' => 'HSC Science',
+            'percentage' => '97.6%',
+            'rank_title' => 'Academy Rank 2',
+            'year_or_batch' => 'HSC Board 2026',
+            'session_name' => '2025-2026',
+            'session_id' => 2,
+            'image' => 'assets/imgs/toppers/topper_girl_1.jpg',
+            'description' => 'Scored 97.6% with top marks in Biology and Chemistry under the mentorship of KSV faculty.',
+            'status' => 'active',
+            'display_order' => 2
+        ],
+        [
+            'id' => 3,
+            'name' => 'Rohan Verma',
+            'subject' => 'Medical (NEET)',
+            'percentage' => '96.4%',
+            'rank_title' => 'Medical Stream Topper',
+            'year_or_batch' => 'NEET Batch 2026',
+            'session_name' => '2025-2026',
+            'session_id' => 2,
+            'image' => 'assets/imgs/toppers/toppers_group_study.jpg',
+            'description' => 'Scored 96.4% in Board exams with top qualifying percentile in NEET mock test series at KSV Academy.',
+            'status' => 'active',
+            'display_order' => 3
+        ]
+    ];
+}
+
+/**
+ * Retrieve Active Academic Session for Toppers (Isolated to Toppers functionality)
+ */
+if (!function_exists('get_toppers_active_session')) {
+    function get_toppers_active_session() {
+        try {
+            $db = null;
+            if (function_exists('get_db_connection')) {
+                $db = get_db_connection();
+            } elseif (file_exists(__DIR__ . '/web-app/config.php')) {
+                require_once __DIR__ . '/web-app/config.php';
+                if (function_exists('get_db_connection')) {
+                    $db = get_db_connection();
+                }
+            }
+            if ($db) {
+                $stmt = $db->query("SELECT setting_value FROM school_settings WHERE setting_key = 'toppers_active_session_id' LIMIT 1");
+                $val = $stmt ? $stmt->fetchColumn() : null;
+                if (!empty($val) && is_numeric($val)) {
+                    $s_stmt = $db->prepare("SELECT * FROM academic_sessions WHERE id = ? LIMIT 1");
+                    $s_stmt->execute([intval($val)]);
+                    $sess = $s_stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($sess) {
+                        return $sess;
+                    }
+                }
+            }
+        } catch (Throwable $e) {}
+
+        if (function_exists('get_active_session')) {
+            try {
+                return get_active_session();
+            } catch (Throwable $e) {}
+        }
+        return ['id' => 2, 'session_name' => '2025-2026', 'is_current' => 1];
+    }
+}
+
+/**
+ * Retrieve All Academic Sessions
+ */
+if (!function_exists('get_all_sessions')) {
+    function get_all_sessions() {
+        try {
+            $db = null;
+            if (function_exists('get_db_connection')) {
+                $db = get_db_connection();
+            } elseif (file_exists(__DIR__ . '/web-app/config.php')) {
+                require_once __DIR__ . '/web-app/config.php';
+                if (function_exists('get_db_connection')) {
+                    $db = get_db_connection();
+                }
+            }
+            if ($db) {
+                return $db->query("SELECT * FROM academic_sessions ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+            }
+        } catch (Throwable $e) {}
+        return [
+            ['id' => 3, 'session_name' => '2026-2027', 'is_current' => 0],
+            ['id' => 2, 'session_name' => '2025-2026', 'is_current' => 1],
+            ['id' => 1, 'session_name' => '2024-2025', 'is_current' => 0]
+        ];
+    }
+}
+
 

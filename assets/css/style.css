@@ -690,6 +690,39 @@ button, input, select, textarea {
   margin-left: 2px;
 }
 
+/* Nav Toppers Highlight Crown */
+.nav-topper-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-topper-badge {
+  position: absolute;
+  top: -7px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+  font-size: 0.72rem;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.45));
+  animation: pulse-topper-badge 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-topper-badge {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.45));
+  }
+  50% {
+    transform: scale(1.18) rotate(-8deg);
+    filter: drop-shadow(0 2px 6px rgba(245, 158, 11, 0.75));
+  }
+}
+
 /* ==========================================================================
    Courses Dropdown Submenu - Simple, Sober & Functional
    ========================================================================== */
@@ -1264,8 +1297,25 @@ button, input, select, textarea {
   transition: all var(--transition-fast);
 }
 
+.drawer-menu-list a > i:first-child {
+  width: 20px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--primary-600);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+[data-theme="dark"] .drawer-menu-list a > i:first-child {
+  color: var(--primary-400);
+}
+
 .drawer-menu-list a:hover {
   background-color: var(--bg-surface-soft);
+  color: var(--primary-600);
+}
+
+.drawer-menu-list a:hover > i:first-child {
   color: var(--primary-600);
 }
 
@@ -1277,10 +1327,60 @@ button, input, select, textarea {
   padding-left: 12px;
 }
 
+.drawer-menu-list a.active > i:first-child {
+  color: var(--primary-600);
+}
+
 [data-theme="dark"] .drawer-menu-list a.active {
   background: linear-gradient(90deg, rgba(30, 162, 212, 0.18), rgba(30, 162, 212, 0.04));
   color: var(--primary-300);
   border-left-color: var(--primary-400);
+}
+
+[data-theme="dark"] .drawer-menu-list a.active > i:first-child {
+  color: var(--primary-300);
+}
+
+/* Crown badge in mobile drawer (matches desktop) */
+.drawer-menu-list .nav-topper-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.drawer-menu-list .nav-topper-badge {
+  position: absolute;
+  top: -7px;
+  right: -8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b !important;
+  font-size: 0.72rem !important;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(245, 158, 11, 0.45));
+  animation: pulse-topper-badge 2.5s infinite ease-in-out;
+}
+
+.drawer-menu-list .nav-topper-badge i {
+  color: #f59e0b !important;
+  font-size: 0.72rem !important;
+  width: auto !important;
+  text-align: center;
+  display: inline-block;
+}
+
+.drawer-cta-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.drawer-cta-section .btn {
+  margin: 0;
+  width: 100%;
 }
 
 .drawer-contact-card {
@@ -2047,7 +2147,8 @@ button, input, select, textarea {
 /* ==========================================================================
    8. Four Pillars / Why Choose KSV Academy (Khan Global Studies Model)
    ========================================================================== */
-.features-grid {
+.features-grid,
+.faculty-methodology-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
@@ -8464,6 +8565,7 @@ textarea.form-control {
   }
 
   .features-grid,
+  .faculty-methodology-grid,
   .admission-steps-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -8558,6 +8660,7 @@ textarea.form-control {
   }
 
   .features-grid,
+  .faculty-methodology-grid,
   .admission-steps-grid,
   .courses-grid,
   .faculty-grid,
@@ -9955,6 +10058,11 @@ textarea.form-control {
   margin-bottom: 4px;
 }
 
+.ksat-step-body {
+  display: flex;
+  flex-direction: column;
+}
+
 .ksat-step-title {
   font-size: 0.90rem;
   font-weight: 700;
@@ -10210,15 +10318,73 @@ textarea.form-control {
 
   .ksat-grid {
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: 28px;
   }
 
   .ksat-banner-card {
-    padding: 32px 24px;
+    padding: 34px 26px;
+    border-radius: 24px;
   }
 
   .ksat-title {
-    font-size: 1.85rem;
+    font-size: 1.95rem;
+  }
+
+  .ksat-title-br {
+    display: none;
+  }
+
+  .ksat-title .highlight-gold {
+    display: block;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .scholarship-drive-section {
+    padding: 44px 0 !important;
+  }
+
+  .ksat-banner-card {
+    padding: 28px 20px;
+    border-radius: 22px;
+  }
+
+  .ksat-title {
+    font-size: 1.68rem;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+
+  .ksat-desc {
+    font-size: 0.90rem;
+    line-height: 1.55;
+    margin-bottom: 22px;
+    max-width: 100%;
+  }
+
+  .ksat-grid {
+    gap: 24px;
+  }
+
+  .ksat-info-card {
+    padding: 22px 18px;
+    border-radius: 18px;
+  }
+
+  .ksat-info-title {
+    font-size: 1.10rem;
+    margin-bottom: 16px;
+  }
+
+  .ksat-details-list {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .ksat-detail-row {
+    font-size: 0.85rem;
+    gap: 12px;
   }
 }
 
@@ -10275,8 +10441,210 @@ textarea.form-control {
     margin-top: 16px;
   }
 
+  .scholarship-drive-section {
+    padding: 34px 0 !important;
+  }
+
+  .ksat-banner-card {
+    padding: 22px 16px;
+    border-radius: 18px;
+  }
+
+  .ksat-bg-glow {
+    width: 240px;
+    height: 240px;
+    top: -15%;
+    right: -20%;
+  }
+
+  .ksat-badge-hot {
+    font-size: 0.70rem;
+    padding: 5px 12px;
+    margin-bottom: 12px;
+    letter-spacing: 0.03em;
+    line-height: 1.3;
+    white-space: normal;
+  }
+
+  .ksat-title {
+    font-size: 1.48rem;
+    line-height: 1.22;
+    margin-bottom: 10px;
+  }
+
+  .ksat-title .highlight-gold {
+    font-size: 1.34rem;
+    display: block;
+    margin-top: 3px;
+  }
+
+  .ksat-desc {
+    font-size: 0.86rem;
+    line-height: 1.5;
+    margin-bottom: 18px;
+    color: #cbd5e1;
+  }
+
   .ksat-steps-row {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-bottom: 20px;
+  }
+
+  .ksat-step-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .ksat-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.70rem;
+    font-weight: 800;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+  }
+
+  .ksat-step-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ksat-step-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+    line-height: 1.25;
+  }
+
+  .ksat-step-sub {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .ksat-info-card {
+    padding: 18px 14px;
+    border-radius: 16px;
+    background: rgba(2, 24, 36, 0.85);
+    border-color: rgba(56, 189, 248, 0.2);
+  }
+
+  .ksat-info-title {
+    font-size: 1.0rem;
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+
+  .ksat-details-list {
+    gap: 11px;
+    margin-bottom: 18px;
+  }
+
+  .ksat-detail-row {
+    font-size: 0.82rem;
+    gap: 10px;
+    line-height: 1.35;
+  }
+
+  .ksat-detail-row i {
+    font-size: 0.90rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .ksat-detail-row strong {
+    font-size: 0.82rem;
+    color: #f8fafc;
+  }
+
+  .ksat-detail-row span {
+    font-size: 0.78rem;
+    color: #cbd5e1;
+  }
+
+  .ksat-btn-actions {
+    gap: 8px;
+  }
+
+  .ksat-btn-actions .btn {
+    padding: 11px 14px;
+    font-size: 0.84rem;
+    min-height: 44px;
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .scholarship-drive-section {
+    padding: 26px 0 !important;
+  }
+
+  .ksat-banner-card {
+    padding: 16px 12px;
+    border-radius: 16px;
+  }
+
+  .ksat-badge-hot {
+    font-size: 0.66rem;
+    padding: 4px 9px;
+  }
+
+  .ksat-title {
+    font-size: 1.32rem;
+  }
+
+  .ksat-title .highlight-gold {
+    font-size: 1.20rem;
+  }
+
+  .ksat-desc {
+    font-size: 0.82rem;
+  }
+
+  .ksat-step-item {
+    gap: 9px;
+    padding: 8px 10px;
+  }
+
+  .ksat-step-num {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+  }
+
+  .ksat-step-title {
+    font-size: 0.82rem;
+  }
+
+  .ksat-step-sub {
+    font-size: 0.68rem;
+  }
+
+  .ksat-info-card {
+    padding: 14px 10px;
+  }
+
+  .ksat-btn-actions .btn {
+    font-size: 0.78rem;
+    padding: 10px 8px;
   }
 }
 

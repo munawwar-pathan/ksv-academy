@@ -1155,7 +1155,7 @@ require_once __DIR__ . '/includes/header.php';
             <i class="fa-solid fa-bolt"></i> Academic Session 2026–27 Scholarship Drive
           </span>
           <h2 class="ksat-title">
-            KSV Talent &amp; Scholarship Test <br>
+            KSV Talent &amp; Scholarship Test <br class="ksat-title-br">
             <span class="highlight-gold">Win Up to 60% Merit Scholarship</span>
           </h2>
           <p class="ksat-desc">
@@ -1166,18 +1166,24 @@ require_once __DIR__ . '/includes/header.php';
           <div class="ksat-steps-row">
             <div class="ksat-step-item">
               <div class="ksat-step-num">STEP 01</div>
-              <div class="ksat-step-title">Register Online</div>
-              <p class="ksat-step-sub">100% Free • No registration fees required</p>
+              <div class="ksat-step-body">
+                <div class="ksat-step-title">Register Online</div>
+                <p class="ksat-step-sub">100% Free • No registration fees required</p>
+              </div>
             </div>
             <div class="ksat-step-item">
               <div class="ksat-step-num">STEP 02</div>
-              <div class="ksat-step-title">Take 45-Min Test</div>
-              <p class="ksat-step-sub">Sunday slots at Ulwe Sector 19 center</p>
+              <div class="ksat-step-body">
+                <div class="ksat-step-title">Take 45-Min Test</div>
+                <p class="ksat-step-sub">Sunday slots at Ulwe Sector 19 center</p>
+              </div>
             </div>
             <div class="ksat-step-item">
               <div class="ksat-step-num">STEP 03</div>
-              <div class="ksat-step-title">Claim Fee Waiver</div>
-              <p class="ksat-step-sub">Instant merit-based concession up to 60%</p>
+              <div class="ksat-step-body">
+                <div class="ksat-step-title">Claim Fee Waiver</div>
+                <p class="ksat-step-sub">Instant merit-based concession up to 60%</p>
+              </div>
             </div>
           </div>
         </div>

@@ -131,6 +131,12 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
               <span>Report Card</span>
             </a>
           </li>
+          <li class="sidebar-menu-item <?php echo $active_menu === 'toppers' ? 'active' : ''; ?>">
+            <a href="<?php echo ADMIN_URL; ?>/toppers">
+              <i class="fa-solid fa-trophy"></i>
+              <span>Toppers</span>
+            </a>
+          </li>
         </ul>
 
         <div class="nav-section-title">Staff &amp; Human Resources</div>
@@ -552,7 +558,8 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
         <div class="header-session-picker">
           <i class="fa-solid fa-calendar-week session-icon"></i>
           <span class="session-label">Session:</span>
-          <select id="sessionSwitcher" class="session-select" onchange="if(this.value) window.location.href='?switch_session=' + this.value">
+          <?php $sess_param = $session_switch_param ?? 'switch_session'; ?>
+          <select id="sessionSwitcher" class="session-select" onchange="if(this.value) window.location.href='?<?php echo $sess_param; ?>=' + this.value">
             <?php foreach ($all_sessions as $sess_item): ?>
               <option value="<?php echo $sess_item['id']; ?>" <?php echo $sess_item['id'] == $active_session['id'] ? 'selected' : ''; ?>>
                 <?php echo htmlspecialchars($sess_item['session_name']); ?><?php echo $sess_item['is_current'] ? ' (Active)' : ''; ?>

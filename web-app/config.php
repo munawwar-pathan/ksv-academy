@@ -1229,43 +1229,49 @@ function get_dashboard_url($role, $user_id = null) {
 /**
  * Academic Session Management
  */
-function get_all_sessions() {
-    try {
-        $db = get_db_connection();
-        return $db->query("SELECT * FROM academic_sessions ORDER BY id DESC")->fetchAll();
-    } catch (Exception $e) {
-        return [];
+if (!function_exists('get_all_sessions')) {
+    function get_all_sessions() {
+        try {
+            $db = get_db_connection();
+            return $db->query("SELECT * FROM academic_sessions ORDER BY id DESC")->fetchAll();
+        } catch (Exception $e) {
+            return [];
+        }
     }
 }
 
-function get_active_session() {
-    $db = get_db_connection();
-    
-    // Check if user manually switched session in session store
-    if (!empty($_SESSION['active_session_id'])) {
-        $stmt = $db->prepare("SELECT * FROM academic_sessions WHERE id = ? LIMIT 1");
-        $stmt->execute([$_SESSION['active_session_id']]);
-        $sess = $stmt->fetch();
-        if ($sess) {
-            return $sess;
-        }
-    }
+if (!function_exists('get_active_session')) {
+    function get_active_session() {
+        try {
+            $db = get_db_connection();
+            
+            // Check if user manually switched session in session store
+            if (!empty($_SESSION['active_session_id'])) {
+                $stmt = $db->prepare("SELECT * FROM academic_sessions WHERE id = ? LIMIT 1");
+                $stmt->execute([$_SESSION['active_session_id']]);
+                $sess = $stmt->fetch();
+                if ($sess) {
+                    return $sess;
+                }
+            }
 
-    // Default to current academic session
-    $stmt = $db->query("SELECT * FROM academic_sessions WHERE is_current = 1 LIMIT 1");
-    $sess = $stmt->fetch();
-    if (!$sess) {
-        // Fallback to highest ID
-        $sess = $db->query("SELECT * FROM academic_sessions ORDER BY id DESC LIMIT 1")->fetch();
-    }
+            // Default to current academic session
+            $stmt = $db->query("SELECT * FROM academic_sessions WHERE is_current = 1 LIMIT 1");
+            $sess = $stmt->fetch();
+            if (!$sess) {
+                // Fallback to highest ID
+                $sess = $db->query("SELECT * FROM academic_sessions ORDER BY id DESC LIMIT 1")->fetch();
+            }
 
-    if ($sess) {
-        $_SESSION['active_session_id'] = $sess['id'];
-        return $sess;
-    }
+            if ($sess) {
+                $_SESSION['active_session_id'] = $sess['id'];
+                return $sess;
+            }
+        } catch (Throwable $e) {}
 
-    // Default fallback object
-    return ['id' => 1, 'session_name' => '2025-2026', 'is_current' => 1];
+        // Default fallback object
+        return ['id' => 1, 'session_name' => '2025-2026', 'is_current' => 1];
+    }
 }
 
 // Global handle session switch GET trigger (e.g. ?switch_session=2)
@@ -1335,6 +1341,30 @@ function get_school_settings() {
 function get_school_setting($key, $default = '') {
     $all = get_school_settings();
     return $all[$key] ?? $default;
+}
+
+/**
+ * Retrieve Active Academic Session for Toppers (Isolated to Toppers functionality)
+ */
+if (!function_exists('get_toppers_active_session')) {
+    function get_toppers_active_session() {
+        try {
+            $db = get_db_connection();
+            $stmt = $db->query("SELECT setting_value FROM school_settings WHERE setting_key = 'toppers_active_session_id' LIMIT 1");
+            $topper_sess_id = $stmt ? $stmt->fetchColumn() : null;
+            if (!empty($topper_sess_id) && is_numeric($topper_sess_id)) {
+                $stmt = $db->prepare("SELECT * FROM academic_sessions WHERE id = ? LIMIT 1");
+                $stmt->execute([intval($topper_sess_id)]);
+                $sess = $stmt->fetch();
+                if ($sess) {
+                    return $sess;
+                }
+            }
+        } catch (Throwable $e) {}
+
+        // Fallback to global active session
+        return get_active_session();
+    }
 }
 
 /**
