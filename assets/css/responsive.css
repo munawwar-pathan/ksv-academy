@@ -581,8 +581,71 @@ img, svg, video {
     line-height: 1.4 !important;
   }
 
+  /* Sober Card Footer - Mobile Responsive Polish */
   .sober-card-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
     padding-top: 12px !important;
+  }
+
+  .sober-rating {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .sober-rating-top {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    white-space: nowrap !important;
+  }
+
+  .sober-stars {
+    font-size: 0.76rem !important;
+    gap: 1.5px !important;
+    display: inline-flex !important;
+  }
+
+  .sober-rating strong,
+  .sober-score {
+    font-size: 0.84rem !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+
+  .sober-rating span,
+  .sober-rating-reviews {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    color: var(--text-muted, #64748b) !important;
+    line-height: 1.2 !important;
+  }
+
+  .sober-location-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    white-space: nowrap !important;
+    font-size: 0.74rem !important;
+    font-weight: 600 !important;
+    color: var(--text-main, #1e293b) !important;
+    background: var(--bg-surface-soft, #f8fafc) !important;
+    padding: 5px 9px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border-subtle, #e2e8f0) !important;
+    flex-shrink: 0 !important;
+  }
+
+  [data-theme="dark"] .sober-location-tag {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
   }
 
   /* ── Pillars / Why Choose Section ── */
@@ -1356,6 +1419,27 @@ img, svg, video {
 
   .gallery-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .sober-stars {
+    font-size: 0.70rem !important;
+    gap: 1.5px !important;
+  }
+
+  .sober-rating strong,
+  .sober-score {
+    font-size: 0.80rem !important;
+  }
+
+  .sober-rating span,
+  .sober-rating-reviews {
+    font-size: 0.69rem !important;
+  }
+
+  .sober-location-tag {
+    font-size: 0.70rem !important;
+    padding: 4px 7px !important;
+    gap: 4px !important;
   }
 
   .director-sober-quote {

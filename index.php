@@ -189,15 +189,17 @@ require_once __DIR__ . '/includes/header.php';
         <!-- Reassurance Footer -->
         <div class="sober-card-footer">
           <div class="sober-rating">
-            <div class="sober-stars">
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
-              <i class="fa-solid fa-star"></i>
+            <div class="sober-rating-top">
+              <div class="sober-stars" aria-label="5 out of 5 stars">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+              </div>
+              <strong class="sober-score">4.9 / 5</strong>
             </div>
-            <strong>4.9 / 5</strong>
-            <span>Rating (150+ Reviews)</span>
+            <span class="sober-rating-reviews">Rating (150+ Reviews)</span>
           </div>
           <span class="sober-location-tag">
             <i class="fa-solid fa-location-dot"></i> Sector 19, Ulwe

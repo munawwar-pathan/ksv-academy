@@ -2012,12 +2012,21 @@ button, input, select, textarea {
   padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
   font-size: 0.82rem;
+  gap: 12px;
 }
 
 .sober-rating {
   display: flex;
   align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sober-rating-top {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .sober-stars {
@@ -2027,14 +2036,18 @@ button, input, select, textarea {
   gap: 2px;
 }
 
-.sober-rating strong {
+.sober-rating strong,
+.sober-score {
   font-weight: 800;
   color: var(--text-main);
+  white-space: nowrap;
 }
 
-.sober-rating span {
+.sober-rating span,
+.sober-rating-reviews {
   color: var(--text-muted);
   font-size: 0.78rem;
+  white-space: nowrap;
 }
 
 .sober-location-tag {
@@ -2044,6 +2057,8 @@ button, input, select, textarea {
   color: var(--text-muted);
   font-weight: 600;
   font-size: 0.78rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sober-location-tag i {
