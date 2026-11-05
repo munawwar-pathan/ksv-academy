@@ -1032,9 +1032,20 @@ function get_staff_permissions($user_or_staff_id, $db = null) {
         $db = get_db_connection();
     }
     try {
-        $stmt = $db->prepare("SELECT menu_permissions FROM staff_profiles WHERE user_id = ? OR id = ? LIMIT 1");
-        $stmt->execute([$user_or_staff_id, $user_or_staff_id]);
+        $uid = intval($user_or_staff_id);
+        // Prioritize user_id first (most common caller with $current_user['id'])
+        $stmt = $db->prepare("SELECT menu_permissions FROM staff_profiles WHERE user_id = ? LIMIT 1");
+        $stmt->execute([$uid]);
         $row = $stmt->fetch();
+        if (!$row || $row['menu_permissions'] === null) {
+            // Fallback by staff_profiles.id
+            $stmt2 = $db->prepare("SELECT menu_permissions FROM staff_profiles WHERE id = ? LIMIT 1");
+            $stmt2->execute([$uid]);
+            $row2 = $stmt2->fetch();
+            if ($row2 && $row2['menu_permissions'] !== null) {
+                $row = $row2;
+            }
+        }
         if ($row && !empty($row['menu_permissions'])) {
             $decoded = json_decode($row['menu_permissions'], true);
             if (is_array($decoded)) {
@@ -1107,6 +1118,8 @@ function has_menu_permission($menu_key, $user = null) {
             'expense-categories' => ['expense-categories', 'admin_expense_categories'],
             'admin_expense_report' => ['expense-report', 'admin_expense_report'],
             'expense-report' => ['expense-report', 'admin_expense_report'],
+            'announcements' => ['announcements', 'noticeboard'],
+            'noticeboard' => ['announcements', 'noticeboard'],
         ];
         if (isset($aliases[$menu_key])) {
             foreach ($aliases[$menu_key] as $alias) {

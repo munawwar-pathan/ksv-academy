@@ -133,16 +133,28 @@ $process_topper_image_upload = function($file_field) use ($toppers_fs_dir) {
         return ['path' => '', 'error' => ''];
     }
     if ($_FILES[$file_field]['error'] !== UPLOAD_ERR_OK) {
-        return ['path' => '', 'error' => 'Upload failed with error code: ' . intval($_FILES[$file_field]['error'])];
+        $err_code = $_FILES[$file_field]['error'];
+        $max_ini = ini_get('upload_max_filesize') ?: '64M';
+        $err_messages = [
+            UPLOAD_ERR_INI_SIZE   => "The uploaded image exceeds the server's upload limit ({$max_ini}). Please upload an image under {$max_ini} or compress it.",
+            UPLOAD_ERR_FORM_SIZE  => "The uploaded image exceeds the form's maximum file size limit.",
+            UPLOAD_ERR_PARTIAL    => "The image file was only partially uploaded. Please try uploading again.",
+            UPLOAD_ERR_NO_FILE    => "No file was uploaded.",
+            UPLOAD_ERR_NO_TMP_DIR => "Server configuration issue: Missing temporary upload folder.",
+            UPLOAD_ERR_CANT_WRITE => "Server write failure: Unable to write uploaded image to disk.",
+            UPLOAD_ERR_EXTENSION  => "A server PHP extension stopped the file upload.",
+        ];
+        $err_msg = $err_messages[$err_code] ?? ('Upload failed with error code: ' . intval($err_code));
+        return ['path' => '', 'error' => $err_msg];
     }
 
     $p_name = $_FILES[$file_field]['name'];
     $p_tmp = $_FILES[$file_field]['tmp_name'];
     $p_size = $_FILES[$file_field]['size'];
 
-    // 10MB maximum file size
-    if ($p_size > 10 * 1024 * 1024) {
-        return ['path' => '', 'error' => 'Uploaded file exceeds the maximum allowed size of 10MB.'];
+    // 25MB maximum file size
+    if ($p_size > 25 * 1024 * 1024) {
+        return ['path' => '', 'error' => 'Uploaded file exceeds the maximum allowed size of 25MB.'];
     }
     if (!is_uploaded_file($p_tmp)) {
         return ['path' => '', 'error' => 'Invalid file upload source.'];

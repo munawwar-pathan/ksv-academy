@@ -227,29 +227,76 @@ if ($selected_id > 0) {
         $stmt = $db->prepare("SELECT * FROM students WHERE id = ? AND session_id = ? LIMIT 1");
         $stmt->execute([$selected_id, $session_id]);
         $student = $stmt->fetch();
+        if (!$student) {
+            $stmt = $db->prepare("SELECT * FROM students WHERE id = ? LIMIT 1");
+            $stmt->execute([$selected_id]);
+            $student = $stmt->fetch();
+        }
     }
     if (!$student) {
         $selected_id = 0;
     }
 }
 
-// Check student photo with directory traversal protection
-$has_student_photo = false;
-$student_photo_url = '';
-$allowed_base_uploads = ($p = realpath(__DIR__ . '/../../uploads')) ? rtrim($p, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : false;
-$allowed_base_assets = ($p = realpath(__DIR__ . '/../../assets')) ? rtrim($p, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : false;
+/**
+ * Safely resolves and validates a student profile photo path.
+ * Supports /web-app/uploads/students/, /uploads/students/, /assets/imgs/students/ etc.
+ * Excludes default placeholder logos (/assets/imgs/ksv-logo.jpg).
+ * Protects against path traversal attacks.
+ *
+ * @param string|null $photo_path
+ * @return string|false Web-accessible URL or false if invalid/not found
+ */
+if (!function_exists('resolve_student_photo_url')) {
+    function resolve_student_photo_url($photo_path) {
+        if (empty($photo_path) || !is_string($photo_path)) {
+            return false;
+        }
+        $trimmed = trim($photo_path);
+        // Exclude generic placeholder logo
+        if ($trimmed === '/assets/imgs/ksv-logo.jpg' || $trimmed === 'assets/imgs/ksv-logo.jpg') {
+            return false;
+        }
 
-if ($student && !empty($student['photo']) && $student['photo'] !== '/assets/imgs/ksv-logo.jpg') {
-    $photo_rel = ltrim($student['photo'], '/\\');
-    $photo_file = realpath(__DIR__ . '/../../' . $photo_rel);
-    if ($photo_file && (
-        ($allowed_base_uploads && strpos($photo_file, $allowed_base_uploads) === 0) ||
-        ($allowed_base_assets && strpos($photo_file, $allowed_base_assets) === 0)
-    ) && file_exists($photo_file)) {
-        $has_student_photo = true;
-        $student_photo_url = '/' . $photo_rel;
+        $clean_rel = ltrim($trimmed, '/\\');
+        
+        // Allowed safe directory bases on disk
+        $allowed_bases = array_filter([
+            realpath(__DIR__ . '/../uploads'),
+            realpath(__DIR__ . '/../../uploads'),
+            realpath(__DIR__ . '/../../assets'),
+            realpath(__DIR__ . '/../assets')
+        ]);
+
+        // Candidate paths to check on disk
+        $candidates = [
+            realpath(__DIR__ . '/../../' . $clean_rel),
+            realpath(__DIR__ . '/../' . $clean_rel),
+            realpath(__DIR__ . '/../../web-app/' . $clean_rel)
+        ];
+
+        foreach ($candidates as $cand) {
+            if ($cand && file_exists($cand) && is_file($cand)) {
+                foreach ($allowed_bases as $base) {
+                    $base_prefix = rtrim($base, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+                    if (strpos($cand, $base_prefix) === 0) {
+                        $root_path = realpath(__DIR__ . '/../..');
+                        if ($root_path && strpos($cand, $root_path) === 0) {
+                            $web_rel = substr($cand, strlen($root_path));
+                            return '/' . ltrim(str_replace('\\', '/', $web_rel), '/');
+                        }
+                        return '/' . $clean_rel;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
+
+// Check student photo with directory traversal protection
+$student_photo_url = resolve_student_photo_url($student['photo'] ?? null);
+$has_student_photo = !empty($student_photo_url);
 
 // Generate sanitized QR Code data string (STU-{id}-{roll_no})
 $raw_qr = $student ? ($student['qr_code'] ?: ('STU-' . $student['roll_no'])) : 'KSV-STUDENT';
@@ -1665,13 +1712,26 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <h3 style="margin: 0; font-size: 1.08rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 8px;">
         <i class="fa-solid fa-id-card" style="color: var(--hrms-primary);"></i>
         <span><?php echo htmlspecialchars($student['student_name'] ?? 'Student', ENT_QUOTES, 'UTF-8'); ?></span>
-        <span style="font-size: 0.78rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+        <span style="font-size: 0.78rem; font-weight: 800; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;" title="Roll Number">
           <?php echo htmlspecialchars($student['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
+        </span>
+        <span style="font-size: 0.78rem; font-weight: 700; color: #0369a1; background: #e0f2fe; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 6px;" title="Database Student ID">
+          ID: #<?php echo intval($student['id']); ?>
         </span>
         <span style="font-size: 0.78rem; font-weight: 700; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 9px; border-radius: 6px;">
           <?php echo htmlspecialchars($student['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
         </span>
       </h3>
+
+      <!-- Prev / Next Student Card Switcher -->
+      <div style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px;">
+        <a href="<?php echo htmlspecialchars($prev_card_url, ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="padding: 0 10px; height: 30px; font-size: 0.75rem; <?php echo !$prev_student_id ? 'opacity: 0.45; pointer-events: none;' : ''; ?>" title="Previous Student Card">
+          <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <a href="<?php echo htmlspecialchars($next_card_url, ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary" style="padding: 0 10px; height: 30px; font-size: 0.75rem; <?php echo !$next_student_id ? 'opacity: 0.45; pointer-events: none;' : ''; ?>" title="Next Student Card">
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+      </div>
     </div>
 
     <!-- Right: Print and Download Actions -->
@@ -1744,7 +1804,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <!-- Photo Frame -->
           <div class="cf-photo-frame">
             <?php if ($has_student_photo): ?>
-              <img src="<?php echo htmlspecialchars($student_photo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($student['student_name'], ENT_QUOTES, 'UTF-8'); ?>">
+              <img src="<?php echo htmlspecialchars($student_photo_url, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($student['student_name'], ENT_QUOTES, 'UTF-8'); ?>" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="cf-photo-fallback" style="background: <?php echo $avatar_bg; ?>; display: none;">
+                <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
+              </div>
             <?php else: ?>
               <div class="cf-photo-fallback" style="background: <?php echo $avatar_bg; ?>;">
                 <?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>
@@ -2003,19 +2066,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <?php foreach ($table_students as $stu): ?>
               <?php 
                 $is_cur_viewing = (intval($stu['id']) === $selected_id);
-                $stu_has_photo = false;
-                $stu_photo_url = '';
-                if (!empty($stu['photo']) && $stu['photo'] !== '/assets/imgs/ksv-logo.jpg') {
-                    $stu_photo_rel = ltrim($stu['photo'], '/\\');
-                    $stu_photo_path = realpath(__DIR__ . '/../../' . $stu_photo_rel);
-                    if ($stu_photo_path && (
-                        ($allowed_base_uploads && strpos($stu_photo_path, $allowed_base_uploads) === 0) ||
-                        ($allowed_base_assets && strpos($stu_photo_path, $allowed_base_assets) === 0)
-                    ) && file_exists($stu_photo_path)) {
-                        $stu_has_photo = true;
-                        $stu_photo_url = '/' . $stu_photo_rel;
-                    }
-                }
+                $stu_photo_url = resolve_student_photo_url($stu['photo'] ?? null);
+                $stu_has_photo = !empty($stu_photo_url);
                 $first_letter = strtoupper(substr($stu['student_name'] ?? 'S', 0, 1));
 
                 $stu_raw_qr = $stu['qr_code'] ?: ('STU-' . ($stu['roll_no'] ?? $stu['id']));
@@ -2045,8 +2097,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                     <?php endif; ?>
 
                     <div>
-                      <div style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25;">
-                        <?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?>
+                      <div style="font-weight: 700; color: #0f172a; font-size: 0.90rem; font-family: 'Outfit', sans-serif; line-height: 1.25; display: flex; align-items: center; gap: 6px;">
+                        <span><?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span style="font-size: 0.70rem; font-weight: 700; color: #0284c7; background: #f0f9ff; border: 1px solid #bae6fd; padding: 1px 6px; border-radius: 4px;" title="Student ID">#<?php echo intval($stu['id']); ?></span>
                       </div>
                       <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 6px;">
                         <span><?php echo htmlspecialchars($stu['gender'] ?? 'Scholar', ENT_QUOTES, 'UTF-8'); ?></span>
@@ -2065,6 +2118,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   </span>
                   <div style="font-size: 0.74rem; color: #64748b; margin-top: 4px;">
                     Adm: <?php echo htmlspecialchars($stu['admission_no'] ?? '—', ENT_QUOTES, 'UTF-8'); ?>
+                  </div>
+                  <div style="font-size: 0.72rem; color: #0284c7; font-weight: 600; margin-top: 3px;">
+                    ID: #<?php echo intval($stu['id']); ?>
                   </div>
                 </td>
 

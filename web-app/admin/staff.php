@@ -277,6 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user_status = in_array($_POST['user_status'] ?? 'active', ['active', 'inactive'], true) ? $_POST['user_status'] : 'active';
         
         $valid_perms = [
+            'quick_note',
             'dashboard', 'myself-attendance', 'staff-id', 'staff-periods', 'leaves', 'payroll', 'announcements',
             'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_marksheet',
             'admin_staff_periods', 'admin_staff_attendance',
@@ -284,6 +285,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
         $submitted_perms = is_array($_POST['permissions'] ?? null) ? $_POST['permissions'] : [];
         $sanitized_perms = array_values(array_intersect($submitted_perms, $valid_perms));
+
+        // Note Active / Deactive Option
+        $note_status = trim((string)($_POST['note_status'] ?? 'deactive'));
+        if ($note_status === 'active') {
+            if (!in_array('quick_note', $sanitized_perms, true)) {
+                $sanitized_perms[] = 'quick_note';
+            }
+        } else {
+            $sanitized_perms = array_values(array_diff($sanitized_perms, ['quick_note', 'note']));
+        }
         $permissions = json_encode($sanitized_perms);
 
         // Handle Photo Upload with security validation (Extension, MIME type, File Size)
@@ -1658,6 +1669,26 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #changeStaffPasswordModal button[title="Show/Hide password"]:hover {
   color: #f8fafc !important;
 }
+[data-theme="dark"] #viewStaffModal div[style*="background: #f0fdf4"] {
+  background: rgba(22, 163, 74, 0.12) !important;
+  border-color: rgba(22, 163, 74, 0.3) !important;
+}
+[data-theme="dark"] #viewStaffModal div[style*="background: #ffffff"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #view_sm_auth_code {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] #editStaffModal div[style*="background: #fefce8"] {
+  background: rgba(234, 179, 8, 0.12) !important;
+  border-color: rgba(234, 179, 8, 0.35) !important;
+}
+[data-theme="dark"] #edit_note_status {
+  background: #0f172a !important;
+  border-color: #ca8a04 !important;
+  color: #fef08a !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -2414,6 +2445,28 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
       </div>
 
+      <!-- Card 4: Portal Authentication & Password Info -->
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; margin-top: 16px;">
+        <h5 style="margin: 0 0 10px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #166534; display: flex; align-items: center; justify-content: space-between;">
+          <span><i class="fa-solid fa-key" style="color: #16a34a; margin-right: 6px;"></i> Faculty Portal Authentication</span>
+          <span style="font-size: 0.70rem; font-weight: 700; color: #15803d; background: #dcfce7; padding: 2px 7px; border-radius: 4px;">Active</span>
+        </h5>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.83rem;">
+          <div><span style="color: #64748b;">Login Username:</span> <strong id="view_sm_auth_user" style="color: #0284c7; display: block; font-family: monospace; font-size: 0.90rem; margin-top: 2px;">—</strong></div>
+          <div><span style="color: #64748b;">Employee Code:</span> <strong id="view_sm_auth_code" style="color: #0f172a; display: block; font-family: monospace; font-size: 0.90rem; margin-top: 2px;">—</strong></div>
+          <div style="grid-column: span 2; display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid #86efac; border-radius: 8px; padding: 8px 12px; margin-top: 4px;">
+            <div>
+              <span style="font-size: 0.72rem; color: #64748b; display: block;">Default / Active Password:</span>
+              <strong style="font-family: monospace; font-size: 0.95rem; color: #166534; letter-spacing: 0.5px;">staff</strong>
+              <small style="color: #64748b; font-size: 0.70rem; margin-left: 6px;">(Default for all staff accounts)</small>
+            </div>
+            <button type="button" onclick="editStaffPasswordFromView()" class="btn-perm-toggle" style="background: #16a34a; color: #ffffff; border: none; padding: 5px 12px; border-radius: 6px; font-weight: 700; cursor: pointer;">
+              <i class="fa-solid fa-key"></i> Change Password
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Modal Footer Actions -->
@@ -2583,6 +2636,31 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="form-group" style="margin-bottom: 0;">
           <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Residential Address</label>
           <textarea name="address" id="edit_address" rows="2" class="hrms-input" placeholder="e.g. Sector 19, Ulwe, Navi Mumbai..." style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px;"></textarea>
+        </div>
+
+        <!-- Row 6b: Quick Note Active / Deactive Option (Red Box Location) -->
+        <div class="form-group" style="margin-top: 14px; margin-bottom: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #fefce8; border: 1.5px solid #fde047; border-radius: 10px; padding: 10px 14px; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 34px; height: 34px; border-radius: 8px; background: #fef08a; color: #854d0e; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
+                <i class="fa-solid fa-note-sticky"></i>
+              </div>
+              <div>
+                <label style="display: block; font-size: 12.5px; font-weight: 800; color: #713f12; margin: 0; font-family: 'Outfit', sans-serif;">
+                  Quick Note
+                </label>
+                <div style="font-size: 11px; color: #854d0e;">
+                  Active shows the sticky note icon on staff header; Deactive hides it.
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <select name="note_status" id="edit_note_status" class="hrms-input" style="padding: 6px 14px; border: 1.5px solid #ca8a04; border-radius: 8px; font-weight: 700; font-size: 12.5px; background: #ffffff; color: #713f12; cursor: pointer; min-width: 115px;">
+                <option value="active">Active</option>
+                <option value="deactive" selected>Deactive</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- Row 7: Menu Permissions (Role Access Control) -->
@@ -2819,7 +2897,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="form-group" style="margin-bottom: 16px;">
           <label class="form-label" style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
             <span>New Password *</span>
-            <span style="font-weight: 500; font-size: 0.72rem; color: #94a3b8;">Min. 4 characters</span>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" onclick="fillDefaultStaffPassword()" style="background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 0.70rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer;" title="Auto-fill default password 'staff'">Set Default: staff</button>
+              <button type="button" onclick="generateRandomStaffPassword()" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; font-size: 0.70rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer;" title="Auto-generate strong password">Auto-Generate</button>
+            </div>
           </label>
           <div style="position: relative;">
             <input type="password" name="new_password" id="staff_new_password" class="hrms-input" required minlength="4" placeholder="Enter new password" style="width: 100%; padding-right: 40px;">
@@ -2951,6 +3032,13 @@ function viewStaffDetails(sm) {
   const addrEl = document.getElementById('view_sm_address');
   if (addrEl) addrEl.textContent = sm.address || 'Campus Staff Quarters, KSV Academy, Sector 12';
 
+  // Card 4 Auth Info
+  const authUserEl = document.getElementById('view_sm_auth_user');
+  if (authUserEl) authUserEl.textContent = '@' + (sm.username || 'staff');
+
+  const authCodeEl = document.getElementById('view_sm_auth_code');
+  if (authCodeEl) authCodeEl.textContent = sm.employee_code || '—';
+
   // Footer links
   const idLink = document.getElementById('view_sm_id_card_link');
   if (idLink) idLink.href = '<?php echo ADMIN_URL; ?>/staff-id?id=' + sm.id;
@@ -3064,6 +3152,13 @@ function openEditStaffModal(sm) {
       (cb.value === 'admin_expense_report' && (perms.includes('expense-report') || perms.includes('admin_expense_report')));
   });
 
+  // Populate Quick Note Active / Deactive status
+  const noteStatusEl = document.getElementById('edit_note_status');
+  if (noteStatusEl) {
+    const hasNote = Array.isArray(perms) && (perms.includes('quick_note') || perms.includes('note'));
+    noteStatusEl.value = hasNote ? 'active' : 'deactive';
+  }
+
   openModal('editStaffModal');
 }
 
@@ -3079,6 +3174,36 @@ function editFromViewModal() {
   }
 }
 
+function editStaffPasswordFromView() {
+  if (currentViewingStaff) {
+    closeModal('viewStaffModal');
+    openChangeStaffPasswordModal(currentViewingStaff);
+  }
+}
+
+function fillDefaultStaffPassword() {
+  const p1 = document.getElementById('staff_new_password');
+  const p2 = document.getElementById('staff_confirm_password');
+  if (p1 && p2) {
+    p1.value = 'staff';
+    p2.value = 'staff';
+    p1.type = 'text';
+    p2.type = 'text';
+  }
+}
+
+function generateRandomStaffPassword() {
+  const p1 = document.getElementById('staff_new_password');
+  const p2 = document.getElementById('staff_confirm_password');
+  const rand = 'Ksv@' + Math.floor(1000 + Math.random() * 9000);
+  if (p1 && p2) {
+    p1.value = rand;
+    p2.value = rand;
+    p1.type = 'text';
+    p2.type = 'text';
+  }
+}
+
 function openChangeStaffPasswordModal(sm) {
   if (!sm) return;
   document.getElementById('pwd_staff_id').value = sm.id || '';
@@ -3086,8 +3211,10 @@ function openChangeStaffPasswordModal(sm) {
   document.getElementById('pwd_staff_code').textContent = sm.employee_code || '—';
   document.getElementById('pwd_staff_dept').textContent = sm.department || '—';
   document.getElementById('pwd_staff_username').textContent = '@' + (sm.username || 'staff');
-  document.getElementById('staff_new_password').value = '';
-  document.getElementById('staff_confirm_password').value = '';
+  const p1 = document.getElementById('staff_new_password');
+  const p2 = document.getElementById('staff_confirm_password');
+  if (p1) { p1.value = ''; p1.type = 'password'; }
+  if (p2) { p2.value = ''; p2.type = 'password'; }
   openModal('changeStaffPasswordModal');
 }
 

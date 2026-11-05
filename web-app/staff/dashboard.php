@@ -1436,27 +1436,37 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </div>
   </div>
 
+  <?php 
+    $can_noticeboard = in_array('announcements', $staff_perms ?? [], true) || in_array('noticeboard', $staff_perms ?? [], true);
+    if ($can_noticeboard): 
+  ?>
   <!-- Academy Notices for Staff -->
   <div class="hrms-card">
-    <div class="hrms-card-header">
+    <div class="hrms-card-header" style="display: flex; justify-content: space-between; align-items: center;">
       <h2 class="card-title">
-        <i class="fa-solid fa-bullhorn"></i> Academy Circulars
+        <i class="fa-solid fa-bullhorn" style="color: #0284c7;"></i> Noticeboard &amp; Academy Circulars
       </h2>
+      <a href="<?php echo STAFF_URL; ?>/announcements" style="font-size: 0.78rem; font-weight: 600; color: #0284c7; text-decoration: none;">View All &rarr;</a>
     </div>
     <div class="hrms-card-body notice-card-body">
       <div class="notice-list">
-        <?php foreach ($notices as $not): ?>
-          <div class="notice-item" style="border-left: 3px solid #0284c7; padding-left: 12px; margin-bottom: 14px;">
-            <div class="notice-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-              <span class="notice-title" style="font-weight: 700; color: #0f172a; font-size: 0.86rem;"><?php echo htmlspecialchars($not['title']); ?></span>
-              <span class="notice-time" style="font-size: 0.72rem; color: #64748b;"><?php echo format_date($not['created_at'], 'd M'); ?></span>
+        <?php if (!empty($notices)): ?>
+          <?php foreach ($notices as $not): ?>
+            <div class="notice-item" style="border-left: 3px solid #0284c7; padding-left: 12px; margin-bottom: 14px;">
+              <div class="notice-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+                <span class="notice-title" style="font-weight: 700; color: #0f172a; font-size: 0.86rem;"><?php echo htmlspecialchars($not['title']); ?></span>
+                <span class="notice-time" style="font-size: 0.72rem; color: #64748b;"><?php echo format_date($not['created_at'], 'd M'); ?></span>
+              </div>
+              <p class="notice-desc" style="font-size: 0.80rem; color: #475569; margin: 0; line-height: 1.4;"><?php echo htmlspecialchars($not['content']); ?></p>
             </div>
-            <p class="notice-desc" style="font-size: 0.80rem; color: #475569; margin: 0; line-height: 1.4;"><?php echo htmlspecialchars($not['content']); ?></p>
-          </div>
-        <?php endforeach; ?>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <p style="text-align: center; color: #64748b; padding: 20px 0; margin: 0; font-size: 0.84rem;">No circulars or notices posted yet.</p>
+        <?php endif; ?>
       </div>
     </div>
   </div>
+  <?php endif; ?>
 
 </div>
 

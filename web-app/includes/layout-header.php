@@ -296,7 +296,7 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
               </a>
             </li>
           <?php endif; ?>
-          <?php if (in_array('announcements', $staff_perms)): ?>
+          <?php if (in_array('announcements', $staff_perms) || in_array('noticeboard', $staff_perms)): ?>
             <li class="sidebar-menu-item <?php echo $active_menu === 'announcements' ? 'active' : ''; ?>">
               <a href="<?php echo STAFF_URL; ?>/announcements">
                 <i class="fa-solid fa-bullhorn"></i>
@@ -554,6 +554,26 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
 
       <div class="header-right">
         
+        <?php
+          $show_quick_note = false;
+          if (isset($current_user)) {
+              if ($current_user['role'] === 'super_admin') {
+                  $show_quick_note = true;
+              } elseif ($current_user['role'] === 'staff') {
+                  $cur_staff_perms = $staff_perms ?? get_staff_permissions($current_user['id']);
+                  if (in_array('quick_note', $cur_staff_perms, true) || in_array('note', $cur_staff_perms, true)) {
+                      $show_quick_note = true;
+                  }
+              }
+          }
+        ?>
+        <?php if ($show_quick_note): ?>
+        <!-- QUICK NOTE ACTION BUTTON -->
+        <button type="button" id="headerQuickNoteBtn" class="header-note-btn" title="Quick Notes" aria-label="Open Quick Notes">
+          <i class="fa-solid fa-note-sticky"></i>
+        </button>
+        <?php endif; ?>
+
         <!-- ACADEMIC SESSION SWITCHER (Session Management) -->
         <div class="header-session-picker">
           <i class="fa-solid fa-calendar-week session-icon"></i>

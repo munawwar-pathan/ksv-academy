@@ -126,16 +126,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return ['path' => '', 'error' => ''];
         }
         if ($_FILES[$file_field]['error'] !== UPLOAD_ERR_OK) {
-            return ['path' => '', 'error' => 'Upload failed with error code: ' . intval($_FILES[$file_field]['error'])];
+            $err_code = $_FILES[$file_field]['error'];
+            $max_ini = ini_get('upload_max_filesize') ?: '64M';
+            $err_messages = [
+                UPLOAD_ERR_INI_SIZE   => "The uploaded image exceeds the server's upload limit ({$max_ini}). Please upload an image under {$max_ini} or compress it.",
+                UPLOAD_ERR_FORM_SIZE  => "The uploaded image exceeds the form's maximum file size limit.",
+                UPLOAD_ERR_PARTIAL    => "The image file was only partially uploaded. Please try uploading again.",
+                UPLOAD_ERR_NO_FILE    => "No file was uploaded.",
+                UPLOAD_ERR_NO_TMP_DIR => "Server configuration issue: Missing temporary upload folder.",
+                UPLOAD_ERR_CANT_WRITE => "Server write failure: Unable to write uploaded image to disk.",
+                UPLOAD_ERR_EXTENSION  => "A server PHP extension stopped the file upload.",
+            ];
+            $err_msg = $err_messages[$err_code] ?? ('Upload failed with error code: ' . intval($err_code));
+            return ['path' => '', 'error' => $err_msg];
         }
 
         $p_name = $_FILES[$file_field]['name'];
         $p_tmp = $_FILES[$file_field]['tmp_name'];
         $p_size = $_FILES[$file_field]['size'];
 
-        // Size limit: 10MB
-        if ($p_size > 10 * 1024 * 1024) {
-            return ['path' => '', 'error' => 'Uploaded file exceeds the maximum allowed size of 10MB.'];
+        // Size limit: 25MB
+        if ($p_size > 25 * 1024 * 1024) {
+            return ['path' => '', 'error' => 'Uploaded file exceeds the maximum allowed size of 25MB.'];
         }
         if (!is_uploaded_file($p_tmp)) {
             return ['path' => '', 'error' => 'Invalid file upload source.'];
@@ -1594,7 +1606,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; color: #0092df; margin-bottom: 8px;"></i>
             <div style="font-size: 0.86rem; font-weight: 700; color: #0f172a;">Click to browse image or drag file here</div>
             <div style="font-size: 0.74rem; color: #64748b; margin-top: 3px;">
-              📐 Dimension: 1024 × 1536 px (2:3) • Saved directly into <code>assets/imgs/popup/</code>
+              📐 Dimension: 1024 × 1536 px (2:3) • Max size: 25MB • Saved directly into <code>assets/imgs/popup/</code>
             </div>
             <input type="file" name="image_file" id="addSlideFile" accept="image/*" style="display: none;" onchange="handleImageSelection(this, 'addPreviewWrap', 'addPreviewImg', 'addDimStatus', 'addSelectedExistingFile');">
           </div>
@@ -1750,7 +1762,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.8rem; color: #0092df; margin-bottom: 6px;"></i>
             <div style="font-size: 0.84rem; font-weight: 700; color: #0f172a;">Click to select new image file</div>
             <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">
-              📐 Dimension: 1024 × 1536 px • Stored in <code>assets/imgs/popup/</code>
+              📐 Dimension: 1024 × 1536 px • Max size: 25MB • Stored in <code>assets/imgs/popup/</code>
             </div>
             <input type="file" name="image_file" id="editSlideFile" accept="image/*" style="display: none;" onchange="handleImageSelection(this, 'editNewPreviewWrap', 'editNewPreviewImg', 'editDimStatus', 'editSelectedExistingFile');">
           </div>
@@ -1897,6 +1909,14 @@ function closeEditModal() {
 function handleImageSelection(input, previewWrapId, previewImgId, statusId, hiddenInputId) {
   if (input.files && input.files[0]) {
     var file = input.files[0];
+    var sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+    if (file.size > 25 * 1024 * 1024) {
+      alert('The selected file is ' + sizeMB + ' MB, which exceeds the maximum limit of 25 MB. Please select a smaller or compressed image.');
+      input.value = '';
+      return;
+    }
+
     var reader = new FileReader();
 
     reader.onload = function(e) {
@@ -1916,14 +1936,14 @@ function handleImageSelection(input, previewWrapId, previewImgId, statusId, hidd
         var dimTextEl = document.getElementById(previewWrapId === 'addPreviewWrap' ? 'addPreviewDimText' : 'editNewDimText');
 
         if (dimTextEl) {
-          dimTextEl.innerHTML = 'Detected: <strong>' + w + ' × ' + h + ' px</strong> (Ratio: ' + ratio + ')';
+          dimTextEl.innerHTML = 'Detected: <strong>' + w + ' × ' + h + ' px</strong> • ' + sizeMB + ' MB';
         }
 
         if (statusEl) {
           if (isRec) {
-            statusEl.innerHTML = '<span style="color:#059669;"><i class="fa-solid fa-circle-check"></i> ' + w + '×' + h + ' px (Perfect fit)</span>';
+            statusEl.innerHTML = '<span style="color:#059669;"><i class="fa-solid fa-circle-check"></i> ' + w + '×' + h + ' px (' + sizeMB + ' MB • Perfect fit)</span>';
           } else {
-            statusEl.innerHTML = '<span style="color:#d97706;"><i class="fa-solid fa-triangle-exclamation"></i> ' + w + '×' + h + ' px (Rec: 1024×1536)</span>';
+            statusEl.innerHTML = '<span style="color:#d97706;"><i class="fa-solid fa-triangle-exclamation"></i> ' + w + '×' + h + ' px (' + sizeMB + ' MB • Rec: 1024×1536)</span>';
           }
         }
 
