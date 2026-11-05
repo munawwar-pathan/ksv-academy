@@ -71,8 +71,8 @@ require_once __DIR__ . '/../config.php';
           <div class="form-group">
             <label for="demoBatchPref"><i class="fa-solid fa-clock"></i> Preferred Timing</label>
             <select id="demoBatchPref" name="batch_timing" class="form-control">
-              <option value="Morning Batch (8:00 AM - 11:30 AM)">Morning Batch (8:00 AM - 11:30 AM)</option>
-              <option value="Evening Batch (4:00 PM - 8:30 PM)">Evening Batch (4:00 PM - 8:30 PM)</option>
+              <option value="Morning Batch (6:00 AM - 12:00 PM)">Morning Batch (6:00 AM - 12:00 PM)</option>
+              <option value="Evening Batch (3:00 PM - 10:00 PM)">Evening Batch (3:00 PM - 10:00 PM)</option>
               <option value="Flexible / Weekend">Flexible / Weekend</option>
             </select>
           </div>

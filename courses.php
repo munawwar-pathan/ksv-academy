@@ -183,7 +183,7 @@ require_once __DIR__ . '/includes/header.php';
             <div class="spec-icon-badge"><i class="fa-solid fa-clock"></i></div>
             <div class="spec-content">
               <span class="spec-label">Batch Options</span>
-              <span class="spec-val">Morning (8:00 AM) &amp; Evening (4:00 PM)</span>
+              <span class="spec-val">Morning (6:00 AM) &amp; Evening (3:00 PM)</span>
             </div>
           </div>
         </div>

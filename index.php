@@ -1683,8 +1683,8 @@ require_once __DIR__ . '/includes/header.php';
                 </p>
                 <div class="faq-answer-highlight">
                   <div class="faq-chips-list">
-                    <span class="faq-chip chip-amber"><i class="fa-regular fa-sun"></i> Morning Batch: 8:00 AM – 11:30 AM</span>
-                    <span class="faq-chip chip-amber"><i class="fa-solid fa-moon"></i> Evening Batch: 4:00 PM – 8:30 PM</span>
+                    <span class="faq-chip chip-amber"><i class="fa-regular fa-sun"></i> Morning Batch: 6:00 AM – 12:00 PM</span>
+                    <span class="faq-chip chip-amber"><i class="fa-solid fa-moon"></i> Evening Batch: 3:00 PM – 10:00 PM</span>
                     <span class="faq-chip chip-amber"><i class="fa-solid fa-comments"></i> Weekend Dedicated Doubt Sessions</span>
                   </div>
                 </div>

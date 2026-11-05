@@ -213,8 +213,8 @@ require_once __DIR__ . '/includes/header.php';
           <div style="flex-grow: 1;">
             <h4 style="font-size: 1.12rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Visiting <span class="hero-highlight">Hours</span></h4>
             <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 8px 0;">
-              <strong>Monday – Saturday:</strong> 8:00 AM – 9:00 PM<br>
-              <strong>Sunday:</strong> 9:00 AM – 2:00 PM (Admission Desk Open)
+              <strong>Morning Batch:</strong> 6:00 AM – 12:00 PM<br>
+              <strong>Evening Batch:</strong> 3:00 PM – 10:00 PM
             </p>
             <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.74rem; font-weight: 700; color: #059669; background: rgba(16, 185, 129, 0.08); padding: 3px 8px; border-radius: 6px;">
               <i class="fa-solid fa-circle-check"></i> Admissions Open 7 Days

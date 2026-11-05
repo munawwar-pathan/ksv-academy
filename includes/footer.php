@@ -126,7 +126,7 @@ require_once __DIR__ . '/../config.php';
               <i class="fa-solid fa-clock"></i>
               <div>
                 <strong>Academy Hours:</strong>
-                <p>Mon - Sat: 7:30 AM – 9:30 PM<br>Sunday: 8:00 AM – 2:00 PM</p>
+                <p>Morning Batch: 6:00 AM – 12:00 PM<br>Evening Batch: 3:00 PM – 10:00 PM</p>
               </div>
             </div>
           </div>

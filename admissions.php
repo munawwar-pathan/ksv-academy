@@ -262,8 +262,8 @@ require_once __DIR__ . '/includes/header.php';
             <div class="form-group col-half">
               <label for="admBatch"><i class="fa-solid fa-clock"></i> Preferred Shift</label>
               <select id="admBatch" name="batch_timing" class="form-control">
-                <option value="Morning Batch (7:30 AM - 11:30 AM)">Morning Shift (7:30 AM - 11:30 AM)</option>
-                <option value="Evening Batch (4:00 PM - 8:30 PM)">Evening Shift (4:00 PM - 8:30 PM)</option>
+                <option value="Morning Batch (6:00 AM - 12:00 PM)">Morning Shift (6:00 AM - 12:00 PM)</option>
+                <option value="Evening Batch (3:00 PM - 10:00 PM)">Evening Shift (3:00 PM - 10:00 PM)</option>
                 <option value="Weekend Special">Weekend Special</option>
               </select>
             </div>

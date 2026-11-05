@@ -242,8 +242,8 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
           {
             "@type": "OpeningHoursSpecification",
             "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-            "opens": "07:30",
-            "closes": "21:30"
+            "opens": "15:00",
+            "closes": "22:00"
           },
           {
             "@type": "OpeningHoursSpecification",
