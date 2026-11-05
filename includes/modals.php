@@ -202,7 +202,7 @@ if (!$db_has_popup_table || $total_popup_records === 0) {
 
         <!-- Heading -->
         <h2 class="promo-title" id="promoModalTitle">
-          Scholarship Up to <span class="promo-highlight-gold">60%</span>
+          Scholarship Up to <span class="promo-highlight-gold">50%</span>
         </h2>
         
         <p class="promo-desc">

@@ -991,7 +991,7 @@ require_once __DIR__ . '/includes/header.php';
               </div>
               <div class="benefit-info">
                 <strong class="benefit-title">1-on-1 Academic &amp; Scholarship Evaluation</strong>
-                <p class="benefit-desc">Get a personalized concept assessment &amp; check eligibility for up to 60% fee scholarships.</p>
+                <p class="benefit-desc">Get a personalized concept assessment &amp; check eligibility for up to 50% fee scholarships.</p>
               </div>
             </div>
           </div>
@@ -1613,7 +1613,7 @@ require_once __DIR__ . '/includes/header.php';
                 <span class="faq-num num-emerald">02</span>
                 <div class="faq-title-wrap">
                   <span class="faq-category-tag cat-emerald">Financial Aid</span>
-                  <span class="faq-title">What is the criteria for the scholarship up to 60%?</span>
+                  <span class="faq-title">What is the criteria for the scholarship up to 50%?</span>
                 </div>
               </div>
               <i class="fa-solid fa-chevron-down faq-icon"></i>
