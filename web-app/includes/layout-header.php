@@ -464,7 +464,7 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
           <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
             <a href="<?php echo PARENT_URL; ?>/marksheet">
               <i class="fa-solid fa-file-lines"></i>
-              <span>Exam Marksheet</span>
+              <span>Report Card</span>
             </a>
           </li>
           <?php endif; ?>

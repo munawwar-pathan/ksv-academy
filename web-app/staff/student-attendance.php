@@ -1,4 +1,13 @@
 <?php
+// HTTP Security Headers (Defense-in-depth across Apache, LiteSpeed, Nginx, PHP built-in server)
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(self), microphone=(), geolocation=()');
+}
+
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'staff']);
@@ -1728,10 +1737,16 @@ function killAllCameraTracks() {
   });
 }
 
+let isPunching = false;
+
 function openScannerModal() {
   const modal = document.getElementById('scannerModal');
   if (modal) {
     modal.classList.add('show');
+    modal.style.display = 'flex'; // Ensure inline display: none from backdrop click is cleared
+    try {
+      sessionStorage.setItem('scanner_modal_open', '1');
+    } catch (e) {}
     // Automatically turn on scanner camera when popup opens
     setTimeout(() => {
       startScanner();
@@ -1743,7 +1758,11 @@ function closeScannerModal() {
   const modal = document.getElementById('scannerModal');
   if (modal) {
     modal.classList.remove('show');
+    modal.style.display = 'none';
   }
+  try {
+    sessionStorage.removeItem('scanner_modal_open');
+  } catch (e) {}
   // Turn off scanner and hardware camera immediately
   stopScanner();
   killAllCameraTracks();
@@ -1754,14 +1773,22 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeScannerModal();
 });
 
-// Close on clicking backdrop outside card
+// Close on clicking backdrop outside card & restore modal if open before reload
 document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('scannerModal');
   if (modal) {
     modal.addEventListener('click', function(e) {
-      if (e.target === this) closeScannerModal();
-    });
+      if (e.target === this) {
+        closeScannerModal();
+      }
+    }, true);
   }
+  // Automatically reopen popup if it was open before reload
+  try {
+    if (sessionStorage.getItem('scanner_modal_open') === '1') {
+      openScannerModal();
+    }
+  } catch (e) {}
 });
 
 function startScanner() {
@@ -1783,23 +1810,48 @@ function startScanner() {
     html5QrCode = new Html5Qrcode("qrReader");
   }
 
+  // If already scanning, do not re-run start
+  if (html5QrCode.isScanning) {
+    return;
+  }
+
   const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
-  html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
-    .catch(err => {
-      console.warn("Unable to start camera scanner, falling back to manual mode:", err);
-      if (idleMsg) {
-        idleMsg.style.display = 'block';
-        const h4 = idleMsg.querySelector('h4');
-        const p = idleMsg.querySelector('p');
-        if (h4) h4.textContent = 'Camera Unavailable';
-        if (p) p.textContent = 'Camera blocked or not found. Enter Roll Number manually below.';
-      }
-      if (reticle) reticle.style.display = 'none';
-      document.getElementById('startScannerBtn').style.display = 'inline-flex';
-      document.getElementById('stopScannerBtn').style.display = 'none';
-      showScanFeedback(false, "Camera access unavailable or blocked. You can enter the Roll Number manually below.");
-    });
+  // Flexible camera launcher: selects rear camera on mobile, or primary webcam on laptop
+  const launchCamera = () => {
+    if (typeof Html5Qrcode.getCameras === 'function') {
+      return Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length > 0) {
+          const backCam = devices.find(d => /back|rear|environment/i.test(d.label));
+          const camId = backCam ? backCam.id : devices[0].id;
+          return html5QrCode.start(camId, config, onScanSuccess, onScanFailure);
+        }
+        return html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+          .catch(() => html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, onScanFailure));
+      }).catch(() => {
+        return html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+          .catch(() => html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, onScanFailure));
+      });
+    } else {
+      return html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+        .catch(() => html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, onScanFailure));
+    }
+  };
+
+  launchCamera().catch(err => {
+    console.warn("Unable to start camera scanner, falling back to manual mode:", err);
+    if (idleMsg) {
+      idleMsg.style.display = 'block';
+      const h4 = idleMsg.querySelector('h4');
+      const p = idleMsg.querySelector('p');
+      if (h4) h4.textContent = 'Camera Unavailable';
+      if (p) p.textContent = 'Camera blocked or not found. Enter Roll Number manually below.';
+    }
+    if (reticle) reticle.style.display = 'none';
+    document.getElementById('startScannerBtn').style.display = 'inline-flex';
+    document.getElementById('stopScannerBtn').style.display = 'none';
+    showScanFeedback(false, "Camera access unavailable or blocked. Please allow camera permissions in browser or enter Roll Number manually below.");
+  });
 }
 
 function stopScanner() {
@@ -1864,6 +1916,9 @@ function submitManualQr() {
 }
 
 function postAttendancePunch(qrCodeValue) {
+  if (isPunching) return;
+  isPunching = true;
+
   const formData = new FormData();
   formData.append('csrf_token', '<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>');
   formData.append('action', 'mark_attendance');
@@ -1879,15 +1934,26 @@ function postAttendancePunch(qrCodeValue) {
   .then(res => res.json())
   .then(data => {
     if (data.success) {
+      const manualInp = document.getElementById('manualQrInput');
+      if (manualInp) manualInp.value = '';
+
       showScanFeedback(true, '🎉 ' + data.message + ' at ' + data.time);
+
+      // Keep popup open flag for seamless reload
+      try {
+        sessionStorage.setItem('scanner_modal_open', '1');
+      } catch (e) {}
+
       setTimeout(() => {
         window.location.reload();
-      }, 1200);
+      }, 900);
     } else {
+      isPunching = false;
       showScanFeedback(false, '⚠️ ' + data.message);
     }
   })
   .catch(err => {
+    isPunching = false;
     showScanFeedback(false, 'Network error while recording punch.');
   });
 }
