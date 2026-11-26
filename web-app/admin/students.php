@@ -3680,6 +3680,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </label>
 
               <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="notes" class="edit-student-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-book-bookmark"></i>
+                  <span>Notes</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
                 <input type="checkbox" name="permissions[]" value="marksheet" class="edit-student-perm-cb">
                 <span class="perm-card-text">
                   <i class="fa-solid fa-file-lines"></i>
@@ -4122,13 +4130,13 @@ function openEditStudentModal(stu) {
     }
   } else {
     // Default student/parent portal permissions if not customized yet
-    perms = ['dashboard', 'attendance', 'fees', 'student-id', 'marksheet', 'announcements', 'settings'];
+    perms = ['dashboard', 'attendance', 'fees', 'student-id', 'notes', 'marksheet', 'announcements', 'settings'];
   }
   if (!Array.isArray(perms)) {
-    perms = ['dashboard', 'attendance', 'fees', 'student-id', 'marksheet', 'announcements', 'settings'];
+    perms = ['dashboard', 'attendance', 'fees', 'student-id', 'notes', 'marksheet', 'announcements', 'settings'];
   }
   document.querySelectorAll('#editStudentModal .edit-student-perm-cb').forEach(cb => {
-    cb.checked = perms.includes(cb.value);
+    cb.checked = perms.includes(cb.value) || (cb.value === 'notes' && (perms.includes('notes') || perms.includes('note-record')));
   });
 
   // Populate Fee Installment Splits in Edit Modal

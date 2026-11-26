@@ -8,6 +8,9 @@
 require_once __DIR__ . '/../config.php';
 
 $current_user = require_login(['super_admin', 'admin', 'staff']);
+if ($current_user['role'] === 'staff') {
+    require_menu_permission('admin_note_record');
+}
 $page_title = 'Note Record | KSV Academy HRMS';
 $page_heading = 'Note Record';
 $page_subheading = 'Upload, organize, and manage academic subject notes, revision material, and reference files';

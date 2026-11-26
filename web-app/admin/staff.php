@@ -279,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $valid_perms = [
             'quick_note',
             'dashboard', 'myself-attendance', 'staff-id', 'staff-periods', 'leaves', 'payroll', 'announcements',
-            'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_marksheet',
+            'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_note_record', 'admin_marksheet',
             'admin_staff_periods', 'admin_staff_attendance',
             'admin_expenses', 'admin_expense_categories', 'admin_expense_report'
         ];
@@ -2781,6 +2781,14 @@ require_once __DIR__ . '/../includes/layout-header.php';
               </label>
 
               <label class="perm-card">
+                <input type="checkbox" name="permissions[]" value="admin_note_record" class="edit-staff-perm-cb">
+                <span class="perm-card-text">
+                  <i class="fa-solid fa-book-bookmark"></i>
+                  <span>Note Record</span>
+                </span>
+              </label>
+
+              <label class="perm-card">
                 <input type="checkbox" name="permissions[]" value="admin_marksheet" class="edit-staff-perm-cb">
                 <span class="perm-card-text">
                   <i class="fa-solid fa-file-lines"></i>
@@ -3125,7 +3133,7 @@ function openEditStaffModal(sm) {
     // Default faculty portal permissions if not customized yet
     perms = [
       'dashboard', 'myself-attendance', 
-      'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_marksheet', 
+      'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_note_record', 'admin_marksheet', 
       'staff-id', 'staff-periods', 'leaves', 'payroll', 'announcements',
       'admin_expenses', 'admin_expense_categories', 'admin_expense_report'
     ];
@@ -3133,7 +3141,7 @@ function openEditStaffModal(sm) {
   if (!Array.isArray(perms)) {
     perms = [
       'dashboard', 'myself-attendance', 
-      'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_marksheet', 
+      'admin_students', 'admin_student_attendance', 'admin_fees', 'admin_student_id', 'admin_note_record', 'admin_marksheet', 
       'staff-id', 'staff-periods', 'leaves', 'payroll', 'announcements',
       'admin_expenses', 'admin_expense_categories', 'admin_expense_report'
     ];
@@ -3144,6 +3152,7 @@ function openEditStaffModal(sm) {
       (cb.value === 'admin_student_attendance' && perms.includes('student-attendance')) ||
       (cb.value === 'admin_fees' && perms.includes('fees')) ||
       (cb.value === 'admin_student_id' && perms.includes('student-id')) ||
+      (cb.value === 'admin_note_record' && (perms.includes('note-record') || perms.includes('admin_note_record') || perms.includes('notes'))) ||
       (cb.value === 'admin_marksheet' && perms.includes('marksheet')) ||
       (cb.value === 'admin_staff_periods' && perms.includes('staff-periods')) ||
       (cb.value === 'staff-periods' && (perms.includes('admin_staff_periods') || perms.includes('staff-periods'))) ||

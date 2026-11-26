@@ -317,8 +317,9 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
           $can_stu_att = in_array('admin_student_attendance', $staff_perms) || in_array('student-attendance', $staff_perms);
           $can_fees = in_array('admin_fees', $staff_perms) || in_array('fees', $staff_perms);
           $can_stu_id = in_array('admin_student_id', $staff_perms) || in_array('student-id', $staff_perms);
+          $can_note_record = in_array('admin_note_record', $staff_perms) || in_array('note-record', $staff_perms) || in_array('notes', $staff_perms);
           $can_marksheet = in_array('admin_marksheet', $staff_perms) || in_array('marksheet', $staff_perms);
-          $has_academic_section = $can_students || $can_stu_att || $can_fees || $can_stu_id || $can_marksheet;
+          $has_academic_section = $can_students || $can_stu_att || $can_fees || $can_stu_id || $can_note_record || $can_marksheet;
         ?>
         <?php if ($has_academic_section): ?>
         <div class="nav-section-title">Students &amp; Academics</div>
@@ -355,12 +356,14 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
               </a>
             </li>
           <?php endif; ?>
-          <li class="sidebar-menu-item <?php echo $active_menu === 'note-record' ? 'active' : ''; ?>">
-            <a href="<?php echo ADMIN_URL; ?>/note-record">
-              <i class="fa-solid fa-book-bookmark"></i>
-              <span>Note Record</span>
-            </a>
-          </li>
+          <?php if ($can_note_record): ?>
+            <li class="sidebar-menu-item <?php echo $active_menu === 'note-record' ? 'active' : ''; ?>">
+              <a href="<?php echo ADMIN_URL; ?>/note-record">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span>Note Record</span>
+              </a>
+            </li>
+          <?php endif; ?>
           <?php if ($can_marksheet): ?>
             <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
               <a href="<?php echo ADMIN_URL; ?>/marksheet">
