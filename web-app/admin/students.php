@@ -203,8 +203,10 @@ $is_rate_limited = (count($_SESSION['students_post_attempts']) >= 40);
 
 // Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 1. Anti-bot honeypot check
-    if (!empty($_POST['students_hp'])) {
+    $action = trim((string)($_POST['action'] ?? ''));
+
+    // 1. Anti-bot honeypot check (exempt internal admin password change to avoid browser credential manager autofill collisions)
+    if ($action !== 'change_student_password' && !empty($_POST['students_hp'])) {
         usleep(300000);
         set_flash('error', 'Invalid request detected.');
         header('Location: ' . ADMIN_URL . '/students');
@@ -225,8 +227,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ' . ADMIN_URL . '/students');
         exit;
     }
-
-    $action = trim((string)($_POST['action'] ?? ''));
 
     // 1. Register New Student
     if ($action === 'register_student') {
@@ -663,7 +663,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$student_id, $session_id]);
             $stu = $stmt->fetch();
             if ($stu) {
-                $stu_user = get_or_create_student_user($stu, $db);
+                $stu_user = get_or_create_student_user($stu, $db, $new_password);
                 $hashed = password_hash($new_password, PASSWORD_DEFAULT);
                 $db->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hashed, $stu_user['id']]);
                 set_flash('success', "Password for student " . htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8') . " (Roll: " . htmlspecialchars($stu['roll_no'], ENT_QUOTES, 'UTF-8') . ") updated successfully!");
@@ -3756,14 +3756,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <button type="button" class="modal-close-btn" onclick="closeModal('changeStudentPasswordModal')" aria-label="Close modal">&times;</button>
     </div>
 
-    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" id="changeStudentPasswordForm">
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/students', ENT_QUOTES, 'UTF-8'); ?>" id="changeStudentPasswordForm" autocomplete="off">
       <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
       <input type="hidden" name="action" value="change_student_password">
       <input type="hidden" name="student_id" id="pwd_modal_student_id" value="">
-      <div style="display:none !important;" aria-hidden="true">
-        <label for="students_hp_pwd">Leave blank</label>
-        <input type="text" id="students_hp_pwd" name="students_hp" tabindex="-1" autocomplete="off">
-      </div>
 
       <div class="hrms-modal-body" style="padding: 22px 24px;">
         <!-- Student Info Chip -->
@@ -3784,7 +3780,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <span style="font-weight: 500; font-size: 0.72rem; color: #94a3b8;">Min. 4 characters</span>
           </label>
           <div style="position: relative;">
-            <input type="password" name="new_password" id="modal_new_password" class="hrms-input" required minlength="4" placeholder="Enter new password" style="width: 100%; padding-right: 40px;">
+            <input type="password" name="new_password" id="modal_new_password" class="hrms-input" required minlength="4" placeholder="Enter new password" autocomplete="new-password" style="width: 100%; padding-right: 40px;">
             <button type="button" onclick="togglePasswordVisibility('modal_new_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;" title="Show/Hide password">
               <i class="fa-solid fa-eye"></i>
             </button>
@@ -3797,7 +3793,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             Confirm New Password *
           </label>
           <div style="position: relative;">
-            <input type="password" name="confirm_password" id="modal_confirm_password" class="hrms-input" required minlength="4" placeholder="Re-enter new password" style="width: 100%; padding-right: 40px;">
+            <input type="password" name="confirm_password" id="modal_confirm_password" class="hrms-input" required minlength="4" placeholder="Re-enter new password" autocomplete="new-password" style="width: 100%; padding-right: 40px;">
             <button type="button" onclick="togglePasswordVisibility('modal_confirm_password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px; font-size: 0.85rem;" title="Show/Hide password">
               <i class="fa-solid fa-eye"></i>
             </button>
@@ -4227,6 +4223,26 @@ function openChangePasswordModal(stu) {
   document.getElementById('modal_confirm_password').value = '';
   openModal('changeStudentPasswordModal');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  const pwdForm = document.getElementById('changeStudentPasswordForm');
+  if (pwdForm) {
+    pwdForm.addEventListener('submit', function(e) {
+      const p1 = document.getElementById('modal_new_password').value;
+      const p2 = document.getElementById('modal_confirm_password').value;
+      if (p1 !== p2) {
+        e.preventDefault();
+        alert('New password and confirm password do not match.');
+        return false;
+      }
+      if (p1.length < 4) {
+        e.preventDefault();
+        alert('Password must be at least 4 characters long.');
+        return false;
+      }
+    });
+  }
+});
 
 function togglePasswordVisibility(inputId, btn) {
   const input = document.getElementById(inputId);

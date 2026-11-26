@@ -1142,6 +1142,199 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .staff-id-table td[colspan] p {
   color: #94a3b8 !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   UPCOMING FEE INSTALLMENT 10-DAY REMINDER CARD STYLES
+   ══════════════════════════════════════════════════════════════════════ */
+.fee-10d-reminder-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.fee-10d-reminder-item {
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fee-10d-reminder-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.07);
+}
+.fee-10d-reminder-item.due-soon {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+}
+.fee-10d-reminder-item.overdue {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+}
+.fee-10d-reminder-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1 1 500px;
+}
+.fee-10d-reminder-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+.fee-10d-reminder-icon.due-soon {
+  background: #fef3c7;
+  color: #d97706;
+}
+.fee-10d-reminder-icon.overdue {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.fee-10d-reminder-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fee-10d-reminder-title {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'Outfit', sans-serif;
+}
+.fee-10d-pill {
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.fee-10d-pill.due-soon {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.fee-10d-pill.overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+.fee-10d-reminder-desc {
+  font-size: 0.83rem;
+  color: #475569;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.fee-10d-amt.due-soon {
+  color: #b45309;
+}
+.fee-10d-amt.overdue {
+  color: #dc2626;
+}
+.fee-10d-pay-hint {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fee-10d-reminder-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fee-10d-amount-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 16px;
+  text-align: right;
+  min-width: 140px;
+}
+.fee-10d-amt-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+.fee-10d-amt-val {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  margin: 2px 0;
+}
+.fee-10d-amt-val.due-soon {
+  color: #b45309;
+}
+.fee-10d-amt-val.overdue {
+  color: #dc2626;
+}
+.fee-10d-due-date {
+  display: block;
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+@media (max-width: 768px) {
+  .fee-10d-reminder-item {
+    padding: 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .fee-10d-reminder-right {
+    width: 100% !important;
+  }
+  .fee-10d-amount-box {
+    width: 100% !important;
+    text-align: left !important;
+  }
+}
+
+/* Dark Theme Adaptations for 10-Day Reminder */
+[data-theme="dark"] .fee-10d-reminder-item.due-soon {
+  background: rgba(217, 119, 6, 0.12) !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
+}
+[data-theme="dark"] .fee-10d-reminder-item.overdue {
+  background: rgba(220, 38, 38, 0.12) !important;
+  border-color: rgba(220, 38, 38, 0.35) !important;
+}
+[data-theme="dark"] .fee-10d-reminder-title {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .fee-10d-reminder-desc {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .fee-10d-pay-hint {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .fee-10d-amount-box {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .fee-10d-amt-val.due-soon {
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .fee-10d-amt-val.overdue {
+  color: #f87171 !important;
+}
+[data-theme="dark"] .fee-10d-due-date {
+  color: #94a3b8 !important;
+}
 </style>
 
 <!-- ══════════════════════════════════════════════════════
@@ -1191,40 +1384,102 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <?php else: ?>
 
 <?php
+  $session_id = !empty($student['session_id']) ? intval($student['session_id']) : ($active_session ? intval($active_session['id']) : null);
   $student_splits = get_student_fee_splits($student_id, $session_id);
-  $next_fee_reminder = get_student_next_fee_reminder($student_id, $session_id);
+
+  // Detect upcoming installments due within 10 days or overdue
+  $upcoming_10d_reminders = [];
+  if (!empty($student_splits)) {
+      foreach ($student_splits as $sp) {
+          $amt = floatval($sp['amount']);
+          $p_amt = floatval($sp['paid_amount'] ?? 0);
+          $bal = max(0, $amt - $p_amt);
+          if ($bal <= 0 || !empty($sp['is_paid'])) {
+              continue; // already cleared
+          }
+
+          $diff_days = round((strtotime($sp['due_date']) - strtotime(date('Y-m-d'))) / 86400);
+          $is_overdue = ($diff_days < 0);
+          $is_due_soon = ($diff_days >= 0 && $diff_days <= 10);
+
+          if ($is_overdue || $is_due_soon) {
+              $upcoming_10d_reminders[] = [
+                  'installment_no' => $sp['installment_no'],
+                  'title' => $sp['title'],
+                  'amount' => $amt,
+                  'paid_amount' => $p_amt,
+                  'balance' => $bal,
+                  'due_date' => $sp['due_date'],
+                  'due_date_formatted' => $sp['due_date_formatted'],
+                  'is_overdue' => $is_overdue,
+                  'days_overdue' => max(0, -$diff_days),
+                  'days_remaining' => max(0, $diff_days),
+                  'notes' => $sp['notes'] ?? ''
+              ];
+          }
+      }
+  }
 ?>
-<?php if ($next_fee_reminder): ?>
-  <?php
-    $is_od = !empty($next_fee_reminder['is_overdue']);
-    $rem_amt = floatval($next_fee_reminder['amount']) - floatval($next_fee_reminder['paid_amount']);
-  ?>
-  <div class="fee-installment-reminder-alert no-print" style="background: <?php echo $is_od ? '#fef2f2' : '#fffbeb'; ?>; border: 1.5px solid <?php echo $is_od ? '#fca5a5' : '#fcd34d'; ?>; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-    <div style="display: flex; align-items: center; gap: 14px;">
-      <div style="width: 40px; height: 40px; border-radius: 10px; background: <?php echo $is_od ? '#fee2e2' : '#fef3c7'; ?>; color: <?php echo $is_od ? '#dc2626' : '#d97706'; ?>; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
-        <i class="fa-solid <?php echo $is_od ? 'fa-triangle-exclamation' : 'fa-bell'; ?>"></i>
-      </div>
-      <div>
-        <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
-          <?php if ($is_od): ?>
-            Fee Installment Overdue Alert
-          <?php else: ?>
-            Upcoming Fee Installment Due Reminder
-          <?php endif; ?>
+
+<?php if (!empty($upcoming_10d_reminders)): ?>
+  <div class="fee-10d-reminder-card no-print">
+    <?php foreach ($upcoming_10d_reminders as $rem): ?>
+      <?php
+        $is_od = $rem['is_overdue'];
+        $days_rem = $rem['days_remaining'];
+        $days_od = $rem['days_overdue'];
+      ?>
+      <div class="fee-10d-reminder-item <?php echo $is_od ? 'overdue' : 'due-soon'; ?>">
+        <div class="fee-10d-reminder-left">
+          <div class="fee-10d-reminder-icon <?php echo $is_od ? 'overdue' : 'due-soon'; ?>">
+            <i class="fa-solid <?php echo $is_od ? 'fa-triangle-exclamation' : 'fa-bell'; ?>"></i>
+          </div>
+          <div>
+            <div class="fee-10d-reminder-title-row">
+              <span class="fee-10d-reminder-title">
+                <?php if ($is_od): ?>
+                  Fee Installment Overdue Alert
+                <?php elseif ($days_rem === 0): ?>
+                  Fee Installment Due Today
+                <?php else: ?>
+                  Upcoming Fee Installment Due Reminder
+                <?php endif; ?>
+              </span>
+              <span class="fee-10d-pill <?php echo $is_od ? 'overdue' : 'due-soon'; ?>">
+                <?php if ($is_od): ?>
+                  Overdue by <?php echo $days_od; ?> days
+                <?php elseif ($days_rem === 0): ?>
+                  Due Today
+                <?php else: ?>
+                  Due in <?php echo $days_rem; ?> day<?php echo $days_rem > 1 ? 's' : ''; ?>
+                <?php endif; ?>
+              </span>
+            </div>
+            <div class="fee-10d-reminder-desc">
+              Next installment milestone: <strong><?php echo htmlspecialchars($rem['title']); ?></strong> &bull; Payable Amount: <strong class="fee-10d-amt <?php echo $is_od ? 'overdue' : 'due-soon'; ?>"><?php echo format_inr($rem['balance']); ?></strong>
+              <?php if ($is_od): ?>
+                &bull; Was due on <strong><?php echo htmlspecialchars($rem['due_date_formatted']); ?></strong>. Please arrange payment at your earliest.
+              <?php elseif ($days_rem === 0): ?>
+                &bull; Scheduled due date is <strong>Today (<?php echo htmlspecialchars($rem['due_date_formatted']); ?>)</strong>.
+              <?php else: ?>
+                &bull; Scheduled due date is <strong><?php echo htmlspecialchars($rem['due_date_formatted']); ?></strong>.
+              <?php endif; ?>
+            </div>
+            <div class="fee-10d-pay-hint">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Pay online via UPI with Student Roll No: <strong><?php echo htmlspecialchars($student['roll_no'] ?? ''); ?></strong> or deposit at the KSV Accounts Reception desk.</span>
+            </div>
+          </div>
         </div>
-        <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;">
-          Next installment milestone <strong><?php echo htmlspecialchars($next_fee_reminder['title']); ?></strong> of <strong style="color: <?php echo $is_od ? '#dc2626' : '#b45309'; ?>;"><?php echo format_inr($rem_amt); ?></strong>
-          <?php if ($is_od): ?>
-            was due on <strong><?php echo htmlspecialchars($next_fee_reminder['due_date_formatted']); ?></strong> (Overdue by <?php echo intval($next_fee_reminder['days_overdue']); ?> days). Please arrange payment at your earliest.
-          <?php else: ?>
-            is due on <strong><?php echo htmlspecialchars($next_fee_reminder['due_date_formatted']); ?></strong> (Due in <?php echo intval($next_fee_reminder['days_remaining']); ?> days).
-          <?php endif; ?>
+        <div class="fee-10d-reminder-right">
+          <div class="fee-10d-amount-box">
+            <span class="fee-10d-amt-label">Payable Amount</span>
+            <span class="fee-10d-amt-val <?php echo $is_od ? 'overdue' : 'due-soon'; ?>"><?php echo format_inr($rem['balance']); ?></span>
+            <span class="fee-10d-due-date"><i class="fa-regular fa-calendar"></i> <?php echo htmlspecialchars($rem['due_date_formatted']); ?></span>
+          </div>
         </div>
       </div>
-    </div>
-    <div style="font-size: 0.78rem; font-weight: 700; color: #64748b;">
-      Academic Session <?php echo htmlspecialchars($active_session['session_name'] ?? ''); ?>
-    </div>
+    <?php endforeach; ?>
   </div>
 <?php endif; ?>
 
@@ -1328,61 +1583,60 @@ require_once __DIR__ . '/../includes/layout-header.php';
 </div>
 
 <!-- ══════════════════════════════════════════════════════
-     FEE INSTALLMENT SCHEDULE & MILESTONE TRACKER
+     FEE INSTALLMENT SCHEDULE (ONLY WHEN CONFIGURED BY ADMIN)
      ══════════════════════════════════════════════════════ -->
 <?php if (!empty($student_splits)): ?>
   <div class="periods-card no-print" style="margin-bottom: 22px;">
     <div class="periods-card-header">
       <div style="display: flex; align-items: center; gap: 10px;">
         <div style="width: 32px; height: 32px; border-radius: 8px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
-          <i class="fa-solid fa-calendar-check"></i>
+          <i class="fa-solid fa-calendar-days"></i>
         </div>
         <div>
           <h4 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
-            Installment Payment Milestones &amp; Scheduled Due Dates
+            Installment Payment Schedule
           </h4>
           <span style="font-size: 0.74rem; color: #64748b;">
-            Track your course fee installments, due dates, paid amounts and clearance status
+            Official scheduled fee milestones, due dates, paid amounts &amp; clearance status
           </span>
         </div>
       </div>
-      <div style="display: flex; gap: 8px; align-items: center;">
-        <span style="font-size: 0.74rem; font-weight: 700; padding: 3px 9px; border-radius: 6px; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569;">
-          <?php echo count($student_splits); ?> Milestones
-        </span>
-      </div>
+      <span style="font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569;">
+        <?php echo count($student_splits); ?> Milestones Configured
+      </span>
     </div>
-
     <div class="table-responsive">
       <table class="staff-id-table">
         <thead>
           <tr>
-            <th style="width: 60px;">#</th>
+            <th style="width: 50px;">#</th>
             <th>Installment Title</th>
             <th>Scheduled Due Date</th>
-            <th>Installment Amount</th>
+            <th>Target Amount</th>
             <th>Paid Amount</th>
             <th>Balance Due</th>
-            <th style="text-align: right;">Payment Status</th>
+            <th style="text-align: right;">Status</th>
           </tr>
         </thead>
         <tbody>
           <?php foreach ($student_splits as $idx => $sp): ?>
             <?php
               $amt = floatval($sp['amount']);
-              $p_amt = floatval($sp['paid_amount']);
+              $p_amt = floatval($sp['paid_amount'] ?? 0);
               $bal = max(0, $amt - $p_amt);
+              $is_paid = !empty($sp['is_paid']) || $bal <= 0;
               $is_overdue = !empty($sp['is_overdue']);
               $is_due_soon = !empty($sp['is_due_soon']);
             ?>
             <tr>
-              <td>
-                <span class="sid-code-pill"><?php echo $idx + 1; ?></span>
-              </td>
+              <td><span class="sid-code-pill"><?php echo $idx + 1; ?></span></td>
               <td>
                 <div style="font-weight: 700; color: #0f172a; font-family: 'Outfit', sans-serif;">
                   <?php echo htmlspecialchars($sp['title']); ?>
                 </div>
+                <?php if (!empty($sp['notes'])): ?>
+                  <div style="font-size: 0.72rem; color: #64748b;"><?php echo htmlspecialchars($sp['notes']); ?></div>
+                <?php endif; ?>
               </td>
               <td>
                 <div style="font-weight: 600; color: #334155;">
@@ -1390,49 +1644,31 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <?php echo htmlspecialchars($sp['due_date_formatted']); ?>
                 </div>
                 <?php if ($is_overdue): ?>
-                  <small style="color: #dc2626; font-weight: 700; font-size: 0.70rem;">
-                    Overdue by <?php echo intval($sp['days_overdue']); ?> days
-                  </small>
+                  <small style="color: #dc2626; font-weight: 700; font-size: 0.70rem; display: block;">Overdue by <?php echo intval($sp['days_overdue']); ?> days</small>
                 <?php elseif ($is_due_soon): ?>
-                  <small style="color: #d97706; font-weight: 700; font-size: 0.70rem;">
-                    Due in <?php echo intval($sp['days_remaining']); ?> days
-                  </small>
+                  <small style="color: #d97706; font-weight: 700; font-size: 0.70rem; display: block;">Due in <?php echo intval($sp['days_remaining']); ?> days</small>
                 <?php endif; ?>
               </td>
-              <td>
-                <strong style="color: #0284c7;"><?php echo format_inr($amt); ?></strong>
-              </td>
-              <td>
-                <span style="color: #059669; font-weight: 700;"><?php echo format_inr($p_amt); ?></span>
-              </td>
+              <td><strong style="color: #0284c7;"><?php echo format_inr($amt); ?></strong></td>
+              <td><span style="color: #059669; font-weight: 700;"><?php echo format_inr($p_amt); ?></span></td>
               <td>
                 <?php if ($bal > 0): ?>
                   <span style="color: #dc2626; font-weight: 700;"><?php echo format_inr($bal); ?></span>
                 <?php else: ?>
-                  <span style="color: #64748b; font-size: 0.75rem;">₹0.00</span>
+                  <span style="color: #059669; font-weight: 600; font-size: 0.78rem;">₹0.00</span>
                 <?php endif; ?>
               </td>
               <td style="text-align: right;">
-                <?php if ($sp['status'] === 'paid' || $bal <= 0): ?>
-                  <span class="sid-status-verified" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;">
-                    <i class="fa-solid fa-check"></i> Paid
-                  </span>
+                <?php if ($is_paid): ?>
+                  <span class="sid-status-verified" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;"><i class="fa-solid fa-check"></i> Paid</span>
                 <?php elseif ($sp['status'] === 'partially_paid'): ?>
-                  <span class="sid-status-verified" style="background: #fffbeb; color: #b45309; border-color: #fde68a;">
-                    <i class="fa-solid fa-hourglass-half"></i> Partial
-                  </span>
+                  <span class="sid-status-verified" style="background: #fffbeb; color: #b45309; border-color: #fde68a;"><i class="fa-solid fa-hourglass-half"></i> Partial</span>
                 <?php elseif ($is_overdue): ?>
-                  <span class="sid-status-verified" style="background: #fef2f2; color: #dc2626; border-color: #fecaca;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Overdue
-                  </span>
+                  <span class="sid-status-verified" style="background: #fef2f2; color: #dc2626; border-color: #fecaca;"><i class="fa-solid fa-triangle-exclamation"></i> Overdue</span>
                 <?php elseif ($is_due_soon): ?>
-                  <span class="sid-status-verified" style="background: #fffbeb; color: #b45309; border-color: #fde68a;">
-                    <i class="fa-regular fa-clock"></i> Due Soon
-                  </span>
+                  <span class="sid-status-verified" style="background: #fffbeb; color: #b45309; border-color: #fde68a;"><i class="fa-regular fa-clock"></i> Due Soon</span>
                 <?php else: ?>
-                  <span class="sid-status-verified" style="background: #f1f5f9; color: #475569; border-color: #e2e8f0;">
-                    <i class="fa-regular fa-calendar"></i> Scheduled
-                  </span>
+                  <span class="sid-status-verified" style="background: #f1f5f9; color: #475569; border-color: #e2e8f0;"><i class="fa-regular fa-calendar"></i> Scheduled</span>
                 <?php endif; ?>
               </td>
             </tr>

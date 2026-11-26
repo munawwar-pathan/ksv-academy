@@ -87,6 +87,7 @@ require_once __DIR__ . '/../config.php';
             <li><a href="<?php echo url('about'); ?>"><i class="fa-solid fa-angle-right"></i> About KSV Academy</a></li>
             <li><a href="<?php echo url('faculty'); ?>"><i class="fa-solid fa-angle-right"></i> Our Expert Faculty</a></li>
             <li><a href="<?php echo url('admissions'); ?>"><i class="fa-solid fa-angle-right"></i> Admissions & Scholarship</a></li>
+            <li><a href="<?php echo url('notes'); ?>"><i class="fa-solid fa-angle-right"></i> Study Notes &amp; Reference</a></li>
             <li><a href="<?php echo url('gallery'); ?>"><i class="fa-solid fa-angle-right"></i> Campus Life & Gallery</a></li>
             <li><a href="<?php echo url('contact'); ?>"><i class="fa-solid fa-angle-right"></i> Student Support & Helpdesk</a></li>
             <li><a href="#" data-modal="demoModal"><i class="fa-solid fa-angle-right"></i> 3-Days Free Demo Class</a></li>

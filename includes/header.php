@@ -22,6 +22,7 @@ $breadcrumb_titles = [
     'about'      => 'About Us',
     'toppers'    => 'Academic Toppers',
     'courses'    => 'Courses & Batches',
+    'notes'      => 'Study Notes',
     'admissions' => 'Admissions & Scholarships',
     'faculty'    => 'Expert Faculty',
     'gallery'    => 'Campus Gallery',
@@ -670,13 +671,23 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
             </a>
           </li>
           <li class="nav-item has-dropdown">
-            <a href="<?php echo url('courses'); ?>" class="nav-link <?php echo is_active('courses'); ?>" id="coursesDropdownToggle">
+            <a href="<?php echo url('courses'); ?>" class="nav-link <?php echo (is_active('courses') || is_active('notes')) ? 'active' : ''; ?>" id="coursesDropdownToggle">
               <span>Courses</span>
               <!-- <span class="nav-courses-badge">New Batches</span> -->
               <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
             <div class="dropdown-menu-box" id="coursesDropdownMenu">
               <div class="dropdown-list">
+                <a href="<?php echo url('notes'); ?>" class="dropdown-link-item highlight-item">
+                  <div class="dropdown-icon-box"><i class="fa-solid fa-book-bookmark"></i></div>
+                  <div class="dropdown-text">
+                    <span class="dropdown-title">
+                      <span>Study Notes</span>
+                      <span class="dropdown-badge-pill"><i class="fa-solid fa-sparkles"></i> Free Notes</span>
+                    </span>
+                    <span class="dropdown-subtitle">Public Study Material &amp; Syllabus Notes</span>
+                  </div>
+                </a>
                 <a href="<?php echo url('courses?filter=school'); ?>" class="dropdown-link-item">
                   <div class="dropdown-icon-box"><i class="fa-solid fa-school"></i></div>
                   <div class="dropdown-text">
@@ -794,8 +805,12 @@ $current_crumb_name = $breadcrumb_titles[$active_page_name] ?? 'Page';
           </a>
         </li>
         <li class="drawer-item-dropdown">
-          <a href="<?php echo url('courses'); ?>" class="<?php echo is_active('courses'); ?>"><i class="fa-solid fa-book-open"></i> Courses &amp; Batches</a>
+          <a href="<?php echo url('courses'); ?>" class="<?php echo (is_active('courses') || is_active('notes')) ? 'active' : ''; ?>"><i class="fa-solid fa-book-open"></i> Courses &amp; Batches</a>
           <div class="drawer-sub-links">
+            <a href="<?php echo url('notes'); ?>" class="drawer-sub-link-highlight">
+              <span><i class="fa-solid fa-book-bookmark"></i> Study Notes &amp; Material</span>
+              <span class="drawer-badge-mini">Free</span>
+            </a>
             <a href="<?php echo url('courses?filter=school'); ?>">&bull; School Section (5th–10th)</a>
             <a href="<?php echo url('courses?filter=competitive'); ?>">&bull; IIT-JEE / NEET / MH-CET</a>
             <a href="<?php echo url('courses?filter=college'); ?>">&bull; Junior College (11th &amp; 12th)</a>
