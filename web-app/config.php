@@ -1018,6 +1018,8 @@ if (!defined('DEFAULT_STUDENT_PERMISSIONS')) {
         'attendance',
         'fees',
         'student-id',
+        'notes',
+        'note-record',
         'marksheet',
         'announcements',
         'settings'
@@ -1140,6 +1142,8 @@ function has_menu_permission($menu_key, $user = null) {
             'attendance' => ['attendance'],
             'fees' => ['fees'],
             'student-id' => ['student-id'],
+            'notes' => ['notes', 'note-record'],
+            'note-record' => ['notes', 'note-record'],
             'marksheet' => ['marksheet'],
             'announcements' => ['announcements'],
             'settings' => ['settings'],
@@ -1502,5 +1506,505 @@ function get_unread_form_data_count() {
     } catch (Exception $e) {
         return 0;
     }
+}
+
+/**
+ * Ensure note_records table exists
+ */
+function ensure_note_records_table($db = null) {
+    if (!$db) {
+        $db = get_db_connection();
+    }
+    static $ensured = false;
+    if ($ensured) return;
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS note_records (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            session_id INT DEFAULT NULL,
+            title VARCHAR(255) NOT NULL,
+            subject VARCHAR(150) NOT NULL,
+            standard VARCHAR(100) DEFAULT 'All Classes / General',
+            description TEXT DEFAULT NULL,
+            file_path VARCHAR(500) NOT NULL,
+            file_name VARCHAR(255) DEFAULT NULL,
+            file_size INT DEFAULT 0,
+            file_type VARCHAR(20) DEFAULT NULL,
+            visibility ENUM('public', 'private') NOT NULL DEFAULT 'public',
+            uploaded_by INT DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_session (session_id),
+            INDEX idx_subject (subject),
+            INDEX idx_standard (standard),
+            INDEX idx_visibility (visibility),
+            INDEX idx_created_at (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+        // Verify standard column exists for older tables
+        try {
+            $cols = $db->query("SHOW COLUMNS FROM note_records LIKE 'standard'")->fetchAll();
+            if (empty($cols)) {
+                $db->exec("ALTER TABLE note_records ADD COLUMN standard VARCHAR(100) DEFAULT 'All Classes / General' AFTER subject, ADD INDEX idx_standard (standard);");
+            }
+        } catch (Exception $e) {}
+
+        $ensured = true;
+    } catch (Exception $e) {
+        // ignore
+    }
+}
+
+/**
+ * Academic Standards & Specialized Course Categories
+ */
+function get_default_academic_categories() {
+    return [
+        'Junior School & Foundation (5th - 8th)' => [
+            '5th Standard',
+            '5th Standard (State Board)',
+            '5th Standard (CBSE)',
+            '5th Standard (ICSE / IB)',
+            '5th Standard Foundation & Olympiad',
+            '6th Standard',
+            '6th Standard (State Board)',
+            '6th Standard (CBSE)',
+            '6th Standard (ICSE / IB)',
+            '6th Standard Foundation & Olympiad',
+            '7th Standard',
+            '7th Standard (State Board)',
+            '7th Standard (CBSE)',
+            '7th Standard (ICSE / IB)',
+            '7th Standard Foundation & Olympiad',
+            '8th Standard',
+            '8th Standard (State Board)',
+            '8th Standard (CBSE)',
+            '8th Standard (ICSE / IB)',
+            '8th Standard Foundation & Olympiad',
+        ],
+        'Secondary & Pre-Foundation (9th - 10th)' => [
+            '9th Standard',
+            '9th Standard (State Board)',
+            '9th Standard (CBSE)',
+            '9th Standard (ICSE / IB)',
+            '9th Standard (IIT-JEE / NEET Foundation)',
+            '9th Standard (Olympiad)',
+            '10th Standard',
+            '10th Standard (State Board)',
+            '10th Standard (CBSE)',
+            '10th Standard (ICSE / IB)',
+            '10th Standard (IIT-JEE / NEET Foundation)',
+            '10th Standard (NTSE & Olympiad)',
+        ],
+        '11th Higher Secondary & Competitive' => [
+            '11th Science',
+            '11th Science (IIT-JEE)',
+            '11th Science (NEET)',
+            '11th Science (MH-CET)',
+            '11th Science (State Board)',
+            '11th Science (CBSE)',
+            '11th Science (ICSE / ISC)',
+            '11th Science (IB)',
+            '11th Commerce',
+            '11th Commerce (State Board)',
+            '11th Commerce (CBSE / ISC)',
+            '11th Arts / Humanities',
+        ],
+        '12th Higher Secondary & Competitive' => [
+            '12th Science',
+            '12th Science (IIT-JEE)',
+            '12th Science (NEET)',
+            '12th Science (MH-CET)',
+            '12th Science (State Board)',
+            '12th Science (CBSE)',
+            '12th Science (ICSE / ISC)',
+            '12th Science (IB)',
+            '12th Commerce',
+            '12th Commerce (State Board)',
+            '12th Commerce (CBSE / ISC)',
+            '12th Arts / Humanities',
+        ],
+        'Competitive Target & Specialized Batches' => [
+            'IIT-JEE Main + Advanced Batch',
+            'NEET-UG Target Batch',
+            'MH-CET Target Batch',
+            'Olympiad Excellence Batch',
+            'IIT-JEE / NEET Repeater Batch',
+        ],
+    ];
+}
+
+/**
+ * Helper to render grouped options with optgroup
+ */
+if (!function_exists('render_standards_dropdown_options')) {
+    function render_standards_dropdown_options($selected_val = '', $include_other = true, $academic_categories = [], $custom_db_standards = []) {
+        if (empty($academic_categories)) {
+            $academic_categories = get_default_academic_categories();
+        }
+        $html = '';
+        foreach ($academic_categories as $category_name => $std_options) {
+            $html .= '<optgroup label="' . htmlspecialchars($category_name, ENT_QUOTES, 'UTF-8') . '">';
+            foreach ($std_options as $std_opt) {
+                $is_sel = ($selected_val === $std_opt) ? ' selected' : '';
+                $html .= '<option value="' . htmlspecialchars($std_opt, ENT_QUOTES, 'UTF-8') . '"' . $is_sel . '>' . htmlspecialchars($std_opt, ENT_QUOTES, 'UTF-8') . '</option>';
+            }
+            $html .= '</optgroup>';
+        }
+        if (!empty($custom_db_standards)) {
+            $html .= '<optgroup label="Custom Academy Batches">';
+            foreach ($custom_db_standards as $cstd) {
+                $is_sel = ($selected_val === $cstd) ? ' selected' : '';
+                $html .= '<option value="' . htmlspecialchars($cstd, ENT_QUOTES, 'UTF-8') . '"' . $is_sel . '>' . htmlspecialchars($cstd, ENT_QUOTES, 'UTF-8') . '</option>';
+            }
+            $html .= '</optgroup>';
+        }
+        if ($include_other) {
+            $is_sel = ($selected_val === '__other__') ? ' selected' : '';
+            $html .= '<option value="__other__"' . $is_sel . '>+ Other (Custom Academic Class)</option>';
+        }
+        return $html;
+    }
+}
+
+/**
+ * ═════════════════════════════════════════════════════════════════════════
+ * STUDENT FEE INSTALLMENT & SPLIT PAYMENT HELPERS
+ * ═════════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Ensure student_fee_installments table exists
+ */
+function ensure_student_fee_installments_table($db) {
+    static $ensured = false;
+    if ($ensured) return;
+    try {
+        $db->exec("CREATE TABLE IF NOT EXISTS student_fee_installments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            session_id INT DEFAULT 2,
+            student_id INT NOT NULL,
+            installment_no INT DEFAULT 1,
+            title VARCHAR(100) DEFAULT 'Installment',
+            amount DECIMAL(10,2) NOT NULL,
+            due_date DATE NOT NULL,
+            paid_amount DECIMAL(10,2) DEFAULT 0.00,
+            status ENUM('pending', 'paid', 'partially_paid', 'overdue') DEFAULT 'pending',
+            paid_date DATE DEFAULT NULL,
+            notes VARCHAR(255) DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_student (student_id),
+            KEY idx_due_date (due_date),
+            KEY idx_session (session_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;");
+        $ensured = true;
+    } catch (Exception $e) {
+        // ignore
+    }
+}
+
+/**
+ * Parse and validate submitted fee splits
+ */
+function parse_and_validate_fee_splits($amounts, $dates, $titles = []) {
+    $splits = [];
+    if (!is_array($amounts) || !is_array($dates)) {
+        return $splits;
+    }
+    $count = count($amounts);
+    for ($i = 0; $i < $count; $i++) {
+        $amt = max(0, floatval($amounts[$i] ?? 0));
+        $date = trim((string)($dates[$i] ?? ''));
+        if ($amt > 0 && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $title = trim((string)($titles[$i] ?? '')) ?: ('Installment ' . (count($splits) + 1));
+            $splits[] = [
+                'installment_no' => count($splits) + 1,
+                'title' => $title,
+                'amount' => $amt,
+                'due_date' => $date
+            ];
+        }
+    }
+    // Sort chronologically by due date
+    usort($splits, function($a, $b) {
+        return strcmp($a['due_date'], $b['due_date']);
+    });
+    // Renumber installment_no
+    foreach ($splits as $idx => &$s) {
+        $s['installment_no'] = $idx + 1;
+    }
+    unset($s);
+    return $splits;
+}
+
+/**
+ * Synchronize fee splits to database (students.fee_splits and student_fee_installments table)
+ */
+function sync_student_fee_splits($student_id, $session_id, array $splits, $paid_fees = null) {
+    $student_id = intval($student_id);
+    $session_id = intval($session_id);
+    if ($student_id <= 0) return [];
+
+    $db = get_db_connection();
+    ensure_student_fee_installments_table($db);
+
+    if ($paid_fees === null) {
+        $st = $db->prepare("SELECT paid_fees FROM students WHERE id = ? LIMIT 1");
+        $st->execute([$student_id]);
+        $paid_fees = floatval($st->fetchColumn() ?: 0);
+    } else {
+        $paid_fees = floatval($paid_fees);
+    }
+
+    $today = date('Y-m-d');
+    $remaining_paid = max(0, $paid_fees);
+    $processed_splits = [];
+
+    foreach ($splits as $idx => $s) {
+        $amt = floatval($s['amount'] ?? 0);
+        if ($amt <= 0) continue;
+
+        $due_date = $s['due_date'] ?? $today;
+        $title = $s['title'] ?? ('Installment ' . ($idx + 1));
+        $item_paid = 0.00;
+        $status = 'pending';
+        $paid_date = null;
+
+        if ($remaining_paid >= $amt) {
+            $item_paid = $amt;
+            $status = 'paid';
+            $paid_date = $today;
+            $remaining_paid -= $amt;
+        } elseif ($remaining_paid > 0) {
+            $item_paid = $remaining_paid;
+            $status = 'partially_paid';
+            $paid_date = $today;
+            $remaining_paid = 0;
+        } else {
+            $status = ($due_date < $today) ? 'overdue' : 'pending';
+        }
+
+        $processed_splits[] = [
+            'installment_no' => $idx + 1,
+            'title' => $title,
+            'amount' => $amt,
+            'due_date' => $due_date,
+            'paid_amount' => $item_paid,
+            'status' => $status,
+            'paid_date' => $paid_date,
+            'notes' => $s['notes'] ?? ''
+        ];
+    }
+
+    // Save to students.fee_splits
+    $json = !empty($processed_splits) ? json_encode($processed_splits, JSON_UNESCAPED_UNICODE) : null;
+    $upd = $db->prepare("UPDATE students SET fee_splits = ? WHERE id = ?");
+    $upd->execute([$json, $student_id]);
+
+    // Replace in student_fee_installments table
+    $del = $db->prepare("DELETE FROM student_fee_installments WHERE student_id = ? AND session_id = ?");
+    $del->execute([$student_id, $session_id]);
+
+    if (!empty($processed_splits)) {
+        $ins = $db->prepare("
+            INSERT INTO student_fee_installments 
+            (session_id, student_id, installment_no, title, amount, due_date, paid_amount, status, paid_date, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        foreach ($processed_splits as $item) {
+            $ins->execute([
+                $session_id,
+                $student_id,
+                $item['installment_no'],
+                $item['title'],
+                $item['amount'],
+                $item['due_date'],
+                $item['paid_amount'],
+                $item['status'],
+                $item['paid_date'],
+                $item['notes']
+            ]);
+        }
+    }
+
+    return $processed_splits;
+}
+
+/**
+ * Recalculate installment statuses when a payment is collected
+ */
+function refresh_student_fee_installment_statuses($student_id, $session_id = null) {
+    $student_id = intval($student_id);
+    if ($student_id <= 0) return [];
+    $db = get_db_connection();
+    ensure_student_fee_installments_table($db);
+
+    $stmt = $db->prepare("SELECT id, session_id, paid_fees, fee_splits FROM students WHERE id = ? LIMIT 1");
+    $stmt->execute([$student_id]);
+    $stu = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$stu) return [];
+
+    $sid = $session_id ? intval($session_id) : intval($stu['session_id']);
+    $splits = [];
+    if (!empty($stu['fee_splits'])) {
+        $splits = json_decode($stu['fee_splits'], true) ?: [];
+    }
+    if (empty($splits)) {
+        $chk = $db->prepare("SELECT title, amount, due_date, notes FROM student_fee_installments WHERE student_id = ? ORDER BY due_date ASC");
+        $chk->execute([$student_id]);
+        $splits = $chk->fetchAll(PDO::FETCH_ASSOC);
+    }
+    if (empty($splits)) return [];
+
+    return sync_student_fee_splits($student_id, $sid, $splits, $stu['paid_fees']);
+}
+
+/**
+ * Get enriched fee splits/installments for a student
+ */
+function get_student_fee_splits($student_id, $session_id = null) {
+    $student_id = intval($student_id);
+    if ($student_id <= 0) return [];
+
+    $db = get_db_connection();
+    ensure_student_fee_installments_table($db);
+
+    $sql = "SELECT * FROM student_fee_installments WHERE student_id = ?";
+    $params = [$student_id];
+    if ($session_id) {
+        $sql .= " AND session_id = ?";
+        $params[] = intval($session_id);
+    }
+    $sql .= " ORDER BY due_date ASC, installment_no ASC";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fallback to students.fee_splits if table is empty
+    if (empty($rows)) {
+        $st = $db->prepare("SELECT fee_splits, session_id, paid_fees FROM students WHERE id = ? LIMIT 1");
+        $st->execute([$student_id]);
+        $stu = $st->fetch(PDO::FETCH_ASSOC);
+        if ($stu && !empty($stu['fee_splits'])) {
+            $parsed = json_decode($stu['fee_splits'], true);
+            if (is_array($parsed) && !empty($parsed)) {
+                $rows = sync_student_fee_splits($student_id, $stu['session_id'], $parsed, $stu['paid_fees']);
+            }
+        }
+    }
+
+    $today = date('Y-m-d');
+    $enriched = [];
+    foreach ($rows as $r) {
+        $amt = floatval($r['amount']);
+        $paid = floatval($r['paid_amount'] ?? 0);
+        $pending = max(0, $amt - $paid);
+        $due = $r['due_date'];
+
+        $is_paid = ($r['status'] === 'paid' || $pending <= 0);
+        $diff_days = round((strtotime($due) - strtotime($today)) / 86400);
+
+        $is_overdue = (!$is_paid && $diff_days < 0);
+        $is_due_soon = (!$is_paid && $diff_days >= 0 && $diff_days <= 10);
+
+        $status = $is_paid ? 'paid' : ($is_overdue ? 'overdue' : ($paid > 0 ? 'partially_paid' : 'pending'));
+
+        $enriched[] = array_merge($r, [
+            'amount' => $amt,
+            'paid_amount' => $paid,
+            'pending_amount' => $pending,
+            'status' => $status,
+            'is_paid' => $is_paid,
+            'is_overdue' => $is_overdue,
+            'is_due_soon' => $is_due_soon,
+            'days_remaining' => max(0, (int)$diff_days),
+            'days_overdue' => max(0, -(int)$diff_days),
+            'formatted_due_date' => date('d M Y', strtotime($due)),
+            'due_date_formatted' => date('d M Y', strtotime($due))
+        ]);
+    }
+    return $enriched;
+}
+
+/**
+ * Get next unpaid or overdue installment reminder for a student
+ */
+function get_student_next_fee_reminder($student_id, $session_id = null) {
+    $splits = get_student_fee_splits($student_id, $session_id);
+    if (empty($splits)) return null;
+
+    // Prioritize overdue installments first
+    foreach ($splits as $s) {
+        if ($s['is_overdue']) {
+            return $s;
+        }
+    }
+    // Then the first upcoming unpaid installment
+    foreach ($splits as $s) {
+        if (!$s['is_paid']) {
+            return $s;
+        }
+    }
+    return null;
+}
+
+/**
+ * Get upcoming fee reminders across students for admin overview (Defaults to 10 days ahead or overdue)
+ */
+function get_upcoming_fee_reminders($session_id = null, $days_ahead = 10) {
+    $db = get_db_connection();
+    ensure_student_fee_installments_table($db);
+
+    $today = date('Y-m-d');
+    $cutoff = date('Y-m-d', strtotime("+{$days_ahead} days"));
+
+    $sql = "
+        SELECT 
+            sfi.*,
+            s.student_name,
+            s.roll_no,
+            s.standard,
+            s.section,
+            s.parent_name,
+            s.parent_phone,
+            s.student_phone,
+            s.photo
+        FROM student_fee_installments sfi
+        JOIN students s ON sfi.student_id = s.id
+        WHERE sfi.status IN ('pending', 'partially_paid', 'overdue')
+          AND sfi.due_date <= ?
+    ";
+    $params = [$cutoff];
+    if ($session_id) {
+        $sql .= " AND sfi.session_id = ?";
+        $params[] = intval($session_id);
+    }
+    $sql .= " ORDER BY sfi.due_date ASC";
+
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $reminders = [];
+    foreach ($rows as $r) {
+        $amt = floatval($r['amount']);
+        $paid = floatval($r['paid_amount'] ?? 0);
+        $pending = max(0, $amt - $paid);
+        $due = $r['due_date'];
+        $diff_days = round((strtotime($due) - strtotime($today)) / 86400);
+        $is_overdue = ($diff_days < 0);
+
+        $reminders[] = array_merge($r, [
+            'amount' => $amt,
+            'paid_amount' => $paid,
+            'pending_amount' => $pending,
+            'is_overdue' => $is_overdue,
+            'days_remaining' => max(0, (int)$diff_days),
+            'days_overdue' => max(0, -(int)$diff_days),
+            'formatted_due_date' => date('d M Y', strtotime($due)),
+            'due_date_formatted' => date('d M Y', strtotime($due))
+        ]);
+    }
+    return $reminders;
 }
 

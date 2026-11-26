@@ -40,13 +40,21 @@ $session_id = $active_session ? intval($active_session['id']) : 1;
 $current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
-// Filters with length bounds & whitelisting
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
-$search = mb_substr(trim($_GET['search'] ?? ''), 0, 100);
-$filter_standard = trim($_GET['standard'] ?? '');
-if (!in_array($filter_standard, $standards, true)) {
-    $filter_standard = '';
+// Academic Standards & Specialized Course Categories (Matching Student Roaster & Attendance)
+$academic_categories = get_default_academic_categories();
+$flat_predefined_standards = [];
+foreach ($academic_categories as $cat => $std_list) {
+    foreach ($std_list as $s_item) {
+        $flat_predefined_standards[] = $s_item;
+    }
 }
+$db_standards = $db->query("SELECT DISTINCT standard FROM students WHERE session_id = " . intval($session_id) . " AND standard IS NOT NULL AND standard != ''")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+$standards = array_values(array_unique(array_filter(array_merge($flat_predefined_standards, $db_standards))));
+$custom_db_standards = array_values(array_diff($db_standards, $flat_predefined_standards));
+
+$search = mb_substr(trim($_GET['search'] ?? ''), 0, 100);
+$raw_standard = trim($_GET['standard'] ?? '');
+$filter_standard = ($raw_standard !== '' && $raw_standard !== 'all' && in_array($raw_standard, $standards, true)) ? $raw_standard : '';
 
 // Selected student & exam
 $selected_student_id = max(0, intval($_GET['student_id'] ?? ($_GET['id'] ?? 0)));
@@ -247,6 +255,37 @@ if (!empty($page_student_ids)) {
     while ($row = $ms_summary_stmt->fetch(PDO::FETCH_ASSOC)) {
         $stu_ms_summary[$row['student_id']] = $row;
     }
+
+    // Query detailed subject marks for page students to support pre-loading saved evaluations & PDF export
+    $stu_evaluations_map = [];
+    $all_ms_stmt = $db->prepare("
+        SELECT id, student_id, exam_name, exam_date, subjects_json, total_obtained, total_max, percentage, overall_grade, result_status
+        FROM marksheets
+        WHERE session_id = ? AND student_id IN ($in_stu_ph)
+        ORDER BY id DESC
+    ");
+    $all_ms_stmt->execute(array_merge([$session_id], $page_student_ids));
+    while ($ms_row = $all_ms_stmt->fetch(PDO::FETCH_ASSOC)) {
+        $sid = intval($ms_row['student_id']);
+        $ename = trim($ms_row['exam_name']);
+        $subs = json_decode($ms_row['subjects_json'], true);
+        if (is_array($subs)) {
+            foreach ($subs as $sb) {
+                $sname = trim($sb['name'] ?? '');
+                if ($sname !== '') {
+                    $stu_evaluations_map[$sid][$ename][$sname] = [
+                        'marksheet_id' => intval($ms_row['id']),
+                        'exam_name' => $ename,
+                        'exam_date' => $ms_row['exam_date'],
+                        'max' => floatval($sb['max'] ?? 100),
+                        'pass' => floatval($sb['pass'] ?? 35),
+                        'obtained' => floatval($sb['obtained'] ?? 0),
+                        'grade' => $sb['grade'] ?? 'F'
+                    ];
+                }
+            }
+        }
+    }
 }
 
 // Handle Add/Generate Marksheet Submission
@@ -301,7 +340,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $exam_name = mb_substr(trim($_POST['exam_name'] ?? 'Annual Examination'), 0, 100);
+        $raw_exam_name = trim($_POST['exam_name'] ?? 'Annual Examination');
+        if ($raw_exam_name === 'Other' && !empty($_POST['custom_exam_name'])) {
+            $raw_exam_name = trim($_POST['custom_exam_name']);
+        }
+        $exam_name = mb_substr($raw_exam_name !== '' ? $raw_exam_name : 'Annual Examination', 0, 100);
         
         // Strict calendar date verification
         $raw_date = trim($_POST['exam_date'] ?? '');
@@ -387,6 +430,154 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($filter_standard)) $qp_redir['standard'] = $filter_standard;
 
         header("Location: " . ADMIN_URL . "/marksheet?" . http_build_query($qp_redir) . "#report-card-view");
+        exit;
+    }
+
+    // Handle Bulk Add Subject Evaluation for Multiple Selected Scholars
+    if ($action === 'bulk_add_subject') {
+        $raw_exam_name = trim($_POST['bulk_exam_name'] ?? '');
+        if ($raw_exam_name === 'custom' && !empty($_POST['bulk_custom_exam_name'])) {
+            $raw_exam_name = trim($_POST['bulk_custom_exam_name']);
+        }
+        $exam_name = mb_substr($raw_exam_name !== '' ? $raw_exam_name : 'Unit Test 1', 0, 100);
+
+        // Strict calendar date verification
+        $raw_date = trim($_POST['bulk_exam_date'] ?? '');
+        $exam_date = date('Y-m-d');
+        if (!empty($raw_date) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw_date, $m)) {
+            if (checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
+                $exam_date = $raw_date;
+            }
+        }
+
+        $student_ids = is_array($_POST['bulk_student_ids'] ?? null) ? $_POST['bulk_student_ids'] : [];
+        $bulk_subjects = is_array($_POST['bulk_subjects'] ?? null) ? $_POST['bulk_subjects'] : [];
+        $bulk_max = is_array($_POST['bulk_max_marks'] ?? null) ? $_POST['bulk_max_marks'] : [];
+        $bulk_pass = is_array($_POST['bulk_pass_marks'] ?? null) ? $_POST['bulk_pass_marks'] : [];
+        $bulk_obtained = is_array($_POST['bulk_obtained'] ?? null) ? $_POST['bulk_obtained'] : [];
+
+        $processed_count = 0;
+        $updated_count = 0;
+        $inserted_count = 0;
+
+        foreach ($student_ids as $sid_raw) {
+            $sid = intval($sid_raw);
+            if ($sid <= 0) continue;
+
+            // Verify scholar belongs to active academic session
+            $st_chk = $db->prepare("SELECT id, student_name FROM students WHERE id = ? AND session_id = ? LIMIT 1");
+            $st_chk->execute([$sid, $session_id]);
+            $stu_row = $st_chk->fetch(PDO::FETCH_ASSOC);
+            if (!$stu_row) continue;
+
+            $sub_name = mb_substr(trim((string)($bulk_subjects[$sid] ?? 'Mathematics')), 0, 100);
+            if ($sub_name === '') $sub_name = 'Mathematics';
+
+            $max_m = max(1.0, min(1000.0, floatval($bulk_max[$sid] ?? 100)));
+            $pass_m = max(0.0, min($max_m, floatval($bulk_pass[$sid] ?? round($max_m * 0.35, 1))));
+            $obt = max(0.0, min($max_m, floatval($bulk_obtained[$sid] ?? 0)));
+
+            $pct_sub = ($obt / $max_m) * 100;
+            if ($pct_sub >= 90) $sub_grade = 'A+';
+            elseif ($pct_sub >= 80) $sub_grade = 'A';
+            elseif ($pct_sub >= 70) $sub_grade = 'B+';
+            elseif ($pct_sub >= 60) $sub_grade = 'B';
+            elseif ($pct_sub >= 50) $sub_grade = 'C';
+            elseif ($pct_sub >= 35) $sub_grade = 'D';
+            else $sub_grade = 'F';
+
+            $new_subject_entry = [
+                'name' => $sub_name,
+                'max' => $max_m,
+                'pass' => $pass_m,
+                'obtained' => $obt,
+                'grade' => $sub_grade
+            ];
+
+            // Check if marksheet already exists for this scholar and exam_name in current session
+            $ms_chk = $db->prepare("SELECT id, subjects_json FROM marksheets WHERE student_id = ? AND session_id = ? AND exam_name = ? LIMIT 1");
+            $ms_chk->execute([$sid, $session_id, $exam_name]);
+            $existing_ms = $ms_chk->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing_ms) {
+                // Parse existing subjects
+                $existing_subs = json_decode($existing_ms['subjects_json'], true);
+                if (!is_array($existing_subs)) $existing_subs = [];
+
+                $found_sub = false;
+                foreach ($existing_subs as &$ex_s) {
+                    if (strcasecmp(trim($ex_s['name'] ?? ''), $sub_name) === 0) {
+                        $ex_s['max'] = $max_m;
+                        $ex_s['pass'] = $pass_m;
+                        $ex_s['obtained'] = $obt;
+                        $ex_s['grade'] = $sub_grade;
+                        $found_sub = true;
+                        break;
+                    }
+                }
+                unset($ex_s);
+
+                if (!$found_sub) {
+                    $existing_subs[] = $new_subject_entry;
+                }
+
+                // Recalculate whole marksheet totals
+                $tot_obt = 0;
+                $tot_max = 0;
+                foreach ($existing_subs as $s_item) {
+                    $tot_obt += floatval($s_item['obtained'] ?? 0);
+                    $tot_max += floatval($s_item['max'] ?? 0);
+                }
+                $overall_pct = $tot_max > 0 ? round(($tot_obt / $tot_max) * 100, 2) : 0;
+                if ($overall_pct >= 90) $overall_grade = 'A+';
+                elseif ($overall_pct >= 80) $overall_grade = 'A';
+                elseif ($overall_pct >= 70) $overall_grade = 'B+';
+                elseif ($overall_pct >= 60) $overall_grade = 'B';
+                elseif ($overall_pct >= 50) $overall_grade = 'C';
+                elseif ($overall_pct >= 35) $overall_grade = 'D';
+                else $overall_grade = 'F';
+
+                $result_status = $overall_pct >= 35 ? 'PASS' : 'FAIL';
+
+                $up_stmt = $db->prepare("
+                    UPDATE marksheets 
+                    SET subjects_json = ?, total_obtained = ?, total_max = ?, percentage = ?, overall_grade = ?, result_status = ?, exam_date = ?
+                    WHERE id = ?
+                ");
+                $up_stmt->execute([
+                    json_encode($existing_subs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP),
+                    $tot_obt, $tot_max, $overall_pct, $overall_grade, $result_status, $exam_date,
+                    $existing_ms['id']
+                ]);
+                $updated_count++;
+            } else {
+                // Insert new marksheet for this scholar
+                $overall_pct = round(($obt / $max_m) * 100, 2);
+                $overall_grade = $sub_grade;
+                $result_status = $overall_pct >= 35 ? 'PASS' : 'FAIL';
+                $remarks = 'Subject evaluation recorded.';
+
+                $ins_stmt = $db->prepare("
+                    INSERT INTO marksheets (session_id, student_id, exam_name, exam_date, subjects_json, total_obtained, total_max, percentage, overall_grade, result_status, remarks)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                $ins_stmt->execute([
+                    $session_id, $sid, $exam_name, $exam_date,
+                    json_encode([$new_subject_entry], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP),
+                    $obt, $max_m, $overall_pct, $overall_grade, $result_status, $remarks
+                ]);
+                $inserted_count++;
+            }
+            $processed_count++;
+        }
+
+        if ($processed_count > 0) {
+            set_flash('success', "Subject '{$sub_name}' evaluation for {$processed_count} scholar(s) saved in '{$exam_name}' successfully! ({$inserted_count} new marksheets, {$updated_count} updated).");
+        } else {
+            set_flash('error', 'No valid scholar records were submitted.');
+        }
+
+        header("Location: " . ADMIN_URL . "/marksheet");
         exit;
     }
 }
@@ -2096,10 +2287,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
   }
 
   /* Modal Responsiveness */
-  #createMarksheetModal {
+  #createMarksheetModal,
+  #bulkAddSubjectModal {
     padding: 12px !important;
   }
-  #createMarksheetModal .hrms-modal-content {
+  #createMarksheetModal .hrms-modal-content,
+  #bulkAddSubjectModal .hrms-modal-content {
     padding: 16px 14px !important;
     border-radius: 12px !important;
     max-height: 94vh !important;
@@ -2628,7 +2821,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: var(--hrms-primary, #0092df) !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
-[data-theme="dark"] .roaster-select-box select option {
+[data-theme="dark"] .roaster-select-box select option,
+[data-theme="dark"] .roaster-select-box select optgroup {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
@@ -2992,8 +3186,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
 }
 
-/* Modal: Create Marksheet Form */
-[data-theme="dark"] #createMarksheetModal .hrms-modal-content {
+/* Modal: Create Marksheet Form & Bulk Subject Modal */
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content,
+[data-theme="dark"] #bulkAddSubjectModal .hrms-modal-content {
   background: #1e293b !important;
   border: 1px solid #334155 !important;
   border-radius: 16px !important;
@@ -3001,34 +3196,44 @@ require_once __DIR__ . '/../includes/layout-header.php';
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
   color: #f8fafc !important;
 }
-[data-theme="dark"] #createMarksheetModal .hrms-modal-content > div:first-child {
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content > div:first-child,
+[data-theme="dark"] #bulkAddSubjectModal .hrms-modal-content > div:first-child {
   border-bottom: 1.5px solid #334155 !important;
 }
-[data-theme="dark"] #createMarksheetModal h3 {
+[data-theme="dark"] #createMarksheetModal h3,
+[data-theme="dark"] #bulkAddSubjectModal h3 {
   color: #f8fafc !important;
 }
-[data-theme="dark"] #createMarksheetModal .hrms-modal-content button[onclick*="closeCreateMarksheetModal"] {
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content button[onclick*="closeCreateMarksheetModal"],
+[data-theme="dark"] #bulkAddSubjectModal .hrms-modal-content button[onclick*="closeBulkAddSubjectModal"] {
   background: #0f172a !important;
   border: 1px solid #334155 !important;
   border-radius: 50% !important;
   color: #cbd5e1 !important;
   transition: all 0.2s ease !important;
 }
-[data-theme="dark"] #createMarksheetModal .hrms-modal-content button[onclick*="closeCreateMarksheetModal"]:hover {
+[data-theme="dark"] #createMarksheetModal .hrms-modal-content button[onclick*="closeCreateMarksheetModal"]:hover,
+[data-theme="dark"] #bulkAddSubjectModal .hrms-modal-content button[onclick*="closeBulkAddSubjectModal"]:hover {
   background: #334155 !important;
   border-color: #475569 !important;
   color: #f8fafc !important;
 }
-[data-theme="dark"] #createMarksheetModal label {
+[data-theme="dark"] #createMarksheetModal label,
+[data-theme="dark"] #bulkAddSubjectModal label {
   color: #cbd5e1 !important;
 }
 [data-theme="dark"] #createMarksheetModal label[style*="color: #334155"],
 [data-theme="dark"] #createMarksheetModal label[style*="color:#334155"],
 [data-theme="dark"] #createMarksheetModal label[style*="color: #0f172a"],
-[data-theme="dark"] #createMarksheetModal label[style*="color:#0f172a"] {
+[data-theme="dark"] #createMarksheetModal label[style*="color:#0f172a"],
+[data-theme="dark"] #bulkAddSubjectModal label[style*="color: #334155"],
+[data-theme="dark"] #bulkAddSubjectModal label[style*="color:#334155"],
+[data-theme="dark"] #bulkAddSubjectModal label[style*="color: #0f172a"],
+[data-theme="dark"] #bulkAddSubjectModal label[style*="color:#0f172a"] {
   color: #f8fafc !important;
 }
-[data-theme="dark"] #createMarksheetModal .hrms-input {
+[data-theme="dark"] #createMarksheetModal .hrms-input,
+[data-theme="dark"] #bulkAddSubjectModal .hrms-input {
   background: #0f172a !important;
   border: 1.5px solid #334155 !important;
   border-radius: 8px !important;
@@ -3036,23 +3241,46 @@ require_once __DIR__ . '/../includes/layout-header.php';
   color: #f8fafc !important;
   color-scheme: dark !important;
 }
-[data-theme="dark"] #createMarksheetModal .hrms-input:focus {
+[data-theme="dark"] #createMarksheetModal .hrms-input:focus,
+[data-theme="dark"] #bulkAddSubjectModal .hrms-input:focus {
   background: #0f172a !important;
   border-color: var(--hrms-primary, #0092df) !important;
   color: #ffffff !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
-[data-theme="dark"] #createMarksheetModal select.hrms-input option {
+[data-theme="dark"] #createMarksheetModal select.hrms-input option,
+[data-theme="dark"] #bulkAddSubjectModal select.hrms-input option {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
-[data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator {
+[data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="dark"] #bulkAddSubjectModal input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1) brightness(0.9);
   cursor: pointer;
   opacity: 0.9;
 }
-[data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator:hover {
+[data-theme="dark"] #createMarksheetModal input[type="date"]::-webkit-calendar-picker-indicator:hover,
+[data-theme="dark"] #bulkAddSubjectModal input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
+}
+[data-theme="dark"] #bulkAddSubjectModal div[style*="background: #f8fafc"] {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] #bulkStudentTable thead tr {
+  background: #0f172a !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] #bulkStudentTable th {
+  background: #0f172a !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] #bulkStudentTable tbody tr {
+  border-bottom: 1px solid #334155 !important;
+}
+[data-theme="dark"] #bulkStudentTable td {
+  border-color: #334155 !important;
 }
 [data-theme="dark"] #createMarksheetModal button[onclick*="addSubjectRow"] {
   background: rgba(22, 101, 52, 0.2) !important;
@@ -3237,6 +3465,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <?php endif; ?>
 
     <?php if ($active_marksheet): ?>
+      <button type="button" onclick="downloadMarksheetPNG();" class="ms-btn-action ms-btn-secondary" style="font-size: 0.76rem; font-weight: 700; gap: 6px; padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1.5px solid #cbd5e1; background: #ffffff; color: #334155;">
+        <i class="fa-solid fa-download" style="color: #0284c7;"></i>
+        <span>Download (PNG)</span>
+      </button>
       <button type="button" onclick="window.print();" class="action-primary-btn marksheet-print-btn" style="background: #0092df; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0, 146, 223, 0.25);">
         <i class="fa-solid fa-print"></i>
         <span>Print Report Card</span>
@@ -3499,13 +3731,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="marksheet-filter-row" style="display: flex; gap: 8px; align-items: center;">
           <div class="roaster-select-box">
             <i class="fa-solid fa-filter"></i>
-            <select name="standard" onchange="this.form.submit()">
-              <option value="">All Academic Standards</option>
-              <?php foreach ($standards as $std): ?>
-                <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-                  <?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>
-                </option>
-              <?php endforeach; ?>
+            <select name="standard" onchange="this.form.submit()" style="min-width: 175px; max-width: 250px; font-weight: 600; text-overflow: ellipsis;">
+              <option value="">All Academic Classes</option>
+              <?php echo render_standards_dropdown_options($filter_standard, false, $academic_categories, $custom_db_standards); ?>
             </select>
             <i class="fa-solid fa-chevron-down select-chevron"></i>
           </div>
@@ -3563,6 +3791,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
           Total Records: <strong style="color: #0f172a;"><?php echo intval($total_records); ?></strong>
         </span>
         <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
+          <button type="button" id="bulkAddSubjectBtn" onclick="openBulkAddSubjectModal('edit');" class="ms-btn-action" style="display: none; background: #0284c7; color: #ffffff; border-color: #0284c7; font-size: 0.76rem; gap: 6px; font-weight: 700; padding: 6px 14px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);">
+            <i class="fa-solid fa-list-check"></i>
+            <span>Open Subject Evaluation (<span id="bulkSelectedCount">0</span>)</span>
+          </button>
           <button type="button" onclick="openCreateMarksheetModal(<?php echo intval($selected_student_id); ?>);" class="ms-btn-action ms-btn-secondary ms-generate-btn" style="font-size: 0.76rem; gap: 5px;">
             <i class="fa-solid fa-file-circle-plus" style="color: #059669;"></i>
             <span>New Evaluation</span>
@@ -3575,6 +3807,11 @@ require_once __DIR__ . '/../includes/layout-header.php';
     <table class="hrms-table marksheet-table">
       <thead>
         <tr>
+          <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
+            <th style="width: 44px; text-align: center; vertical-align: middle; padding: 12px 6px;">
+              <input type="checkbox" id="selectAllStudentsCb" onchange="toggleSelectAllMarksheetStudents(this);" title="Select All Scholars on Page" style="width: 17px; height: 17px; cursor: pointer; accent-color: #0284c7;">
+            </th>
+          <?php endif; ?>
           <th style="min-width: 165px;">Student Profile</th>
           <th style="min-width: 105px;">Roll &amp; Admission</th>
           <th style="min-width: 115px;">Standard &amp; Section</th>
@@ -3588,7 +3825,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <tbody>
         <?php if (empty($table_students)): ?>
           <tr>
-            <td colspan="8" style="text-align: center; padding: 50px 20px; color: #64748b;">
+            <td colspan="<?php echo ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff') ? 9 : 8; ?>" style="text-align: center; padding: 50px 20px; color: #64748b;">
               <div style="width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 1.4rem; color: #94a3b8;">
                 <i class="fa-solid fa-user-slash"></i>
               </div>
@@ -3635,6 +3872,24 @@ require_once __DIR__ . '/../includes/layout-header.php';
             ?>
             <tr class="<?php echo $is_cur_viewing ? 'active-student-row' : ''; ?>">
               
+              <?php if ($current_user['role'] === 'super_admin' || $current_user['role'] === 'staff'): ?>
+                <td style="width: 44px; text-align: center; vertical-align: middle; padding: 12px 6px;">
+                  <input type="checkbox" class="ms-student-cb"
+                         value="<?php echo intval($stu['id']); ?>"
+                         data-id="<?php echo intval($stu['id']); ?>"
+                         data-name="<?php echo htmlspecialchars($stu['student_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                         data-roll="<?php echo htmlspecialchars($stu['roll_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                         data-standard="<?php echo htmlspecialchars($stu['standard'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                         data-section="<?php echo htmlspecialchars($stu['section'] ?? 'A', ENT_QUOTES, 'UTF-8'); ?>"
+                         data-admission="<?php echo htmlspecialchars($stu['admission_no'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                         data-initial="<?php echo htmlspecialchars($first_letter, ENT_QUOTES, 'UTF-8'); ?>"
+                         data-has-photo="<?php echo $has_photo ? '1' : '0'; ?>"
+                         data-photo="<?php echo htmlspecialchars($stu['photo'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                         onchange="onMarksheetStudentSelectChange();"
+                         style="width: 17px; height: 17px; cursor: pointer; accent-color: #0284c7;">
+                </td>
+              <?php endif; ?>
+
               <!-- 1. Student Profile -->
               <td>
                 <div class="user-cell" style="display: flex; align-items: center; gap: 12px;">
@@ -3864,7 +4119,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
 <!-- ══════════════════════════════════════════════════════
      MODAL: Create New Marksheet Form (With Dynamic Calculation)
      ══════════════════════════════════════════════════════ -->
-<div id="createMarksheetModal" class="hrms-modal-overlay" onclick="if (event.target === this) closeCreateMarksheetModal();" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
+<div id="createMarksheetModal" class="hrms-modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
   <div class="hrms-modal-content" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 720px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 92vh; overflow-y: auto; border: 1px solid #e2e8f0;">
     
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
@@ -3894,13 +4149,18 @@ require_once __DIR__ . '/../includes/layout-header.php';
         
         <div class="form-group">
           <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; color: #334155;">Examination Title *</label>
-          <select name="exam_name" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+          <select name="exam_name" id="createExamSelect" onchange="toggleCustomExamInput(this);" class="hrms-input" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
             <option value="Unit Test 1">Unit Test 1</option>
             <option value="First Term Mid-Term Examination">First Term Mid-Term Examination</option>
             <option value="Unit Test 2">Unit Test 2</option>
             <option value="Annual Board Examination">Annual Board Examination</option>
             <option value="Pre-Board Mock Evaluation">Pre-Board Mock Evaluation</option>
+            <option value="Other">Other</option>
           </select>
+          <div id="customExamFieldWrap" style="display: none; margin-top: 8px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; margin-bottom: 4px; color: #0284c7;">Custom Examination Title *</label>
+            <input type="text" name="custom_exam_name" id="customExamInput" placeholder="Enter custom examination title..." class="hrms-input" style="width: 100%; padding: 8px 12px; border: 1.5px solid #0284c7; border-radius: 8px; font-weight: 600;">
+          </div>
         </div>
       </div>
 
@@ -3981,15 +4241,1044 @@ require_once __DIR__ . '/../includes/layout-header.php';
     </form>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL: Bulk Add / View Single Subject to Selected Scholars & PDF Export
+     ══════════════════════════════════════════════════════ -->
+<div id="bulkAddSubjectModal" class="hrms-modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); z-index: 1050; align-items: center; justify-content: center; backdrop-filter: blur(5px); overflow-y: auto; padding: 20px;">
+  <div class="hrms-modal-content" style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 980px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 92vh; overflow-y: auto; border: 1px solid #e2e8f0;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-list-check" style="color: #0284c7;"></i>
+          <span>Single Subject Evaluation &amp; PDF Export</span>
+          <span id="bulkModalCountBadge" style="font-size: 0.75rem; background: #e0f2fe; color: #0369a1; padding: 3px 10px; border-radius: 20px; font-weight: 700; border: 1px solid #bae6fd;">
+            0 Scholars Selected
+          </span>
+        </h3>
+        <p style="margin: 4px 0 0; font-size: 0.80rem; color: #64748b;">
+          Enter marks for a single subject or review already created scores across checked scholars, and export directly in official A4 PDF register.
+        </p>
+      </div>
+      <div>
+        <button type="button" onclick="closeBulkAddSubjectModal();" style="background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 20px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;">&times;</button>
+      </div>
+    </div>
+
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/marksheet', ENT_QUOTES, 'UTF-8'); ?>" id="bulkAddSubjectForm">
+      <input type="hidden" name="action" value="bulk_add_subject">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+      <div style="display:none;" aria-hidden="true"><input type="text" name="marksheet_hp" tabindex="-1" autocomplete="off"></div>
+
+      <!-- Global Examination & Default Subject Config Box -->
+      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <div style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #0284c7; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-sliders"></i> Examination &amp; Default Subject Settings
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 12px;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155;">Examination Title *</label>
+            <select name="bulk_exam_name" id="bulkExamSelect" onchange="onBulkExamChange(this)" class="hrms-input" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+              <option value="Unit Test 1">Unit Test 1</option>
+              <option value="First Term Mid-Term Examination">First Term Mid-Term Examination</option>
+              <option value="Unit Test 2">Unit Test 2</option>
+              <option value="Annual Board Examination">Annual Board Examination</option>
+              <option value="Pre-Board Mock Evaluation">Pre-Board Mock Evaluation</option>
+              <option value="custom">+ Other / Custom Examination</option>
+            </select>
+            <input type="text" name="bulk_custom_exam_name" id="bulkCustomExamInput" placeholder="Enter custom examination title..." class="hrms-input" style="display: none; width: 100%; margin-top: 6px; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155;">Evaluation &amp; Issue Date</label>
+            <input type="date" name="bulk_exam_date" value="<?php echo date('Y-m-d'); ?>" class="hrms-input" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+          </div>
+        </div>
+
+        <!-- Global Subject, Max, Pass Bar -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: flex-end;">
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155;">Subject Title *</label>
+            <input type="text" id="bulkGlobalSubject" list="bulkSubjectSuggestions" value="Mathematics" placeholder="e.g. Mathematics" oninput="onBulkSubjectInputChange(this.value);" class="hrms-input" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 600;">
+            <datalist id="bulkSubjectSuggestions">
+              <option value="Mathematics"></option>
+              <option value="Physics"></option>
+              <option value="Chemistry"></option>
+              <option value="Biology"></option>
+              <option value="Science"></option>
+              <option value="Social Studies"></option>
+              <option value="English Core"></option>
+              <option value="Computer Science"></option>
+              <option value="Hindi"></option>
+              <option value="Accountancy"></option>
+              <option value="Business Studies"></option>
+              <option value="Economics"></option>
+            </datalist>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155;">Max Marks *</label>
+            <input type="number" id="bulkGlobalMax" value="100" min="1" class="hrms-input" style="width: 100%; padding: 8px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; font-weight: 600;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #334155;">Pass Marks *</label>
+            <input type="number" id="bulkGlobalPass" value="35" min="0" class="hrms-input" style="width: 100%; padding: 8px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; font-weight: 600;">
+          </div>
+
+          <div>
+            <button type="button" onclick="applyBulkGlobalValues();" class="roaster-btn secondary" style="padding: 9px 14px; font-size: 0.78rem; font-weight: 700; border-radius: 8px; white-space: nowrap; height: 38px;" title="Apply this subject, max, and pass marks to all student rows below">
+              <i class="fa-solid fa-arrows-rotate"></i> Apply to All
+            </button>
+          </div>
+        </div>
+
+        <!-- Evaluated subjects quick-switch ribbon -->
+        <div id="bulkEvaluatedSubjectsBar" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1; display: none; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.76rem;">
+          <span style="font-weight: 700; color: #475569; display: flex; align-items: center; gap: 5px;">
+            <i class="fa-solid fa-layer-group" style="color: #0284c7;"></i> Evaluated in this Exam:
+          </span>
+          <div id="bulkEvaluatedSubjectsList" style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Table of Checked Students -->
+      <div style="border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 18px;">
+        <div style="max-height: 380px; overflow-y: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;" id="bulkStudentTable">
+            <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 2; border-bottom: 1.5px solid #e2e8f0;">
+              <tr>
+                <th style="padding: 10px 14px; text-align: left; font-weight: 800; color: #475569; width: 30%;">Student Name</th>
+                <th style="padding: 10px 10px; text-align: left; font-weight: 800; color: #475569; width: 22%;">Subjects</th>
+                <th style="padding: 10px 8px; text-align: center; font-weight: 800; color: #475569; width: 12%;">MAX MARKS</th>
+                <th style="padding: 10px 8px; text-align: center; font-weight: 800; color: #475569; width: 12%;">PASS MARKS</th>
+                <th style="padding: 10px 8px; text-align: center; font-weight: 800; color: #475569; width: 13%;">OBTAINED</th>
+                <th style="padding: 10px 8px; text-align: center; font-weight: 800; color: #475569; width: 8%;">GRADE</th>
+                <th style="padding: 10px 8px; text-align: center; width: 3%;"></th>
+              </tr>
+            </thead>
+            <tbody id="bulkTableBody">
+              <!-- Dynamically populated from checked checkboxes -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer & Actions -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.80rem; color: #64748b;">
+          <span>Quick Fill:</span>
+          <button type="button" onclick="bulkQuickFillObtained(75);" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #334155;">75 (A+)</button>
+          <button type="button" onclick="bulkQuickFillObtained(85);" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #334155;">85 (A+)</button>
+          <button type="button" onclick="bulkQuickFillObtained(35);" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #334155;">35 (D)</button>
+          <button type="button" onclick="bulkQuickFillObtained('');" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; cursor: pointer; color: #ef4444;">Clear</button>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button type="button" onclick="exportSingleSubjectPDF();" class="roaster-btn secondary" style="background: #fef2f2; border: 1.5px solid #fca5a5; color: #dc2626; font-size: 0.80rem; font-weight: 700; gap: 6px; padding: 9px 18px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.15);" title="Export single subject evaluation in official A4 PDF">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span>Export in PDF</span>
+          </button>
+          <button type="button" onclick="closeBulkAddSubjectModal();" class="action-btn" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; color: #475569;">Cancel</button>
+          <button type="submit" class="action-primary-btn" style="background: #0284c7; color: #ffffff; border: none; padding: 9px 24px; border-radius: 8px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Save Marks</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 <?php endif; ?>
 
+<!-- html2canvas Library for High-Res Report Card Export -->
+<script src="<?php echo htmlspecialchars(HRMS_URL, ENT_QUOTES, 'UTF-8'); ?>/assets/js/html2canvas.min.js"></script>
+
 <script>
+window.KSV_PAGE_EVALUATIONS = <?php echo json_encode($stu_evaluations_map ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?> || {};
+window.KSV_SCHOOL_INFO = {
+  name: <?php echo json_encode($school_settings['school_name'] ?? 'KSV Academy'); ?>,
+  tagline: <?php echo json_encode($school_settings['tagline'] ?? 'WHERE LEARNING MEETS EXCELLENCE'); ?>,
+  address: <?php echo json_encode($school_settings['address'] ?? 'Knowledge Valley Road, Sector 12, Academic Hub'); ?>,
+  phone: <?php echo json_encode($school_settings['phone'] ?? '+91 98765 43210'); ?>,
+  logo: <?php echo json_encode($school_settings['logo_url'] ?? '/assets/imgs/ksv-logo.jpg'); ?>,
+  session: <?php echo json_encode($current_session_name ?? '2025-2026'); ?>
+};
+
+function getSavedEvaluation(sid, examName, subName) {
+  if (!window.KSV_PAGE_EVALUATIONS || !window.KSV_PAGE_EVALUATIONS[sid]) return null;
+  const exams = window.KSV_PAGE_EVALUATIONS[sid];
+  if (!exams[examName]) return null;
+  const subs = exams[examName];
+  for (const k in subs) {
+    if (k.toLowerCase().trim() === subName.toLowerCase().trim()) {
+      return subs[k];
+    }
+  }
+  return null;
+}
+
+function onMarksheetStudentSelectChange() {
+  const cbs = document.querySelectorAll('.ms-student-cb');
+  let checkedCount = 0;
+  cbs.forEach(cb => {
+    if (cb.checked) checkedCount++;
+  });
+
+  const btn = document.getElementById('bulkAddSubjectBtn');
+  const countSpan = document.getElementById('bulkSelectedCount');
+
+  if (countSpan) countSpan.innerText = checkedCount;
+  if (btn) btn.style.display = checkedCount > 0 ? 'inline-flex' : 'none';
+
+  const masterCb = document.getElementById('selectAllStudentsCb');
+  if (masterCb) {
+    if (checkedCount === 0) {
+      masterCb.checked = false;
+      masterCb.indeterminate = false;
+    } else if (checkedCount === cbs.length) {
+      masterCb.checked = true;
+      masterCb.indeterminate = false;
+    } else {
+      masterCb.checked = false;
+      masterCb.indeterminate = true;
+    }
+  }
+}
+
+function toggleSelectAllMarksheetStudents(masterCb) {
+  const cbs = document.querySelectorAll('.ms-student-cb');
+  cbs.forEach(cb => {
+    cb.checked = masterCb.checked;
+  });
+  onMarksheetStudentSelectChange();
+}
+
+function onBulkExamChange(sel) {
+  const customInput = document.getElementById('bulkCustomExamInput');
+  if (customInput) {
+    if (sel.value === 'custom') {
+      customInput.style.display = 'block';
+      customInput.focus();
+    } else {
+      customInput.style.display = 'none';
+    }
+  }
+  reloadBulkStudentRows();
+}
+
+function updateEvaluatedSubjectsBar() {
+  const checkedCbs = Array.from(document.querySelectorAll('.ms-student-cb:checked'));
+  const examName = (document.getElementById('bulkExamSelect')?.value === 'custom' 
+    ? document.getElementById('bulkCustomExamInput')?.value 
+    : document.getElementById('bulkExamSelect')?.value) || '';
+
+  const bar = document.getElementById('bulkEvaluatedSubjectsBar');
+  const list = document.getElementById('bulkEvaluatedSubjectsList');
+  if (!bar || !list) return;
+
+  const currentSub = (document.getElementById('bulkGlobalSubject')?.value || '').toLowerCase().trim();
+  const foundSubs = new Map();
+
+  checkedCbs.forEach(cb => {
+    const sid = cb.value;
+    if (window.KSV_PAGE_EVALUATIONS && window.KSV_PAGE_EVALUATIONS[sid] && window.KSV_PAGE_EVALUATIONS[sid][examName]) {
+      const subs = window.KSV_PAGE_EVALUATIONS[sid][examName];
+      for (const sname in subs) {
+        foundSubs.set(sname, (foundSubs.get(sname) || 0) + 1);
+      }
+    }
+  });
+
+  if (foundSubs.size === 0) {
+    bar.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+
+  bar.style.display = 'flex';
+  list.innerHTML = '';
+
+  foundSubs.forEach((cnt, sname) => {
+    const isAct = sname.toLowerCase().trim() === currentSub;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'eval-sub-pill';
+    btn.style.cssText = `
+      background: ${isAct ? '#0284c7' : '#ffffff'};
+      color: ${isAct ? '#ffffff' : '#0369a1'};
+      border: 1px solid ${isAct ? '#0284c7' : '#bae6fd'};
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    `;
+    btn.innerHTML = `<i class="fa-solid fa-book-open" style="font-size: 10px;"></i> ${sname} (${cnt}/${checkedCbs.length})`;
+    btn.onclick = () => selectEvaluatedSubject(sname);
+    list.appendChild(btn);
+  });
+}
+
+function selectEvaluatedSubject(sname) {
+  const subInp = document.getElementById('bulkGlobalSubject');
+  if (subInp) {
+    subInp.value = sname;
+  }
+  reloadBulkStudentRows();
+}
+
+function onBulkSubjectInputChange(val) {
+  reloadBulkStudentRows();
+}
+
+function reloadBulkStudentRows() {
+  const checkedCbs = Array.from(document.querySelectorAll('.ms-student-cb:checked'));
+  const examName = (document.getElementById('bulkExamSelect')?.value === 'custom' 
+    ? document.getElementById('bulkCustomExamInput')?.value 
+    : document.getElementById('bulkExamSelect')?.value) || '';
+  const currentSub = (document.getElementById('bulkGlobalSubject')?.value || 'Mathematics').trim();
+  const globalMax = parseFloat(document.getElementById('bulkGlobalMax')?.value) || 100;
+  const globalPass = parseFloat(document.getElementById('bulkGlobalPass')?.value) || 35;
+
+  updateEvaluatedSubjectsBar();
+
+  checkedCbs.forEach(cb => {
+    const sid = cb.value;
+    const tr = document.getElementById('bulkRow_' + sid);
+    if (!tr) return;
+
+    const subInp = tr.querySelector('.bulk-sub-cell');
+    const maxInp = tr.querySelector('.bulk-max-cell');
+    const passInp = tr.querySelector('.bulk-pass-cell');
+    const obtInp = tr.querySelector('.bulk-obt-cell');
+    const evalTag = tr.querySelector('.bulk-eval-tag');
+
+    const saved = getSavedEvaluation(sid, examName, currentSub);
+    if (subInp) subInp.value = currentSub;
+
+    if (saved) {
+      if (maxInp) maxInp.value = saved.max;
+      if (passInp) passInp.value = saved.pass;
+      if (obtInp) {
+        obtInp.value = saved.obtained;
+        obtInp.style.borderColor = '#16a34a';
+        obtInp.style.background = '#f0fdf4';
+      }
+      if (evalTag) {
+        evalTag.innerHTML = `<i class="fa-solid fa-check-circle" style="color: #16a34a;"></i> <span style="color:#15803d; font-weight:700;">Saved</span>`;
+        evalTag.style.background = '#dcfce7';
+      }
+    } else {
+      if (maxInp) maxInp.value = globalMax;
+      if (passInp) passInp.value = globalPass;
+      if (obtInp) {
+        obtInp.value = '';
+        obtInp.style.borderColor = '#0284c7';
+        obtInp.style.background = '#ffffff';
+      }
+      if (evalTag) {
+        evalTag.innerHTML = `<span style="color:#64748b; font-weight:600;">Pending</span>`;
+        evalTag.style.background = '#f1f5f9';
+      }
+    }
+
+    if (obtInp) calcBulkRow(obtInp);
+  });
+}
+
+function openBulkAddSubjectModal(initialMode = 'edit') {
+  const checkedCbs = Array.from(document.querySelectorAll('.ms-student-cb:checked'));
+  if (checkedCbs.length === 0) {
+    alert('Please select at least one student using the checkboxes.');
+    return;
+  }
+
+  const examName = (document.getElementById('bulkExamSelect')?.value === 'custom' 
+    ? document.getElementById('bulkCustomExamInput')?.value 
+    : document.getElementById('bulkExamSelect')?.value) || 'Unit Test 1';
+  const globalSub = (document.getElementById('bulkGlobalSubject')?.value || 'Mathematics').trim();
+  const globalMax = parseFloat(document.getElementById('bulkGlobalMax')?.value) || 100;
+  const globalPass = parseFloat(document.getElementById('bulkGlobalPass')?.value) || 35;
+
+  const tbody = document.getElementById('bulkTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  checkedCbs.forEach(cb => {
+    const sid = cb.value;
+    const name = cb.getAttribute('data-name') || 'Student';
+    const roll = cb.getAttribute('data-roll') || '';
+    const standard = cb.getAttribute('data-standard') || '';
+    const initial = cb.getAttribute('data-initial') || name.charAt(0).toUpperCase();
+    const photo = cb.getAttribute('data-photo') || '';
+    const hasPhoto = cb.getAttribute('data-has-photo') === '1' && photo;
+
+    // Check if scholar already has evaluated score for this exam and subject
+    const saved = getSavedEvaluation(sid, examName, globalSub);
+    const rowSub = globalSub;
+    const rowMax = saved ? saved.max : globalMax;
+    const rowPass = saved ? saved.pass : globalPass;
+    const rowObt = saved ? saved.obtained : '';
+    const isSaved = (saved !== null);
+
+    const tr = document.createElement('tr');
+    tr.id = 'bulkRow_' + sid;
+    tr.style.borderBottom = '1px solid #f1f5f9';
+
+    const avatarHtml = hasPhoto 
+      ? `<img src="${photo}" alt="${name}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e2e8f0; flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div style="width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 13px; border: 1px solid #e2e8f0; display: none; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</div>`
+      : `<div style="width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; color: #334155; font-weight: 700; font-size: 13px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${initial}</div>`;
+
+    tr.innerHTML = `
+      <td style="padding: 8px 12px; vertical-align: middle;">
+        <input type="hidden" name="bulk_student_ids[]" value="${sid}">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${avatarHtml}
+          <div>
+            <div style="font-weight: 700; color: #0f172a; font-size: 13px; line-height: 1.2; display: flex; align-items: center; gap: 6px;">
+              <span class="bulk-student-name">${name}</span>
+              <span class="bulk-eval-tag" style="font-size: 10px; padding: 1px 6px; border-radius: 4px; ${isSaved ? 'background:#dcfce7; color:#15803d; font-weight:700;' : 'background:#f1f5f9; color:#64748b; font-weight:600;'}">
+                ${isSaved ? '<i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> Saved' : 'Pending'}
+              </span>
+            </div>
+            <div class="bulk-student-meta" style="font-size: 11px; color: #64748b; margin-top: 1px;">
+              ${roll ? '#' + roll : ''} ${standard ? '&bull; ' + standard : ''}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td style="padding: 8px 10px; vertical-align: middle;">
+        <input type="text" name="bulk_subjects[${sid}]" value="${rowSub}" class="hrms-input bulk-sub-cell" required style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 600;">
+      </td>
+      <td style="padding: 8px 8px; text-align: center; vertical-align: middle;">
+        <input type="number" name="bulk_max_marks[${sid}]" value="${rowMax}" min="1" class="hrms-input bulk-max-cell" oninput="calcBulkRow(this);" required style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 600;">
+      </td>
+      <td style="padding: 8px 8px; text-align: center; vertical-align: middle;">
+        <input type="number" name="bulk_pass_marks[${sid}]" value="${rowPass}" min="0" class="hrms-input bulk-pass-cell" required style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 600;">
+      </td>
+      <td style="padding: 8px 8px; text-align: center; vertical-align: middle;">
+        <input type="number" step="0.5" name="bulk_obtained[${sid}]" value="${rowObt !== '' ? rowObt : ''}" placeholder="e.g. 75" min="0" class="hrms-input bulk-obt-cell" oninput="calcBulkRow(this);" required style="width: 100%; padding: 6px 8px; border: 1.5px solid ${isSaved ? '#16a34a' : '#0284c7'}; ${isSaved ? 'background:#f0fdf4;' : ''} border-radius: 6px; text-align: center; font-weight: 800; font-size: 13px; color: #0f172a;">
+      </td>
+      <td style="padding: 8px 8px; text-align: center; vertical-align: middle;">
+        <span class="bulk-grade-badge" style="display: inline-block; min-width: 36px; padding: 4px 6px; border-radius: 6px; font-size: 11px; font-weight: 800; background: #f1f5f9; color: #64748b;">-</span>
+        <input type="hidden" name="bulk_grades[${sid}]" class="bulk-grade-val" value="">
+      </td>
+      <td style="padding: 8px 6px; text-align: center; vertical-align: middle;">
+        <button type="button" onclick="removeBulkStudentRow(${sid});" style="background: none; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 4px;" title="Remove student from this bulk entry">&times;</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    const obtInput = tr.querySelector('.bulk-obt-cell');
+    if (obtInput) calcBulkRow(obtInput);
+  });
+
+  const countBadge = document.getElementById('bulkModalCountBadge');
+  if (countBadge) countBadge.innerText = checkedCbs.length + ' Scholar' + (checkedCbs.length === 1 ? '' : 's') + ' Selected';
+
+  updateEvaluatedSubjectsBar();
+
+  const modal = document.getElementById('bulkAddSubjectModal');
+  if (modal) modal.style.display = 'flex';
+
+  if (initialMode === 'export') {
+    setTimeout(() => {
+      exportSingleSubjectPDF();
+    }, 200);
+  } else {
+    const firstObt = tbody.querySelector('.bulk-obt-cell');
+    if (firstObt) firstObt.focus();
+  }
+}
+
+function closeBulkAddSubjectModal() {
+  const modal = document.getElementById('bulkAddSubjectModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function removeBulkStudentRow(sid) {
+  const tr = document.getElementById('bulkRow_' + sid);
+  if (tr) tr.remove();
+
+  const cb = document.querySelector(`.ms-student-cb[value="${sid}"]`);
+  if (cb) cb.checked = false;
+  onMarksheetStudentSelectChange();
+
+  const remaining = document.querySelectorAll('#bulkTableBody tr').length;
+  const countBadge = document.getElementById('bulkModalCountBadge');
+  if (countBadge) countBadge.innerText = remaining + ' Scholar' + (remaining === 1 ? '' : 's') + ' Selected';
+
+  if (remaining === 0) {
+    closeBulkAddSubjectModal();
+  } else {
+    updateEvaluatedSubjectsBar();
+  }
+}
+
+function calcBulkRow(inputEl) {
+  const tr = inputEl.closest('tr');
+  if (!tr) return;
+
+  const maxInp = tr.querySelector('.bulk-max-cell');
+  const obtInp = tr.querySelector('.bulk-obt-cell');
+  const gradeBadge = tr.querySelector('.bulk-grade-badge');
+  const gradeVal = tr.querySelector('.bulk-grade-val');
+
+  const maxM = parseFloat(maxInp?.value) || 0;
+  const rawObt = obtInp?.value !== '' ? parseFloat(obtInp?.value) : null;
+
+  if (rawObt === null || isNaN(rawObt) || maxM <= 0) {
+    if (gradeBadge) {
+      gradeBadge.innerText = '-';
+      gradeBadge.style.background = '#f1f5f9';
+      gradeBadge.style.color = '#64748b';
+    }
+    if (gradeVal) gradeVal.value = '';
+    return;
+  }
+
+  const pct = (rawObt / maxM) * 100;
+  let grade = 'F';
+  let bg = '#fee2e2';
+  let color = '#b91c1c';
+
+  if (pct >= 90) {
+    grade = 'A+'; bg = '#dcfce7'; color = '#15803d';
+  } else if (pct >= 80) {
+    grade = 'A'; bg = '#dcfce7'; color = '#15803d';
+  } else if (pct >= 70) {
+    grade = 'B+'; bg = '#e0f2fe'; color = '#0369a1';
+  } else if (pct >= 60) {
+    grade = 'B'; bg = '#e0f2fe'; color = '#0369a1';
+  } else if (pct >= 50) {
+    grade = 'C'; bg = '#fef9c3'; color = '#a16207';
+  } else if (pct >= 35) {
+    grade = 'D'; bg = '#fef9c3'; color = '#a16207';
+  }
+
+  if (gradeBadge) {
+    gradeBadge.innerText = grade;
+    gradeBadge.style.background = bg;
+    gradeBadge.style.color = color;
+  }
+  if (gradeVal) gradeVal.value = grade;
+}
+
+function applyBulkGlobalValues() {
+  const globalSub = (document.getElementById('bulkGlobalSubject')?.value || 'Mathematics').trim();
+  const globalMax = parseFloat(document.getElementById('bulkGlobalMax')?.value) || 100;
+  const globalPass = parseFloat(document.getElementById('bulkGlobalPass')?.value) || 35;
+
+  document.querySelectorAll('#bulkTableBody tr').forEach(tr => {
+    const subInp = tr.querySelector('.bulk-sub-cell');
+    const maxInp = tr.querySelector('.bulk-max-cell');
+    const passInp = tr.querySelector('.bulk-pass-cell');
+
+    if (subInp && globalSub) subInp.value = globalSub;
+    if (maxInp) maxInp.value = globalMax;
+    if (passInp) passInp.value = globalPass;
+
+    const obtInp = tr.querySelector('.bulk-obt-cell');
+    if (obtInp) calcBulkRow(obtInp);
+  });
+}
+
+function bulkQuickFillObtained(score) {
+  document.querySelectorAll('#bulkTableBody tr').forEach(tr => {
+    const obtInp = tr.querySelector('.bulk-obt-cell');
+    if (obtInp) {
+      obtInp.value = score !== '' ? score : '';
+      calcBulkRow(obtInp);
+    }
+  });
+}
+
+// ── Export Single Subject Evaluation in Official A4 Landscape PDF ──
+function exportSingleSubjectPDF() {
+  const rows = Array.from(document.querySelectorAll('#bulkTableBody tr'));
+  if (rows.length === 0) {
+    alert('Please select at least one student before exporting.');
+    return;
+  }
+
+  const examName = (document.getElementById('bulkExamSelect')?.value === 'custom' 
+    ? document.getElementById('bulkCustomExamInput')?.value 
+    : document.getElementById('bulkExamSelect')?.value) || 'Examination Evaluation';
+  
+  const subjectName = (document.getElementById('bulkGlobalSubject')?.value || 'Mathematics').trim();
+  const examDate = document.querySelector('input[name="bulk_exam_date"]')?.value || new Date().toISOString().split('T')[0];
+
+  const studentData = [];
+  let totalMaxAll = 0;
+  let totalObtAll = 0;
+  let passCount = 0;
+  let failCount = 0;
+  let highestScore = -1;
+  let highestScorer = '';
+
+  rows.forEach((tr, idx) => {
+    const sid = tr.id.replace('bulkRow_', '');
+    const nameEl = tr.querySelector('.bulk-student-name');
+    const name = nameEl ? nameEl.innerText.trim() : 'Scholar';
+    const metaEl = tr.querySelector('.bulk-student-meta');
+    const metaText = metaEl ? metaEl.innerText.trim() : '';
+    
+    const metaParts = metaText.split('•').map(s => s.trim());
+    const roll = metaParts[0] || ('#' + sid);
+    const standard = metaParts[1] || 'Standard';
+
+    const maxM = parseFloat(tr.querySelector('.bulk-max-cell')?.value) || 100;
+    const passM = parseFloat(tr.querySelector('.bulk-pass-cell')?.value) || 35;
+    const obtVal = tr.querySelector('.bulk-obt-cell')?.value;
+    const obtM = obtVal !== '' && !isNaN(parseFloat(obtVal)) ? parseFloat(obtVal) : 0;
+    const isEvaluated = (obtVal !== '' && !isNaN(parseFloat(obtVal)));
+    
+    const pct = maxM > 0 ? ((obtM / maxM) * 100).toFixed(1) : '0';
+    const isPass = isEvaluated && (obtM >= passM);
+    if (isPass) passCount++;
+    else if (isEvaluated) failCount++;
+
+    if (isEvaluated && obtM > highestScore) {
+      highestScore = obtM;
+      highestScorer = name;
+    }
+
+    const gradeBadge = tr.querySelector('.bulk-grade-badge');
+    const grade = gradeBadge ? gradeBadge.innerText.trim() : (isPass ? 'A' : 'F');
+
+    if (isEvaluated) {
+      totalMaxAll += maxM;
+      totalObtAll += obtM;
+    }
+
+    studentData.push({
+      sr: idx + 1,
+      sid,
+      name,
+      roll,
+      standard,
+      max: maxM,
+      pass: passM,
+      obtained: isEvaluated ? obtM : '-',
+      pct: isEvaluated ? pct + '%' : '-',
+      grade: isEvaluated ? grade : '-',
+      status: isEvaluated ? (isPass ? 'PASS' : 'FAIL') : 'PENDING'
+    });
+  });
+
+  const evaluatedCount = passCount + failCount;
+  const passRate = evaluatedCount > 0 ? Math.round((passCount / evaluatedCount) * 100) : 0;
+  const classAvgPct = (evaluatedCount > 0 && totalMaxAll > 0) ? ((totalObtAll / totalMaxAll) * 100).toFixed(1) : '0';
+
+  const school = window.KSV_SCHOOL_INFO || {
+    name: 'KSV Academy',
+    tagline: 'WHERE LEARNING MEETS EXCELLENCE',
+    address: 'Knowledge Valley Road, Sector 12, Academic Hub',
+    phone: '+91 98765 43210',
+    logo: '/assets/imgs/ksv-logo.jpg',
+    session: '2025-2026'
+  };
+
+  let printIframe = document.getElementById('ksvSubjectPdfFrame');
+  if (!printIframe) {
+    printIframe = document.createElement('iframe');
+    printIframe.id = 'ksvSubjectPdfFrame';
+    printIframe.style.position = 'fixed';
+    printIframe.style.right = '0';
+    printIframe.style.bottom = '0';
+    printIframe.style.width = '0';
+    printIframe.style.height = '0';
+    printIframe.style.border = '0';
+    document.body.appendChild(printIframe);
+  }
+
+  const tableRowsHtml = studentData.map(st => {
+    let gradeColor = '#64748b';
+    let gradeBg = '#f1f5f9';
+    if (st.grade === 'A+' || st.grade === 'A') { gradeColor = '#15803d'; gradeBg = '#dcfce7'; }
+    else if (st.grade === 'B+' || st.grade === 'B') { gradeColor = '#0369a1'; gradeBg = '#e0f2fe'; }
+    else if (st.grade === 'C' || st.grade === 'D') { gradeColor = '#a16207'; gradeBg = '#fef9c3'; }
+    else if (st.grade === 'F') { gradeColor = '#b91c1c'; gradeBg = '#fee2e2'; }
+
+    let statusHtml = '<span style="color:#64748b; font-weight:700;">PENDING</span>';
+    if (st.status === 'PASS') {
+      statusHtml = '<span style="color:#15803d; font-weight:800; background:#dcfce7; padding:2px 8px; border-radius:4px; font-size:11px;">PASS</span>';
+    } else if (st.status === 'FAIL') {
+      statusHtml = '<span style="color:#b91c1c; font-weight:800; background:#fee2e2; padding:2px 8px; border-radius:4px; font-size:11px;">FAIL</span>';
+    }
+
+    return `
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 7px 10px; text-align: center; color: #64748b; font-weight: 600;">${st.sr}</td>
+        <td style="padding: 7px 10px; font-weight: 700; color: #0284c7; white-space: nowrap;">${st.roll}</td>
+        <td style="padding: 7px 12px; font-weight: 700; color: #0f172a;">${st.name}</td>
+        <td style="padding: 7px 10px; color: #475569; font-size: 11.5px;">${st.standard}</td>
+        <td style="padding: 7px 10px; text-align: center; font-weight: 600; color: #475569;">${st.max}</td>
+        <td style="padding: 7px 10px; text-align: center; color: #64748b;">${st.pass}</td>
+        <td style="padding: 7px 10px; text-align: center; font-weight: 800; color: #0f172a; font-size: 13px;">${st.obtained}</td>
+        <td style="padding: 7px 10px; text-align: center; font-weight: 700; color: #0284c7;">${st.pct}</td>
+        <td style="padding: 7px 10px; text-align: center;">
+          <span style="display:inline-block; min-width:32px; padding:2px 6px; border-radius:4px; font-weight:800; font-size:11px; background:${gradeBg}; color:${gradeColor};">
+            ${st.grade}
+          </span>
+        </td>
+        <td style="padding: 7px 10px; text-align: center;">${statusHtml}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const printHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Single Subject Academic Evaluation - ${subjectName} (${examName})</title>
+      <style>
+        @page {
+          size: A4 landscape;
+          margin: 8mm 10mm;
+        }
+        * {
+          box-sizing: border-box;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          background: #ffffff;
+          color: #0f172a;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          font-size: 12px;
+          line-height: 1.4;
+        }
+        .cert-container {
+          width: 100%;
+          border: 2px solid #0284c7;
+          border-radius: 8px;
+          padding: 14px 18px;
+          position: relative;
+        }
+        .header-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-bottom: 2px solid #0f172a;
+          padding-bottom: 10px;
+          margin-bottom: 12px;
+        }
+        .header-logo {
+          width: 58px;
+          height: 58px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1.5px solid #0284c7;
+          padding: 2px;
+        }
+        .header-title-wrap {
+          text-align: center;
+          flex: 1;
+          padding: 0 14px;
+        }
+        .school-name {
+          font-size: 20px;
+          font-weight: 800;
+          color: #0f172a;
+          letter-spacing: -0.02em;
+          margin: 0;
+          text-transform: uppercase;
+        }
+        .school-tagline {
+          font-size: 10.5px;
+          font-weight: 700;
+          color: #0284c7;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          margin-top: 2px;
+        }
+        .school-sub {
+          font-size: 10px;
+          color: #64748b;
+          margin-top: 2px;
+        }
+        .meta-strip {
+          background: #f8fafc;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          padding: 8px 14px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+        .meta-item strong {
+          color: #475569;
+          font-size: 11px;
+          text-transform: uppercase;
+        }
+        .meta-item span {
+          color: #0f172a;
+          font-weight: 800;
+          font-size: 12px;
+          margin-left: 4px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 14px;
+        }
+        thead th {
+          background: #0f172a !important;
+          color: #ffffff !important;
+          font-weight: 800;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 8px 10px;
+        }
+        tbody tr:nth-child(even) {
+          background: #f8fafc;
+        }
+        .stats-ribbon {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+        .stat-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          padding: 6px 10px;
+          background: #f8fafc;
+          text-align: center;
+        }
+        .stat-card .label {
+          font-size: 9.5px;
+          font-weight: 700;
+          color: #64748b;
+          text-transform: uppercase;
+        }
+        .stat-card .val {
+          font-size: 14px;
+          font-weight: 800;
+          color: #0f172a;
+          margin-top: 2px;
+        }
+        .signatures-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          padding-top: 18px;
+          border-top: 1px dashed #cbd5e1;
+          margin-top: 10px;
+        }
+        .sig-block {
+          text-align: center;
+          width: 28%;
+        }
+        .sig-line {
+          border-top: 1px solid #94a3b8;
+          margin-bottom: 4px;
+        }
+        .sig-title {
+          font-size: 10.5px;
+          font-weight: 700;
+          color: #334155;
+          text-transform: uppercase;
+        }
+        .sig-sub {
+          font-size: 9px;
+          color: #64748b;
+        }
+        .watermark {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          opacity: 0.04;
+          pointer-events: none;
+          z-index: 0;
+          width: 320px;
+          height: 320px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="cert-container">
+        <img class="watermark" src="${school.logo}" alt="">
+
+        <div class="header-top">
+          <img class="header-logo" src="${school.logo}" alt="Logo">
+          <div class="header-title-wrap">
+            <h1 class="school-name">${school.name}</h1>
+            <div class="school-tagline">${school.tagline}</div>
+            <div class="school-sub">${school.address} &bull; Contact: ${school.phone}</div>
+            <div style="font-size: 11px; font-weight: 800; color: #0284c7; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em;">
+              Official Statement of Academic Marks &bull; Single Subject Register
+            </div>
+          </div>
+          <div style="text-align: right; width: 80px;">
+            <div style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; display: inline-block;">
+              <span style="font-size: 9px; font-weight: 800; color: #0284c7; display: block;">VERIFIED</span>
+              <span style="font-size: 8px; color: #64748b;">OFFICIAL</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-strip">
+          <div class="meta-item"><strong>Examination:</strong> <span>${examName}</span></div>
+          <div class="meta-item"><strong>Subject:</strong> <span style="color: #0284c7;">${subjectName}</span></div>
+          <div class="meta-item"><strong>Academic Session:</strong> <span>${school.session}</span></div>
+          <div class="meta-item"><strong>Evaluation Date:</strong> <span>${examDate}</span></div>
+          <div class="meta-item"><strong>Max / Pass:</strong> <span>${studentData[0]?.max || 100} / ${studentData[0]?.pass || 35}</span></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 4%;">#</th>
+              <th style="width: 13%;">Roll Number</th>
+              <th style="width: 28%;">Scholar Full Name</th>
+              <th style="width: 20%;">Academic Class / Batch</th>
+              <th style="width: 7%; text-align: center;">Max</th>
+              <th style="width: 7%; text-align: center;">Pass</th>
+              <th style="width: 7%; text-align: center;">Obtained</th>
+              <th style="width: 7%; text-align: center;">Percentage</th>
+              <th style="width: 7%; text-align: center;">Grade</th>
+              <th style="width: 8%; text-align: center;">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRowsHtml}
+          </tbody>
+        </table>
+
+        <div class="stats-ribbon">
+          <div class="stat-card">
+            <div class="label">Total Scholars</div>
+            <div class="val">${studentData.length}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Passed Candidates</div>
+            <div class="val" style="color: #15803d;">${passCount} (${passRate}%)</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Failed Candidates</div>
+            <div class="val" style="color: ${failCount > 0 ? '#b91c1c' : '#64748b'};">${failCount}</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Class Subject Average</div>
+            <div class="val" style="color: #0284c7;">${classAvgPct}%</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Subject Highest Score</div>
+            <div class="val" style="color: #15803d;">${highestScore >= 0 ? highestScore : '-'}</div>
+          </div>
+        </div>
+
+        <div class="signatures-row">
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-title">Subject Faculty / Evaluator</div>
+            <div class="sig-sub">Signature &amp; Date</div>
+          </div>
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-title">Controller of Examinations</div>
+            <div class="sig-sub">Verification Stamp</div>
+          </div>
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-title">Head of Institution / Principal</div>
+            <div class="sig-sub">Official Academy Seal</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 8px; font-size: 8.5px; color: #94a3b8; display: flex; justify-content: space-between;">
+          <span>Generated on: ${new Date().toLocaleString()} &bull; KSV Academy ERP &amp; Portal</span>
+          <span>Official Academic Transcript Document &bull; Single Subject Evaluation Register</span>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const doc = printIframe.contentWindow.document;
+  doc.open();
+  doc.write(printHtml);
+  doc.close();
+
+  setTimeout(() => {
+    printIframe.contentWindow.focus();
+    printIframe.contentWindow.print();
+  }, 350);
+}
+
+function downloadMarksheetPNG() {
+  const card = document.getElementById('report-card-view');
+  if (!card) {
+    alert('Please select a student and evaluation above to download report card.');
+    return;
+  }
+  const studentName = <?php echo json_encode($student_profile['student_name'] ?? 'Scholar'); ?>;
+  const examName = <?php echo json_encode($active_marksheet['exam_name'] ?? 'ReportCard'); ?>;
+  const filename = `Marksheet_${studentName.replace(/\s+/g, '_')}_${examName.replace(/\s+/g, '_')}.png`;
+
+  if (typeof html2canvas === 'function') {
+    html2canvas(card, {
+      scale: 2.5,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch(err => {
+      console.error('Download error:', err);
+      window.print();
+    });
+  } else {
+    window.print();
+  }
+}
+
+function toggleCustomExamInput(sel) {
+  const wrap = document.getElementById('customExamFieldWrap');
+  const input = document.getElementById('customExamInput');
+  if (!wrap || !input) return;
+  if (sel && sel.value === 'Other') {
+    wrap.style.display = 'block';
+    input.setAttribute('required', 'required');
+    setTimeout(() => { try { input.focus(); } catch(e){} }, 50);
+  } else {
+    wrap.style.display = 'none';
+    input.removeAttribute('required');
+    input.value = '';
+  }
+}
+
 function openCreateMarksheetModal(studentId = null) {
   const modal = document.getElementById('createMarksheetModal');
   if (!modal) return;
   if (studentId) {
     const sel = document.getElementById('modalStudentSelect');
     if (sel) sel.value = studentId;
+  }
+  const examSelect = document.getElementById('createExamSelect');
+  if (examSelect) {
+    toggleCustomExamInput(examSelect);
   }
   modal.style.display = 'flex';
   recalcModalTotals();
@@ -3998,6 +5287,11 @@ function openCreateMarksheetModal(studentId = null) {
 function closeCreateMarksheetModal() {
   const modal = document.getElementById('createMarksheetModal');
   if (modal) modal.style.display = 'none';
+  const examSelect = document.getElementById('createExamSelect');
+  if (examSelect && examSelect.value === 'Other') {
+    examSelect.value = 'Unit Test 1';
+    toggleCustomExamInput(examSelect);
+  }
 }
 
 function addSubjectRow() {
@@ -4072,6 +5366,7 @@ function recalcModalTotals() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeCreateMarksheetModal();
+    closeBulkAddSubjectModal();
   }
 });
 

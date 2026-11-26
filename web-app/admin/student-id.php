@@ -46,13 +46,21 @@ $session_id = $active_session ? intval($active_session['id']) : 1;
 $current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
-// Filters with length bounds & whitelisting
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
-$search = mb_substr(trim($_GET['search'] ?? ''), 0, 100);
-$filter_standard = trim($_GET['standard'] ?? '');
-if (!in_array($filter_standard, $standards, true)) {
-    $filter_standard = '';
+// Academic Standards & Specialized Course Categories (Matching Student Roaster & Attendance)
+$academic_categories = get_default_academic_categories();
+$flat_predefined_standards = [];
+foreach ($academic_categories as $cat => $std_list) {
+    foreach ($std_list as $s_item) {
+        $flat_predefined_standards[] = $s_item;
+    }
 }
+$db_standards = $db->query("SELECT DISTINCT standard FROM students WHERE session_id = " . intval($session_id) . " AND standard IS NOT NULL AND standard != ''")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+$standards = array_values(array_unique(array_filter(array_merge($flat_predefined_standards, $db_standards))));
+$custom_db_standards = array_values(array_diff($db_standards, $flat_predefined_standards));
+
+$search = mb_substr(trim($_GET['search'] ?? ''), 0, 100);
+$raw_standard = trim($_GET['standard'] ?? '');
+$filter_standard = ($raw_standard !== '' && $raw_standard !== 'all' && in_array($raw_standard, $standards, true)) ? $raw_standard : '';
 
 // Get selected student ID
 $selected_id = max(0, intval($_GET['id'] ?? 0));
@@ -1345,7 +1353,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: var(--hrms-primary, #0092df) !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
-[data-theme="dark"] .roaster-select-box select option {
+[data-theme="dark"] .roaster-select-box select option,
+[data-theme="dark"] .roaster-select-box select optgroup {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
@@ -1964,13 +1973,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div class="student-id-filter-row" style="display: flex; gap: 8px; align-items: center;">
           <div class="roaster-select-box">
             <i class="fa-solid fa-filter"></i>
-            <select name="standard" onchange="this.form.submit()">
+            <select name="standard" onchange="this.form.submit()" style="min-width: 175px; max-width: 250px; font-weight: 600; text-overflow: ellipsis;">
               <option value="">All Academic Standards</option>
-              <?php foreach ($standards as $std): ?>
-                <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-                  <?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>
-                </option>
-              <?php endforeach; ?>
+              <?php echo render_standards_dropdown_options($filter_standard, false, $academic_categories, $custom_db_standards); ?>
             </select>
             <i class="fa-solid fa-chevron-down select-chevron"></i>
           </div>

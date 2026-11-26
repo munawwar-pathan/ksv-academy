@@ -242,9 +242,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Query Data ──────────────────────────────────────────────────────────────
 $filter_category = mb_substr(trim((string)($_GET['category'] ?? '')), 0, 100);
-$filter_status = in_array($_GET['status'] ?? 'all', ['all', 'active', 'inactive'], true) ? $_GET['status'] : 'all';
+$raw_status = (string)($_GET['status'] ?? 'all');
+$filter_status = in_array($raw_status, ['all', 'active', 'inactive'], true) ? $raw_status : 'all';
 $search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
-$view_mode = in_array($_GET['view'] ?? 'table', ['table', 'grid'], true) ? $_GET['view'] : 'table';
+$raw_view = (string)($_GET['view'] ?? 'table');
+$view_mode = in_array($raw_view, ['table', 'grid'], true) ? $raw_view : 'table';
 
 // Scan existing gallery photos in assets/imgs/gallers/
 $existing_gallery_files = [];

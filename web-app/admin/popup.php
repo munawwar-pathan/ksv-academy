@@ -106,7 +106,8 @@ if (is_dir($popup_fs_dir)) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Determine validated redirect target early
     $redirect_view = in_array($_POST['redirect_view'] ?? '', ['grid', 'table'], true) ? $_POST['redirect_view'] : 'grid';
-    $redirect_status = in_array($_GET['status'] ?? 'all', ['all', 'active', 'inactive', 'paused'], true) ? $_GET['status'] : 'all';
+    $raw_redirect_status = (string)($_GET['status'] ?? 'all');
+    $redirect_status = in_array($raw_redirect_status, ['all', 'active', 'inactive', 'paused'], true) ? $raw_redirect_status : 'all';
 
     // 1. CSRF Token Verification
     if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
@@ -346,8 +347,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Query Slider Data ────────────────────────────────────────────────────────
 $search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
-$filter_status = in_array($_GET['status'] ?? 'all', ['all', 'active', 'inactive', 'paused'], true) ? $_GET['status'] : 'all';
-$view_mode = in_array($_GET['view'] ?? 'grid', ['grid', 'table'], true) ? $_GET['view'] : 'grid';
+$raw_status = (string)($_GET['status'] ?? 'all');
+$filter_status = in_array($raw_status, ['all', 'active', 'inactive', 'paused'], true) ? $raw_status : 'all';
+$raw_view = (string)($_GET['view'] ?? 'grid');
+$view_mode = in_array($raw_view, ['grid', 'table'], true) ? $raw_view : 'grid';
 
 $query = "SELECT * FROM popup_sliders WHERE 1=1";
 $params = [];

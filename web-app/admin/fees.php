@@ -25,14 +25,25 @@ $session_id = $active_session ? intval($active_session['id']) : 1;
 $current_session_name = $active_session['session_name'] ?? (defined('CURRENT_SESSION') ? CURRENT_SESSION : date('Y'));
 $school_settings = get_school_settings();
 
-// Standards list
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+// Academic Standards & Specialized Course Categories (Matching Student Roaster & Attendance)
+$academic_categories = get_default_academic_categories();
+$flat_predefined_standards = [];
+foreach ($academic_categories as $cat => $std_list) {
+    foreach ($std_list as $s_item) {
+        $flat_predefined_standards[] = $s_item;
+    }
+}
+$db_standards = $db->query("SELECT DISTINCT standard FROM students WHERE session_id = " . intval($session_id) . " AND standard IS NOT NULL AND standard != ''")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+$standards = array_values(array_unique(array_filter(array_merge($flat_predefined_standards, $db_standards))));
+$custom_db_standards = array_values(array_diff($db_standards, $flat_predefined_standards));
+
 $allowed_methods = ['Cash', 'UPI', 'Net Banking', 'Cheque', 'Credit Card'];
 $allowed_fee_types = ['Tuition Fee', 'Admission Fee', 'Examination Fee', 'Laboratory Charges', 'Library Fee', 'Transport Fee', 'Annual Charges'];
 
 // Filters
 $search = trim((string)($_GET['search'] ?? ''));
-$filter_standard = isset($_GET['standard']) && in_array($_GET['standard'], $standards, true) ? (string)$_GET['standard'] : '';
+$raw_standard = trim((string)($_GET['standard'] ?? ''));
+$filter_standard = ($raw_standard !== '' && $raw_standard !== 'all' && in_array($raw_standard, $standards, true)) ? $raw_standard : '';
 $filter_method = isset($_GET['method']) && in_array($_GET['method'], $allowed_methods, true) ? (string)$_GET['method'] : '';
 $filter_student_id = intval($_GET['student_id'] ?? 0);
 
@@ -161,8 +172,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $upd_stmt = $db->prepare("UPDATE students SET paid_fees = paid_fees + ? WHERE id = ? AND session_id = ?");
                 $upd_stmt->execute([$amount, $student_id, $session_id]);
 
+                // Sync installment statuses and fee splits
+                refresh_student_fee_installment_statuses($student_id, $session_id);
+
                 set_flash('success', "Fee payment of ₹" . number_format($amount, 2) . " recorded for " . htmlspecialchars($stu_row['student_name'], ENT_QUOTES, 'UTF-8') . " with Receipt #{$receipt_no}!");
-                header('Location: ' . ADMIN_URL . '/fees');
+                header('Location: ' . ADMIN_URL . '/fees?receipt=' . urlencode($receipt_no));
                 exit;
             } catch (Exception $e) {
                 error_log("Fee collection error: " . $e->getMessage());
@@ -178,12 +192,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch all students for the dropdown only for super_admin (Performance & Data isolation)
+// Fetch all students and their configured fee installments (Created in Add Student)
 $students_list = [];
+$students_installments_map = [];
 if ($current_user['role'] === 'super_admin') {
-    $all_students = $db->prepare("SELECT id, student_name, roll_no, standard, total_fees, paid_fees FROM students WHERE session_id = ? ORDER BY student_name ASC");
+    $all_students = $db->prepare("SELECT id, student_name, roll_no, standard, total_fees, paid_fees, fee_splits FROM students WHERE session_id = ? ORDER BY student_name ASC");
     $all_students->execute([$session_id]);
     $students_list = $all_students->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($students_list as $stu) {
+        $sid = intval($stu['id']);
+        $splits = get_student_fee_splits($sid, $session_id);
+        if (empty($splits) && floatval($stu['total_fees']) > 0) {
+            $tot = floatval($stu['total_fees']);
+            $pd = floatval($stu['paid_fees']);
+            $rem = max(0, $tot - $pd);
+            $splits = [[
+                'id' => 0,
+                'student_id' => $sid,
+                'installment_no' => 1,
+                'title' => 'Installment 1',
+                'amount' => $tot,
+                'paid_amount' => $pd,
+                'pending_amount' => $rem,
+                'due_date' => date('Y-m-d', strtotime('+30 days')),
+                'due_date_formatted' => date('d M Y', strtotime('+30 days')),
+                'status' => ($rem <= 0 ? 'paid' : ($pd > 0 ? 'partially_paid' : 'pending')),
+                'is_paid' => ($rem <= 0),
+                'is_overdue' => false,
+                'is_due_soon' => false
+            ]];
+        }
+        $students_installments_map[$sid] = $splits;
+    }
 }
 
 // Build WHERE filter conditions
@@ -1432,7 +1473,8 @@ require_once __DIR__ . '/../includes/layout-header.php';
   border-color: var(--hrms-primary, #0092df) !important;
   box-shadow: 0 0 0 3px rgba(0, 146, 223, 0.2) !important;
 }
-[data-theme="dark"] .roaster-select-box select option {
+[data-theme="dark"] .roaster-select-box select option,
+[data-theme="dark"] .roaster-select-box select optgroup {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
@@ -1752,6 +1794,58 @@ require_once __DIR__ . '/../includes/layout-header.php';
 }
 
 /* 6. Collect Fee Modal (#collectFeeModal) */
+#collectFeeModal {
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#collectFeeModal .hrms-modal-card {
+  width: 100%;
+  max-width: 580px;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4);
+  background: #ffffff;
+  margin: auto;
+}
+#collectFeeModal .hrms-modal-header {
+  flex-shrink: 0;
+  padding: 16px 22px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#collectFeeModal form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+#collectFeeModal .hrms-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 22px;
+  -webkit-overflow-scrolling: touch;
+}
+#collectFeeModal .collect-modal-actions {
+  flex-shrink: 0;
+  padding: 14px 22px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .due-banner {
   margin-top: 8px;
   padding: 8px 12px;
@@ -1781,6 +1875,143 @@ require_once __DIR__ . '/../includes/layout-header.php';
   font-size: 0.88rem;
   font-family: 'Outfit', sans-serif;
   color: #059669;
+}
+
+/* Installments Schedule Cards in Collect Fee Modal */
+.inst-card {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.inst-card:hover {
+  border-color: #0284c7;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.08);
+}
+.inst-card.selected {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+}
+.inst-card.is-paid {
+  border-color: #d1fae5;
+  background: #f0fdf4;
+  cursor: default;
+  opacity: 0.9;
+}
+.inst-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.inst-badge.paid {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.inst-badge.overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.inst-badge.due-soon {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+.inst-badge.pending {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+.inst-chip {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.inst-chip:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
+}
+.inst-chip.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+[data-theme="dark"] .inst-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .inst-card:hover {
+  background: #1e293b !important;
+  border-color: #38bdf8 !important;
+}
+[data-theme="dark"] .inst-card.selected {
+  background: rgba(2, 132, 199, 0.15) !important;
+  border-color: #38bdf8 !important;
+}
+[data-theme="dark"] .inst-card.is-paid {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+[data-theme="dark"] .inst-badge.paid {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #4ade80 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+[data-theme="dark"] .inst-badge.overdue {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+[data-theme="dark"] .inst-badge.due-soon {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+[data-theme="dark"] .inst-badge.pending {
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+  border-color: #475569 !important;
+}
+[data-theme="dark"] .inst-chip {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .inst-chip:hover {
+  background: #1e293b !important;
+  border-color: #38bdf8 !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .inst-chip.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] #collectFeeModal .hrms-modal-card {
@@ -1902,6 +2133,10 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] .due-banner.is-cleared strong,
 [data-theme="dark"] #studentDueBanner.is-cleared #bannerDueAmount {
   color: #6ee7b7 !important;
+}
+[data-theme="dark"] #collectFeeModal .collect-modal-actions {
+  background: #1e293b !important;
+  border-top: 1px solid #334155 !important;
 }
 [data-theme="dark"] #collectFeeModal .collect-cancel-btn {
   background: #0f172a !important;
@@ -2302,6 +2537,67 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
 </div>
 
+<!-- ══════════════════════════════════════════════════════
+     UPCOMING FEE INSTALLMENTS & DUE DATE REMINDERS
+     ══════════════════════════════════════════════════════ -->
+<?php
+  $upcoming_reminders = get_upcoming_fee_reminders($session_id, 10);
+?>
+<?php if (!empty($upcoming_reminders)): ?>
+  <div class="fee-reminders-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin-bottom: 22px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 34px; height: 34px; border-radius: 8px; background: #fef2f2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+          <i class="fa-solid fa-bell"></i>
+        </div>
+        <div>
+          <h4 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: #0f172a; font-family: 'Outfit', sans-serif;">
+            Installment Due Reminders &amp; Upcoming Deadlines
+          </h4>
+          <span style="font-size: 0.74rem; color: #64748b;">
+            Scholars with overdue installments or scheduled fee milestones due within next 10 days
+          </span>
+        </div>
+      </div>
+      <span style="font-size: 0.74rem; font-weight: 700; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 3px 10px; border-radius: 12px;">
+        <?php echo count($upcoming_reminders); ?> Actionable Reminders
+      </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px;">
+      <?php foreach ($upcoming_reminders as $rem): ?>
+        <?php
+          $rem_due_amt = floatval($rem['amount']) - floatval($rem['paid_amount']);
+          $is_od = !empty($rem['is_overdue']);
+        ?>
+        <div style="background: <?php echo $is_od ? '#fef2f2' : '#fffbeb'; ?>; border: 1px solid <?php echo $is_od ? '#fecaca' : '#fde68a'; ?>; border-radius: 10px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+          <div>
+            <div style="font-weight: 800; font-size: 0.88rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+              <?php echo htmlspecialchars($rem['student_name']); ?>
+              <span style="font-size: 0.72rem; color: #64748b; font-weight: 600;">(<?php echo htmlspecialchars($rem['roll_no']); ?>)</span>
+            </div>
+            <div style="font-size: 0.75rem; color: #475569; margin: 3px 0;">
+              <?php echo htmlspecialchars($rem['title']); ?> • <strong style="color: <?php echo $is_od ? '#dc2626' : '#d97706'; ?>;"><?php echo format_inr($rem_due_amt); ?></strong>
+            </div>
+            <div style="font-size: 0.72rem; color: <?php echo $is_od ? '#b91c1c' : '#92400e'; ?>; font-weight: 700;">
+              <?php if ($is_od): ?>
+                <i class="fa-solid fa-triangle-exclamation"></i> Overdue since <?php echo htmlspecialchars($rem['due_date_formatted']); ?> (<?php echo intval($rem['days_overdue']); ?>d ago)
+              <?php else: ?>
+                <i class="fa-regular fa-clock"></i> Due on <?php echo htmlspecialchars($rem['due_date_formatted']); ?> (In <?php echo intval($rem['days_remaining']); ?>d)
+              <?php endif; ?>
+            </div>
+          </div>
+          <div>
+            <button type="button" class="roaster-btn primary" onclick="event.stopPropagation(); quickCollectFee(<?php echo intval($rem['student_id']); ?>, <?php echo floatval($rem_due_amt); ?>, <?php echo htmlspecialchars(json_encode($rem['title']), ENT_QUOTES, 'UTF-8'); ?>)" style="padding: 6px 11px; font-size: 0.76rem; white-space: nowrap;">
+              <i class="fa-solid fa-hand-holding-dollar"></i> Collect
+            </button>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+<?php endif; ?>
+
 <!-- Modern Enhanced Filter Toolbar & Collect Fee Button (Like student.php) -->
 <div class="roaster-toolbar-card" style="padding: 12px 18px;">
   <div class="roaster-toolbar-inner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -2324,13 +2620,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
       <div class="fee-filter-selects" style="display: flex; gap: 8px; align-items: center;">
         <div class="roaster-select-box">
           <i class="fa-solid fa-school"></i>
-          <select name="standard" onchange="this.form.submit()" style="min-width: 155px; padding: 7px 28px 7px 30px; font-size: 0.82rem;">
+          <select name="standard" onchange="this.form.submit()" style="min-width: 175px; max-width: 250px; padding: 7px 28px 7px 30px; font-size: 0.82rem; font-weight: 600; text-overflow: ellipsis;">
             <option value="">All Standards</option>
-            <?php foreach ($standards as $std): ?>
-              <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-                <?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>
-              </option>
-            <?php endforeach; ?>
+            <?php echo render_standards_dropdown_options($filter_standard, false, $academic_categories, $custom_db_standards); ?>
           </select>
           <i class="fa-solid fa-chevron-down select-chevron" style="right: 10px;"></i>
         </div>
@@ -2370,7 +2662,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </div>
 
       <?php if ($current_user['role'] === 'super_admin'): ?>
-        <button type="button" class="roaster-add-btn" onclick="openCollectModal()" style="padding: 7px 16px; font-size: 0.82rem;">
+        <button type="button" class="roaster-add-btn" onclick="event.stopPropagation(); openCollectModal()" style="padding: 7px 16px; font-size: 0.82rem;">
           <div class="btn-icon-circle" style="width: 22px; height: 22px; font-size: 0.72rem;"><i class="fa-solid fa-plus"></i></div>
           <span>Collect Fee</span>
         </button>
@@ -2547,12 +2839,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
               <td style="text-align: right; white-space: nowrap;">
                 <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px;">
                   <?php if ($current_user['role'] === 'super_admin'): ?>
-                    <button type="button" onclick="openCollectModal(<?php echo (int)$p['student_id']; ?>);" class="sid-btn-action sid-btn-secondary" title="Collect next fee installment for <?php echo htmlspecialchars($p['student_name']); ?>">
+                    <button type="button" onclick="event.stopPropagation(); openCollectModal(<?php echo (int)$p['student_id']; ?>);" class="sid-btn-action sid-btn-secondary" title="Collect fee installment for <?php echo htmlspecialchars($p['student_name'], ENT_QUOTES, 'UTF-8'); ?>">
                       <i class="fa-solid fa-circle-dollar-to-slot" style="color: #059669; font-size: 0.70rem;"></i>
                       <span>Collect</span>
                     </button>
                   <?php endif; ?>
-                  <button type="button" onclick="openReceiptModal(<?php echo htmlspecialchars(json_encode($p, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP), ENT_QUOTES, 'UTF-8'); ?>);" class="sid-btn-action sid-btn-primary" title="View &amp; Print Official Receipt">
+                  <button type="button" onclick="event.stopPropagation(); openReceiptModalById(<?php echo (int)$p['id']; ?>);" class="sid-btn-action sid-btn-primary" title="View &amp; Print Official Receipt">
                     <i class="fa-solid fa-receipt" style="font-size: 0.70rem;"></i>
                     <span>Receipt</span>
                   </button>
@@ -2707,19 +2999,19 @@ require_once __DIR__ . '/../includes/layout-header.php';
      MODAL: COLLECT FEE PAYMENT FORM
      ══════════════════════════════════════════════════════ -->
 <div class="hrms-modal" id="collectFeeModal">
-  <div class="hrms-modal-card" style="max-width: 540px; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);">
+  <div class="hrms-modal-card" style="max-width: 580px; width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; border-radius: 18px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35); margin: auto;">
     
     <!-- Modal Header -->
-    <div class="hrms-modal-header" style="border-bottom: 1px solid #e2e8f0; padding: 18px 24px; background: #ffffff; display: flex; align-items: center; justify-content: space-between;">
+    <div class="hrms-modal-header" style="flex-shrink: 0; border-bottom: 1px solid #e2e8f0; padding: 16px 22px; background: #ffffff; display: flex; align-items: center; justify-content: space-between;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <div style="width: 40px; height: 40px; border-radius: 12px; background: rgba(0, 146, 223, 0.1); color: var(--hrms-primary); display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
           <i class="fa-solid fa-hand-holding-dollar"></i>
         </div>
         <div>
-          <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--hrms-navy); font-family: 'Outfit', sans-serif;">
+          <h3 style="margin: 0; font-size: 1.08rem; font-weight: 800; color: var(--hrms-navy); font-family: 'Outfit', sans-serif;">
             Record Fee Collection
           </h3>
-          <p style="margin: 2px 0 0; font-size: 0.76rem; color: #64748b;">Issue verified payment receipt</p>
+          <p style="margin: 2px 0 0; font-size: 0.76rem; color: #64748b;">Collect configured student fee installments &amp; issue verified receipt</p>
         </div>
       </div>
 
@@ -2728,18 +3020,20 @@ require_once __DIR__ . '/../includes/layout-header.php';
       </button>
     </div>
 
-    <!-- Modal Body -->
-    <div class="hrms-modal-body" style="padding: 22px;">
-      <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/fees', ENT_QUOTES, 'UTF-8'); ?>" onsubmit="return validateCollectFeeForm();">
-        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-        <input type="hidden" name="action" value="collect_fee">
-        <div style="display:none !important;" aria-hidden="true">
-          <label for="fees_hp_collect">Leave blank</label>
-          <input type="text" id="fees_hp_collect" name="fees_hp" tabindex="-1" autocomplete="off">
-        </div>
+    <!-- Form wrapping Body + Footer -->
+    <form method="POST" action="<?php echo htmlspecialchars(ADMIN_URL . '/fees', ENT_QUOTES, 'UTF-8'); ?>" onsubmit="return validateCollectFeeForm();" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0; overflow: hidden;">
+      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(get_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="action" value="collect_fee">
+      <div style="display:none !important;" aria-hidden="true">
+        <label for="fees_hp_collect">Leave blank</label>
+        <input type="text" id="fees_hp_collect" name="fees_hp" tabindex="-1" autocomplete="off">
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="hrms-modal-body" style="flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px;">
 
         <!-- Student Selector with Due Indicator -->
-        <div class="form-group" style="margin-bottom: 16px;">
+        <div class="form-group" style="margin-bottom: 14px;">
           <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
             Select Scholar / Student <span style="color: #dc2626;">*</span>
           </label>
@@ -2758,15 +3052,34 @@ require_once __DIR__ . '/../includes/layout-header.php';
             <span id="bannerDueLabel"><i class="fa-solid fa-clock-rotate-left"></i> Current Outstanding Due:</span>
             <strong id="bannerDueAmount">₹0.00</strong>
           </div>
+
+          <!-- Dynamic Installments Schedule Section (Created in Add Student) -->
+          <div id="studentInstallmentsWrap" style="display: none; margin-top: 14px; margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" style="margin: 0; font-size: 0.8rem; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-list-check" style="color: #0284c7;"></i>
+                <span>Configured Installments (From Student Registration)</span>
+              </label>
+              <span id="installmentsCountBadge" style="font-size: 0.70rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                0 Installments
+              </span>
+            </div>
+
+            <!-- Quick Amount Chips -->
+            <div id="quickAmountChips" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;"></div>
+
+            <!-- Installments Cards Grid -->
+            <div id="installmentsCardsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 2px;"></div>
+          </div>
         </div>
 
-        <!-- Fee Type & Amount Paid -->
+        <!-- Fee Type & Amount Paid (Clean 2-column grid) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
               Fee Head / Category <span style="color: #dc2626;">*</span>
             </label>
-            <select name="fee_type" class="hrms-input" style="width: 100%; padding: 9px 12px; font-size: 0.85rem;">
+            <select name="fee_type" id="collectFeeTypeSelect" class="hrms-input" style="width: 100%; padding: 9px 12px; font-size: 0.85rem;">
               <option value="Tuition Fee">Tuition Fee</option>
               <option value="Admission Fee">Admission Fee</option>
               <option value="Examination Fee">Examination Fee</option>
@@ -2777,7 +3090,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
               Amount Paid (₹) <span style="color: #dc2626;">*</span>
             </label>
@@ -2788,9 +3101,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
         </div>
 
-        <!-- Payment Mode & Payment Date -->
+        <!-- Payment Mode & Payment Date (Clean 2-column grid) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px;">
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
               Payment Mode <span style="color: #dc2626;">*</span>
             </label>
@@ -2802,7 +3115,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
             </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
               Payment Date <span style="color: #dc2626;">*</span>
             </label>
@@ -2811,32 +3124,43 @@ require_once __DIR__ . '/../includes/layout-header.php';
         </div>
 
         <!-- Remarks / Ref ID -->
-        <div class="form-group" style="margin-bottom: 22px;">
+        <div class="form-group" style="margin-bottom: 8px;">
           <label class="form-label" style="display: block; font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 6px;">
             Transaction Reference / Remarks
           </label>
-          <input type="text" name="remarks" placeholder="e.g. UPI Ref #4928192019 or Cheque #91823" class="hrms-input" style="width: 100%; padding: 9px 12px; font-size: 0.85rem;">
+          <input type="text" name="remarks" id="collectRemarksInput" placeholder="e.g. UPI Ref #4928192019 or Cheque #91823" class="hrms-input" style="width: 100%; padding: 9px 12px; font-size: 0.85rem;">
         </div>
 
-        <!-- Modal Submit & Cancel Buttons -->
-        <div class="collect-modal-actions" style="display: flex; justify-content: flex-end; gap: 10px;">
-          <button type="button" onclick="closeCollectModal();" class="btn-hrms btn-hrms-outline collect-cancel-btn" style="padding: 9px 18px; font-weight: 600;">
-            Cancel
-          </button>
-          <button type="submit" class="roaster-add-btn collect-submit-btn" style="padding: 9px 22px; font-size: 0.85rem; gap: 8px;">
-            <i class="fa-solid fa-check"></i>
-            <span>Record &amp; Issue Receipt</span>
-          </button>
-        </div>
+      </div>
 
-      </form>
-    </div>
+      <!-- Modal Footer (Pinned at bottom) -->
+      <div class="collect-modal-actions" style="flex-shrink: 0; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px; border-top: 1px solid #e2e8f0; background: #f8fafc;">
+        <button type="button" onclick="closeCollectModal();" class="btn-hrms btn-hrms-outline collect-cancel-btn" style="padding: 9px 18px; font-weight: 600;">
+          Cancel
+        </button>
+        <button type="submit" class="roaster-add-btn collect-submit-btn" style="padding: 9px 22px; font-size: 0.85rem; gap: 8px;">
+          <i class="fa-solid fa-check"></i>
+          <span>Record &amp; Issue Receipt</span>
+        </button>
+      </div>
+
+    </form>
 
   </div>
 </div>
 <?php endif; ?>
 
 <script>
+// ── Global Lookup Maps for Fast Modal Opening & URL State Persistence ──
+window.STUDENT_INSTALLMENTS_MAP = <?php echo json_encode($students_installments_map ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>;
+window.FEES_PAYMENTS_MAP = <?php 
+  $clean_map = [];
+  foreach ($payments as $item) {
+      $clean_map[$item['id']] = $item;
+  }
+  echo json_encode($clean_map, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+?>;
+
 // ── State for Active Payment in Modal ──
 let currentActivePayment = null;
 
@@ -3089,9 +3413,12 @@ function buildPaymentReceipt(record) {
 
 // ── Open Receipt Modal ──
 function openReceiptModal(payment) {
+  if (!payment) return;
   currentActivePayment = payment;
   const printArea = document.getElementById('receipt_print_area');
-  printArea.innerHTML = buildPaymentReceipt(payment);
+  if (printArea) {
+    printArea.innerHTML = buildPaymentReceipt(payment);
+  }
 
   const sub = document.getElementById('modalReceiptSub');
   if (sub) {
@@ -3100,7 +3427,19 @@ function openReceiptModal(payment) {
   }
 
   const modal = document.getElementById('receiptPrintModal');
-  if (modal) modal.classList.add('show');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    modal.setAttribute('data-opened-at', Date.now());
+  }
+
+  // Update URL state to preserve open modal on reload without page refresh
+  try {
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('collect');
+    newUrl.searchParams.set('receipt', payment.receipt_no);
+    history.replaceState(null, '', newUrl.toString());
+  } catch (e) {}
 
   // Reset scroll position to top
   const body = document.getElementById('receiptModalBody');
@@ -3109,10 +3448,26 @@ function openReceiptModal(payment) {
   }
 }
 
+function openReceiptModalById(paymentId) {
+  const p = window.FEES_PAYMENTS_MAP ? window.FEES_PAYMENTS_MAP[paymentId] : null;
+  if (p) {
+    openReceiptModal(p);
+  }
+}
+
 // ── Close Receipt Modal ──
 function closeReceiptModal() {
   const modal = document.getElementById('receiptPrintModal');
-  if (modal) modal.classList.remove('show');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
+  // Clear URL receipt state without page refresh
+  try {
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('receipt');
+    history.replaceState(null, '', newUrl.toString());
+  } catch (e) {}
 }
 
 // ── Print Action (Isolated Clean Print) ──
@@ -3606,13 +3961,24 @@ function shareReceipt() {
 // ── Collect Fee Modal Controls ──
 function openCollectModal(preselectStudentId) {
   const modal = document.getElementById('collectFeeModal');
-  if (modal) modal.classList.add('show');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('show');
+    modal.setAttribute('data-opened-at', Date.now());
+  }
+
+  // Preserve modal state in URL on reload without refreshing page
+  try {
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('receipt');
+    newUrl.searchParams.set('collect', preselectStudentId || '1');
+    history.replaceState(null, '', newUrl.toString());
+  } catch (e) {}
+
   const sel = document.getElementById('collectStudentSelect');
   if (sel) {
     if (preselectStudentId) {
       sel.value = preselectStudentId;
-    } else {
-      sel.value = '';
     }
     updateStudentDueDisplay(sel);
   }
@@ -3620,26 +3986,53 @@ function openCollectModal(preselectStudentId) {
 
 function closeCollectModal() {
   const modal = document.getElementById('collectFeeModal');
-  if (modal) modal.classList.remove('show');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
   const sel = document.getElementById('collectStudentSelect');
   if (sel) {
     sel.value = '';
     updateStudentDueDisplay(sel);
   }
+  // Clear URL collect state without page refresh
+  try {
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('collect');
+    history.replaceState(null, '', newUrl.toString());
+  } catch (e) {}
 }
 
-function updateStudentDueDisplay(select) {
+function quickCollectFee(studentId, amount, remark) {
+  openCollectModal(studentId);
+  const amtInput = document.getElementById('collectAmountInput');
+  if (amtInput && amount > 0) {
+    amtInput.value = amount;
+  }
+  const remarkInput = document.getElementById('collectRemarksInput');
+  if (remarkInput && remark) {
+    remarkInput.value = remark + ' installment payment';
+  }
+}
+
+function updateStudentDueDisplay(select, preferredInstallmentId = null) {
   if (!select) return;
   const opt = select.options[select.selectedIndex];
   const banner = document.getElementById('studentDueBanner');
   const labelEl = document.getElementById('bannerDueLabel');
   const amountEl = document.getElementById('bannerDueAmount');
   const amountInput = document.getElementById('collectAmountInput');
+  const instWrap = document.getElementById('studentInstallmentsWrap');
+  const instBadge = document.getElementById('installmentsCountBadge');
+  const instList = document.getElementById('installmentsCardsList');
+  const quickChips = document.getElementById('quickAmountChips');
 
   if (!banner) return;
 
   if (opt && opt.value) {
+    const studentId = parseInt(opt.value, 10);
     const due = parseFloat(opt.getAttribute('data-due') || 0);
+
     banner.style.display = 'flex';
     banner.style.removeProperty('background');
     banner.style.removeProperty('border-color');
@@ -3656,6 +4049,89 @@ function updateStudentDueDisplay(select) {
       banner.className = 'due-banner is-cleared';
       if (labelEl) labelEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account Status:';
       if (amountEl) amountEl.innerText = 'Fully Paid / Cleared (₹0.00)';
+      if (amountInput) amountInput.value = '0';
+    }
+
+    // Render Configured Installments (Created in Add Student)
+    const installments = (window.STUDENT_INSTALLMENTS_MAP && window.STUDENT_INSTALLMENTS_MAP[studentId]) ? window.STUDENT_INSTALLMENTS_MAP[studentId] : [];
+
+    if (instWrap && instList && installments.length > 0) {
+      instWrap.style.display = 'block';
+      if (instBadge) {
+        instBadge.innerText = installments.length + (installments.length === 1 ? ' Installment' : ' Installments');
+      }
+
+      // Find first unpaid / overdue installment
+      let nextUnpaidInst = installments.find(inst => !inst.is_paid && inst.pending_amount > 0);
+
+      // Render Quick Chips
+      let chipsHtml = '';
+      if (nextUnpaidInst) {
+        chipsHtml += `<button type="button" class="inst-chip active" onclick="selectInstallmentCard(${nextUnpaidInst.id || 0}, ${nextUnpaidInst.pending_amount}, '${escapeJsQuotes(nextUnpaidInst.title)}')">
+          <i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> Pay Next: ${escapeHtml(nextUnpaidInst.title)} (₹${nextUnpaidInst.pending_amount.toLocaleString('en-IN')})
+        </button>`;
+      }
+      if (due > 0) {
+        chipsHtml += `<button type="button" class="inst-chip" onclick="setCollectAmount(${due}, 'Tuition Fee', 'Full fee clearance payment')">
+          <i class="fa-solid fa-check-double" style="color: #059669;"></i> Pay Full Due (₹${due.toLocaleString('en-IN')})
+        </button>`;
+      }
+      chipsHtml += `<button type="button" class="inst-chip" onclick="focusCustomAmount()">
+        <i class="fa-solid fa-pen-to-square"></i> Custom Amount
+      </button>`;
+      if (quickChips) quickChips.innerHTML = chipsHtml;
+
+      // Render Installment Cards
+      let cardsHtml = '';
+      installments.forEach((inst, idx) => {
+        const isPaid = inst.is_paid || inst.pending_amount <= 0;
+        let badgeHtml = '';
+        if (isPaid) {
+          badgeHtml = '<span class="inst-badge paid"><i class="fa-solid fa-circle-check"></i> Paid</span>';
+        } else if (inst.is_overdue) {
+          badgeHtml = `<span class="inst-badge overdue"><i class="fa-solid fa-triangle-exclamation"></i> Overdue</span>`;
+        } else if (inst.is_due_soon) {
+          badgeHtml = `<span class="inst-badge due-soon"><i class="fa-solid fa-clock"></i> Due in ${inst.days_remaining}d</span>`;
+        } else {
+          badgeHtml = '<span class="inst-badge pending"><i class="fa-regular fa-calendar"></i> Upcoming</span>';
+        }
+
+        const isSelected = (!preferredInstallmentId && !isPaid && nextUnpaidInst && nextUnpaidInst === inst) || (preferredInstallmentId && inst.id == preferredInstallmentId);
+
+        cardsHtml += `
+          <div class="inst-card ${isPaid ? 'is-paid' : ''} ${isSelected ? 'selected' : ''}" id="inst_card_${inst.id || idx}" onclick="${isPaid ? '' : `selectInstallmentCard(${inst.id || idx}, ${inst.pending_amount}, '${escapeJsQuotes(inst.title)}')`}">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <strong style="font-size: 0.84rem; color: #0f172a; font-family: 'Outfit', sans-serif;">${escapeHtml(inst.title)}</strong>
+                ${badgeHtml}
+              </div>
+              <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span><i class="fa-regular fa-calendar" style="color: #94a3b8;"></i> Due: <strong>${escapeHtml(inst.due_date_formatted || inst.due_date)}</strong></span>
+                <span>&bull;</span>
+                <span>Total: ₹${parseFloat(inst.amount).toLocaleString('en-IN')}</span>
+                <span>&bull;</span>
+                <span style="color: ${isPaid ? '#059669' : '#0284c7'}; font-weight: 600;">Paid: ₹${parseFloat(inst.paid_amount || 0).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              ${isPaid 
+                ? '<div style="font-size: 0.75rem; font-weight: 700; color: #059669;"><i class="fa-solid fa-check"></i> Cleared</div>'
+                : `<div style="font-size: 0.86rem; font-weight: 800; color: #0284c7; font-family: 'Outfit', sans-serif;">₹${parseFloat(inst.pending_amount).toLocaleString('en-IN')}</div>
+                   <div style="font-size: 0.70rem; color: #64748b;">Pending Due</div>`
+              }
+            </div>
+          </div>
+        `;
+      });
+      instList.innerHTML = cardsHtml;
+
+      // Auto-set the next unpaid installment amount, fee type, and remarks
+      if (nextUnpaidInst && amountInput) {
+        amountInput.value = nextUnpaidInst.pending_amount;
+        setInstallmentFeeTypeAndRemarks(nextUnpaidInst.title, nextUnpaidInst.title + ' installment payment');
+      }
+    } else if (instWrap) {
+      instWrap.style.display = 'none';
     }
   } else {
     banner.style.display = 'none';
@@ -3663,7 +4139,67 @@ function updateStudentDueDisplay(select) {
     banner.style.removeProperty('background');
     banner.style.removeProperty('border-color');
     banner.style.removeProperty('color');
+    if (instWrap) instWrap.style.display = 'none';
   }
+}
+
+function selectInstallmentCard(instId, amount, title) {
+  document.querySelectorAll('.inst-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('inst_card_' + instId);
+  if (card) card.classList.add('selected');
+  setCollectAmount(amount, title, title + ' installment payment');
+}
+
+function setCollectAmount(amount, feeTypeTitle, remarksText) {
+  const amountInput = document.getElementById('collectAmountInput');
+  if (amountInput) {
+    amountInput.value = amount;
+    amountInput.focus();
+  }
+  setInstallmentFeeTypeAndRemarks(feeTypeTitle, remarksText);
+}
+
+function setInstallmentFeeTypeAndRemarks(title, remarksText) {
+  const feeTypeSel = document.getElementById('collectFeeTypeSelect');
+  if (feeTypeSel && title) {
+    let found = false;
+    for (let i = 0; i < feeTypeSel.options.length; i++) {
+      if (feeTypeSel.options[i].value === title) {
+        feeTypeSel.selectedIndex = i;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      const newOpt = document.createElement('option');
+      newOpt.value = title;
+      newOpt.textContent = title;
+      newOpt.selected = true;
+      feeTypeSel.appendChild(newOpt);
+    }
+  }
+  const remInput = document.getElementById('collectRemarksInput');
+  if (remInput) {
+    remInput.value = remarksText || (title ? title + ' installment payment' : '');
+  }
+}
+
+function focusCustomAmount() {
+  const amountInput = document.getElementById('collectAmountInput');
+  if (amountInput) {
+    amountInput.focus();
+    amountInput.select();
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function escapeJsQuotes(str) {
+  if (!str) return '';
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
 }
 
 function validateCollectFeeForm() {
@@ -3695,16 +4231,48 @@ document.addEventListener('keydown', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+  // 1. Rock-solid backdrop click handling (prevents glitchy open/close/reopen)
   ['receiptPrintModal', 'collectFeeModal'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('click', function(e) {
-        if (e.target === this) {
-          el.classList.remove('show');
-        }
-      });
-    }
+    if (!el) return;
+    let mouseDownOnBackdrop = false;
+
+    el.addEventListener('mousedown', function(e) {
+      mouseDownOnBackdrop = (e.target === this);
+    });
+
+    el.addEventListener('click', function(e) {
+      const openedAt = parseInt(el.getAttribute('data-opened-at') || '0', 10);
+      // Ignore clicks if modal opened less than 200ms ago (prevents bubbling click glitch)
+      if (Date.now() - openedAt < 200) {
+        return;
+      }
+      if (e.target === this && mouseDownOnBackdrop) {
+        if (id === 'receiptPrintModal') closeReceiptModal();
+        if (id === 'collectFeeModal') closeCollectModal();
+      }
+      mouseDownOnBackdrop = false;
+    });
   });
+
+  // 2. URL-based auto-restore for modals (Fixes "when open if reload the page")
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const receiptParam = urlParams.get('receipt');
+    const collectParam = urlParams.get('collect');
+
+    if (receiptParam) {
+      const p = Object.values(window.FEES_PAYMENTS_MAP || {}).find(x => x.receipt_no === receiptParam);
+      if (p) {
+        openReceiptModal(p);
+      }
+    } else if (collectParam) {
+      const stuId = parseInt(collectParam, 10);
+      openCollectModal(stuId > 0 ? stuId : null);
+    }
+  } catch (e) {
+    console.warn('Modal URL restore error:', e);
+  }
 });
 </script>
 

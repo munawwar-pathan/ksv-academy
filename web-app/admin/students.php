@@ -23,8 +23,123 @@ $db = get_db_connection();
 $active_session = get_active_session();
 $session_id = $active_session ? intval($active_session['id']) : 1;
 
-// Standards list for filter & validation
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+// Academic Standards & Specialized Course Categories
+$academic_categories = [
+    'Junior School & Foundation (5th - 8th)' => [
+        '5th Standard',
+        '5th Standard (State Board)',
+        '5th Standard (CBSE)',
+        '5th Standard (ICSE / IB)',
+        '5th Standard Foundation & Olympiad',
+        '6th Standard',
+        '6th Standard (State Board)',
+        '6th Standard (CBSE)',
+        '6th Standard (ICSE / IB)',
+        '6th Standard Foundation & Olympiad',
+        '7th Standard',
+        '7th Standard (State Board)',
+        '7th Standard (CBSE)',
+        '7th Standard (ICSE / IB)',
+        '7th Standard Foundation & Olympiad',
+        '8th Standard',
+        '8th Standard (State Board)',
+        '8th Standard (CBSE)',
+        '8th Standard (ICSE / IB)',
+        '8th Standard Foundation & Olympiad',
+    ],
+    'Secondary & Pre-Foundation (9th - 10th)' => [
+        '9th Standard',
+        '9th Standard (State Board)',
+        '9th Standard (CBSE)',
+        '9th Standard (ICSE / IB)',
+        '9th Standard (IIT-JEE / NEET Foundation)',
+        '9th Standard (Olympiad)',
+        '10th Standard',
+        '10th Standard (State Board)',
+        '10th Standard (CBSE)',
+        '10th Standard (ICSE / IB)',
+        '10th Standard (IIT-JEE / NEET Foundation)',
+        '10th Standard (NTSE & Olympiad)',
+    ],
+    '11th Higher Secondary & Competitive' => [
+        '11th Science',
+        '11th Science (IIT-JEE)',
+        '11th Science (NEET)',
+        '11th Science (MH-CET)',
+        '11th Science (State Board)',
+        '11th Science (CBSE)',
+        '11th Science (ICSE / ISC)',
+        '11th Science (IB)',
+        '11th Commerce',
+        '11th Commerce (State Board)',
+        '11th Commerce (CBSE / ISC)',
+        '11th Arts / Humanities',
+    ],
+    '12th Higher Secondary & Competitive' => [
+        '12th Science',
+        '12th Science (IIT-JEE)',
+        '12th Science (NEET)',
+        '12th Science (MH-CET)',
+        '12th Science (State Board)',
+        '12th Science (CBSE)',
+        '12th Science (ICSE / ISC)',
+        '12th Science (IB)',
+        '12th Commerce',
+        '12th Commerce (State Board)',
+        '12th Commerce (CBSE / ISC)',
+        '12th Arts / Humanities',
+    ],
+    'Competitive Target & Specialized Batches' => [
+        'IIT-JEE Main + Advanced Batch',
+        'NEET-UG Target Batch',
+        'MH-CET Target Batch',
+        'Olympiad Excellence Batch',
+        'IIT-JEE / NEET Repeater Batch',
+    ],
+];
+
+// Flat list of predefined standards
+$flat_predefined_standards = [];
+foreach ($academic_categories as $cat => $std_list) {
+    foreach ($std_list as $s_item) {
+        $flat_predefined_standards[] = $s_item;
+    }
+}
+
+// Fetch any distinct custom standards already stored in DB for this session
+$db_standards = $db->query("SELECT DISTINCT standard FROM students WHERE session_id = " . intval($session_id) . " AND standard IS NOT NULL AND standard != ''")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+$custom_db_standards = array_values(array_diff($db_standards, $flat_predefined_standards));
+
+// All valid standards array for validation and stats
+$standards = array_values(array_unique(array_filter(array_merge($flat_predefined_standards, $db_standards))));
+
+// Helper to render grouped options with optgroup
+if (!function_exists('render_standards_dropdown_options')) {
+function render_standards_dropdown_options($selected_val = '', $include_other = true, $academic_categories = [], $custom_db_standards = []) {
+    $html = '';
+    foreach ($academic_categories as $category_name => $std_options) {
+        $html .= '<optgroup label="' . htmlspecialchars($category_name, ENT_QUOTES, 'UTF-8') . '">';
+        foreach ($std_options as $std_opt) {
+            $is_sel = ($selected_val === $std_opt) ? ' selected' : '';
+            $html .= '<option value="' . htmlspecialchars($std_opt, ENT_QUOTES, 'UTF-8') . '"' . $is_sel . '>' . htmlspecialchars($std_opt, ENT_QUOTES, 'UTF-8') . '</option>';
+        }
+        $html .= '</optgroup>';
+    }
+    if (!empty($custom_db_standards)) {
+        $html .= '<optgroup label="Custom Academy Batches">';
+        foreach ($custom_db_standards as $cstd) {
+            $is_sel = ($selected_val === $cstd) ? ' selected' : '';
+            $html .= '<option value="' . htmlspecialchars($cstd, ENT_QUOTES, 'UTF-8') . '"' . $is_sel . '>' . htmlspecialchars($cstd, ENT_QUOTES, 'UTF-8') . '</option>';
+        }
+        $html .= '</optgroup>';
+    }
+    if ($include_other) {
+        $is_sel = ($selected_val === '__other__') ? ' selected' : '';
+        $html .= '<option value="__other__"' . $is_sel . '>+ Other (Custom Academic Class)</option>';
+    }
+    return $html;
+}
+}
 
 // Filter by search and standard
 $search = trim((string)($_GET['search'] ?? ''));
@@ -119,7 +234,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $roll_no = mb_substr(trim((string)($_POST['roll_no'] ?? '')), 0, 50);
         $admission_no = mb_substr(trim((string)($_POST['admission_no'] ?? '')), 0, 50);
         $standard = mb_substr(trim((string)($_POST['standard'] ?? '10th Standard')), 0, 50);
-        if (!in_array($standard, $standards, true)) {
+        if ($standard === '__other__' || $standard === 'Other') {
+            $custom_std = mb_substr(trim((string)($_POST['custom_standard'] ?? '')), 0, 50);
+            if (!empty($custom_std)) {
+                $standard = $custom_std;
+            } else {
+                $standard = '10th Standard';
+            }
+        } elseif (!in_array($standard, $standards, true)) {
             $standard = '10th Standard';
         }
         $section = preg_replace('/[^a-zA-Z0-9]/', '', mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10)) ?: 'A';
@@ -260,6 +382,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt_fee->execute([$session_id, $new_student_id, $rcpt, $paid_fees]);
                 }
 
+                // Sync fee installment splits and schedule
+                $split_amounts = $_POST['split_amount'] ?? [];
+                $split_dates = $_POST['split_date'] ?? [];
+                $split_titles = $_POST['split_title'] ?? [];
+                $parsed_splits = parse_and_validate_fee_splits($split_amounts, $split_dates, $split_titles);
+                if (empty($parsed_splits) && $total_fees > 0) {
+                    $parsed_splits = [[
+                        'installment_no' => 1,
+                        'title' => 'Installment 1',
+                        'amount' => $total_fees,
+                        'due_date' => date('Y-m-d', strtotime('+30 days')),
+                    ]];
+                }
+                sync_student_fee_splits($new_student_id, $session_id, $parsed_splits, $paid_fees);
+
                 // If student email is provided, dispatch portal login credentials & welcome email
                 $email_dispatched = false;
                 $email_diag = [];
@@ -323,7 +460,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $student_id = intval($_POST['student_id'] ?? 0);
         $student_name = mb_substr(trim((string)($_POST['student_name'] ?? '')), 0, 100);
         $standard = mb_substr(trim((string)($_POST['standard'] ?? '')), 0, 50);
-        if (!in_array($standard, $standards, true)) {
+        if ($standard === '__other__' || $standard === 'Other') {
+            $custom_std = mb_substr(trim((string)($_POST['custom_standard'] ?? '')), 0, 50);
+            if (!empty($custom_std)) {
+                $standard = $custom_std;
+            } else {
+                $standard = '10th Standard';
+            }
+        } elseif (!in_array($standard, $standards, true)) {
             $standard = '10th Standard';
         }
         $section = preg_replace('/[^a-zA-Z0-9]/', '', mb_substr(trim((string)($_POST['section'] ?? 'A')), 0, 10)) ?: 'A';
@@ -457,6 +601,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($linked_uid) {
                         $db->prepare("UPDATE users SET email = ?, full_name = ? WHERE id = ?")->execute([$student_email, $student_name, $linked_uid]);
                     }
+                }
+
+                // Sync fee installment splits and schedule
+                $split_amounts = $_POST['split_amount'] ?? [];
+                $split_dates = $_POST['split_date'] ?? [];
+                $split_titles = $_POST['split_title'] ?? [];
+                $parsed_splits = parse_and_validate_fee_splits($split_amounts, $split_dates, $split_titles);
+                if (!empty($parsed_splits)) {
+                    sync_student_fee_splits($student_id, $session_id, $parsed_splits, $paid_fees);
+                } else {
+                    refresh_student_fee_installment_statuses($student_id, $session_id);
                 }
 
                 set_flash('success', "Student profile and menu permissions for {$student_name} updated successfully!");
@@ -2278,6 +2433,104 @@ require_once __DIR__ . '/../includes/layout-header.php';
 [data-theme="dark"] #changeStudentPasswordModal button[title="Show/Hide password"]:hover {
   color: #38bdf8 !important;
 }
+
+/* ════════════════════════════════════════════════════════
+   FEE INSTALLMENT SPLITS & DUE DATE SCHEDULER STYLES
+   ════════════════════════════════════════════════════════ */
+.fee-splits-card {
+  margin-top: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.fee-splits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.btn-split-preset {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-split-preset:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.btn-add-split {
+  background: #0284c7;
+  border: 1px solid #0284c7;
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+.btn-add-split:hover {
+  background: #0369a1;
+}
+.split-row {
+  display: grid;
+  grid-template-columns: 140px 140px 1fr 34px;
+  gap: 8px;
+  align-items: center;
+}
+.btn-del-split {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #fee2e2;
+  background: #fef2f2;
+  color: #ef4444;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  transition: all 0.15s ease;
+}
+.btn-del-split:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+[data-theme="dark"] .fee-splits-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .fee-splits-card div[style*="background: #ffffff"],
+[data-theme="dark"] .fee-splits-card div[style*="background:#ffffff"] {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+[data-theme="dark"] .btn-split-preset {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .btn-split-preset:hover {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .btn-del-split {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
 </style>
 
 <!-- KPI Summary Strip for Student Roaster -->
@@ -2389,11 +2642,7 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <i class="fa-solid fa-filter"></i>
         <select name="standard" onchange="this.form.submit()">
           <option value="">All Academic Standards</option>
-          <?php foreach ($standards as $std): ?>
-            <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>>
-              <?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>
-            </option>
-          <?php endforeach; ?>
+          <?php echo render_standards_dropdown_options($filter_standard, false, $academic_categories, $custom_db_standards); ?>
         </select>
         <i class="fa-solid fa-chevron-down select-chevron"></i>
       </div>
@@ -2569,6 +2818,34 @@ require_once __DIR__ . '/../includes/layout-header.php';
                   <span class="sid-fee-paid">
                     <i class="fa-solid fa-check" style="font-size: 0.65rem;"></i> Fully Paid
                   </span>
+                <?php endif; ?>
+
+                <?php
+                  $splits_data = get_student_fee_splits(intval($stu['id']), $session_id);
+                  $next_rem = null;
+                  foreach ($splits_data as $sp) {
+                      if (in_array($sp['status'], ['pending', 'partially_paid', 'overdue'], true)) {
+                          $next_rem = $sp;
+                          break;
+                      }
+                  }
+                ?>
+                <?php if ($next_rem): ?>
+                  <div style="margin-top: 5px;">
+                    <?php if ($next_rem['is_overdue']): ?>
+                      <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.70rem; font-weight: 700; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; padding: 2px 6px;" title="Overdue by <?php echo intval($next_rem['days_overdue']); ?> days">
+                        <i class="fa-solid fa-circle-exclamation"></i> Overdue: <?php echo format_inr($next_rem['amount'] - $next_rem['paid_amount']); ?> (<?php echo date('d M', strtotime($next_rem['due_date'])); ?>)
+                      </span>
+                    <?php elseif ($next_rem['is_due_soon']): ?>
+                      <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.70rem; font-weight: 700; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 2px 6px;" title="Due in <?php echo intval($next_rem['days_remaining']); ?> days">
+                        <i class="fa-regular fa-clock"></i> Due: <?php echo date('d M', strtotime($next_rem['due_date'])); ?> (<?php echo format_inr($next_rem['amount'] - $next_rem['paid_amount']); ?>)
+                      </span>
+                    <?php else: ?>
+                      <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.69rem; font-weight: 600; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 2px 5px;" title="Scheduled installment due on <?php echo htmlspecialchars($next_rem['due_date_formatted'] ?? $next_rem['due_date']); ?>">
+                        <i class="fa-regular fa-calendar"></i> <?php echo date('d M', strtotime($next_rem['due_date'])); ?>: <?php echo format_inr($next_rem['amount'] - $next_rem['paid_amount']); ?>
+                      </span>
+                    <?php endif; ?>
+                  </div>
                 <?php endif; ?>
               </td>
 
@@ -2774,11 +3051,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Academic Standard / Class *</label>
-            <select name="standard" class="hrms-input" required>
-              <?php foreach ($standards as $std): ?>
-                <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?></option>
-              <?php endforeach; ?>
+            <select name="standard" id="add_standard" class="hrms-input" required onchange="handleStandardChange('add')">
+              <?php echo render_standards_dropdown_options('10th Standard', true, $academic_categories, $custom_db_standards); ?>
             </select>
+            <div id="add_custom_standard_box" style="display: none; margin-top: 8px;">
+              <input type="text" name="custom_standard" id="add_custom_standard" class="hrms-input" placeholder="Enter custom academic class (e.g. 12th Commerce, Diploma)">
+            </div>
           </div>
         </div>
 
@@ -2910,11 +3188,91 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 0; background: #f8fafc; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0;">
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Total Annual Fees (₹) *</label>
-            <input type="number" step="0.01" name="total_fees" value="45000" class="hrms-input" required>
+            <input type="number" step="0.01" name="total_fees" id="add_total_fees" value="45000" class="hrms-input" required oninput="onFeeInputsChanged('add')">
           </div>
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Initial Fee Paid (₹)</label>
-            <input type="number" step="0.01" name="paid_fees" value="15000" class="hrms-input">
+            <input type="number" step="0.01" name="paid_fees" id="add_paid_fees" value="15000" class="hrms-input" oninput="onFeeInputsChanged('add')">
+          </div>
+        </div>
+
+        <!-- Row 8B: Fee Installment Splits & Due Dates -->
+        <div class="fee-splits-card" id="add_splits_wrapper">
+          <div class="fee-splits-header">
+            <div>
+              <label style="display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">
+                <i class="fa-solid fa-calendar-days" style="color: #0284c7;"></i>
+                Fee Installment Splits &amp; Due Date Reminders
+              </label>
+              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                Specify installment amounts &amp; due dates. Automatic reminders will trigger on due dates for admin and scholars.
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-split-preset" onclick="autoSplitFees('add', 2)">Split 2</button>
+              <button type="button" class="btn-split-preset" onclick="autoSplitFees('add', 3)">Split 3</button>
+              <button type="button" class="btn-split-preset" onclick="autoSplitFees('add', 4)">Split 4</button>
+              <button type="button" class="btn-add-split" onclick="addSplitRow('add')">
+                <i class="fa-solid fa-plus"></i> Add Split
+              </button>
+            </div>
+          </div>
+
+          <!-- Column Header Labels -->
+          <div style="display: grid; grid-template-columns: 140px 140px 1fr 34px; gap: 8px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; padding: 0 2px;">
+            <span>Installment</span>
+            <span>Amount (₹)</span>
+            <span>Due Date</span>
+            <span></span>
+          </div>
+
+          <div id="add_splits_container" class="splits-container" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Pre-populated default 3 splits: 15000 on 28/11/2026, 15000 on 25/12/2026, 15000 on 02/01/2027 -->
+            <div class="split-row">
+              <input type="text" name="split_title[]" value="Installment 1" placeholder="Title" class="hrms-input split-title-input" style="padding: 7px 10px; font-size: 0.8rem;" required>
+              <div style="position: relative;">
+                <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: #64748b; font-weight: 600;">₹</span>
+                <input type="number" step="0.01" name="split_amount[]" value="15000" placeholder="15000" class="hrms-input split-amt-input" style="padding: 7px 10px 7px 20px; font-size: 0.8rem; font-weight: 700;" required oninput="updateSplitsSummary('add')">
+              </div>
+              <input type="date" name="split_date[]" value="2026-11-28" class="hrms-input split-date-input" style="padding: 7px 10px; font-size: 0.8rem;" required onchange="updateSplitsSummary('add')">
+              <button type="button" class="btn-del-split" onclick="removeSplitRow(this, 'add')" title="Remove this installment split">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+            <div class="split-row">
+              <input type="text" name="split_title[]" value="Installment 2" placeholder="Title" class="hrms-input split-title-input" style="padding: 7px 10px; font-size: 0.8rem;" required>
+              <div style="position: relative;">
+                <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: #64748b; font-weight: 600;">₹</span>
+                <input type="number" step="0.01" name="split_amount[]" value="15000" placeholder="15000" class="hrms-input split-amt-input" style="padding: 7px 10px 7px 20px; font-size: 0.8rem; font-weight: 700;" required oninput="updateSplitsSummary('add')">
+              </div>
+              <input type="date" name="split_date[]" value="2026-12-25" class="hrms-input split-date-input" style="padding: 7px 10px; font-size: 0.8rem;" required onchange="updateSplitsSummary('add')">
+              <button type="button" class="btn-del-split" onclick="removeSplitRow(this, 'add')" title="Remove this installment split">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+            <div class="split-row">
+              <input type="text" name="split_title[]" value="Installment 3" placeholder="Title" class="hrms-input split-title-input" style="padding: 7px 10px; font-size: 0.8rem;" required>
+              <div style="position: relative;">
+                <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: #64748b; font-weight: 600;">₹</span>
+                <input type="number" step="0.01" name="split_amount[]" value="15000" placeholder="15000" class="hrms-input split-amt-input" style="padding: 7px 10px 7px 20px; font-size: 0.8rem; font-weight: 700;" required oninput="updateSplitsSummary('add')">
+              </div>
+              <input type="date" name="split_date[]" value="2027-01-02" class="hrms-input split-date-input" style="padding: 7px 10px; font-size: 0.8rem;" required onchange="updateSplitsSummary('add')">
+              <button type="button" class="btn-del-split" onclick="removeSplitRow(this, 'add')" title="Remove this installment split">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Splits Summary Bar -->
+          <div id="add_splits_summary" style="margin-top: 10px; padding: 9px 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11.5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+              <span>Splits Sum: <strong id="add_splits_total_badge" style="color: #0284c7;">₹45,000</strong></span>
+              <span>Paid Allocated: <strong id="add_splits_paid_badge" style="color: #10b981;">₹15,000</strong></span>
+              <span>Remaining: <strong id="add_splits_due_badge" style="color: #ef4444;">₹30,000</strong></span>
+            </div>
+            <div id="add_splits_status_msg" style="font-weight: 600; font-size: 11px; color: #059669;">
+              <i class="fa-solid fa-check"></i> Splits match Total Annual Fee
+            </div>
           </div>
         </div>
 
@@ -3002,6 +3360,17 @@ require_once __DIR__ . '/../includes/layout-header.php';
 
       </div>
 
+      <!-- Card 2B: Fee Installment Milestones & Due Dates -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:18px;">
+        <h5 style="margin:0 0 12px; font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:#475569; display:flex; justify-content:space-between; align-items:center;">
+          <span><i class="fa-solid fa-clock-rotate-left" style="color:#0284c7; margin-right:6px;"></i> Fee Installment Milestones &amp; Due Dates</span>
+          <span id="view_stu_splits_badge" style="font-size:0.70rem; font-weight:700; padding:2px 8px; border-radius:10px; background:#e0f2fe; color:#0369a1;">0 Milestones</span>
+        </h5>
+        <div id="view_stu_splits_table" style="font-size:0.82rem;">
+          <!-- Populated in viewStudentDetails(stu) -->
+        </div>
+      </div>
+
       <!-- Card 3: Personal & Contact Information -->
       <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:18px;">
         <h5 style="margin:0 0 12px; font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; color:#475569;">
@@ -3072,11 +3441,12 @@ require_once __DIR__ . '/../includes/layout-header.php';
           </div>
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Academic Standard / Class *</label>
-            <select name="standard" id="edit_standard" class="hrms-input" required>
-              <?php foreach ($standards as $std): ?>
-                <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?></option>
-              <?php endforeach; ?>
+            <select name="standard" id="edit_standard" class="hrms-input" required onchange="handleStandardChange('edit')">
+              <?php echo render_standards_dropdown_options('', true, $academic_categories, $custom_db_standards); ?>
             </select>
+            <div id="edit_custom_standard_box" style="display: none; margin-top: 8px;">
+              <input type="text" name="custom_standard" id="edit_custom_standard" class="hrms-input" placeholder="Enter custom academic class (e.g. 12th Commerce, Diploma)">
+            </div>
           </div>
         </div>
 
@@ -3202,11 +3572,56 @@ require_once __DIR__ . '/../includes/layout-header.php';
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 0; background: #f8fafc; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0;">
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Total Annual Fees (₹) *</label>
-            <input type="number" step="0.01" name="total_fees" id="edit_total_fees" class="hrms-input" required>
+            <input type="number" step="0.01" name="total_fees" id="edit_total_fees" class="hrms-input" required oninput="onFeeInputsChanged('edit')">
           </div>
           <div class="form-group" style="margin: 0;">
             <label class="form-label">Paid Fees (₹)</label>
-            <input type="number" step="0.01" name="paid_fees" id="edit_paid_fees" class="hrms-input">
+            <input type="number" step="0.01" name="paid_fees" id="edit_paid_fees" class="hrms-input" oninput="onFeeInputsChanged('edit')">
+          </div>
+        </div>
+
+        <!-- Row 8B: Fee Installment Splits & Due Dates -->
+        <div class="fee-splits-card" id="edit_splits_wrapper">
+          <div class="fee-splits-header">
+            <div>
+              <label style="display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; color: #0f172a; margin: 0; font-family: 'Outfit', sans-serif;">
+                <i class="fa-solid fa-calendar-days" style="color: #0284c7;"></i>
+                Fee Installment Splits &amp; Due Date Reminders
+              </label>
+              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                Update installment amounts &amp; due dates. Automatic reminders will trigger on due dates for admin and scholars.
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-split-preset" onclick="autoSplitFees('edit', 2)">Split 2</button>
+              <button type="button" class="btn-split-preset" onclick="autoSplitFees('edit', 3)">Split 3</button>
+              <button type="button" class="btn-split-preset" onclick="autoSplitFees('edit', 4)">Split 4</button>
+              <button type="button" class="btn-add-split" onclick="addSplitRow('edit')">
+                <i class="fa-solid fa-plus"></i> Add Split
+              </button>
+            </div>
+          </div>
+
+          <!-- Column Header Labels -->
+          <div style="display: grid; grid-template-columns: 140px 140px 1fr 34px; gap: 8px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; padding: 0 2px;">
+            <span>Installment</span>
+            <span>Amount (₹)</span>
+            <span>Due Date</span>
+            <span></span>
+          </div>
+
+          <div id="edit_splits_container" class="splits-container" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Dynamically populated in openEditStudentModal(stu) -->
+          </div>
+
+          <!-- Splits Summary Bar -->
+          <div id="edit_splits_summary" style="margin-top: 10px; padding: 9px 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11.5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+              <span>Splits Sum: <strong id="edit_splits_total_badge" style="color: #0284c7;">₹0</strong></span>
+              <span>Paid Allocated: <strong id="edit_splits_paid_badge" style="color: #10b981;">₹0</strong></span>
+              <span>Remaining: <strong id="edit_splits_due_badge" style="color: #ef4444;">₹0</strong></span>
+            </div>
+            <div id="edit_splits_status_msg" style="font-weight: 600; font-size: 11px;"></div>
           </div>
         </div>
 
@@ -3555,6 +3970,70 @@ function viewStudentDetails(stu) {
     docsContainer.innerHTML = '<p style="color:#94a3b8; font-size:0.8rem; margin:0; font-style:italic;">No academic documents attached for this scholar.</p>';
   }
 
+  // Render Fee Installment Milestones & Schedule
+  const splitsTable = document.getElementById('view_stu_splits_table');
+  const splitsBadge = document.getElementById('view_stu_splits_badge');
+  let splits = [];
+  try {
+    if (typeof stu.fee_splits === 'string' && stu.fee_splits.trim() !== '') {
+      splits = JSON.parse(stu.fee_splits);
+    } else if (Array.isArray(stu.fee_splits)) {
+      splits = stu.fee_splits;
+    }
+  } catch(e) {
+    splits = [];
+  }
+
+  if (Array.isArray(splits) && splits.length > 0) {
+    splitsBadge.textContent = splits.length + (splits.length === 1 ? ' Milestone' : ' Milestones');
+    let tblHtml = `
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.80rem;">
+          <thead>
+            <tr style="border-bottom:1.5px solid #e2e8f0; color:#64748b; font-size:0.72rem; text-transform:uppercase;">
+              <th style="padding:6px 8px;">#</th>
+              <th style="padding:6px 8px;">Milestone</th>
+              <th style="padding:6px 8px;">Amount</th>
+              <th style="padding:6px 8px;">Due Date</th>
+              <th style="padding:6px 8px;">Paid</th>
+              <th style="padding:6px 8px; text-align:right;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    const today = new Date().toISOString().slice(0, 10);
+    splits.forEach((sp, idx) => {
+      const amt = parseFloat(sp.amount || 0);
+      const paidAmt = parseFloat(sp.paid_amount || 0);
+      const remAmt = Math.max(0, amt - paidAmt);
+      let statusBadge = '';
+      if (sp.status === 'paid' || remAmt <= 0) {
+        statusBadge = '<span style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; padding:2px 7px; border-radius:4px; font-weight:700;"><i class="fa-solid fa-check"></i> Paid</span>';
+      } else if (sp.status === 'partially_paid') {
+        statusBadge = `<span style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:2px 7px; border-radius:4px; font-weight:700;">Partial (₹${paidAmt.toLocaleString('en-IN')})</span>`;
+      } else if (sp.due_date && sp.due_date < today) {
+        statusBadge = '<span style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:2px 7px; border-radius:4px; font-weight:700;"><i class="fa-solid fa-circle-exclamation"></i> Overdue</span>';
+      } else {
+        statusBadge = '<span style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; padding:2px 7px; border-radius:4px; font-weight:600;"><i class="fa-regular fa-clock"></i> Scheduled</span>';
+      }
+      tblHtml += `
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:7px 8px; color:#64748b; font-weight:600;">${idx + 1}</td>
+          <td style="padding:7px 8px; font-weight:700; color:#0f172a;">${escapeHtml(sp.title || ('Installment ' + (idx + 1)))}</td>
+          <td style="padding:7px 8px; font-weight:700; color:#0284c7;">₹${amt.toLocaleString('en-IN')}</td>
+          <td style="padding:7px 8px; color:#475569;">${sp.due_date ? formatDate(sp.due_date) : '—'}</td>
+          <td style="padding:7px 8px; color:#059669; font-weight:600;">₹${paidAmt.toLocaleString('en-IN')}</td>
+          <td style="padding:7px 8px; text-align:right;">${statusBadge}</td>
+        </tr>
+      `;
+    });
+    tblHtml += `</tbody></table></div>`;
+    splitsTable.innerHTML = tblHtml;
+  } else {
+    splitsBadge.textContent = 'Standard';
+    splitsTable.innerHTML = '<p style="color:#94a3b8; font-size:0.8rem; margin:0; font-style:italic;">No custom installment splits configured. Standard single-term payment schedule.</p>';
+  }
+
   openModal('viewStudentModal');
 }
 
@@ -3568,7 +4047,37 @@ function openEditStudentModal(stu) {
 
   document.getElementById('edit_student_id').value = stu.id || '';
   document.getElementById('edit_student_name').value = stu.student_name || '';
-  document.getElementById('edit_standard').value = stu.standard || '8th Standard';
+  
+  // Populate Academic Standard / Class (including custom)
+  const editStdSel = document.getElementById('edit_standard');
+  const customStdBox = document.getElementById('edit_custom_standard_box');
+  const customStdInput = document.getElementById('edit_custom_standard');
+  const stuStd = stu.standard || '8th Standard';
+  if (editStdSel) {
+    let matched = false;
+    for (let i = 0; i < editStdSel.options.length; i++) {
+      if (editStdSel.options[i].value === stuStd) {
+        editStdSel.selectedIndex = i;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      editStdSel.value = '__other__';
+      if (customStdBox) customStdBox.style.display = 'block';
+      if (customStdInput) {
+        customStdInput.required = true;
+        customStdInput.value = stuStd;
+      }
+    } else {
+      if (customStdBox) customStdBox.style.display = 'none';
+      if (customStdInput) {
+        customStdInput.required = false;
+        customStdInput.value = '';
+      }
+    }
+  }
+
   document.getElementById('edit_roll_no').value = stu.roll_no || '';
   document.getElementById('edit_admission_no').value = stu.admission_no || '';
   document.getElementById('edit_section').value = stu.section || 'A';
@@ -3625,6 +4134,38 @@ function openEditStudentModal(stu) {
   document.querySelectorAll('#editStudentModal .edit-student-perm-cb').forEach(cb => {
     cb.checked = perms.includes(cb.value);
   });
+
+  // Populate Fee Installment Splits in Edit Modal
+  const editSplitsContainer = document.getElementById('edit_splits_container');
+  if (editSplitsContainer) {
+    editSplitsContainer.innerHTML = '';
+    let editSplits = [];
+    try {
+      if (typeof stu.fee_splits === 'string' && stu.fee_splits.trim() !== '') {
+        editSplits = JSON.parse(stu.fee_splits);
+      } else if (Array.isArray(stu.fee_splits)) {
+        editSplits = stu.fee_splits;
+      }
+    } catch(e) {
+      editSplits = [];
+    }
+
+    if (Array.isArray(editSplits) && editSplits.length > 0) {
+      editSplits.forEach((sp, idx) => {
+        addSplitRow('edit', sp.amount || 0, sp.due_date || '', sp.title || ('Installment ' + (idx + 1)));
+      });
+    } else {
+      const tot = parseFloat(stu.total_fees || 0);
+      if (tot > 0) {
+        addSplitRow('edit', tot, new Date().toISOString().slice(0, 10), 'Installment 1');
+      } else {
+        addSplitRow('edit', 15000, '2026-11-28', 'Installment 1');
+        addSplitRow('edit', 15000, '2026-12-25', 'Installment 2');
+        addSplitRow('edit', 15000, '2027-01-02', 'Installment 3');
+      }
+    }
+    updateSplitsSummary('edit');
+  }
 
   openModal('editStudentModal');
 }
@@ -3705,6 +4246,182 @@ function togglePasswordVisibility(inputId, btn) {
     }
   }
 }
+
+/* ════════════════════════════════════════════════════════
+   FEE INSTALLMENT SPLIT INTERACTIVE JAVASCRIPT LOGIC
+   ════════════════════════════════════════════════════════ */
+function addSplitRow(type, amount, date, title) {
+  const container = document.getElementById(type + '_splits_container');
+  if (!container) return;
+  const currentRows = container.querySelectorAll('.split-row');
+  const nextIdx = currentRows.length + 1;
+  
+  const defaultTitle = title !== undefined && title !== null && title !== '' ? title : ('Installment ' + nextIdx);
+  
+  let defaultDate = date;
+  if (!defaultDate) {
+    const lastDateInput = container.querySelector('.split-row:last-child .split-date-input');
+    if (lastDateInput && lastDateInput.value) {
+      const d = new Date(lastDateInput.value);
+      d.setDate(d.getDate() + 30);
+      defaultDate = d.toISOString().slice(0, 10);
+    } else {
+      const today = new Date();
+      today.setDate(today.getDate() + 30);
+      defaultDate = today.toISOString().slice(0, 10);
+    }
+  }
+
+  let defaultAmount = amount;
+  if (defaultAmount === undefined || defaultAmount === null || defaultAmount === '') {
+    const totalInput = document.getElementById(type + '_total_fees');
+    const total = parseFloat(totalInput ? totalInput.value : 0) || 0;
+    let sumExisting = 0;
+    container.querySelectorAll('.split-amt-input').forEach(inp => {
+      sumExisting += parseFloat(inp.value) || 0;
+    });
+    const remaining = Math.max(0, total - sumExisting);
+    defaultAmount = remaining > 0 ? remaining : (total > 0 ? Math.round(total / 3) : 15000);
+  }
+
+  const row = document.createElement('div');
+  row.className = 'split-row';
+  row.innerHTML = `
+    <input type="text" name="split_title[]" value="${escapeHtml(String(defaultTitle))}" placeholder="Title" class="hrms-input split-title-input" style="padding: 7px 10px; font-size: 0.8rem;" required>
+    <div style="position: relative;">
+      <span style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: #64748b; font-weight: 600;">₹</span>
+      <input type="number" step="0.01" name="split_amount[]" value="${parseFloat(defaultAmount) || 0}" placeholder="Amount" class="hrms-input split-amt-input" style="padding: 7px 10px 7px 20px; font-size: 0.8rem; font-weight: 700;" required oninput="updateSplitsSummary('${type}')">
+    </div>
+    <input type="date" name="split_date[]" value="${escapeHtml(String(defaultDate))}" class="hrms-input split-date-input" style="padding: 7px 10px; font-size: 0.8rem;" required onchange="updateSplitsSummary('${type}')">
+    <button type="button" class="btn-del-split" onclick="removeSplitRow(this, '${type}')" title="Remove this installment split">
+      <i class="fa-solid fa-trash-can"></i>
+    </button>
+  `;
+  container.appendChild(row);
+  updateSplitsSummary(type);
+}
+
+function removeSplitRow(btn, type) {
+  const container = document.getElementById(type + '_splits_container');
+  if (!container) return;
+  const rows = container.querySelectorAll('.split-row');
+  if (rows.length <= 1) {
+    alert('At least one installment split is required.');
+    return;
+  }
+  const row = btn.closest('.split-row');
+  if (row) {
+    row.remove();
+    // Renumber remaining default installment titles if they match "Installment X"
+    const remainingRows = container.querySelectorAll('.split-row');
+    remainingRows.forEach((r, idx) => {
+      const titleInp = r.querySelector('.split-title-input');
+      if (titleInp && /^Installment \d+$/i.test(titleInp.value.trim())) {
+        titleInp.value = 'Installment ' + (idx + 1);
+      }
+    });
+    updateSplitsSummary(type);
+  }
+}
+
+function autoSplitFees(type, count) {
+  count = parseInt(count) || 2;
+  const totalInput = document.getElementById(type + '_total_fees');
+  const total = parseFloat(totalInput ? totalInput.value : 0) || 0;
+  if (total <= 0) {
+    alert('Please enter a valid Total Annual Fee first.');
+    return;
+  }
+  const container = document.getElementById(type + '_splits_container');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  const baseAmt = Math.floor((total / count) * 100) / 100;
+  let allocated = 0;
+  const startDate = new Date();
+
+  for (let i = 1; i <= count; i++) {
+    const isLast = (i === count);
+    const amt = isLast ? Math.round((total - allocated) * 100) / 100 : baseAmt;
+    allocated += amt;
+    
+    // Spread dates 30 days apart
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + ((i - 1) * 30));
+    const dateStr = d.toISOString().slice(0, 10);
+    
+    addSplitRow(type, amt, dateStr, 'Installment ' + i);
+  }
+  updateSplitsSummary(type);
+}
+
+function updateSplitsSummary(type) {
+  const container = document.getElementById(type + '_splits_container');
+  if (!container) return;
+  
+  const totalInput = document.getElementById(type + '_total_fees');
+  const paidInput = document.getElementById(type + '_paid_fees');
+  const total = parseFloat(totalInput ? totalInput.value : 0) || 0;
+  const paid = parseFloat(paidInput ? paidInput.value : 0) || 0;
+  
+  let splitsSum = 0;
+  container.querySelectorAll('.split-amt-input').forEach(inp => {
+    splitsSum += parseFloat(inp.value) || 0;
+  });
+  splitsSum = Math.round(splitsSum * 100) / 100;
+
+  const totalBadge = document.getElementById(type + '_splits_total_badge');
+  const paidBadge = document.getElementById(type + '_splits_paid_badge');
+  const dueBadge = document.getElementById(type + '_splits_due_badge');
+  const statusMsg = document.getElementById(type + '_splits_status_msg');
+  
+  const paidAllocated = Math.min(paid, splitsSum);
+  const remainingDue = Math.max(0, splitsSum - paidAllocated);
+
+  if (totalBadge) totalBadge.textContent = '₹' + splitsSum.toLocaleString('en-IN');
+  if (paidBadge) paidBadge.textContent = '₹' + paidAllocated.toLocaleString('en-IN');
+  if (dueBadge) dueBadge.textContent = '₹' + remainingDue.toLocaleString('en-IN');
+
+  if (statusMsg) {
+    const diff = Math.round((splitsSum - total) * 100) / 100;
+    if (Math.abs(diff) < 0.01) {
+      statusMsg.innerHTML = '<span style="color: #059669;"><i class="fa-solid fa-check"></i> Splits match Total Fee (₹' + total.toLocaleString('en-IN') + ')</span>';
+    } else if (diff < 0) {
+      statusMsg.innerHTML = '<span style="color: #d97706;"><i class="fa-solid fa-triangle-exclamation"></i> Splits total is ₹' + Math.abs(diff).toLocaleString('en-IN') + ' less than Total Fee (₹' + total.toLocaleString('en-IN') + ')</span>';
+    } else {
+      statusMsg.innerHTML = '<span style="color: #dc2626;"><i class="fa-solid fa-circle-exclamation"></i> Splits total exceeds Total Fee by ₹' + diff.toLocaleString('en-IN') + '</span>';
+    }
+  }
+}
+
+function onFeeInputsChanged(type) {
+  updateSplitsSummary(type);
+}
+
+function handleStandardChange(type) {
+  const sel = document.getElementById(type + '_standard');
+  const customBox = document.getElementById(type + '_custom_standard_box');
+  const customInput = document.getElementById(type + '_custom_standard');
+  if (!sel || !customBox) return;
+  if (sel.value === '__other__') {
+    customBox.style.display = 'block';
+    if (customInput) {
+      customInput.required = true;
+      customInput.focus();
+    }
+  } else {
+    customBox.style.display = 'none';
+    if (customInput) {
+      customInput.required = false;
+      customInput.value = '';
+    }
+  }
+}
+
+// Initial calculation on page load
+document.addEventListener('DOMContentLoaded', function() {
+  updateSplitsSummary('add');
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/layout-footer.php'; ?>

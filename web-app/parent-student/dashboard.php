@@ -1183,6 +1183,46 @@ require_once __DIR__ . '/../includes/layout-header.php';
   </div>
 <?php else: ?>
 
+<?php
+  $active_stu_id = intval($student['id'] ?? 0);
+  $next_fee_reminder = $active_stu_id > 0 ? get_student_next_fee_reminder($active_stu_id, $session_id) : null;
+?>
+<?php if ($next_fee_reminder): ?>
+  <?php
+    $is_od = !empty($next_fee_reminder['is_overdue']);
+    $rem_amt = floatval($next_fee_reminder['amount']) - floatval($next_fee_reminder['paid_amount']);
+  ?>
+  <div class="fee-installment-reminder-alert" style="background: <?php echo $is_od ? '#fef2f2' : '#fffbeb'; ?>; border: 1.5px solid <?php echo $is_od ? '#fca5a5' : '#fcd34d'; ?>; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: <?php echo $is_od ? '#fee2e2' : '#fef3c7'; ?>; color: <?php echo $is_od ? '#dc2626' : '#d97706'; ?>; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+        <i class="fa-solid <?php echo $is_od ? 'fa-triangle-exclamation' : 'fa-bell'; ?>"></i>
+      </div>
+      <div>
+        <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; font-family: 'Outfit', sans-serif;">
+          <?php if ($is_od): ?>
+            Fee Payment Overdue Reminder
+          <?php else: ?>
+            Upcoming Fee Installment Reminder
+          <?php endif; ?>
+        </div>
+        <div style="font-size: 0.82rem; color: #475569; margin-top: 2px;">
+          Next installment <strong><?php echo htmlspecialchars($next_fee_reminder['title']); ?></strong> of <strong style="color: <?php echo $is_od ? '#dc2626' : '#b45309'; ?>;"><?php echo format_inr($rem_amt); ?></strong>
+          <?php if ($is_od): ?>
+            was due on <strong><?php echo htmlspecialchars($next_fee_reminder['due_date_formatted']); ?></strong> (Overdue by <?php echo intval($next_fee_reminder['days_overdue']); ?> days).
+          <?php else: ?>
+            is scheduled for payment on <strong><?php echo htmlspecialchars($next_fee_reminder['due_date_formatted']); ?></strong> (Due in <?php echo intval($next_fee_reminder['days_remaining']); ?> days).
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+    <div>
+      <a href="<?php echo htmlspecialchars(PARENT_URL . '/fees' . ($student ? '?student_id=' . intval($student['id']) : ''), ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn primary" style="padding: 8px 16px; font-size: 0.82rem; text-decoration: none; border-radius: 8px;">
+        <i class="fa-solid fa-receipt"></i> View Fee Schedule &amp; Receipts &rarr;
+      </a>
+    </div>
+  </div>
+<?php endif; ?>
+
 <!-- ══════════════════════════════════════════════════════
      STUDENT PROFILE HERO CARD (Simple & Sober)
      ══════════════════════════════════════════════════════ -->
@@ -1240,6 +1280,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   <div class="student-hero-actions">
     <a href="<?php echo htmlspecialchars(PARENT_URL . '/student-id', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary hero-action-btn" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
       <i class="fa-solid fa-id-card" style="color: #0284c7;"></i> Student ID
+    </a>
+    <a href="<?php echo htmlspecialchars(PARENT_URL . '/notes', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary hero-action-btn" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
+      <i class="fa-solid fa-book-bookmark" style="color: #0284c7;"></i> Notes
     </a>
     <a href="<?php echo htmlspecialchars(PARENT_URL . '/marksheet', ENT_QUOTES, 'UTF-8'); ?>" class="roaster-btn secondary hero-action-btn" style="gap: 6px; font-size: 0.78rem; text-decoration: none; padding: 7px 14px; border-radius: 8px; justify-content: center; white-space: nowrap;">
       <i class="fa-solid fa-file-invoice" style="color: #0284c7;"></i> Report Card

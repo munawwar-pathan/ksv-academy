@@ -125,6 +125,12 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
               <span>Student ID Card</span>
             </a>
           </li>
+          <li class="sidebar-menu-item <?php echo $active_menu === 'note-record' ? 'active' : ''; ?>">
+            <a href="<?php echo ADMIN_URL; ?>/note-record">
+              <i class="fa-solid fa-book-bookmark"></i>
+              <span>Note Record</span>
+            </a>
+          </li>
           <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
             <a href="<?php echo ADMIN_URL; ?>/marksheet">
               <i class="fa-solid fa-file-lines"></i>
@@ -349,6 +355,12 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
               </a>
             </li>
           <?php endif; ?>
+          <li class="sidebar-menu-item <?php echo $active_menu === 'note-record' ? 'active' : ''; ?>">
+            <a href="<?php echo ADMIN_URL; ?>/note-record">
+              <i class="fa-solid fa-book-bookmark"></i>
+              <span>Note Record</span>
+            </a>
+          </li>
           <?php if ($can_marksheet): ?>
             <li class="sidebar-menu-item <?php echo $active_menu === 'marksheet' ? 'active' : ''; ?>">
               <a href="<?php echo ADMIN_URL; ?>/marksheet">
@@ -457,6 +469,14 @@ $role_title = $role_names[$current_user['role']] ?? ucfirst($current_user['role'
             <a href="<?php echo PARENT_URL; ?>/student-id">
               <i class="fa-solid fa-id-badge"></i>
               <span>Student ID Card</span>
+            </a>
+          </li>
+          <?php endif; ?>
+          <?php if (in_array('notes', $stu_perms) || in_array('note-record', $stu_perms)): ?>
+          <li class="sidebar-menu-item <?php echo in_array($active_menu, ['notes', 'note-record'], true) ? 'active' : ''; ?>">
+            <a href="<?php echo PARENT_URL; ?>/notes">
+              <i class="fa-solid fa-book-bookmark"></i>
+              <span>Notes</span>
             </a>
           </li>
           <?php endif; ?>

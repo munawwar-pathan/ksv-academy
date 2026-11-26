@@ -39,8 +39,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if (!empty($_POST['redirect_url']) && strpos($_POST['redirect_url'], ADMIN_URL) === 0) {
             return $_POST['redirect_url'];
         }
-        $tab = in_array($_GET['tab'] ?? 'all', ['all', 'demo_class', 'admission', 'inquiry'], true) ? $_GET['tab'] : 'all';
-        $status = in_array($_GET['status'] ?? 'all', ['all', 'unread', 'contacted', 'enrolled', 'closed'], true) ? $_GET['status'] : 'all';
+        $raw_tab = (string)($_GET['tab'] ?? 'all');
+        $tab = in_array($raw_tab, ['all', 'demo_class', 'admission', 'inquiry'], true) ? $raw_tab : 'all';
+        $raw_status = (string)($_GET['status'] ?? 'all');
+        $status = in_array($raw_status, ['all', 'unread', 'contacted', 'enrolled', 'closed'], true) ? $raw_status : 'all';
         $page = max(1, intval($_GET['page'] ?? 1));
         $limit = intval($_GET['limit'] ?? 10);
         if (!in_array($limit, [10, 20, 30, 40, 50], true)) $limit = 10;
@@ -80,12 +82,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 }
 
 // ── Query Parameters: Tabs, Search, Status & Sorting ─────────────────────────
-$active_tab = in_array($_GET['tab'] ?? 'all', ['all', 'demo_class', 'admission', 'inquiry'], true) ? $_GET['tab'] : 'all';
+$raw_tab = (string)($_GET['tab'] ?? 'all');
+$active_tab = in_array($raw_tab, ['all', 'demo_class', 'admission', 'inquiry'], true) ? $raw_tab : 'all';
 
-$filter_status = in_array($_GET['status'] ?? 'all', ['all', 'unread', 'contacted', 'enrolled', 'closed'], true) ? $_GET['status'] : 'all';
+$raw_status = (string)($_GET['status'] ?? 'all');
+$filter_status = in_array($raw_status, ['all', 'unread', 'contacted', 'enrolled', 'closed'], true) ? $raw_status : 'all';
 
 $search = mb_substr(trim((string)($_GET['search'] ?? '')), 0, 100);
-$sort = in_array($_GET['sort'] ?? 'newest', ['newest', 'oldest'], true) ? $_GET['sort'] : 'newest';
+$raw_sort = (string)($_GET['sort'] ?? 'newest');
+$sort = in_array($raw_sort, ['newest', 'oldest'], true) ? $raw_sort : 'newest';
 
 // ── Pagination Settings ──────────────────────────────────────────────────────
 $allowed_limits = [10, 20, 30, 40, 50];

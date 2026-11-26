@@ -23,12 +23,22 @@ $db = get_db_connection();
 $active_session = get_active_session();
 $session_id = $active_session ? intval($active_session['id']) : 1;
 
-// Standard classes whitelist
-$standards = ['8th Standard', '9th Standard', '10th Standard', '11th Science', '11th Commerce', '12th Science', '12th Commerce'];
+// Academic Standards & Specialized Course Categories (Matching Student Roaster)
+$academic_categories = get_default_academic_categories();
+$flat_predefined_standards = [];
+foreach ($academic_categories as $cat => $std_list) {
+    foreach ($std_list as $s_item) {
+        $flat_predefined_standards[] = $s_item;
+    }
+}
+$db_standards = $db->query("SELECT DISTINCT standard FROM students WHERE session_id = " . intval($session_id) . " AND standard IS NOT NULL AND standard != ''")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+$standards = array_values(array_unique(array_filter(array_merge($flat_predefined_standards, $db_standards))));
+$custom_db_standards = array_values(array_diff($db_standards, $flat_predefined_standards));
 
 // Validate date and class standard
 $filter_date = isset($_GET['date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$_GET['date']) ? (string)$_GET['date'] : date('Y-m-d');
-$filter_standard = isset($_GET['standard']) && in_array($_GET['standard'], $standards, true) ? (string)$_GET['standard'] : '';
+$raw_standard = trim((string)($_GET['standard'] ?? ''));
+$filter_standard = ($raw_standard !== '' && $raw_standard !== 'all' && in_array($raw_standard, $standards, true)) ? $raw_standard : '';
 
 // Rate Limiting Protection (Max 120 attendance punch requests per 5 minutes per session)
 $now = time();
@@ -887,7 +897,9 @@ require_once __DIR__ . '/../includes/layout-header.php';
   filter: invert(1) brightness(0.9);
 }
 [data-theme="dark"] .att-filter-select option,
-[data-theme="dark"] .hrms-card-header form select[name="standard"] option {
+[data-theme="dark"] .att-filter-select optgroup,
+[data-theme="dark"] .hrms-card-header form select[name="standard"] option,
+[data-theme="dark"] .hrms-card-header form select[name="standard"] optgroup {
   background: #0f172a !important;
   color: #f8fafc !important;
 }
@@ -1351,12 +1363,13 @@ require_once __DIR__ . '/../includes/layout-header.php';
           <input type="date" name="date" value="<?php echo htmlspecialchars($filter_date, ENT_QUOTES, 'UTF-8'); ?>" onchange="this.form.submit()" class="hrms-input att-filter-date" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; width: 140px; border: 1px solid #cbd5e1;">
         </div>
         
-        <select name="standard" onchange="this.form.submit()" class="hrms-input att-filter-select" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; min-width: 140px; border: 1px solid #cbd5e1;">
-          <option value="">All Academic Classes</option>
-          <?php foreach ($standards as $std): ?>
-            <option value="<?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filter_standard === $std ? 'selected' : ''; ?>><?php echo htmlspecialchars($std, ENT_QUOTES, 'UTF-8'); ?></option>
-          <?php endforeach; ?>
-        </select>
+        <div class="att-filter-select-wrap" style="position: relative; display: inline-flex; align-items: center;">
+          <select name="standard" onchange="this.form.submit()" class="hrms-input att-filter-select" style="padding: 6px 28px 6px 12px; font-size: 0.8rem; border-radius: 6px; min-width: 170px; max-width: 250px; border: 1px solid #cbd5e1; appearance: none; background: #ffffff; cursor: pointer; font-weight: 600; text-overflow: ellipsis;">
+            <option value="">All Academic Classes</option>
+            <?php echo render_standards_dropdown_options($filter_standard, false, $academic_categories, $custom_db_standards); ?>
+          </select>
+          <i class="fa-solid fa-chevron-down" style="position: absolute; right: 10px; font-size: 0.70rem; color: #94a3b8; pointer-events: none;"></i>
+        </div>
       </form>
 
       <!-- Start Camera Scanner Trigger Button -->
